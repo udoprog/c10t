@@ -1,12 +1,23 @@
 #ifndef GUARD_H
 #define GUARD_H
-int flip;
-int Rotate;
-int daynight;
-int cave;
-int exclude;
-int slide;
+
+typedef struct _settings {
+	int flip;
+	int Rotate;
+	int daynight;
+	int cave;
+	int exclude;
+	int slide;
+	int water;
+} settings_t;
+
+extern int Rotate;
+extern int daynight;
+extern int cave;
+extern int exclude;
+extern int slide;
+extern int flip;
+
 void f();
+
 #endif
-
-

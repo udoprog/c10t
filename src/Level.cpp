@@ -1,105 +1,21 @@
+#include <assert.h>
+
 #include "Level.h"
-
-extern int flip;
-extern int Rotate;
-extern int daynight;
-extern int cave;
-extern int exclude;
-extern int slide;
-
-
-Color::Color(){
-r = 255;
-g=255;
-b=255;
-a=0;
-
-}
-
-Color::Color(unsigned char rr ,unsigned char gg,unsigned char bb,unsigned char aa){
-r=rr;g=gg;b=bb;a=aa;
-
-}
-
-Color::~Color(){
-
-
-}
-
-void IMG::SetPixel(int x,int y,Color q){
-if(x >= 0 && x < w && y >= 0 && y < h)
-d[x+y*w] = q;
-}
-
-Color IMG::GetPixel(int x,int y){
-if(x >= 0 && x < w && y >= 0 && y < h)
-return d[x+y*w];
-else
-return Color(0,0,0,0);
-}
-
-Color * IMG::GetPPointer(int x,int y){
-if(x >= 0 && x < w && y >= 0 && y < h)
-return &d[x+y*w];
-else
-return 0;
-}
-
-IMG::IMG(){
-w = 16;h = 16;
-d = new Color[w*h];
-}
-
-IMG::IMG(int width,int height){
-w = width; h = height;
-d = new Color[w*h];
-}
-
-IMG::~IMG(){
-delete [] d;
-
-}
-
-render::render(){
-Q = new IMG(16,16);
-}
-
-render::~render(){
-delete Q;
-//MessageBoxW(NULL,L"Done", L" ", MB_OK);
-
-}
-
-render::render(int bb){
-	if(bb == 69){
-	Q = new IMG(16,144);
-
-	}else if(bb == 70){
-	Q = new IMG(33,160);
-
-	}else{
-	Q = new IMG(16,16);
-	}
-
-x = 0;y= 0;
-
-}
-
 
 Level::~Level(){
 
 }
 
-Color Blend(Color A,Color B,int h){
-Color C;
-float Aa = (float)A.a/255;
-float Ba = (float)B.a/255;
-float Alpha = Aa + Ba*(1-Aa);
-C.r = (A.r*Aa + (B.r*((float)h/128))*Ba*(1-Aa))/Alpha;
-C.g = (A.g*Aa + (B.g*((float)h/128))*Ba*(1-Aa))/Alpha;
-C.b = (A.b*Aa + (B.b*((float)h/128))*Ba*(1-Aa))/Alpha;
-C.a = Alpha*255;
-return C;
+Color Blend(Color A,Color B,int h) {
+	Color C;
+	float Aa = (float)A.a/255;
+	float Ba = (float)B.a/255;
+	float Alpha = Aa + Ba*(1-Aa);
+	C.r = (A.r*Aa + (B.r*((float)h/128))*Ba*(1-Aa))/Alpha;
+	C.g = (A.g*Aa + (B.g*((float)h/128))*Ba*(1-Aa))/Alpha;
+	C.b = (A.b*Aa + (B.b*((float)h/128))*Ba*(1-Aa))/Alpha;
+	C.a = Alpha*255;
+	return C;
 }
 
 
@@ -240,7 +156,7 @@ int Level::GetHeight(int x,int y){
 
 
 
-const render * Level::LoadLevelFromFile(const char * name, const int slide, const bool CWATER,const int cut){
+const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const int slide, const bool CWATER,const int cut){
 
 	render * R;
 	R = new render(slide);
@@ -505,7 +421,7 @@ const render * Level::LoadLevelFromFile(const char * name, const int slide, cons
 
 				if(Rotate){
 				
-				if(!flip){
+				if(!s->flip){
 				yo =  yr;
 				xo =  15-xr;
 				ff = -1;

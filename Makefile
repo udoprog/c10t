@@ -1,18 +1,19 @@
 CC=g++
-CFLAGS=-g -Wall
-LFLAGS=-lcorona
+CFLAGS=-g -Wall -I./corona/usr/include/
+LDFLAGS=-lpng
 
 SOURCES=src/main.cpp
 SOURCES+=src/Level.cpp
+SOURCES+=src/IMG.cpp
 OBJS=$(SOURCES:.cpp=.o)
 
-.SUFFIXES: .c .o
+.SUFFIXES: .cpp .o
 
-cart5: $(OBJS)
-	$(CC) $(LFLAGS) $(OBJS) -o cart5
+cart5: $(OBJS) 
+	$(CC) $(OBJS) -o cart5 $(LDFLAGS)
 
-.c.o:
-	$(CC) -c $(CFLAGS) $< -o $@
+.cpp.o:
+	$(CC) $(CFLAGS) -c $< -o $@
 	
 clean:
 	$(RM) $(OBJS)

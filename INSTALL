@@ -1,3 +1,26 @@
+ORIGINAL INSTALLATION INSTRUCTIONS
 You must have corona 1.0.2 lib - http://corona.sourceforge.net/
 solution to install corona : http://www.spheredev.org/smforums/index.php?topic=3152.0;wap2
 To install Cartograph type 'make' . Enjoy
+
+ADDITIONAL
+I've bundled corona with cartography to make it easier to compile everything, the Makefile will attempt to statically link corona
+
+There is also a patch under corona which fixes a couple of includes which messes with the g++ compiler.
+
+First step (build corona):
+
+#> cd corona
+#> make
+#> cd ..
+
+This will build corona with the prefix corona/usr to get a nice directory for the libraries and such.
+
+Second step (build cartographer in the root directory)
+#> make
+
+If something goes wrong, please remember: this is a dirty hack.
+
+Enjoy!
+
+-- udoprog

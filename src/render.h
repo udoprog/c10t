@@ -3,29 +3,29 @@
 
 #include "global.h"
 
-#include "IMG.h"
+#include "Image.h"
 
 struct render{
-  render() : Q(new IMG(16,16)) {}
+  render() : Q(new Image(16,16)) {}
 
   render(int bb){
-  	if(bb == 69) {
-  		Q = new IMG(16,144);
-  	} else if(bb == 70) {
-  		Q = new IMG(33,160);
-  	} else{
-  		Q = new IMG(16,16);
-  	}
+    if(bb == 69) {
+      Q = new Image(16,144);
+    } else if(bb == 70) {
+      Q = new Image(33,160);
+    } else{
+      Q = new Image(16,16);
+    }
 
-  	x = 0;
-  	y= 0;
+    x = 0;
+    y= 0;
   }
 
   int x;
   int y;
-  IMG *Q;
+  Image *Q;
   ~render(){
-  	delete Q;
+    delete Q;
   }
   bool isgood;
   

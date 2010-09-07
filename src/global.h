@@ -2,13 +2,13 @@
 #define GUARD_H
 
 typedef struct _settings {
-	int flip;
-	int Rotate;
-	int daynight;
-	int cave;
-	int exclude;
-	int slide;
-	int water;
+  int flip;
+  int Rotate;
+  int daynight;
+  int cave;
+  int exclude;
+  int slide;
+  int water;
 } settings_t;
 
 extern int Rotate;

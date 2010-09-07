@@ -12,7 +12,7 @@
 
 #include "Color.h"
 #include "render.h"
-#include "IMG.h"
+#include "Image.h"
 
 extern int flip;
 extern int Rotate;
@@ -26,55 +26,55 @@ Color Blend(Color A,Color B,int h);
 unsigned long file_size(char *filename);
 
 class Level{
-	public:
-		Level();
-		~Level();
+  public:
+    Level();
+    ~Level();
 
-		void Save(char* name);
+    void Save(char* name);
 
-		//read
-		int Read(int x,int y,int z,unsigned char * &d,int ret);
-		int GetHeight(int x,int y);
+    //read
+    int Read(int x,int y,int z,unsigned char * &d,int ret);
+    int GetHeight(int x,int y);
 
-		//edit
-		void Edit(int x,int y,int z,int block,unsigned char * &d); //edit one block
+    //edit
+    void Edit(int x,int y,int z,int block,unsigned char * &d); //edit one block
 
-		//Color Blend(Color A,Color B,int h);
+    //Color Blend(Color A,Color B,int h);
 
-		//load data from chunk file
-		const render *LoadLevelFromFile(settings_t *s, const char *name, const int slice, const bool CWATER, const int cut);
+    //load data from chunk file
+    const render *LoadLevelFromFile(settings_t *s, const char *name, const int slice, const bool CWATER, const int cut);
 
-		void MakeNewWorld(const wchar_t  * folder);
-		void WriteBuffer(const char * file);
+    void MakeNewWorld(const wchar_t  * folder);
+    void WriteBuffer(const char * file);
 
-		bool IsBlock(int x,int y,int z);
+    bool IsBlock(int x,int y,int z);
 
-		const double getlight(int x,int y,int z,double sky,double block,bool CWATER,int slice);
+    const double getlight(int x,int y,int z,double sky,double block,bool CWATER,int slice);
 
-		Color GetColor(int blockid);
+    Color GetColor(int blockid);
 
-		void AddName(const char * name);
+    void AddName(const char * name);
 
-		void End();
+    void End();
 
-		std::string buffer;
+    std::string buffer;
 
-		int mapx;
-		int mapy;
-		int mapz;
+    int mapx;
+    int mapy;
+    int mapz;
 
-		int posx;
-		int posy;
+    int posx;
+    int posy;
 
-		unsigned int count[128];
+    unsigned int count[128];
 
-	private:
-		//char arrays for level data
-		unsigned char * blocklight;
-		unsigned char * skylight;
-		unsigned char * blocks;
+  private:
+    //char arrays for level data
+    unsigned char * blocklight;
+    unsigned char * skylight;
+    unsigned char * blocks;
 
-		Color BlockC[256];
+    Color BlockC[256];
 
-		unsigned char *databuffer;
+    unsigned char *databuffer;
 };

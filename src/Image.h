@@ -3,7 +3,7 @@
 
 #include "Color.h"
 
-class IMG {
+class Image {
   private:
     int w;
     int h;
@@ -11,17 +11,17 @@ class IMG {
   public:
     Color *d;
 
-    IMG(){
+    Image(){
       w = 16;h = 16;
       d = new Color[w*h];
     }
-
-    IMG(int width,int height){
+    
+    Image(int width, int height){
       w = width; h = height;
       d = new Color[w*h];
     }
 
-    ~IMG(){
+    ~Image(){
       delete [] d;
     }
 

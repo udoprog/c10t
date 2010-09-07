@@ -124,7 +124,7 @@ int write_image(settings_t *s, const char *filename, int width, int height, IMG 
    png_init_io(png_ptr, fp);
 
    png_set_IHDR(png_ptr, info_ptr, width, height,
-         8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
+         8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
          PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
    if (title != NULL) {
@@ -137,7 +137,7 @@ int write_image(settings_t *s, const char *filename, int width, int height, IMG 
 
    png_write_info(png_ptr, info_ptr);
 
-   row = (png_bytep) malloc(4 * width * sizeof(png_byte));
+   row = (png_bytep) malloc(3 * width * sizeof(png_byte));
 
    int x, y;
    for (y=0 ; y<height ; y++) {
@@ -146,7 +146,6 @@ int write_image(settings_t *s, const char *filename, int width, int height, IMG 
     	  row[0 + x*3] = c.r;
     	  row[1 + x*3] = c.g;
     	  row[2 + x*3] = c.b;
-    	  row[3 + x*3] = c.a;
       }
 
       png_write_row(png_ptr, row);

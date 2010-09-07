@@ -3,7 +3,9 @@
 #include "Level.h"
 
 Level::~Level(){
-
+  delete [] blocklight;
+  delete [] skylight;
+  delete [] blocks;
 }
 
 Color Blend(Color A,Color B,int h) {
@@ -18,117 +20,110 @@ Color Blend(Color A,Color B,int h) {
   return C;
 }
 
-
-
-Level::Level(){
-
-mapx = 16;
-mapy = 16;
-mapz = 128;
-
+Level::Level() {
+  mapx = 16;
+  mapy = 16;
+  mapz = 128;
+  mapsize = mapx * mapy * mapz;
   
-
+  blocklight = new unsigned char[mapsize];
+  skylight = new unsigned char[mapsize];
+  blocks = new unsigned char[mapsize];
+  
   for(int m = 0;m < 128;m++){
-  count[m] = 0;
+    count[m] = 0;
   }
-
-
   
   for(int b = 0;b < 255;b++){
     BlockC[b] = Color(0,0,0,0);
   }      
-        BlockC[0] = Color(255,255,255,0);
-        BlockC[1] = Color(120,120,120,255);
-        BlockC[2] = Color(117,176,73,255);
-        BlockC[3] = Color(134,96,67,255);
-        BlockC[4] = Color(115,115,115,255);
-        BlockC[48] = Color(115,115,115,255);
-        BlockC[5] = Color(157,128,79,255);
-        BlockC[6] = Color(120,120,120,0);
-        BlockC[7] = Color(84,84,84,255);
-        BlockC[8] = Color(38,92,255,51);
-        BlockC[9] = Color(38,92,255,51);
-        BlockC[10] = Color(255,90,0,255);
-        BlockC[11] = Color(255,90,0,255);
-        BlockC[12] = Color(218,210,158,255);
-        BlockC[13] = Color(136,126,126,255);
-        BlockC[14] = Color(143,140,125,255);
-        BlockC[15] = Color(136,130,127,255);
-        BlockC[16] = Color(115,115,115,255);
-        BlockC[17] = Color(102,81,51,255);
-        BlockC[18] = Color(60,192,41,100);
-        BlockC[20] = Color(255,255,255,64); //glass
-        //BlockC[21] = Color(222,50,50,255);
-        //BlockC[22] = Color(222,136,50,255);
-        //BlockC[23] = Color(222,222,50,255);
-        //BlockC[24] = Color(136,222,50,255);
-        //BlockC[25] = Color(50,222,50,255);
-        //BlockC[26] = Color(50,222,136,255);
-        //BlockC[27] = Color(50,222,222,255);
-        //BlockC[28] = Color(104,163,222,255);
-        //BlockC[29] = Color(120,120,222,255);
-        //BlockC[30] = Color(136,50,222,255);
-        //BlockC[31] = Color(174,74,222,255);
-        //BlockC[32] = Color(222,50,222,255);
-        //BlockC[33] = Color(222,50,136,255);
-        //BlockC[34] = Color(77,77,77,255);
-        BlockC[35] = Color(222,222,222,255); //Color(143,143,143,255); 
-        //BlockC[36] = Color(222,222,222,255);
-        BlockC[37] = Color(255,0,0,255);
-        BlockC[38] = Color(255,255,0,0);
-        BlockC[41] = Color(232,245,46,255);
-        BlockC[42] = Color(191,191,191,255);
-        BlockC[43] = Color(200,200,200,255);
-        BlockC[44] = Color(200,200,200,255);
-        BlockC[45] = Color(170,86,62,255);
-        BlockC[46] = Color(160,83,65,255);
-        BlockC[49] = Color(26,11,43,255);
-        BlockC[50] = Color(245,220,50,200);
-        BlockC[51] = Color(255,170,30,200);
-        //BlockC[52] = Color(245,220,50,255); unnecessary afaik
-        BlockC[53] = Color(157,128,79,255);
-        BlockC[54] = Color(125,91,38,255);
-        //BlockC[55] = Color(245,220,50,255); unnecessary afaik
-        BlockC[56] = Color(129,140,143,255);
-        BlockC[57] = Color(45,166,152,255);
-        BlockC[58] = Color(114,88,56,255);
-        BlockC[59] = Color(146,192,0,255);
-        BlockC[60] = Color(95,58,30,255);
-        BlockC[61] = Color(96,96,96,255);
-        BlockC[62] = Color(96,96,96,255);
-        BlockC[63] = Color(111,91,54,255);
-        BlockC[64] = Color(136,109,67,255);
-        BlockC[65] = Color(181,140,64,32);
-        BlockC[66] = Color(150,134,102,180);
-        BlockC[67] = Color(115,115,115,255);
-        BlockC[71] = Color(191,191,191,255);
-        BlockC[73] = Color(131,107,107,255);
-        BlockC[74] = Color(131,107,107,255);
-        BlockC[75] = Color(181,140,64,32);
-        BlockC[76] = Color(255,0,0,200);
-        BlockC[78] = Color(255,255,255,255);
-        BlockC[79] = Color(83,113,163,51);
-        BlockC[80] = Color(250,250,250,255);
-        BlockC[81] = Color(25,120,25,255);
-        BlockC[82] = Color(151,157,169,255);
-        BlockC[83] = Color(193,234,150,255);
-
-
-
-
+  
+  BlockC[0] = Color(255,255,255,0);
+  BlockC[1] = Color(120,120,120,255);
+  BlockC[2] = Color(117,176,73,255);
+  BlockC[3] = Color(134,96,67,255);
+  BlockC[4] = Color(115,115,115,255);
+  BlockC[48] = Color(115,115,115,255);
+  BlockC[5] = Color(157,128,79,255);
+  BlockC[6] = Color(120,120,120,0);
+  BlockC[7] = Color(84,84,84,255);
+  BlockC[8] = Color(38,92,255,51);
+  BlockC[9] = Color(38,92,255,51);
+  BlockC[10] = Color(255,90,0,255);
+  BlockC[11] = Color(255,90,0,255);
+  BlockC[12] = Color(218,210,158,255);
+  BlockC[13] = Color(136,126,126,255);
+  BlockC[14] = Color(143,140,125,255);
+  BlockC[15] = Color(136,130,127,255);
+  BlockC[16] = Color(115,115,115,255);
+  BlockC[17] = Color(102,81,51,255);
+  BlockC[18] = Color(60,192,41,100);
+  BlockC[20] = Color(255,255,255,64); //glass
+  //BlockC[21] = Color(222,50,50,255);
+  //BlockC[22] = Color(222,136,50,255);
+  //BlockC[23] = Color(222,222,50,255);
+  //BlockC[24] = Color(136,222,50,255);
+  //BlockC[25] = Color(50,222,50,255);
+  //BlockC[26] = Color(50,222,136,255);
+  //BlockC[27] = Color(50,222,222,255);
+  //BlockC[28] = Color(104,163,222,255);
+  //BlockC[29] = Color(120,120,222,255);
+  //BlockC[30] = Color(136,50,222,255);
+  //BlockC[31] = Color(174,74,222,255);
+  //BlockC[32] = Color(222,50,222,255);
+  //BlockC[33] = Color(222,50,136,255);
+  //BlockC[34] = Color(77,77,77,255);
+  BlockC[35] = Color(222,222,222,255); //Color(143,143,143,255); 
+  //BlockC[36] = Color(222,222,222,255);
+  BlockC[37] = Color(255,0,0,255);
+  BlockC[38] = Color(255,255,0,0);
+  BlockC[41] = Color(232,245,46,255);
+  BlockC[42] = Color(191,191,191,255);
+  BlockC[43] = Color(200,200,200,255);
+  BlockC[44] = Color(200,200,200,255);
+  BlockC[45] = Color(170,86,62,255);
+  BlockC[46] = Color(160,83,65,255);
+  BlockC[49] = Color(26,11,43,255);
+  BlockC[50] = Color(245,220,50,200);
+  BlockC[51] = Color(255,170,30,200);
+  //BlockC[52] = Color(245,220,50,255); unnecessary afaik
+  BlockC[53] = Color(157,128,79,255);
+  BlockC[54] = Color(125,91,38,255);
+  //BlockC[55] = Color(245,220,50,255); unnecessary afaik
+  BlockC[56] = Color(129,140,143,255);
+  BlockC[57] = Color(45,166,152,255);
+  BlockC[58] = Color(114,88,56,255);
+  BlockC[59] = Color(146,192,0,255);
+  BlockC[60] = Color(95,58,30,255);
+  BlockC[61] = Color(96,96,96,255);
+  BlockC[62] = Color(96,96,96,255);
+  BlockC[63] = Color(111,91,54,255);
+  BlockC[64] = Color(136,109,67,255);
+  BlockC[65] = Color(181,140,64,32);
+  BlockC[66] = Color(150,134,102,180);
+  BlockC[67] = Color(115,115,115,255);
+  BlockC[71] = Color(191,191,191,255);
+  BlockC[73] = Color(131,107,107,255);
+  BlockC[74] = Color(131,107,107,255);
+  BlockC[75] = Color(181,140,64,32);
+  BlockC[76] = Color(255,0,0,200);
+  BlockC[78] = Color(255,255,255,255);
+  BlockC[79] = Color(83,113,163,51);
+  BlockC[80] = Color(250,250,250,255);
+  BlockC[81] = Color(25,120,25,255);
+  BlockC[82] = Color(151,157,169,255);
+  BlockC[83] = Color(193,234,150,255);
 }
 
-Color Level::GetColor(int blockid){
-return BlockC[blockid];
-
+Color Level::GetColor(int blockid) {
+  return BlockC[blockid];
 }
 
-void Level::Edit(int x,int y,int z,int block,unsigned char * &d){
+void Level::Edit(int x, int y, int z, int block, unsigned char * &d) {
   if ((x >= mapx) || (x < 0)) return;
   if ((y >= mapy) || (y < 0)) return;
   if ((z >= mapz) || (z < 0)) return;
   d[x*mapz + y*mapz*mapx + z] = block;
-
 }
 
 int Level::Read(int x,int y,int z,unsigned char * &d,int ret){
@@ -136,36 +131,52 @@ int Level::Read(int x,int y,int z,unsigned char * &d,int ret){
   if ((y >= mapy) || (y < 0)) return ret;
   if ((z >= mapz) || (z < 0)) return ret;
   return d[x*mapz + y*mapz*mapx + z];
-
 }
 
-int Level::GetHeight(int x,int y){
-    if ( x >= mapx ) return 0;
-    if ( y >= mapy ) return 0;
-    if ( x < 0 ) return 0;
-    if ( y < 0 ) return 0;
-    for (int z = mapz;z > 0;z--){
-      if ((Read(x,y,z,blocks,0) != 0)){
-        return z;
-      }
-
+int Level::GetHeight(int x, int y){
+  if ( x >= mapx ) return 0;
+  if ( y >= mapy ) return 0;
+  if ( x < 0 ) return 0;
+  if ( y < 0 ) return 0;
+  
+  for (int z = mapz; z > 0; z--){
+    if (Read(x, y, z, blocks, 0) != 0) {
+      return z;
     }
-  return 0;
+  }
 
+  return 0;
 }
 
+int read_int(uint8_t *buffer, unsigned int o) {
+    int32_t i = 0;
+    bool neg = false;
+    
+    if(buffer[o+1] == 0xff) {
+      neg = true;
+    }
+    
+    if(neg) {
+      i += -(255-(int)buffer[o+3])*256;
+      i += -(255-(int)buffer[o+4]);
+    } else {
+      i += (int)buffer[o+3]*256;
+      i += (int)buffer[o+4]+1;
+    }
+    
+    return i;
+}
 
-
-const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const int slide, const bool CWATER,const int cut){
-
+const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const int slide, const bool CWATER, const int cut){
   render *R;
   R = new render(slide);
   R->isgood = false;
   long length;
   
-  blocklight = new unsigned char[mapx*mapy*mapz];
-  skylight = new unsigned char[mapx*mapy*mapz];
-  blocks = new unsigned char[mapx*mapy*mapz];
+  /* memset instead of alloc */
+  memset(blocklight, 0, mapsize);
+  memset(skylight, 0, mapsize);
+  memset(blocks, 0, mapsize);
   
   gzFile filein = gzopen(name, "rb");
   
@@ -176,144 +187,91 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
   length = 131072;
   databuffer = new unsigned char[length];
   
-  int q = gzread(filein,databuffer,length);
-  
-  while(q == -1) {
-    q = gzread(filein, databuffer, length);
-  };
+  assert(gzread(filein, databuffer, length) != -1);
   
   gzclose(filein);
+
+  /**
+  0000000: 0a00 000a 0005 4c65 7665 6c07 0004 4461  ......Level...Da
+  0000010: 7461 0000 4000 0000 0000 0000 0000 0000  ta..@...........
+   */
   
-  if( databuffer[0] == 10 && 
-    databuffer[1] == 0 && 
-    databuffer[2] == 0 && 
-    databuffer[3] == 10 && 
-    databuffer[4] == 0 && 
-    databuffer[5] == 5 &&
-    databuffer[6] ==76 &&
-    databuffer[7] == 101 &&
-    databuffer[8] == 118 &&
-    databuffer[9] == 101 &&
-    databuffer[10] == 108){
-      R->isgood = true;
+  int8_t hdr[] = {
+    0x0a, 0x00, 0x00, 0x0a, 0x00, 0x05, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x07, 0x00, 0x04
+  };
+
+  int8_t xPos[] = {120, 80, 111, 115};
+  int8_t zPos[] = {122, 80, 111, 115};
+  int8_t Blocks[] = {0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x73};
+  // 0004030: 6174 6500 0000 0000 a74e 8203 0004 7850  ate......N....xP
+  // 0004040: 6f73 0000 0000 0300 047a 506f 7300 0000  os.......zPos...
+  
+  if(memcmp(databuffer, hdr, sizeof(hdr) / sizeof(int8_t)) == 0){
+    R->isgood = true;
   }else{
     return R;
   }
     
-    
-    int startlight = 0;
-    int bstartlight = 0;
-    int startterrain = 0;
-    
-    for(int z = 0;z < length;z++){
-      if(z > 10 && databuffer[z] == 115 && databuffer[z-1] == 111 && databuffer[z-2] == 80 && databuffer[z-3] == 120 ){  
-        
-        int32_t Int32 = 0;
-        bool neg = false;
-        
-        if(databuffer[z+1] == 255) {
-          neg = true;
-        }
+  int startlight = 0;
+  int bstartlight = 0;
+  int startterrain = 0;
 
-        if(neg){
-          Int32 += -(255-(int)databuffer[z+3])*256;
-          Int32 += -(255-(int)databuffer[z+4]);
-        }else{
-          Int32 += (int)databuffer[z+3]*256;
-          Int32 += (int)databuffer[z+4]+1;
-        }
-
-        R->x = Int32;
-      }
-
-      if(z > 10 && databuffer[z] == 115 && databuffer[z-1] == 111 && databuffer[z-2] == 80 && databuffer[z-3] == 122)
-      {
-        
-        
-        long int Int32 = 0;
-        bool neg = false;
-        if(databuffer[z+1] == 255)neg = true;
-        if(neg){
-        Int32 += -(255-(int)databuffer[z+3])*256;
-        Int32 += -(255-(int)databuffer[z+4]);
-        }else{
-        Int32 += (int)databuffer[z+3]*256;
-        Int32 += (int)databuffer[z+4]+1;
-        }
-        
-
-      
-        R->y = Int32;
-
-      }
-
-
-      
-      if(databuffer[z] == 115 && databuffer[z-1] == 107 && databuffer[z-2] == 99 && databuffer[z-3] == 111 && databuffer[z-4] == 108 && databuffer[z-5] == 66 && databuffer[z-6] == 6 && databuffer[z-7] == 0){
-      startterrain = z+5;
-
-      }
-      if(z > startterrain + 10 && startterrain != 0) break;
-
-      if(databuffer[z] == 116 && databuffer[z-1] == 104 && databuffer[z-2] == 103 && databuffer[z-3] == 105 && databuffer[z-4] == 76 && databuffer[z-5] == 121){
-      startlight = z+5;
-
-      }
-      if(databuffer[z] == 116 && databuffer[z-1] == 104 && databuffer[z-2] == 103 && databuffer[z-3] == 105 && databuffer[z-4] == 76 && databuffer[z-5] == 107){
-      bstartlight = z+5;
-
-      }
-
+  for(int z = 0;z < length;z++){
+    if (memcmp(&databuffer[z], xPos, sizeof(xPos) / sizeof(int8_t)) == 0) {  
+      R->x = read_int(databuffer, z+3);
     }
     
+    if(memcmp(&databuffer[z], zPos, sizeof(zPos) / sizeof(int8_t)) == 0) {  
+      R->y = read_int(databuffer, z+3);
+    }
     
-    /*for(int x = 0;x< 16;x++){
-    for(int y = 0;y< 16;y++){
-    for(int z = 0;z< 128;z++){
-    Edit(x,y,z,databuffer[startterrain + x*128 + y*128*16 + z],blocks);
-    //count[databuffer[startterrain + x*128 + y*128*16 + z]]++;
-    }}}*/
+    if(memcmp(&databuffer[z], Blocks, sizeof(Blocks) / sizeof(int8_t)) == 0) {
+      startterrain = z+5;
+    }
+    
+    if(startterrain != 0 && z > startterrain + 10) {
+      break;
+    }
 
-    for(int pss = 0;pss < 32768;pss++){
+    if(databuffer[z] == 116 && databuffer[z-1] == 104 && databuffer[z-2] == 103 && databuffer[z-3] == 105 && databuffer[z-4] == 76 && databuffer[z-5] == 121) {
+      startlight = z+5;
+    }
 
+    if(databuffer[z] == 116 && databuffer[z-1] == 104 && databuffer[z-2] == 103 && databuffer[z-3] == 105 && databuffer[z-4] == 76 && databuffer[z-5] == 107) {
+      bstartlight = z+5;
+    }
+  }
+
+  assert(startterrain != 0);
+
+  for(int pss = 0;pss < 32768;pss++) {
     blocks[pss] = databuffer[startterrain + pss];
     count[databuffer[startterrain + pss]]++;
+  }
+
+  for(int x = 0;x< 16;x++){
+    for(int y = 0;y< 16;y++){
+      for(int z = 0;z< 128;z++){
+        int half = x*64 + y*64*16 + z*0.5; 
+        int ls, lb;
+        
+        if(z % 2 == 0) {
+          ls = (int)databuffer[startlight + half] % 16;
+          lb = (int)databuffer[bstartlight + half] % 16;
+        } else {
+          ls = (int)databuffer[startlight + half]/16;
+          lb = (int)databuffer[bstartlight + half]/16;
+        }
+        
+        Edit(x, y, z, ls, skylight);
+        Edit(x, y, z, lb, blocklight);
+      }
     }
+  }
 
-  
-    for(int x = 0;x< 16;x++){
-    for(int y = 0;y< 16;y++){
-    for(int z = 0;z< 128;z++){
+  Color waste;
     
-    int half = x*64 + y*64*16 + z*0.5; 
-    int l;
-    if(z % 2 == 0)
-    l = (int)databuffer[startlight + half] % 16;
-    else
-    l = (int)databuffer[startlight + half]/16;
-    Edit(x,y,z,l,skylight);
-    
-    }}}
-
-    Color waste;
-    
-    for(int x = 0;x< 16;x++){
-    for(int y = 0;y< 16;y++){
-    for(int z = 0;z< 128;z++){
-    
-    int half = x*64 + y*64*16 + z*0.5; 
-    int l;
-    if(z % 2 == 0)
-    l = (int)databuffer[bstartlight + half] % 16;
-    else
-    l = (int)databuffer[bstartlight + half]/16;
-    Edit(x,y,z,l,blocklight);
-    
-    }}}
-
-    
-    
-    if(slide < 69){
+  if(slide < 69) {
     for(int x = 0;x< 16;x++){
     for(int y = 0;y< 16;y++){
 
@@ -408,7 +366,8 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
       *t = GetColor(rr);
       
       }
-    }}}else{
+    }}
+  } else {
       if(slide == 70){
   for(int z = 128;z > -1;z--){
       for(int xr = 0;xr < 16;xr++){
@@ -744,30 +703,30 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
         }}}}
     
   }
-  delete[]  skylight;
-  delete[]  blocks;  
-  delete[] blocklight;
+
   delete[] databuffer;
   return R;
 }
-
 
 bool Level::IsBlock(int x,int y,int z){
   int qq = Read(x,y,z,blocks,0);
   return (qq > 62 || qq == 10 || qq == 20 || qq == 0 || qq == 37 || qq == 38 || qq == 39 || qq == 40 || qq == 50 || qq == 18 || qq == 8 || qq == 9);
 }
 
-
-const double Level::getlight(int x,int y,int z,double sky,double block,bool CWATER,int slide){
-double b = (double)Read(x,y,z,skylight,15*sky)*sky;
-
-
-double s = (double)Read(x,y,z,blocklight,0)*block;
-if(!CWATER && slide == -1) s = 15*sky;
-if(s > b)
-return s+1;
-else
-return b+1;
+const double Level::getlight(int x, int y, int z, double sky, double block, bool CWATER, int slide){
+  double b = (double)Read(x,y,z,skylight,15*sky)*sky;
+  double s = (double)Read(x,y,z,blocklight,0)*block;
+  
+  if(!CWATER && slide == -1) {
+    s = 15*sky;
+  }
+  
+  if(s > b) {
+    return s+1;
+  }
+  else {
+    return b+1;
+  }
 }
 
 

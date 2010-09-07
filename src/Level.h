@@ -69,10 +69,11 @@ class Level{
     unsigned int count[128];
 
   private:
+    int mapsize;
     //char arrays for level data
-    unsigned char * blocklight;
-    unsigned char * skylight;
-    unsigned char * blocks;
+    unsigned char *blocklight;
+    unsigned char *skylight;
+    unsigned char *blocks;
 
     Color BlockC[256];
 

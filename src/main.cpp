@@ -267,7 +267,7 @@ void do_work(settings_t *s, string path, string out) {
   Level foo;
   
   cout << "Unpacking and drawing... " << flush;
-
+  
   for (vector<string>::iterator it = files.begin(); it != files.end(); it++) {
      const render *temp = foo.LoadLevelFromFile(s, it->c_str(), s->slide, s->water, cut);
      if(temp->isgood){
@@ -415,7 +415,7 @@ void do_work(settings_t *s, string path, string out) {
 
   if (save_txt(txtname, cc, foo) != 0) {
     cout << "failed!" << endl;
-    exit(1);
+      exit(1);
     }
 
     cout << "done!" << endl;

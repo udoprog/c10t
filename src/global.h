@@ -17,6 +17,7 @@ extern int cave;
 extern int exclude;
 extern int slide;
 extern int flip;
+extern int water;
 
 void f();
 

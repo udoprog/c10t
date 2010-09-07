@@ -76,5 +76,5 @@ class Level{
 
 		Color BlockC[256];
 
-		unsigned char * databuffer;
+		unsigned char *databuffer;
 };

@@ -1,14 +1,7 @@
-#include "resource.h"
-#include "global.h"
-#include "Level.h"
-#include "render.h"
-#include "IMG.h"
-
-#include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <dirent.h>
+#include <limits.h>
 
 #include <string>
 #include <vector>
@@ -17,12 +10,21 @@
 #include <iostream>
 #include <fstream>
 
+#include <png.h>
+
+#include "resource.h"
+#include "global.h"
+#include "Level.h"
+#include "render.h"
+#include "IMG.h"
+
 int Rotate;
 int daynight;
 int cave;
 int exclude;
 int slide;
 int flip;
+int water;
 
 using namespace std;
 
@@ -36,10 +38,8 @@ using namespace std;
 int CWorld = 0;
 
 int cut = 0;
-bool RENDER = false;
-bool water = true;
 
-bool ListFiles(string path, vector<string>& files,int &numfiles) {
+int list_files(string path, vector<string>& files, int &numfiles) {
 	stack<string> directories;
 	DIR *dir;
 	dirent *ent; 
@@ -49,7 +49,6 @@ bool ListFiles(string path, vector<string>& files,int &numfiles) {
 	directories.push(path);
 	files.clear();
 	
-	cout << "1) Generating tree of files... " << flush;
 	while ( !directories.empty() ) {
 		path = directories.top();
 		directories.pop();
@@ -57,32 +56,36 @@ bool ListFiles(string path, vector<string>& files,int &numfiles) {
 		dir = opendir( path.c_str() ); 
 	
         if (!dir) {
-		cout << "directory does not exist: " << path << endl;
-		return false;
-	}
+			return 1;
+		}
 	
-        while((ent = readdir(dir)) != NULL) 
-        { 
-		temp_str = ent->d_name;
-		
-		if ( temp_str != "." && temp_str != ".." ){
+		while((ent = readdir(dir)) != NULL)
+		{
+			temp_str = ent->d_name;
+
+			if (temp_str.compare(".") == 0) {
+				continue;
+			}
+
+			if (temp_str.compare("..") == 0) {
+				continue;
+			}
+
 			temp = path + "/" + temp_str;
-			//cout << temp << " ";
-			if (ent->d_type == DT_DIR ){
+
+			if (ent->d_type == DT_DIR) {
 				directories.push(temp);
 			}
-			if (ent->d_type == DT_REG ){
+			else if (ent->d_type == DT_REG) {
 				files.push_back(temp);
 				numfiles++;
 			}
-				
 		}
-        } 
+
         closedir(dir);
 	}
-	cout << "Done!" << endl;
 
-	return true;
+	return 0;
 };
 
 int write_image(settings_t *s, const char *filename, int width, int height, IMG *img, const char *title)
@@ -93,59 +96,37 @@ int write_image(settings_t *s, const char *filename, int width, int height, IMG 
    png_infop info_ptr;
    png_bytep row;
 
-   //Now we open the file that the image will be written to. There's also a check to make sure the file opened was successful.
-
-   // Open file for writing (binary mode)
    fp = fopen(filename, "wb");
+
    if (fp == NULL) {
-      fprintf(stderr, "Could not open file %s for writing\n", filename);
       code = 1;
       goto finalise;
    }
 
-   //Two libPNG structures are allocated and initialised.
-
-   // * The write structure contains information about how the PNG file will be written (or read).
-   // * The info structure contains information about the PNG image that will be written into the actual file. This allow programmes to find out characteristics of the image.
-
-   // Initialize write structure
    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
    if (png_ptr == NULL) {
-      fprintf(stderr, "Could not allocate write struct\n");
       code = 1;
       goto finalise;
    }
 
-   // Initialize info structure
    info_ptr = png_create_info_struct(png_ptr);
 
    if (info_ptr == NULL) {
-      fprintf(stderr, "Could not allocate info struct\n");
       code = 1;
       goto finalise;
    }
 
-   // This is a form of exception handling for C. Basically, after this little block of code, if any libPNG function fails, execution will jump back to the setjmp function with a non-zero value. The if statement is then entered.
-   // Within this example code, the jump point is only set once at this point. Therefore, if an 'exception' occurs, it is not possible to determine from which libPNG function it was thrown. However, it is possible to repeat this block before each libPNG function call, defining a new point to jump back to with an appropriate response.
-   // Setup Exception handling
    if (setjmp(png_jmpbuf(png_ptr))) {
-      fprintf(stderr, "Error during png creation\n");
       code = 1;
       goto finalise;
    }
-
-   //Various meta data for the image is now set, such as the size and the colour depth per channel.
-
-   // A further piece of meta information is also set, an image title. There are various other bits of standard text that can be set, such as an author.
 
    png_init_io(png_ptr, fp);
 
-   // Write header (8 bit colour depth)
    png_set_IHDR(png_ptr, info_ptr, width, height,
-         8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+         8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
          PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-   // Set title
    if (title != NULL) {
       png_text title_text;
       title_text.compression = PNG_TEXT_COMPRESSION_NONE;
@@ -156,12 +137,8 @@ int write_image(settings_t *s, const char *filename, int width, int height, IMG 
 
    png_write_info(png_ptr, info_ptr);
 
-   //Now the image data is written one row at a time. A single row buffer is created which is of the correct format. For each row, the floating-point image data is converted and written into the row buffer.
+   row = (png_bytep) malloc(4 * width * sizeof(png_byte));
 
-   // Allocate memory for one row (3 bytes per pixel - RGB)
-   row = (png_bytep) malloc(3 * width * sizeof(png_byte));
-
-   // Write image data
    int x, y;
    for (y=0 ; y<height ; y++) {
       for (x=0 ; x<width ; x++) {
@@ -169,20 +146,30 @@ int write_image(settings_t *s, const char *filename, int width, int height, IMG 
     	  row[0 + x*3] = c.r;
     	  row[1 + x*3] = c.g;
     	  row[2 + x*3] = c.b;
+    	  row[3 + x*3] = c.a;
       }
 
       png_write_row(png_ptr, row);
    }
 
-   // End write
    png_write_end(png_ptr, NULL);
 
-   //The last stage is just some cleaning up. This point is jumped to if there has been an error.
 finalise:
-   if (fp != NULL) fclose(fp);
-   if (info_ptr != NULL) png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-   if (png_ptr != NULL) png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-   if (row != NULL) free(row);
+   if (fp != NULL) {
+	   fclose(fp);
+   }
+
+   if (info_ptr != NULL) {
+	   png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+   }
+
+   if (png_ptr != NULL) {
+	   png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+   }
+
+   if (row != NULL) {
+	   free(row);
+   }
 
    return code;
 }
@@ -270,52 +257,55 @@ void do_work(settings_t *s, string path, string out) {
 	int counter = 0;
 	int cc = 0;
 	
-	if (!ListFiles(path, files,counter)) {
+	cout << "Listing world directory... " << flush;
+
+	if (list_files(path, files,counter) != 0) {
+		cout << "failed!" << endl;
 		exit(1);
 	}
+	cout << "done!" << endl;
 	
 	Level foo;
 	
-	cout << "2) Unpacking and drawing... " << flush;
-        for (vector<string>::iterator it = files.begin(); it != files.end(); it++) {
-			 
-			 const render * temp = foo.LoadLevelFromFile(s, it->c_str(), s->slide, s->water, cut);
-			 if(temp->isgood){
-				cc++;
-				renderblocks.push_back(*temp);
-			 }
-			//}
+	cout << "Unpacking and drawing... " << flush;
 
-        }
-	cout << "Done!" << endl;
-	//}
-		//int lool2 = renderblocks.size();
-	
-	int minx = 100000000;
-	int miny = 100000000;
-	int maxx = -100000000;
-	int maxy = -100000000;
-	for (list<render>::iterator pit=renderblocks.begin();pit!=renderblocks.end();pit++){
-		//std::cout << "  " << it->x << " " << it->y;
-		if(abs(pit->x) < 65536 && abs(pit->y) < 65536){
-			
-			if(pit->x < minx)
-			minx = pit->x;
-		if(pit->y < miny)
-			miny = pit->y;
-		
-		if(pit->x > maxx)
-			maxx = pit->x;
-		if(pit->y > maxy)
-			maxy = pit->y;
-		
-		}
-
+	for (vector<string>::iterator it = files.begin(); it != files.end(); it++) {
+		 const render *temp = foo.LoadLevelFromFile(s, it->c_str(), s->slide, s->water, cut);
+		 if(temp->isgood){
+			cc++;
+			renderblocks.push_back(*temp);
+		 }
 	}
-	//std::cout << "\n\nMAXIMUM X = " << maxx << " MAXIMUM Y = " << maxy;
-	//std::cout << "\n\nMINIMUM X = " << minx << " MINIMUM Y = " << miny;
-	int imageheight,imagewidth;
+
+	cout << "done!" << endl;
 	
+	int minx = INT_MAX;
+	int miny = INT_MAX;
+	int maxx = INT_MIN;
+	int maxy = INT_MIN;
+
+	for (list<render>::iterator block=renderblocks.begin(); block!=renderblocks.end(); block++){
+		if(abs(block->x) < 65536 && abs(block->y) < 65536) {
+			if(block->x < minx) {
+				minx = block->x;
+			}
+			
+			if(block->y < miny) {
+				miny = block->y;
+			}
+		
+			if(block->x > maxx) {
+				maxx = block->x;
+			}
+
+			if(block->y > maxy) {
+				maxy = block->y;
+			}
+		}
+	}
+	
+	int imageheight, imagewidth;
+
 	IMG *image;
 
 	if(slide == 70) {
@@ -352,20 +342,21 @@ void do_work(settings_t *s, string path, string out) {
 		int yy = (yb-miny)*16;
 
 		if(s->slide == 70){
-			if(s->flip == 1)
+			if(s->flip == 1) {
 				yy = abs((yb-miny)-(maxy-miny))*16;
-			if(Rotate == 0)
+			}
+
+			if(Rotate == 0) {
 				xx = abs((xb-minx)-(maxx-minx))*16;
+			}
 
-
-	
 			int temx = xx;
 			int temy = yy;
 			xx = imageheight/2+(temx)-(temy);
 			yy = (temx)+(temy)+128;
 		}
 
-		if(slide == 69){
+		if(slide == 69) {
 			if(s->flip == 1){
 				if(s->Rotate == 0){
 					yy = abs((yb-miny)-(maxy-miny))*16;
@@ -409,23 +400,19 @@ void do_work(settings_t *s, string path, string out) {
 		}
 	}
 
-	cout << "3) Saving image " << pngname << "... " << flush;
-	//corona::Image *Output = corona::CreateImage(imageheight, imagewidth, corona::PF_R8G8B8A8,MAP->d);
-	//corona::SaveImage(pngname.c_str(), corona::FF_PNG,Output);
+	cout << "Saving image " << pngname << "... " << flush;
 	
 	if (write_image(s, pngname.c_str(), imagewidth, imageheight, image, "Title stuff") != 0) {
 		cout << "failed!" << endl;
 		exit(1);
 	}
 
-	cout << "done!";
+	cout << "done!" << endl;
 
 	delete image;
-
 	renderblocks.clear();
-	cout << "Done!" << endl;
 
-	cout << "4) Saving txt " << txtname << "... " << flush;
+	cout << "Saving txt " << txtname << "... " << flush;
 
 	if (save_txt(txtname, cc, foo) != 0) {
 		cout << "failed!" << endl;
@@ -436,7 +423,7 @@ void do_work(settings_t *s, string path, string out) {
 }
 
 void do_help() {
-	cout << "Usage: cart5 <world-directory> <output.png> [options]" << endl;
+	cout << "Usage: cart5 <world-directory> <output> [options]" << endl;
 	cout << "Valid options:" << endl
 		<< "W - water; C - cave mode" << endl
 		<< "R - rotate; F - flip  " << endl
@@ -497,12 +484,12 @@ int main(int argc, char *argv[]){
 		else if ( opt.compare("Or") == 0)
 			settings->slide = -5;
 		else if ( opt.compare("Ob") == 0)
-			//yeah funny
-			// i lolled
+			//--yeah funny
+			// -- i lolled aswell
 			settings->slide = 69;
 		else if ( opt.compare("Oa") == 0)
 			settings->slide = 70;
-		else if ( flag.find("E") != string::npos ) {
+		else if ( opt.compare("E") == 0) {
 			cout << "Write number to exclude [0-128]" << endl << ":" << flush;
 			cin >> exclude;
 		}

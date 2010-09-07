@@ -3,9 +3,6 @@
 #include "Level.h"
 
 Level::~Level(){
-  delete [] blocklight;
-  delete [] skylight;
-  delete [] blocks;
 }
 
 Color Blend(Color A,Color B,int h) {
@@ -25,10 +22,6 @@ Level::Level() {
   mapy = 16;
   mapz = 128;
   mapsize = mapx * mapy * mapz;
-  
-  blocklight = new unsigned char[mapsize];
-  skylight = new unsigned char[mapsize];
-  blocks = new unsigned char[mapsize];
   
   for(int m = 0;m < 128;m++){
     count[m] = 0;
@@ -119,21 +112,21 @@ Color Level::GetColor(int blockid) {
   return BlockC[blockid];
 }
 
-void Level::Edit(int x, int y, int z, int block, unsigned char * &d) {
+void Level::Edit(int x, int y, int z, int block, nbt::Byte* &d) { 
   if ((x >= mapx) || (x < 0)) return;
   if ((y >= mapy) || (y < 0)) return;
   if ((z >= mapz) || (z < 0)) return;
   d[x*mapz + y*mapz*mapx + z] = block;
 }
 
-int Level::Read(int x,int y,int z,unsigned char * &d,int ret){
+int Level::Read(int x, int y, int z, nbt::Byte *d, int ret){
   if ((x >= mapx) || (x < 0)) return ret;
   if ((y >= mapy) || (y < 0)) return ret;
   if ((z >= mapz) || (z < 0)) return ret;
   return d[x*mapz + y*mapz*mapx + z];
 }
 
-int Level::GetHeight(int x, int y){
+int Level::GetHeight(nbt::Byte *blocks, int x, int y){
   if ( x >= mapx ) return 0;
   if ( y >= mapy ) return 0;
   if ( x < 0 ) return 0;
@@ -148,107 +141,62 @@ int Level::GetHeight(int x, int y){
   return 0;
 }
 
-int read_int(uint8_t *buffer, unsigned int o) {
-    int32_t i = 0;
-    bool neg = false;
-    
-    if(buffer[o+1] == 0xff) {
-      neg = true;
-    }
-    
-    if(neg) {
-      i += -(255-(int)buffer[o+3])*256;
-      i += -(255-(int)buffer[o+4]);
-    } else {
-      i += (int)buffer[o+3]*256;
-      i += (int)buffer[o+4]+1;
-    }
-    
-    return i;
+nbt::Byte *blocks;
+nbt::Byte *skylight;
+nbt::Byte *heightmap;
+nbt::Byte *blocklight;
+nbt::Byte *data;
+nbt::Int data_length;
+nbt::Int xPos;
+nbt::Int zPos;
+
+void register_int(nbt::String name, nbt::Int i) {
+  if (name.compare("xPos") == 0) {
+    xPos = i;
+    return;
+  }
+  
+  if (name.compare("zPos") == 0) {
+    zPos = i;
+    return;
+  }
+}
+
+void register_byte_array(nbt::String name, nbt::Int length, nbt::Byte *a) {
+  if (name.compare("Blocks") == 0) {
+    blocks = a;
+    return;
+  }
+
+  if (name.compare("SkyLight") == 0) {
+    skylight = a;
+    return;
+  }
+
+  if (name.compare("HeightMap") == 0) {
+    heightmap = a;
+    return;
+  }
+
+  if (name.compare("BlockLight") == 0) {
+    blocklight = a;
+    return;
+  }
 }
 
 const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const int slide, const bool CWATER, const int cut){
   render *R;
   R = new render(slide);
   R->isgood = false;
-  long length;
   
-  /* memset instead of alloc */
-  memset(blocklight, 0, mapsize);
-  memset(skylight, 0, mapsize);
-  memset(blocks, 0, mapsize);
+  nbt::Parser parser;
+  parser.register_byte_array = register_byte_array;
+  parser.register_int = register_int;
+  parser.parse_file(name);
   
-  gzFile filein = gzopen(name, "rb");
+  R->x = xPos;
+  R->y = zPos;
   
-  while(!filein) {
-    filein = gzopen(name,"rb");
-  }
-  
-  length = 131072;
-  databuffer = new unsigned char[length];
-  
-  assert(gzread(filein, databuffer, length) != -1);
-  
-  gzclose(filein);
-
-  /**
-  0000000: 0a00 000a 0005 4c65 7665 6c07 0004 4461  ......Level...Da
-  0000010: 7461 0000 4000 0000 0000 0000 0000 0000  ta..@...........
-   */
-  
-  int8_t hdr[] = {
-    0x0a, 0x00, 0x00, 0x0a, 0x00, 0x05, 0x4c, 0x65, 0x76, 0x65, 0x6c, 0x07, 0x00, 0x04
-  };
-
-  int8_t xPos[] = {120, 80, 111, 115};
-  int8_t zPos[] = {122, 80, 111, 115};
-  int8_t Blocks[] = {0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x73};
-  // 0004030: 6174 6500 0000 0000 a74e 8203 0004 7850  ate......N....xP
-  // 0004040: 6f73 0000 0000 0300 047a 506f 7300 0000  os.......zPos...
-  
-  if(memcmp(databuffer, hdr, sizeof(hdr) / sizeof(int8_t)) == 0){
-    R->isgood = true;
-  }else{
-    return R;
-  }
-    
-  int startlight = 0;
-  int bstartlight = 0;
-  int startterrain = 0;
-
-  for(int z = 0;z < length;z++){
-    if (memcmp(&databuffer[z], xPos, sizeof(xPos) / sizeof(int8_t)) == 0) {  
-      R->x = read_int(databuffer, z+3);
-    }
-    
-    if(memcmp(&databuffer[z], zPos, sizeof(zPos) / sizeof(int8_t)) == 0) {  
-      R->y = read_int(databuffer, z+3);
-    }
-    
-    if(memcmp(&databuffer[z], Blocks, sizeof(Blocks) / sizeof(int8_t)) == 0) {
-      startterrain = z+5;
-    }
-    
-    if(startterrain != 0 && z > startterrain + 10) {
-      break;
-    }
-
-    if(databuffer[z] == 116 && databuffer[z-1] == 104 && databuffer[z-2] == 103 && databuffer[z-3] == 105 && databuffer[z-4] == 76 && databuffer[z-5] == 121) {
-      startlight = z+5;
-    }
-
-    if(databuffer[z] == 116 && databuffer[z-1] == 104 && databuffer[z-2] == 103 && databuffer[z-3] == 105 && databuffer[z-4] == 76 && databuffer[z-5] == 107) {
-      bstartlight = z+5;
-    }
-  }
-
-  assert(startterrain != 0);
-
-  for(int pss = 0;pss < 32768;pss++) {
-    blocks[pss] = databuffer[startterrain + pss];
-    count[databuffer[startterrain + pss]]++;
-  }
-
   for(int x = 0;x< 16;x++){
     for(int y = 0;y< 16;y++){
       for(int z = 0;z< 128;z++){
@@ -256,11 +204,11 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
         int ls, lb;
         
         if(z % 2 == 0) {
-          ls = (int)databuffer[startlight + half] % 16;
-          lb = (int)databuffer[bstartlight + half] % 16;
+          ls = (int)skylight[half] % 16;
+          lb = (int)blocklight[half] % 16;
         } else {
-          ls = (int)databuffer[startlight + half]/16;
-          lb = (int)databuffer[bstartlight + half]/16;
+          ls = (int)skylight[half]/16;
+          lb = (int)blocklight[half]/16;
         }
         
         Edit(x, y, z, ls, skylight);
@@ -268,89 +216,117 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
       }
     }
   }
-
+  
   Color waste;
     
   if(slide < 69) {
-    for(int x = 0;x< 16;x++){
-    for(int y = 0;y< 16;y++){
+    for(int x = 0;x< 16;x++)
+    {
+      for(int y = 0;y< 16;y++)
+      {
 
-    int l;
-    
-      Color *t = &R->Q->d[y+x*16];
-      if(cave){ 
-      for(int z = 127;z >= 0;z--){
-      if(IsBlock(x,y,z) && Read(x,y,z,skylight,0) == 0){
-        Color v;
-      int zzz = 128-z;
-      v.r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
-      v.g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
-      v.b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
-      v.a = (Read(x,y,z,blocklight,0)+1)*10;
+        int l;
+        Color *t = &R->Q->d[y+x*16];
       
-      *t = Blend(*t,v,128);
-
-      }
-      }
-
-
-      }else if(slide == -1){
-      for(int z = 127;z >= 0;z--){
-        int rr = Read(x,y,z,blocks,0);
-        if((rr != 0 && (exclude == 0 || rr == exclude)) || (!CWATER && (rr != 8 && rr != 9))){
-        switch(daynight){
-        case(0):
-        l = getlight(x,y,z+1,1,1,CWATER,slide)*4;
-        break;
-        case(1):
-        l = getlight(x,y,z+1,0.5,1,CWATER,slide)*4;
-        break;
-        case(2):
-        l = getlight(x,y,z+1,0,1,CWATER,slide)*4;
-        break;
-        }
-        if(exclude != 0) l = 128;
-        int br = 0.8*l + 0.5*z;if(br > 128) br = 128;
-        
-        if(rr == 10 || rr == 11 || rr == 50 || rr == 51 || rr == 76){
-          *t = Blend(*t,GetColor(rr),128);
-        }else if((rr == 8 || rr == 9 || rr == 79) && CWATER){
-          Color P = GetColor(rr);
-          if(Read(x,y,z+1,blocks,0) == 0){
-          P.a = 128; *t = Blend(*t,P,br);
+        if(cave){ 
+          for(int z = 127;z >= 0;z--)
+          {
+            if(IsBlock(x,y,z) && Read(x,y,z,skylight,0) == 0)
+            {
+              Color v;
+              int zzz = 128-z;
+              v.r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
+              v.g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
+              v.b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
+              v.a = (Read(x,y,z,blocklight,0)+1)*10;
+      
+              *t = Blend(*t,v,128);
+            }
           }
-          }else{
-          *t = Blend(*t,GetColor(rr),br);
-          }}
-        //if(z == 0)
-          //t = BlockC[10];
-        if(t->a >= 255){z = -10;t->a = 255;}
-      }}else if(slide == -3){
-        for(int z = 127;z >= 0;z--){
-        int rr = Read(x,y,z,blocks,0);
-        if((rr != 0 && ((rr != 8 && rr != 9) || !CWATER) && (exclude == 0 || rr == exclude))){
-        
-        int zzz = 128-z;
-        t->r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
-        t->g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
-        t->b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
-        t->a = 255;
-        z = -10;
         }
+        else if(slide == -1)
+        {
+          for(int z = 127;z >= 0;z--)
+          {
+            int rr = Read(x,y,z,blocks,0);
+            if((rr != 0 && (exclude == 0 || rr == exclude)) || (!CWATER && (rr != 8 && rr != 9)))
+            {
+              switch(daynight){
+              case(0):
+                l = getlight(x,y,z+1,1,1,CWATER,slide)*4;
+                break;
+              case(1):
+                l = getlight(x,y,z+1,0.5,1,CWATER,slide)*4;
+                break;
+              case(2):
+                l = getlight(x,y,z+1,0,1,CWATER,slide)*4;
+                break;
+              }
+            
+              if(exclude != 0)
+              {
+                l = 128;
+              }
+              
+              int br = 0.8*l + 0.5*z;if(br > 128) br = 128;
+          
+              if(rr == 10 || rr == 11 || rr == 50 || rr == 51 || rr == 76)
+              {
+                *t = Blend(*t,GetColor(rr),128);
+              }
+              else if((rr == 8 || rr == 9 || rr == 79) && CWATER)
+              {
+                Color P = GetColor(rr);
+                
+                if(Read(x,y,z+1,blocks,0) == 0)
+                {
+                  P.a = 128; *t = Blend(*t,P,br);
+                }
+              } 
+              else
+              {
+                *t = Blend(*t,GetColor(rr),br);
+              }
+            }
+            
+            if(t->a >= 255)
+            {
+              z = -10;t->a = 255;
+            }
+          }
         }
-      }else if(slide == -4){
-        for(int z = 127;z >= 0;z--){
-        int rr = Read(x,y,z,blocks,0);
-        if((rr != 0 && ((rr != 8 && rr != 9) || !CWATER) && (exclude == 0 || rr == exclude))){
-
-        t->r = z*2;
-        t->g = z*2;
-        t->b = z*2;
-        t->a = 255;
-        z = -10;
+        else if(slide == -3) {
+          for(int z = 127;z >= 0;z--)
+          {
+            int rr = Read(x,y,z,blocks,0);
+            
+            if((rr != 0 && ((rr != 8 && rr != 9) || !CWATER) && (exclude == 0 || rr == exclude)))
+            {
+              int zzz = 128-z;
+              t->r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
+              t->g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
+              t->b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
+              t->a = 255;
+              z = -10;
+            }
+          }
         }
+        else if(slide == -4)
+        {
+          for(int z = 127;z >= 0;z--)
+          {
+            int rr = Read(x,y,z,blocks,0);
+            if((rr != 0 && ((rr != 8 && rr != 9) || !CWATER) && (exclude == 0 || rr == exclude)))
+            {
+              t->r = z*2;
+              t->g = z*2;
+              t->b = z*2;
+              t->a = 255;
+              z = -10;
+            }
         }
-      }else if(slide == -5){
+      }
+      else if(slide == -5){
         for(int z = 127;z >= 0;z--){
         int rr = Read(x,y,z,blocks,0);
 
@@ -728,7 +704,3 @@ const double Level::getlight(int x, int y, int z, double sky, double block, bool
     return b+1;
   }
 }
-
-
-
-

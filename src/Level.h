@@ -13,6 +13,7 @@
 #include "Color.h"
 #include "render.h"
 #include "Image.h"
+#include "nbt/nbt.h"
 
 extern int flip;
 extern int Rotate;
@@ -26,6 +27,13 @@ Color Blend(Color A,Color B,int h);
 unsigned long file_size(char *filename);
 
 class Level{
+  private:
+    int mapsize;
+
+    Color BlockC[256];
+
+    unsigned char *databuffer;
+  
   public:
     Level();
     ~Level();
@@ -33,14 +41,14 @@ class Level{
     void Save(char* name);
 
     //read
-    int Read(int x,int y,int z,unsigned char * &d,int ret);
-    int GetHeight(int x,int y);
+    int Read(int x, int y, int z, nbt::Byte *d, int ret);
+    int GetHeight(nbt::Byte *blocks, int x,int y);
 
     //edit
-    void Edit(int x,int y,int z,int block,unsigned char * &d); //edit one block
+    void Edit(int x,int y,int z,int block, nbt::Byte* &d); //edit one block
 
     //Color Blend(Color A,Color B,int h);
-
+    
     //load data from chunk file
     const render *LoadLevelFromFile(settings_t *s, const char *name, const int slice, const bool CWATER, const int cut);
 
@@ -67,15 +75,4 @@ class Level{
     int posy;
 
     unsigned int count[128];
-
-  private:
-    int mapsize;
-    //char arrays for level data
-    unsigned char *blocklight;
-    unsigned char *skylight;
-    unsigned char *blocks;
-
-    Color BlockC[256];
-
-    unsigned char *databuffer;
 };

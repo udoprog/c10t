@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-g -Wall
 LDFLAGS=-lpng
 
-OUT=cart5
+OUT=src/cart5
 
 SOURCES=src/main.cpp
 SOURCES+=src/Level.cpp

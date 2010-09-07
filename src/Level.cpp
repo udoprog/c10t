@@ -158,31 +158,32 @@ int Level::GetHeight(int x,int y){
 
 const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const int slide, const bool CWATER,const int cut){
 
-  render * R;
+  render *R;
   R = new render(slide);
   R->isgood = false;
   long length;
   
-
   blocklight = new unsigned char[mapx*mapy*mapz];
   skylight = new unsigned char[mapx*mapy*mapz];
   blocks = new unsigned char[mapx*mapy*mapz];
   
-  
-
   gzFile filein = gzopen(name, "rb");
-  while(!filein){filein = gzopen(name,"rb");}
-//  filein.seekg (0,std::ios::end);
+  
+  while(!filein) {
+    filein = gzopen(name,"rb");
+  }
+  
   length = 131072;
-//  filein.seekg (0,std::ios::beg);
-
   databuffer = new unsigned char[length];
-  //filein.seekg (0, std::ios::beg);
+  
   int q = gzread(filein,databuffer,length);
-  while(q == -1){q = gzread(filein,databuffer,length);
+  
+  while(q == -1) {
+    q = gzread(filein, databuffer, length);
   };
+  
   gzclose(filein);
-
+  
   if( databuffer[0] == 10 && 
     databuffer[1] == 0 && 
     databuffer[2] == 0 && 
@@ -196,37 +197,37 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
     databuffer[10] == 108){
       R->isgood = true;
   }else{
-  return R;
+    return R;
   }
     
     
     int startlight = 0;
     int bstartlight = 0;
     int startterrain = 0;
-    //std::cout << "\nprocessing " << length << " bytes\n";
     
     for(int z = 0;z < length;z++){
-
       if(z > 10 && databuffer[z] == 115 && databuffer[z-1] == 111 && databuffer[z-2] == 80 && databuffer[z-3] == 120 ){  
         
-        
-        long int Int32 = 0;
+        int32_t Int32 = 0;
         bool neg = false;
-        if(databuffer[z+1] == 255)neg = true;
-        //Int32 += (int)databuffer[z+3]*256;
-        if(neg){
-        Int32 += -(255-(int)databuffer[z+3])*256;
-        Int32 += -(255-(int)databuffer[z+4]);
-        }else{
-        Int32 += (int)databuffer[z+3]*256;
-        Int32 += (int)databuffer[z+4]+1;
+        
+        if(databuffer[z+1] == 255) {
+          neg = true;
         }
+
+        if(neg){
+          Int32 += -(255-(int)databuffer[z+3])*256;
+          Int32 += -(255-(int)databuffer[z+4]);
+        }else{
+          Int32 += (int)databuffer[z+3]*256;
+          Int32 += (int)databuffer[z+4]+1;
+        }
+
         R->x = Int32;
-
-
-
       }
-      if(z > 10 && databuffer[z] == 115 && databuffer[z-1] == 111 && databuffer[z-2] == 80 && databuffer[z-3] == 122){
+
+      if(z > 10 && databuffer[z] == 115 && databuffer[z-1] == 111 && databuffer[z-2] == 80 && databuffer[z-3] == 122)
+      {
         
         
         long int Int32 = 0;

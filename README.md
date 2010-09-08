@@ -1,3 +1,6 @@
+Cartography for Minecraft
+=========================
+
 * Cartograph by ZomBuster
 * Linux version by Firemark
 * Additional work by Udoprog <johnjohn.tedro@gmail.com>
@@ -10,9 +13,11 @@ This version is hosted at http://github.com/udoprog/cartography
 
 No features have been discarded, instead the code has been subtly refactored and improvements made where they dont effect functionality.
 
-Future work involves:
+Future work
+-----------
 
  * Making the cartographer more memory friendly by implementing incremental image rendering. Currently all renderblocks are kept in-memory prior to image generation, this can be improved upon.
+ * Fixing proper commandline options and a gui wrapper similar to the windows version
 
 Options
 -------

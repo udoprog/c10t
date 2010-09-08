@@ -61,7 +61,7 @@ public:
     }
     
     // work until you find any files
-    while (!directories.empty()) {
+    while (files.empty() && !directories.empty()) {
       string path = directories.front();
       directories.pop();
       

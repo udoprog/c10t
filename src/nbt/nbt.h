@@ -32,7 +32,7 @@ namespace nbt {
   const Byte TAG_String = 0x8;
   const Byte TAG_List = 0x9;
   const Byte TAG_Compound = 0xa;
-
+  
   const std::string TAG_End_str("TAG_End");
   const std::string TAG_Byte_str("TAG_Byte");
   const std::string TAG_Short_str("TAG_Short");
@@ -59,33 +59,33 @@ namespace nbt {
     TAG_Compound_str
   };
   
-  typedef void (*begin_compound_t)(String name);
-  typedef void (*end_compound_t)();
+  typedef void (*begin_compound_t)(void *context, String name);
+  typedef void (*end_compound_t)(void *context);
   
-  typedef void (*begin_list_t)(String name, Byte type, Int length);
-  typedef void (*end_list_t)();
+  typedef void (*begin_list_t)(void *context, String name, Byte type, Int length);
+  typedef void (*end_list_t)(void *context);
   
-  typedef void (*register_long_t)(String name, Long l);
-  typedef void (*register_short_t)(String name, Short l);
-  typedef void (*register_string_t)(String name, String l);
-  typedef void (*register_float_t)(String name, Float l);
-  typedef void (*register_double_t)(String name, Double l);
-  typedef void (*register_int_t)(String name, Int l);
-  typedef void (*register_byte_t)(String name, Byte b);
-  typedef void (*register_byte_array_t)(String name, Int length, Byte *b);
+  typedef void (*register_long_t)(void *context, String name, Long l);
+  typedef void (*register_short_t)(void *context, String name, Short l);
+  typedef void (*register_string_t)(void *context, String name, String l);
+  typedef void (*register_float_t)(void *context, String name, Float l);
+  typedef void (*register_double_t)(void *context, String name, Double l);
+  typedef void (*register_int_t)(void *context, String name, Int l);
+  typedef void (*register_byte_t)(void *context, String name, Byte b);
+  typedef void (*register_byte_array_t)(void *context, String name, Int length, Byte *b);
 
-  void default_begin_compound(nbt::String name);
-  void default_end_compound();
-  void default_register_long(nbt::String name, nbt::Long l);
-  void default_register_short(nbt::String name, nbt::Short s);
-  void default_register_string(nbt::String name, nbt::String s);
-  void default_register_float(nbt::String name, nbt::Float f);
-  void default_register_double(nbt::String name, nbt::Double f);
-  void default_register_int(nbt::String name, nbt::Int f);
-  void default_register_byte(nbt::String name, nbt::Byte f);
-  void default_register_byte_array(nbt::String name, nbt::Int length, nbt::Byte *a);
-  void default_begin_list(nbt::String name, nbt::Byte type, nbt::Int length);
-  void default_end_list();
+  void default_begin_compound(void *context, nbt::String name);
+  void default_end_compound(void *context);
+  void default_register_long(void *context, nbt::String name, nbt::Long l);
+  void default_register_short(void *context, nbt::String name, nbt::Short s);
+  void default_register_string(void *context, nbt::String name, nbt::String s);
+  void default_register_float(void *context, nbt::String name, nbt::Float f);
+  void default_register_double(void *context, nbt::String name, nbt::Double f);
+  void default_register_int(void *context, nbt::String name, nbt::Int f);
+  void default_register_byte(void *context, nbt::String name, nbt::Byte f);
+  void default_register_byte_array(void *context, nbt::String name, nbt::Int length, nbt::Byte *a);
+  void default_begin_list(void *context, nbt::String name, nbt::Byte type, nbt::Int length);
+  void default_end_list(void *context);
   
   bool is_big_endian();
   
@@ -237,7 +237,7 @@ namespace nbt {
   
   class Parser {
     private:
-      std::stack<Byte> context;
+      void *context;
     public:
       begin_compound_t begin_compound;
       register_long_t register_long;
@@ -254,7 +254,7 @@ namespace nbt {
       end_list_t end_list;
       
       Parser() :
-        context(),
+        context(NULL),
         begin_compound(default_begin_compound),
         register_long(default_register_long),
         register_short(default_register_short),
@@ -270,6 +270,24 @@ namespace nbt {
       {
       }
       
+      Parser(void *context) :
+        context(context),
+        begin_compound(default_begin_compound),
+        register_long(default_register_long),
+        register_short(default_register_short),
+        register_string(default_register_string),
+        register_float(default_register_float),
+        register_double(default_register_double),
+        register_int(default_register_int),
+        register_byte(default_register_byte),
+        register_byte_array(default_register_byte_array),
+        end_compound(default_end_compound),
+        begin_list(default_begin_list),
+        end_list(default_end_list)
+      {
+        this->context = context;
+      }
+      
       Byte read_tagType(gzFile file) {
         Byte type = ByteTag::read(file);
         assert(type >= 0 && type <= TAG_Compound);
@@ -280,25 +298,25 @@ namespace nbt {
         Byte type = ByteTag::read(file);
         Int length = IntTag::read(file);
         
-        begin_list(name, type, length);
+        begin_list(context, name, type, length);
         
         for (int i = 0; i < length; i++) {
           handle_type(type, name, file);
         }
 
-        end_list();
+        end_list(context);
       }
       
       void handle_byte_array(String name, gzFile file) {
         Int length = IntTag::read(file);
         Byte *a = new Byte[length];
         assert(gzread(file, a, length) == length);
-        register_byte_array(name, length, a);
+        register_byte_array(context, name, length, a);
         delete [] a;
       }
 
       void handle_compound(String name, gzFile file) {
-        begin_compound(name);
+        begin_compound(context, name);
         
         do {
           Byte type = read_tagType(file);
@@ -311,7 +329,7 @@ namespace nbt {
           handle_type(type, name, file);
         } while(1);
         
-        end_compound();
+        end_compound(context);
       }
       
       void handle_type(Byte type, String name, gzFile file);

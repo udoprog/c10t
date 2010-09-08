@@ -141,49 +141,45 @@ int Level::GetHeight(nbt::Byte *blocks, int x, int y){
   return 0;
 }
 
-nbt::Byte *blocks;
-nbt::Byte *skylight;
-nbt::Byte *heightmap;
-nbt::Byte *blocklight;
-nbt::Byte *data;
-nbt::Int data_length;
-nbt::Int xPos;
-nbt::Int zPos;
+struct nbtctx {
+  nbt::Byte *blocks;
+  nbt::Byte *skylight;
+  nbt::Byte *heightmap;
+  nbt::Byte *blocklight;
+  nbt::Int xPos;
+  nbt::Int zPos;
+};
 
-void register_int(nbt::String name, nbt::Int i) {
+void register_int(void *context, nbt::String name, nbt::Int i) {
   if (name.compare("xPos") == 0) {
-    xPos = i;
+    ((nbtctx *)context)->xPos = i;
     return;
   }
   
   if (name.compare("zPos") == 0) {
-    zPos = i;
+    ((nbtctx *)context)->zPos = i;
     return;
   }
 }
 
-void register_byte_array(nbt::String name, nbt::Int length, nbt::Byte *a) {
+void register_byte_array(void *context, nbt::String name, nbt::Int length, nbt::Byte *a) {
   if (name.compare("Blocks") == 0) {
-    blocks = new nbt::Byte[length * 2];
-    memcpy(blocks, a, length);
+    memcpy(((nbtctx *)context)->blocks, a, length);
     return;
   }
 
   if (name.compare("SkyLight") == 0) {
-    skylight = new nbt::Byte[length * 2];
-    memcpy(skylight, a, length);
+    memcpy(((nbtctx *)context)->skylight, a, length);
     return;
   }
 
   if (name.compare("HeightMap") == 0) {
-    heightmap = new nbt::Byte[length * 2];
-    memcpy(heightmap, a, length);
+    memcpy(((nbtctx *)context)->heightmap, a, length);
     return;
   }
 
   if (name.compare("BlockLight") == 0) {
-    blocklight = new nbt::Byte[length * 2];
-    memcpy(blocklight, a, length);
+    memcpy(((nbtctx *)context)->blocklight, a, length);
     return;
   }
 }
@@ -192,18 +188,24 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
   render *R;
   R = new render(slide);
   R->isgood = true;
+
+  nbtctx context;
+  context.blocks = new nbt::Byte[mapsize];
+  context.skylight = new nbt::Byte[mapsize];
+  context.heightmap = new nbt::Byte[mapsize];
+  context.blocklight = new nbt::Byte[mapsize];
+  context.xPos = 0;
+  context.zPos = 0;
   
-  blocks = NULL;
-  skylight = NULL;
-  heightmap = NULL;
-  blocklight = NULL;
-  xPos = 0;
-  zPos = 0;
-  
-  nbt::Parser parser;
+  nbt::Parser parser(&context);
   parser.register_byte_array = register_byte_array;
   parser.register_int = register_int;
   parser.parse_file(name);
+  
+  nbt::Byte *blocks = context.blocks;
+  nbt::Byte *skylight = context.skylight;
+  nbt::Byte *heightmap = context.heightmap;
+  nbt::Byte *blocklight = context.blocklight;
   
   if (
     blocks == NULL ||
@@ -214,8 +216,8 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
     return R;
   }
   
-  R->x = xPos;
-  R->y = zPos;
+  R->x = context.xPos;
+  R->y = context.zPos;
   
   for(int x = 0; x < 16; x++){
     for(int y = 0; y < 16; y++){
@@ -253,7 +255,7 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
         { 
           for(int z = 127;z >= 0;z--)
           {
-            if(IsBlock(x,y,z) && Read(x,y,z,skylight,0) == 0)
+            if(IsBlock(blocks, x,y,z) && Read(x,y,z,skylight,0) == 0)
             {
               Color v;
               int zzz = 128-z;
@@ -275,13 +277,13 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
             {
               switch(daynight){
               case(0):
-                l = getlight(x,y,z+1,1,1,CWATER,slide)*4;
+                l = getlight(skylight, blocklight, x,y,z+1,1,1,CWATER,slide)*4;
                 break;
               case(1):
-                l = getlight(x,y,z+1,0.5,1,CWATER,slide)*4;
+                l = getlight(skylight, blocklight, x,y,z+1,0.5,1,CWATER,slide)*4;
                 break;
               case(2):
-                l = getlight(x,y,z+1,0,1,CWATER,slide)*4;
+                l = getlight(skylight, blocklight, x,y,z+1,0,1,CWATER,slide)*4;
                 break;
               }
             
@@ -426,9 +428,9 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
         
             int rr = Read(xo,yo,z,blocks,0);
             bool f,t,r;
-            f = IsBlock(xo-ff,yo,z);
-            t = IsBlock(xo,yo,z+1);
-            r = IsBlock(xo,yo-ff2,z);
+            f = IsBlock(blocks, xo-ff,yo,z);
+            t = IsBlock(blocks, xo,yo,z+1);
+            r = IsBlock(blocks, xo,yo-ff2,z);
 
             
 
@@ -454,22 +456,22 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
             if(exclude == 0 && !cave){
               switch(daynight) {
               case(0):
-                here = getlight(xo,yo,z,1,1,CWATER,slide)*4;
-                top = getlight(xo,yo,z+1,1,1,CWATER,slide)*4;
-                left = getlight(xo-ff,yo,z,1,1,CWATER,slide)*4;
-                right = getlight(xo,yo-ff2,z,1,1,CWATER,slide)*4;
+                here = getlight(skylight, blocklight, xo,yo,z,1,1,CWATER,slide)*4;
+                top = getlight(skylight, blocklight, xo,yo,z+1,1,1,CWATER,slide)*4;
+                left = getlight(skylight, blocklight, xo-ff,yo,z,1,1,CWATER,slide)*4;
+                right = getlight(skylight, blocklight, xo,yo-ff2,z,1,1,CWATER,slide)*4;
                 break;
               case(1):
-                here = getlight(xo,yo,z,0.5,1,CWATER,slide)*4;
-                top = getlight(xo,yo,z+1,0.5,1,CWATER,slide)*4;
-                left = getlight(xo-ff,yo,z,0.5,1,CWATER,slide)*4;
-                right = getlight(xo,yo-ff2,z,0.5,1,CWATER,slide)*4;
+                here = getlight(skylight, blocklight, xo,yo,z,0.5,1,CWATER,slide)*4;
+                top = getlight(skylight, blocklight, xo,yo,z+1,0.5,1,CWATER,slide)*4;
+                left = getlight(skylight, blocklight, xo-ff,yo,z,0.5,1,CWATER,slide)*4;
+                right = getlight(skylight, blocklight, xo,yo-ff2,z,0.5,1,CWATER,slide)*4;
                 break;
               case(2):
-                here = getlight(xo,yo,z,0,1,CWATER,slide)*4;
-                top = getlight(xo,yo,z+1,0,1,CWATER,slide)*4;
-                left = getlight(xo-ff,yo,z,0,1,CWATER,slide)*4;
-                right = getlight(xo,yo-ff2,z,0,1,CWATER,slide)*4;
+                here = getlight(skylight, blocklight, xo,yo,z,0,1,CWATER,slide)*4;
+                top = getlight(skylight, blocklight, xo,yo,z+1,0,1,CWATER,slide)*4;
+                left = getlight(skylight, blocklight, xo-ff,yo,z,0,1,CWATER,slide)*4;
+                right = getlight(skylight, blocklight, xo,yo-ff2,z,0,1,CWATER,slide)*4;
                 break;
               }
             }
@@ -489,7 +491,7 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
               
               if(blight > 0) blight++;
             
-              if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(xo,yo,z))
+              if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(blocks, xo,yo,z))
                 blight = 1;
 
               if(Read(xo,yo,z,skylight,15) != 0 || rr == 8 || rr == 9 || rr == 79)
@@ -625,22 +627,22 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
             int rr = Read(xo,yo,z,blocks,0);
             bool f,t;
             
-            t = IsBlock(xo,yo,z+1);
+            t = IsBlock(blocks, xo,yo,z+1);
             
             if(Rotate == 1)
             {
               if(flip == 1){
-                f = IsBlock(xo,yo-1,z);
+                f = IsBlock(blocks, xo,yo-1,z);
               } else {
-                f = IsBlock(xo,yo+1,z);
+                f = IsBlock(blocks, xo,yo+1,z);
               }
             }
             else
             {
               if(flip == 1){
-                f = IsBlock(xo-1,yo,z);
+                f = IsBlock(blocks, xo-1,yo,z);
               } else {
-                f = IsBlock(xo+1,yo,z);
+                f = IsBlock(blocks, xo+1,yo,z);
               }
             }
 
@@ -658,19 +660,19 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
             if(exclude == 0 && !cave){
               switch(daynight){
               case(0):
-                here = getlight(xo,yo,z,1,1,CWATER,slide)*4;
-                top = getlight(xo,yo,z+1,1,1,CWATER,slide)*4;
-                front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,1,1,CWATER,slide)*4;
+                here = getlight(skylight, blocklight, xo,yo,z,1,1,CWATER,slide)*4;
+                top = getlight(skylight, blocklight, xo,yo,z+1,1,1,CWATER,slide)*4;
+                front = getlight(skylight, blocklight, xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,1,1,CWATER,slide)*4;
                 break;
               case(1):
-                here = getlight(xo,yo,z,0.5,1,CWATER,slide)*4;
-                top = getlight(xo,yo,z+1,0.5,1,CWATER,slide)*4;
-                front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0.5,1,CWATER,slide)*4;
+                here = getlight(skylight, blocklight, xo,yo,z,0.5,1,CWATER,slide)*4;
+                top = getlight(skylight, blocklight, xo,yo,z+1,0.5,1,CWATER,slide)*4;
+                front = getlight(skylight, blocklight, xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0.5,1,CWATER,slide)*4;
                 break;
               case(2):
-                here = getlight(xo,yo,z,0,1,CWATER,slide)*4;
-                top = getlight(xo,yo,z+1,0,1,CWATER,slide)*4;
-                front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0,1,CWATER,slide)*4;
+                here = getlight(skylight, blocklight, xo,yo,z,0,1,CWATER,slide)*4;
+                top = getlight(skylight, blocklight, xo,yo,z+1,0,1,CWATER,slide)*4;
+                front = getlight(skylight, blocklight, xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0,1,CWATER,slide)*4;
                 break;
               }
             }
@@ -689,7 +691,7 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
               int blight = Read(xo,yo,z,blocklight,0);
               if(blight > 0) { blight++; }
           
-              if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(xo,yo,z))
+              if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(blocks, xo,yo,z))
                 blight = 1;
 
               if(Read(xo,yo,z,skylight,15) != 0 || rr == 8 || rr == 9)
@@ -777,14 +779,14 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
   return R;
 }
 
-bool Level::IsBlock(int x,int y,int z){
+bool Level::IsBlock(nbt::Byte *&blocks, int x, int y, int z){
   int qq = Read(x,y,z,blocks,0);
   return (qq > 62 || qq == 10 || qq == 20 || qq == 0 || qq == 37 || qq == 38 || qq == 39 || qq == 40 || qq == 50 || qq == 18 || qq == 8 || qq == 9);
 }
 
-const double Level::getlight(int x, int y, int z, double sky, double block, bool CWATER, int slide){
-  double b = (double)Read(x,y,z,skylight,15*sky)*sky;
-  double s = (double)Read(x,y,z,blocklight,0)*block;
+const double Level::getlight(nbt::Byte *skylight, nbt::Byte *blocklight, int x, int y, int z, double sky, double block, bool CWATER, int slide){
+  double b = (double)Read(x, y, z, skylight, 15*sky)*sky;
+  double s = (double)Read(x, y, z, blocklight, 0)*block;
   
   if(!CWATER && slide == -1) {
     s = 15*sky;

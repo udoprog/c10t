@@ -55,9 +55,9 @@ class Level{
     void MakeNewWorld(const wchar_t  * folder);
     void WriteBuffer(const char * file);
 
-    bool IsBlock(int x,int y,int z);
+    bool IsBlock(nbt::Byte *&blocks, int x, int y, int z);
 
-    const double getlight(int x,int y,int z,double sky,double block,bool CWATER,int slice);
+    const double getlight(nbt::Byte *, nbt::Byte *, int x,int y,int z,double sky,double block,bool CWATER,int slice);
 
     Color GetColor(int blockid);
 

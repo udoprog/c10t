@@ -97,7 +97,7 @@ namespace nbt {
     public:
       static Short read(gzFile file) {
         uint8_t b[2];
-        assert(gzread(file, b, sizeof(b)) != -1);
+        assert(gzread(file, b, sizeof(b)) == sizeof(b));
         Short s = (b[0] << 8) + b[1];
         return s;
       }
@@ -108,7 +108,7 @@ namespace nbt {
       static String read(gzFile file) {
         Short s = ShortTag::read(file);
         uint8_t str[s + 1];
-        assert(gzread(file, str, (size_t)s) != -1);
+        assert(gzread(file, str, s) == s);
         return String((const char*)str, s);
       }
   };
@@ -119,7 +119,7 @@ namespace nbt {
       {
         Float f;
         Byte b[sizeof(f)];
-        assert(gzread(file, b, sizeof(f)) != -1);
+        assert(gzread(file, b, sizeof(f)) == sizeof(f));
         Float *fp = &f;
         
         if (is_big_endian()) {
@@ -143,7 +143,7 @@ namespace nbt {
       static Long read(gzFile file) {
         Long l;
         Byte b[sizeof(l)];
-        assert(gzread(file, b, sizeof(b)) != -1);
+        assert(gzread(file, b, sizeof(b)) == sizeof(b));
         Long *lp = &l;
         
         if (is_big_endian()) {
@@ -175,7 +175,7 @@ namespace nbt {
       static Double read(gzFile file) {
         Double d;
         Byte b[sizeof(d)];
-        assert(gzread(file, b, sizeof(d)) != -1);
+        assert(gzread(file, b, sizeof(d)) == sizeof(d));
         Double *dp = &d;
         
         if (is_big_endian()) {
@@ -207,7 +207,7 @@ namespace nbt {
       static Int read(gzFile file) {
         Int i;
         Byte b[sizeof(i)];
-        assert(gzread(file, b, sizeof(b)) != -1);
+        assert(gzread(file, b, sizeof(b)) == sizeof(b));
         Int *ip = &i;
         
         if (is_big_endian()) {
@@ -230,7 +230,7 @@ namespace nbt {
     public:
       static Byte read(gzFile file) {
         Byte b;
-        assert(gzread(file, &b, sizeof(Byte)) != -1);
+        assert(gzread(file, &b, sizeof(Byte)) == sizeof(Byte));
         return b;
       }
   };
@@ -292,7 +292,7 @@ namespace nbt {
       void handle_byte_array(String name, gzFile file) {
         Int length = IntTag::read(file);
         Byte *a = new Byte[length];
-        assert(gzread(file, a, length) != -1);
+        assert(gzread(file, a, length) == length);
         register_byte_array(name, length, a);
       }
 
@@ -313,40 +313,8 @@ namespace nbt {
         end_compound();
       }
       
-      void handle_type(Byte type, String name, gzFile file)
-      {
-        switch(type) {
-        case TAG_Long:    register_long(    name, LongTag::read(file));   break;
-        case TAG_Short:   register_short(   name, ShortTag::read(file));  break;
-        case TAG_String:  register_string(  name, StringTag::read(file)); break;
-        case TAG_Float:   register_float(   name, FloatTag::read(file));  break;
-        case TAG_Double:  register_double(  name, DoubleTag::read(file)); break;
-        case TAG_Int:     register_int(     name, IntTag::read(file));    break;
-        case TAG_Byte:    register_byte(    name, ByteTag::read(file));   break;
-        case TAG_Compound:
-          handle_compound(name, file);
-          break;
-        case TAG_Byte_Array:
-          handle_byte_array(name, file);
-          break;
-        case TAG_List:
-          handle_list(name, file);
-          break;
-        }
-      }
-      
-      void parse_file(const char *path) {
-        gzFile file = gzopen(path, "rb");
-        
-        Byte type = read_tagType(file);
-        
-        switch(type) {
-        case TAG_Compound:
-          String name = StringTag::read(file);
-          handle_type(type, name, file);
-          break;
-        }
-      }
+      void handle_type(Byte type, String name, gzFile file);
+      void parse_file(const char *path);
   };
   
   class NBTFile {

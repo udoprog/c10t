@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <limits.h>
+#include <errno.h>
 
 #include <string>
 #include <vector>
 #include <stack>
 #include <list>
+#include <queue>
 #include <iostream>
 #include <fstream>
 
@@ -39,62 +41,78 @@ int CWorld = 0;
 
 int cut = 0;
 
-int list_files(string path, vector<string>& files, int &numfiles) {
-  stack<string> directories;
-  DIR *dir;
-  dirent *ent; 
-  string temp_str;
-  string temp;
-  
-  directories.push(path);
-  files.clear();
-  
-  while ( !directories.empty() ) {
-    path = directories.top();
-    directories.pop();
-       
-    dir = opendir( path.c_str() ); 
-  
-        if (!dir) {
-      return 1;
-    }
-  
-    while((ent = readdir(dir)) != NULL)
-    {
-      temp_str = ent->d_name;
+class dirlist {
+private:
+  queue<string> directories;
+  queue<string> files;
 
-      if (temp_str.compare(".") == 0) {
-        continue;
-      }
-
-      if (temp_str.compare("..") == 0) {
-        continue;
-      }
-
-      temp = path + "/" + temp_str;
-
-      if (ent->d_type == DT_DIR) {
-        directories.push(temp);
-      }
-      else if (ent->d_type == DT_REG) {
-        files.push_back(temp);
-        numfiles++;
-      }
+public:
+  dirlist(string path) {
+    directories.push(path);
+  }
+  
+  bool hasnext() {
+    if (!files.empty()) {
+      return true;
     }
 
-        closedir(dir);
+    if (directories.empty()) {
+      return false;
+    }
+    
+    // work until you find any files
+    while (files.empty() && !directories.empty()) {
+      string path = directories.front();
+      directories.pop();
+      
+      DIR *dir = opendir(path.c_str()); 
+      
+      if (!dir) {
+        return false;
+      }
+      
+      dirent *ent; 
+    
+      while((ent = readdir(dir)) != NULL)
+      {
+        string temp_str = ent->d_name;
+
+        if (temp_str.compare(".") == 0) {
+          continue;
+        }
+        
+        if (temp_str.compare("..") == 0) {
+          continue;
+        }
+        
+        if (ent->d_type == DT_DIR) {
+          directories.push(path + "/" + temp_str);
+        }
+        else if (ent->d_type == DT_REG) {
+          files.push(path + "/" + temp_str);
+        }
+      }
+      
+      closedir(dir);
+    }
+    
+    return !files.empty();
   }
 
-  return 0;
+  string next() {
+    string next = files.front();
+    files.pop();
+    return next;
+  }
 };
 
 int write_image(settings_t *s, const char *filename, int width, int height, Image *img, const char *title)
 {
    int code = 0;
    FILE *fp;
-   png_structp png_ptr;
-   png_infop info_ptr;
-   png_bytep row;
+   png_structp png_ptr = NULL;
+   png_infop info_ptr = NULL;
+   png_bytep row = NULL;
 
    fp = fopen(filename, "wb");
 
@@ -126,7 +144,7 @@ int write_image(settings_t *s, const char *filename, int width, int height, Imag
    png_set_IHDR(png_ptr, info_ptr, width, height,
          8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
          PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
+    
    if (title != NULL) {
       png_text title_text;
       title_text.compression = PNG_TEXT_COMPRESSION_NONE;
@@ -157,7 +175,7 @@ finalise:
    if (fp != NULL) {
      fclose(fp);
    }
-
+    
    if (info_ptr != NULL) {
      png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
    }
@@ -245,7 +263,7 @@ int save_txt(string txtname, int cc, Level &foo)
 void do_work(settings_t *s, string path, string out) {
   string txtname = out + ".txt";
   string pngname = out + ".png";
-
+  
   cout << "world: " << path << " " << endl;
   cout << "png: " << pngname << " " << endl;
   cout << "txt: " << txtname << " " << endl;
@@ -253,29 +271,26 @@ void do_work(settings_t *s, string path, string out) {
     vector<string> files;
   list<render> renderblocks;
 
-  int counter = 0;
   int cc = 0;
-  
-  cout << "Listing world directory... " << flush;
-
-  if (list_files(path, files,counter) != 0) {
-    cout << "failed!" << endl;
-    exit(1);
-  }
-  cout << "done!" << endl;
   
   Level foo;
   
   cout << "Unpacking and drawing... " << flush;
+
+  dirlist listing(path);
   
-  for (vector<string>::iterator it = files.begin(); it != files.end(); it++) {
-     const render *temp = foo.LoadLevelFromFile(s, it->c_str(), s->slide, s->water, cut);
-     if(temp->isgood){
+  while (listing.hasnext()) {
+    string p = listing.next();
+
+    cout << p << endl;
+    
+    const render *temp = foo.LoadLevelFromFile(s, p.c_str(), s->slide, s->water, cut);
+    if(temp->isgood){
       cc++;
       renderblocks.push_back(*temp);
-     }
+    }
   }
-
+  
   cout << "done!" << endl;
   
   int minx = INT_MAX;
@@ -402,7 +417,7 @@ void do_work(settings_t *s, string path, string out) {
   cout << "Saving image " << pngname << "... " << flush;
   
   if (write_image(s, pngname.c_str(), imagewidth, imageheight, image, "Title stuff") != 0) {
-    cout << "failed!" << endl;
+    cout << "failed! " << strerror(errno) << endl;
     exit(1);
   }
 

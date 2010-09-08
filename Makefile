@@ -15,6 +15,9 @@ OBJS=$(SOURCES:.cpp=.o)
 cart5: $(OBJS) 
 	$(CC) $(OBJS) -o $(OUT) $(LDFLAGS)
 
+nbt:
+	cd src/nbt && make
+
 .cpp.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 	

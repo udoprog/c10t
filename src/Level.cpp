@@ -187,12 +187,28 @@ void register_byte_array(nbt::String name, nbt::Int length, nbt::Byte *a) {
 const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const int slide, const bool CWATER, const int cut){
   render *R;
   R = new render(slide);
-  R->isgood = false;
+  R->isgood = true;
+  
+  blocks = NULL;
+  skylight = NULL;
+  heightmap = NULL;
+  blocklight = NULL;
+  xPos = 0;
+  zPos = 0;
   
   nbt::Parser parser;
   parser.register_byte_array = register_byte_array;
   parser.register_int = register_int;
   parser.parse_file(name);
+  
+  if (
+    blocks == NULL ||
+    skylight == NULL ||
+    heightmap == NULL ||
+    blocklight == NULL) {
+    R->isgood = false;
+    return R;
+  }
   
   R->x = xPos;
   R->y = zPos;
@@ -754,7 +770,6 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
     }
   }
 
-  delete[] databuffer;
   return R;
 }
 

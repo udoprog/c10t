@@ -57,3 +57,43 @@ bool nbt::is_big_endian() {
   int32_t i = 1;
   return ((int8_t*)(&i))[0] == 0;
 }
+      
+void nbt::Parser::handle_type(Byte type, String name, gzFile file)
+{
+  switch(type) {
+  case TAG_Long:    register_long(    name, LongTag::read(file));   break;
+  case TAG_Short:   register_short(   name, ShortTag::read(file));  break;
+  case TAG_String:  register_string(  name, StringTag::read(file)); break;
+  case TAG_Float:   register_float(   name, FloatTag::read(file));  break;
+  case TAG_Double:  register_double(  name, DoubleTag::read(file)); break;
+  case TAG_Int:     register_int(     name, IntTag::read(file));    break;
+  case TAG_Byte:    register_byte(    name, ByteTag::read(file));   break;
+  case TAG_Compound:
+    handle_compound(name, file);
+    break;
+  case TAG_Byte_Array:
+    handle_byte_array(name, file);
+    break;
+  case TAG_List:
+    handle_list(name, file);
+    break;
+  }
+}
+
+void nbt::Parser::parse_file(const char *path)
+{
+  gzFile file = gzopen(path, "rb");
+  assert(file != NULL);
+  Byte type = read_tagType(file);
+  
+  switch(type) {
+  case TAG_Compound:
+    String name = StringTag::read(file);
+    handle_type(type, name, file);
+    break;
+  }
+  
+  assert(file != NULL);
+  gzflush(file);
+  gzclose(file);
+}

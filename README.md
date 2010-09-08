@@ -3,13 +3,15 @@ Linux version by Firemark
 Additional work by Udoprog <johnjohn.tedro@gmail.com>
 
 See INSTALL for installation instructions
+See ChangeLog for changes
 
-This version is hosted at http://github.com/udoprog
+This version is hosted at http://github.com/udoprog/cartography
 
-ChangeLog
----------
-- More commandline friendly options, the modifiers are passed directly as extra arguments.
-- Major code refactoring for readability
+No features have been discarded, instead the code has been subtly refactored and improvements made where they dont effect functionality.
+
+Future work involves:
+- Making the cartographer more memory friendly by implementing incremental image rendering.
+  Currently all renderblocks are kept in-memory prior to image generation, this can be improved upon.
 
 Options
 -------

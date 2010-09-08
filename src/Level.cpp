@@ -219,7 +219,8 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
   
   Color waste;
     
-  if(slide < 69) {
+  if(slide < 69)
+  {
     for(int x = 0;x< 16;x++)
     {
       for(int y = 0;y< 16;y++)
@@ -228,7 +229,8 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
         int l;
         Color *t = &R->Q->d[y+x*16];
       
-        if(cave){ 
+        if(cave)
+        { 
           for(int z = 127;z >= 0;z--)
           {
             if(IsBlock(x,y,z) && Read(x,y,z,skylight,0) == 0)
@@ -295,7 +297,8 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
             }
           }
         }
-        else if(slide == -3) {
+        else if(slide == -3)
+        {
           for(int z = 127;z >= 0;z--)
           {
             int rr = Read(x,y,z,blocks,0);
@@ -324,360 +327,431 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
               t->a = 255;
               z = -10;
             }
-        }
-      }
-      else if(slide == -5){
-        for(int z = 127;z >= 0;z--){
-        int rr = Read(x,y,z,blocks,0);
-
-          if(rr == 14 )*t = Blend(*t,Color(0,255,0,32),128);
-          if(rr == 15 )*t = Blend(*t,Color(255,0,0,32),128);
-          if(rr == 16 )*t = Blend(*t,Color(0,0,0,32),128);
-          if(rr == 56 )*t = Blend(*t,Color(0,0,255,32),128);
-        
-        if(t->a > 255){z = -10;t->a = 255;}
-        }}
-    else{
-      int rr = Read(x,y,cut,blocks,0);
-      *t = GetColor(rr);
-      
-      }
-    }}
-  } else {
-      if(slide == 70){
-  for(int z = 128;z > -1;z--){
-      for(int xr = 0;xr < 16;xr++){
-        for(int yr = !(Rotate && !flip)*14;yr != 0+(Rotate && !flip)*16;yr += 1-!(Rotate && !flip)*2){
-        
-        
-
-        int xo,yo;
-        
-        int ff = -1;int  ff2 = 1;
-
-        if(Rotate){
-        
-        if(!s->flip){
-        yo =  yr;
-        xo =  15-xr;
-        ff = -1;
-        ff2 = -1;
-        }else{
-        ff = 1;
-        xo = xr;
-        }
-        
-        }else{
-        xo = 15 - xr;
-        
-        }
-
-        
-
-        if(flip){
-        
-        if(!Rotate){
-        xo = xr;
-        yo = 15 - yr;
-        ff = 1;
-        ff2 = 1;
-        }else{
-          yo =  yr;
-          ff2 = -1;
-        }
-        
-        }else{
-        yo = 15 - yr;
-        
-        }
-
-        int x = xr;
-        int y = yr;
-        if(Rotate && !flip)
-        y =  15 - yr;
-        
-
-        int rr = Read(xo,yo,z,blocks,0);
-        bool f,t,r;
-        f = IsBlock(xo-ff,yo,z);
-        t = IsBlock(xo,yo,z+1);
-        r = IsBlock(xo,yo-ff2,z);
-
-        
-
-
-        int rrx = 16+(y)-(x);
-        int rry = 0+(y)+(x);    
-        Color *t2;Color *t3;Color *t4;
-        Color *t1 = &R->Q->d[rry+((128-z)+rrx)*33];
-        
-        if(rrx+1+(128-z) < 160)
-        t2 = &R->Q->d[rry+((128-z)+rrx+1)*33];
-        else
-        t2 = &waste;
-
-
-        
-        if(rry+1 < 34 && rrx+1+(128-z) < 160)
-        t3 = &R->Q->d[rry+1+((128-z)+rrx+1)*33];
-        else
-        t2 = &waste;
-        
-        t4 = &R->Q->d[rry+1+((128-z)+rrx)*33];
-        
-        
-
-        
-
-
-        int here,top,left,right;
-        if(exclude == 0 && !cave){
-        switch(daynight){
-        case(0):
-        here = getlight(xo,yo,z,1,1,CWATER,slide)*4;
-        top = getlight(xo,yo,z+1,1,1,CWATER,slide)*4;
-        left = getlight(xo-ff,yo,z,1,1,CWATER,slide)*4;
-        right = getlight(xo,yo-ff2,z,1,1,CWATER,slide)*4;
-        break;
-        case(1):
-        here = getlight(xo,yo,z,0.5,1,CWATER,slide)*4;
-        top = getlight(xo,yo,z+1,0.5,1,CWATER,slide)*4;
-        left = getlight(xo-ff,yo,z,0.5,1,CWATER,slide)*4;
-        right = getlight(xo,yo-ff2,z,0.5,1,CWATER,slide)*4;
-        break;
-        case(2):
-        here = getlight(xo,yo,z,0,1,CWATER,slide)*4;
-        top = getlight(xo,yo,z+1,0,1,CWATER,slide)*4;
-        left = getlight(xo-ff,yo,z,0,1,CWATER,slide)*4;
-        right = getlight(xo,yo-ff2,z,0,1,CWATER,slide)*4;
-        break;
-        }}
-
-        if(exclude != 0){top = 128;here = 128; right = 128;left = 128;}
-        if(cave){
-        Color B;
-        
-        int blight = Read(xo,yo,z,blocklight,0);
-        if(blight > 0) blight++;
-        
-        if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(xo,yo,z))
-          blight = 1;
-
-        if(Read(xo,yo,z,skylight,15) != 0 || rr == 8 || rr == 9 || rr == 79)
-          blight = 0;
-
-        int zzz = 128-z;
-        B.r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
-        B.g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
-        B.b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
-        B.a = (blight > 0)*60+((blight)*12);
-
-        
-        *t1 = Blend(*t1,B,128);
-        *t2 = Blend(*t2,B,100);
-        *t3 = Blend(*t3,B,90);
-        *t4 = Blend(*t4,B,118);
-
-        }
-
-        if(!cave){
-        if(rr != 0 && rr != 78 && (f || t ||  r || exclude != 0) && (exclude == 0 || rr == exclude)){
-        if (rr == 76 || rr == 75 || rr == 6 || rr == 37 || rr == 38 || rr == 39 || rr == 40 || rr == 51 || rr == 50 || rr == 59 || rr == 63 || rr == 65 || rr == 66){
-          if(rr == 50 || rr == 51 || rr == 76){
-          *t2 = Blend(*t2,GetColor(rr),128);
-          }else{
-          *t2 = Blend(*t2,GetColor(rr),here*0.8+z*0.4);
           }
-        }else{
-          if(rr == 10 || rr == 11){
-          *t1 = Blend(*t1,GetColor(rr),(128*0.8+z*0.4));
-          *t2 = Blend(*t2,GetColor(rr),(128*0.8+z*0.4)*0.65);
-          *t3 = Blend(*t3,GetColor(rr),(128*0.8+z*0.4)*0.5);
-          *t4 = Blend(*t3,GetColor(rr),(128*0.8+z*0.4)*0.8);
-
-          }else{
-            if(rr == 8 || rr == 9 || rr == 79){
-            Color P = GetColor(rr);
-            if(Read(xo,yo,z+1,blocks,0) == 0 || Read(xo+1,yo,z,blocks,-1) == 0 || Read(xo,yo+1,z,blocks,-1) == 0){
-              P.a = 128;
-            *t1 = Blend(*t1,P,(here*0.8+z*0.4));        
-            *t2 = Blend(*t2,P,(here*0.8+z*0.4)*0.65);
-            *t3 = Blend(*t3,P,(here*0.8+z*0.4)*0.5);
-            *t4 = Blend(*t4,P,(here*0.8+z*0.4)*0.8);}
-
-
-            }else if(rr == 2){
-        if(Read(xo,yo,z+1,blocks,0) == 78)
-        *t1 = Blend(*t1,Color(255,255,255,255),(top*0.8+z*0.4));
+        }
+        else if(slide == -5){
+          for(int z = 127;z >= 0;z--){
+            int rr = Read(x,y,z,blocks,0);
+            
+            if(rr == 14 )*t = Blend(*t,Color(0,255,0,32),128);
+            if(rr == 15 )*t = Blend(*t,Color(255,0,0,32),128);
+            if(rr == 16 )*t = Blend(*t,Color(0,0,0,32),128);
+            if(rr == 56 )*t = Blend(*t,Color(0,0,255,32),128);
+          
+            if(t->a > 255){z = -10;t->a = 255;}
+          }
+        }
         else
-        *t1 = Blend(*t1,GetColor(2),(top*0.8+z*0.4));        
-        *t2 = Blend(*t2,GetColor(3),(left*0.8+z*0.4)*0.65);
-        *t3 = Blend(*t3,GetColor(3),(right*0.8+z*0.4)*0.5);
-        if(Read(xo,yo,z+1,blocks,0) == 78)
-        *t4 = Blend(*t4,Color(255,255,255,255),(top*0.8+z*0.4)*0.8);
-        else
-        *t4 = Blend(*t4,GetColor(2),(top*0.8+z*0.4)*0.8);
-            }else{
-        if(Read(xo,yo,z+1,blocks,0) == 78)
-        *t1 = Blend(*t1,Color(255,255,255,255),(top*0.8+z*0.4));
-        else
-        *t1 = Blend(*t1,GetColor(rr),(top*0.8+z*0.4));        
-        *t2 = Blend(*t2,GetColor(rr),(left*0.8+z*0.4)*0.75);
-        *t3 = Blend(*t3,GetColor(rr),(right*0.8+z*0.4)*0.5);
-        if(Read(xo,yo,z+1,blocks,0) == 78)
-        *t4 = Blend(*t4,Color(255,255,255,255),(top*0.8+z*0.4)*0.8);
-        else
-        *t4 = Blend(*t4,GetColor(rr),(top*0.8+z*0.4)*0.8);
-
+        {
+          int rr = Read(x,y,cut,blocks,0);
+          *t = GetColor(rr);
+        }
+      }
+    }
+  }
+  else
+  {
+    if(slide == 70)
+    {
+      for(int z = 128;z > -1;z--)
+      {
+        for(int xr = 0;xr < 16;xr++){
+          for(int yr = !(Rotate && !flip)*14;yr != 0+(Rotate && !flip)*16;yr += 1-!(Rotate && !flip)*2){
+            int xo,yo;
+            int ff = -1;int  ff2 = 1;
+            if(Rotate)
+            {
+              if(!s->flip){
+                yo =  yr;
+                xo =  15-xr;
+                ff = -1;
+                ff2 = -1;
+              }
+              else
+              {
+                ff = 1;
+                xo = xr;
+              }
             }
-          
-          
-          }
-        }
-        }
-        }
+            else
+            {
+              xo = 15 - xr;
+            }
 
-        }}}
-
-        }else if(slide == 69){
-    for(int z = 128;z > -1;z--){
-      for(int xr = 15-(flip == 1)*15;xr != -1+(flip == 1)*17;xr += -1+(flip == 1)*2){
-        for(int yr = 0;yr < 16;yr++){
+            if(flip)
+            {
+              if(!Rotate)
+              {
+                xo = xr;
+                yo = 15 - yr;
+                ff = 1;
+                ff2 = 1;
+              }
+              else
+              {
+                yo =  yr;
+                ff2 = -1;
+              }
         
-        int xo,yo;
+            }
+            else
+            {
+              yo = 15 - yr;
+            }
 
-        if(Rotate == 1){
-        xo = yr;
-        yo = xr;
-        }else{
-        xo = xr;
-        yo = yr;
-        }
-
-        int x = xr;
-        int y = yr;
-        int ff = 1;
-        if(flip == 1){
-        x = 15-xr;
-        //y = 15-yo;
-        ff = -1;
-        }
-
+            int x = xr;
+            int y = yr;
+            if(Rotate && !flip)
+            y =  15 - yr;
         
+            int rr = Read(xo,yo,z,blocks,0);
+            bool f,t,r;
+            f = IsBlock(xo-ff,yo,z);
+            t = IsBlock(xo,yo,z+1);
+            r = IsBlock(xo,yo-ff2,z);
 
-        int rr = Read(xo,yo,z,blocks,0);
-        bool f,t;
-        t = IsBlock(xo,yo,z+1);
-        if(Rotate == 1){
-          if(flip == 1){
-          f = IsBlock(xo,yo-1,z);
-          }else{
-          f = IsBlock(xo,yo+1,z);
-          }
-        }else{
-          if(flip == 1){
-          f = IsBlock(xo-1,yo,z);
+            
 
-          }else{
-          f = IsBlock(xo+1,yo,z);
-          }}
 
-        Color *t1 = &R->Q->d[y+((128-z)+x)*16];      
-        Color *t2;
-        if(z > 1)
-          t2 = &R->Q->d[y+((128-z)+x+1)*16];
-        else
-        t2 = new Color();
+            int rrx = 16+(y)-(x);
+            int rry = 0+(y)+(x);    
+            Color *t2;Color *t3;Color *t4;
+            Color *t1 = &R->Q->d[rry+((128-z)+rrx)*33];
+            
+            if(rrx+1+(128-z) < 160)
+              t2 = &R->Q->d[rry+((128-z)+rrx+1)*33];
+            else
+              t2 = &waste;
 
-        int here,top,front;
-        if(exclude == 0 && !cave){
-        switch(daynight){
-        case(0):
-        here = getlight(xo,yo,z,1,1,CWATER,slide)*4;
-        top = getlight(xo,yo,z+1,1,1,CWATER,slide)*4;
-        front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,1,1,CWATER,slide)*4;
-        break;
-        case(1):
-        here = getlight(xo,yo,z,0.5,1,CWATER,slide)*4;
-        top = getlight(xo,yo,z+1,0.5,1,CWATER,slide)*4;
-        front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0.5,1,CWATER,slide)*4;
-        break;
-        case(2):
-        here = getlight(xo,yo,z,0,1,CWATER,slide)*4;
-        top = getlight(xo,yo,z+1,0,1,CWATER,slide)*4;
-        front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0,1,CWATER,slide)*4;
-        break;
-        }}
+            if(rry+1 < 34 && rrx+1+(128-z) < 160)
+              t3 = &R->Q->d[rry+1+((128-z)+rrx+1)*33];
+            else
+              t2 = &waste;
+            
+            t4 = &R->Q->d[rry+1+((128-z)+rrx)*33];
+            
+            int here,top,left,right;
+            if(exclude == 0 && !cave){
+              switch(daynight) {
+              case(0):
+                here = getlight(xo,yo,z,1,1,CWATER,slide)*4;
+                top = getlight(xo,yo,z+1,1,1,CWATER,slide)*4;
+                left = getlight(xo-ff,yo,z,1,1,CWATER,slide)*4;
+                right = getlight(xo,yo-ff2,z,1,1,CWATER,slide)*4;
+                break;
+              case(1):
+                here = getlight(xo,yo,z,0.5,1,CWATER,slide)*4;
+                top = getlight(xo,yo,z+1,0.5,1,CWATER,slide)*4;
+                left = getlight(xo-ff,yo,z,0.5,1,CWATER,slide)*4;
+                right = getlight(xo,yo-ff2,z,0.5,1,CWATER,slide)*4;
+                break;
+              case(2):
+                here = getlight(xo,yo,z,0,1,CWATER,slide)*4;
+                top = getlight(xo,yo,z+1,0,1,CWATER,slide)*4;
+                left = getlight(xo-ff,yo,z,0,1,CWATER,slide)*4;
+                right = getlight(xo,yo-ff2,z,0,1,CWATER,slide)*4;
+                break;
+              }
+            }
 
-        if(exclude != 0){top = 128;here = 128; front = 128;}
-        if(cave){
-        Color B;
-        
-        int blight = Read(xo,yo,z,blocklight,0);
-        if(blight > 0) blight++;
-        
-        if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(xo,yo,z))
-          blight = 1;
-
-        if(Read(xo,yo,z,skylight,15) != 0 || rr == 8 || rr == 9)
-          blight = 0;
-
-        int zzz = 128-z;
-        B.r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
-        B.g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
-        B.b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
-        B.a = (blight > 0)*60+((blight)*12);
-
-        
-        *t1 = Blend(*t1,B,128);
-        *t2 = Blend(*t2,B,100);
-
-        }
-
-        if(!cave){
-        if(rr != 0  && rr != 78 && (t || f || exclude != 0) && (exclude == 0 || rr == exclude)){
-        if(rr == 8 || rr == 9 || rr == 79){
-        Color P = GetColor(rr);
-        if(Read(xo,yo,z+1,blocks,0) == 0){
-        P.a = 128;
-        *t1 = Blend(*t1,P,top);}
-
-        
-        }else if (rr == 6 || rr == 75 || rr == 76 || rr == 37 || rr == 38 || rr == 39 || rr == 40 || rr == 51 || rr == 50 || rr == 59 || rr == 63 || rr == 65 || rr == 66){
-          if(rr == 50 || rr == 51 || rr == 76){
-          *t2 = Blend(*t2,GetColor(rr),128*0.8+z*0.4);
-          }else{
-          *t2 = Blend(*t2,GetColor(rr),here*0.8+z*0.4);
-          }
-        }else{
-          if(rr == 10 || rr == 11){
-          *t1 = Blend(*t1,GetColor(rr),128*0.8+z*0.4);
-          *t2 = Blend(*t2,GetColor(rr),128*0.8+z*0.4);
-
-          }else{
-          if(rr == 2){
-        if(Read(xo,yo,z+1,blocks,0) == 78)
-        *t1 = Blend(*t1,Color(255,255,255,255),top*0.8+z*0.4);
-        else
-        *t1 = Blend(*t1,GetColor(2),(top*0.8+z*0.4));        
-        *t2 = Blend(*t2,GetColor(3),(front*0.8+z*0.4)*0.75);
-            }else{
-        if(Read(xo,yo,z+1,blocks,0) == 78)
-        *t1 = Blend(*t1,Color(255,255,255,255),(top*0.8+z*0.4));
-        else
-        *t1 = Blend(*t1,GetColor(rr),(top*0.8+z*0.4));        
-        *t2 = Blend(*t2,GetColor(rr),(front*0.8+z*0.4)*0.75);
-
+            if(exclude != 0)
+            {
+              top = 128;
+              here = 128;
+              right = 128;
+              left = 128;
             }
             
-          
+            if(cave){
+              Color B;
+            
+              int blight = Read(xo,yo,z,blocklight,0);
+              
+              if(blight > 0) blight++;
+            
+              if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(xo,yo,z))
+                blight = 1;
+
+              if(Read(xo,yo,z,skylight,15) != 0 || rr == 8 || rr == 9 || rr == 79)
+                blight = 0;
+
+              int zzz = 128-z;
+              B.r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
+              B.g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
+              B.b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
+              B.a = (blight > 0)*60+((blight)*12);
+
+              *t1 = Blend(*t1,B,128);
+              *t2 = Blend(*t2,B,100);
+              *t3 = Blend(*t3,B,90);
+              *t4 = Blend(*t4,B,118);
+            }
+
+            if(!cave)
+            {
+              if(rr != 0 && rr != 78 && (f || t ||  r || exclude != 0) && (exclude == 0 || rr == exclude))
+              {
+                if (rr == 76 || rr == 75 || rr == 6 || rr == 37 || rr == 38 || rr == 39 || rr == 40 || rr == 51 || rr == 50 || rr == 59 || rr == 63 || rr == 65 || rr == 66)
+                {
+                  if(rr == 50 || rr == 51 || rr == 76){
+                    *t2 = Blend(*t2,GetColor(rr),128);
+                  }else{
+                    *t2 = Blend(*t2,GetColor(rr),here*0.8+z*0.4);
+                  }
+                }
+                else
+                {
+                  if(rr == 10 || rr == 11)
+                  {
+                    *t1 = Blend(*t1, GetColor(rr),(128*0.8+z*0.4));
+                    *t2 = Blend(*t2, GetColor(rr),(128*0.8+z*0.4)*0.65);
+                    *t3 = Blend(*t3, GetColor(rr),(128*0.8+z*0.4)*0.5);
+                    *t4 = Blend(*t3, GetColor(rr),(128*0.8+z*0.4)*0.8);
+                  }
+                  else
+                  {
+                    if(rr == 8 || rr == 9 || rr == 79)
+                    {
+                      Color P = GetColor(rr);
+                      if(Read(xo,yo,z+1,blocks,0) == 0 || Read(xo+1,yo,z,blocks,-1) == 0 || Read(xo,yo+1,z,blocks,-1) == 0){
+                        P.a = 128;
+                        *t1 = Blend(*t1,P,(here*0.8+z*0.4));        
+                        *t2 = Blend(*t2,P,(here*0.8+z*0.4)*0.65);
+                        *t3 = Blend(*t3,P,(here*0.8+z*0.4)*0.5);
+                        *t4 = Blend(*t4,P,(here*0.8+z*0.4)*0.8);
+                      }
+                    }
+                    else if(rr == 2)
+                    {
+                      if(Read(xo,yo,z+1,blocks,0) == 78)
+                      {
+                        *t1 = Blend(*t1,Color(255,255,255,255),(top*0.8+z*0.4));
+                      }
+                      else
+                      {
+                        *t1 = Blend(*t1,GetColor(2),(top*0.8+z*0.4));        
+                      }
+                      
+                      *t2 = Blend(*t2,GetColor(3),(left*0.8+z*0.4)*0.65);
+                      *t3 = Blend(*t3,GetColor(3),(right*0.8+z*0.4)*0.5);
+                      
+                      if(Read(xo,yo,z+1,blocks,0) == 78)
+                      {
+                        *t4 = Blend(*t4,Color(255,255,255,255),(top*0.8+z*0.4)*0.8);
+                      }
+                      else {
+                        *t4 = Blend(*t4,GetColor(2),(top*0.8+z*0.4)*0.8);
+                      }
+                    }
+                    else
+                    {
+                      if(Read(xo,yo,z+1,blocks,0) == 78)
+                      {
+                        *t1 = Blend(*t1,Color(255,255,255,255),(top*0.8+z*0.4));
+                      }
+                      else
+                      {
+                        *t1 = Blend(*t1,GetColor(rr),(top*0.8+z*0.4));        
+                      }
+                      
+                      *t2 = Blend(*t2,GetColor(rr),(left*0.8+z*0.4)*0.75);
+                      *t3 = Blend(*t3,GetColor(rr),(right*0.8+z*0.4)*0.5);
+                      
+                      if(Read(xo,yo,z+1,blocks,0) == 78)
+                      {
+                        *t4 = Blend(*t4,Color(255,255,255,255),(top*0.8+z*0.4)*0.8);
+                      }
+                      else
+                      {
+                        *t4 = Blend(*t4,GetColor(rr),(top*0.8+z*0.4)*0.8);
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
-        }
-        }
+      }
+    }
+    else if(slide == 69)
+    {
+      for(int z = 128;z > -1;z--)
+      {
+        for(int xr = 15-(flip == 1)*15;xr != -1+(flip == 1)*17;xr += -1+(flip == 1)*2)
+        {
+          for(int yr = 0;yr < 16;yr++)
+          {
+            int xo,yo;
 
-        }}}}
-    
+            if(Rotate == 1){
+              xo = yr;
+              yo = xr;
+            }else{
+              xo = xr;
+              yo = yr;
+            }
+
+            int x = xr;
+            int y = yr;
+            int ff = 1;
+            
+            if(flip == 1){
+              x = 15-xr;
+              //y = 15-yo;
+              ff = -1;
+            }
+
+            int rr = Read(xo,yo,z,blocks,0);
+            bool f,t;
+            
+            t = IsBlock(xo,yo,z+1);
+            
+            if(Rotate == 1)
+            {
+              if(flip == 1){
+                f = IsBlock(xo,yo-1,z);
+              } else {
+                f = IsBlock(xo,yo+1,z);
+              }
+            }
+            else
+            {
+              if(flip == 1){
+                f = IsBlock(xo-1,yo,z);
+              } else {
+                f = IsBlock(xo+1,yo,z);
+              }
+            }
+
+            Color *t1 = &R->Q->d[y+((128-z)+x)*16];      
+            Color *t2;
+            
+            if(z > 1) {
+              t2 = &R->Q->d[y+((128-z)+x+1)*16];
+            }
+            else {
+              t2 = new Color();
+            }
+
+            int here,top,front;
+            if(exclude == 0 && !cave){
+              switch(daynight){
+              case(0):
+                here = getlight(xo,yo,z,1,1,CWATER,slide)*4;
+                top = getlight(xo,yo,z+1,1,1,CWATER,slide)*4;
+                front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,1,1,CWATER,slide)*4;
+                break;
+              case(1):
+                here = getlight(xo,yo,z,0.5,1,CWATER,slide)*4;
+                top = getlight(xo,yo,z+1,0.5,1,CWATER,slide)*4;
+                front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0.5,1,CWATER,slide)*4;
+                break;
+              case(2):
+                here = getlight(xo,yo,z,0,1,CWATER,slide)*4;
+                top = getlight(xo,yo,z+1,0,1,CWATER,slide)*4;
+                front = getlight(xo+ff*(Rotate != 1),yo+ff*(Rotate == 1),z,0,1,CWATER,slide)*4;
+                break;
+              }
+            }
+
+            if(exclude != 0)
+            {
+              top = 128;
+              here = 128;
+              front = 128;
+            }
+            
+            if(cave)
+            {
+              Color B;
+              
+              int blight = Read(xo,yo,z,blocklight,0);
+              if(blight > 0) { blight++; }
+          
+              if(Read(xo,yo,z,skylight,15) == 0 && IsBlock(xo,yo,z))
+                blight = 1;
+
+              if(Read(xo,yo,z,skylight,15) != 0 || rr == 8 || rr == 9)
+                blight = 0;
+
+              int zzz = 128-z;
+              B.r = (zzz > 0)*(zzz <= 32)*255 + (zzz > 32)*(zzz < 64)*(32-(zzz-32))*8;
+              B.g = (zzz > 96)*(zzz < 128)*(32-(zzz-96))*8 + (zzz > 0)*(zzz < 32)*(zzz)*8 + (zzz >= 32)*(zzz <= 96)*255;
+              B.b = (zzz >= 96)*(zzz < 128)*255 + (zzz > 64)*(zzz < 96)*(zzz-64)*8;
+              B.a = (blight > 0)*60+((blight)*12);
+
+              
+              *t1 = Blend(*t1,B,128);
+              *t2 = Blend(*t2,B,100);
+
+            }
+
+            if(!cave)
+            {
+              if(rr != 0  && rr != 78 && (t || f || exclude != 0) && (exclude == 0 || rr == exclude))
+              {
+                if(rr == 8 || rr == 9 || rr == 79)
+                {
+                  Color P = GetColor(rr);
+                  if(Read(xo,yo,z+1,blocks,0) == 0)
+                  {
+                    P.a = 128;
+                    *t1 = Blend(*t1,P,top);}
+                }
+                else if (rr == 6 || rr == 75 || rr == 76 || rr == 37 || rr == 38 || rr == 39 || rr == 40 || rr == 51 || rr == 50 || rr == 59 || rr == 63 || rr == 65 || rr == 66)
+                {
+                  if(rr == 50 || rr == 51 || rr == 76)
+                  {
+                    *t2 = Blend(*t2,GetColor(rr),128*0.8+z*0.4);
+                  }
+                  else
+                  {
+                    *t2 = Blend(*t2,GetColor(rr),here*0.8+z*0.4);
+                  }
+                }
+                else
+                {
+                  if(rr == 10 || rr == 11)
+                  {
+                    *t1 = Blend(*t1,GetColor(rr),128*0.8+z*0.4);
+                    *t2 = Blend(*t2,GetColor(rr),128*0.8+z*0.4);
+                  }
+                  else
+                  {
+                    if(rr == 2)
+                    {
+                      if(Read(xo,yo,z+1,blocks,0) == 78)
+                      {
+                        *t1 = Blend(*t1,Color(255,255,255,255),top*0.8+z*0.4);
+                      }
+                      else
+                      {
+                        *t1 = Blend(*t1,GetColor(2),(top*0.8+z*0.4));        
+                      }
+                      *t2 = Blend(*t2,GetColor(3),(front*0.8+z*0.4)*0.75);
+                    }
+                    else 
+                    {
+                      if(Read(xo,yo,z+1,blocks,0) == 78)
+                      {
+                        *t1 = Blend(*t1,Color(255,255,255,255),(top*0.8+z*0.4));
+                      }
+                      else
+                      {
+                        *t1 = Blend(*t1,GetColor(rr),(top*0.8+z*0.4));        
+                      }
+                      
+                      *t2 = Blend(*t2,GetColor(rr),(front*0.8+z*0.4)*0.75);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   delete[] databuffer;

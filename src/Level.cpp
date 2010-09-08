@@ -164,22 +164,26 @@ void register_int(nbt::String name, nbt::Int i) {
 
 void register_byte_array(nbt::String name, nbt::Int length, nbt::Byte *a) {
   if (name.compare("Blocks") == 0) {
-    blocks = a;
+    blocks = new nbt::Byte[length * 2];
+    memcpy(blocks, a, length);
     return;
   }
 
   if (name.compare("SkyLight") == 0) {
-    skylight = a;
+    skylight = new nbt::Byte[length * 2];
+    memcpy(skylight, a, length);
     return;
   }
 
   if (name.compare("HeightMap") == 0) {
-    heightmap = a;
+    heightmap = new nbt::Byte[length * 2];
+    memcpy(heightmap, a, length);
     return;
   }
 
   if (name.compare("BlockLight") == 0) {
-    blocklight = a;
+    blocklight = new nbt::Byte[length * 2];
+    memcpy(blocklight, a, length);
     return;
   }
 }
@@ -213,9 +217,9 @@ const render * Level::LoadLevelFromFile(settings_t *s, const char * name, const 
   R->x = xPos;
   R->y = zPos;
   
-  for(int x = 0;x< 16;x++){
-    for(int y = 0;y< 16;y++){
-      for(int z = 0;z< 128;z++){
+  for(int x = 0; x < 16; x++){
+    for(int y = 0; y < 16; y++){
+      for(int z = 0; z < 128; z++){
         int half = x*64 + y*64*16 + z*0.5; 
         int ls, lb;
         

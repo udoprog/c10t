@@ -294,6 +294,7 @@ namespace nbt {
         Byte *a = new Byte[length];
         assert(gzread(file, a, length) == length);
         register_byte_array(name, length, a);
+        delete [] a;
       }
 
       void handle_compound(String name, gzFile file) {

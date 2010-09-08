@@ -94,6 +94,5 @@ void nbt::Parser::parse_file(const char *path)
   }
   
   assert(file != NULL);
-  gzflush(file);
   gzclose(file);
 }

@@ -3,12 +3,15 @@
 #include <dirent.h>
 #include <limits.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <string>
 #include <vector>
 #include <stack>
 #include <queue>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
 #include <png.h>
@@ -20,17 +23,6 @@
 #include "blocks.h"
 
 using namespace std;
-
-//My changes:
-//ListFiles rewrited to posix mode
-//gui is destroy [oh god]
-//only console
-//what the hell is wchar_t??
-//by Firemark :)
-
-int CWorld = 0;
-
-int cut = 0;
 
 class dirlist {
 private:
@@ -183,106 +175,37 @@ finalise:
    return code;
 }
 
-int save_txt(string txtname, int cc)
-{
-//    ofstream values(txtname.c_str());
-
-//    if(!values.is_open()) {
-//      return 1;
-//    }
-
-//  values << "Map surface is: " << cc * 16 * 16 << " square meters" << endl;
-//  values << "Block amounts:" << endl;
-//  values << endl;
-//  values << "Air: " << foo.count[0] << endl;
-//  values << "Stone: " << foo.count[1] << endl;
-//  values << "Grass: " << foo.count[2] << endl;
-//  values << "Dirt: " << foo.count[3] << endl;
-//  values << "Snow: " << foo.count[78] << endl;
-//  values << endl;
-//  values << "Water: " << foo.count[8] + foo.count[9] << endl;
-//  values << "Ice: " << foo.count[79] << endl;
-//  values << "Lava: " << foo.count[10] + foo.count[11] << endl;
-//  values << endl;
-//  values << "Obisidian: " << foo.count[49] << endl;
-//  values << endl;
-//  values << "Trunk: " << foo.count[17] << endl;
-//  values << "Leaves: " << foo.count[18] << endl;
-//  values << "Wood: " << foo.count[5] << endl;
-//  values << "Cactus: " << foo.count[81] << endl;
-//  values << endl;
-//  values << "Sand: " << foo.count[12] << endl;
-//  values << "Gravel: " << foo.count[13] << endl;
-//  values << "Clay: " << foo.count[82] << endl;
-//  values << endl;
-//  values << "Gold Ore: " << foo.count[14] << endl;
-//  values << "Iron Ore: " << foo.count[15] << endl;
-//  values << "Coal Ore: " << foo.count[16] << endl;
-//  values << "Diamond Ore: " << foo.count[56] << endl;
-//  values << "Redstone: " << foo.count[73] + foo.count[74] << endl;
-//  values << endl;
-//  values << "Cobble: " << foo.count[4] << endl;
-//  values << "Glass: " << foo.count[20] << endl;
-//  values << "Cloth: " << foo.count[35] << endl;
-//  values << "Gold: " << foo.count[41] << endl;
-//  values << "Iron: " << foo.count[42] << endl;
-//  values << "Diamond: " << foo.count[57] << endl;
-//  values << endl;
-//  values << "Farmland: " << foo.count[60] << endl;
-//  values << "Crops: " << foo.count[59] << endl;
-//  values << "Reed: " << foo.count[83] << endl;
-//  values << "Torch: " << foo.count[50] << endl;
-//  values << "CraftTable: " << foo.count[58] << endl;
-//  values << "Chest: " << foo.count[54] << endl;
-//  values << "Furnace: " << foo.count[61] + foo.count[62] << endl;
-//  values << "Wooden Doors: " << foo.count[64] / 2 << endl;
-//  values << "Iron Doors: " << foo.count[71] << endl;
-//  values << "Signs: " << foo.count[63] + foo.count[68] << endl;
-//  values << "Ladder: " << foo.count[65] << endl;
-//  values << "Railtracks: " << foo.count[66] << endl;
-//  values << "Wooden Stairs: " << foo.count[53] << endl;
-//  values << "Rock Stairs: " << foo.count[67] << endl;
-//  values << "Lever: " << foo.count[69] << endl;
-//  values << "Buttons: " << foo.count[77] << endl;
-//  values << "Pressure Plates: " << foo.count[70] + foo.count[72] << endl;
-//  values << "Redstone Powder: " << foo.count[55] << endl;
-//  values << "Redstone Torches: " << foo.count[75] + foo.count[76] << endl;
-//  values << endl;
-//    values.close();
-    return 0;
-}
-
+/*
+ * Store part of a level rendered as a small image.
+ *
+ * This will allow us to composite the entire image later and calculate sizes then.
+ */
 struct partial {
   int xPos;
   int zPos;
   Image *image;
 };
 
-void do_work(settings_t *s, string path, string out) {
-  string txtname = out + ".txt";
-  string pngname = out + ".png";
+void do_world(settings_t *s, string world, string output) {
+  if (!s->silent) {
+    cout << "world:  " << world << " " << endl;
+    cout << "output: " << output << " " << endl;
+    cout << endl;
+  }
   
-  Image image;
+  if (!s->silent) cout << "Reading and projecting blocks ... " << endl;
   
-  cout << "world: " << path << " " << endl;
-  cout << "png: " << pngname << " " << endl;
-  cout << "txt: " << txtname << " " << endl;
-  
-  int cc = 0;
-  
-  cout << "Reading and projecting blocks ... " << flush;
-
   queue<partial> partials;
   
-  dirlist listing(path);
+  dirlist listing(world);
 
-  int i = 0;
+  int i = 1;
 
   int minx = INT_MAX;
   int minz = INT_MAX;
   int maxx = INT_MIN;
   int maxz = INT_MIN;
-  
+
   while (listing.hasnext()) {
     string path = listing.next();
     Level level(path.c_str());
@@ -309,26 +232,30 @@ void do_work(settings_t *s, string path, string out) {
     p.zPos = level.zPos;
     partials.push(p);
     
-    if (i % 100 == 0) {
-      cout << i << " " << flush;
+    if (!s->silent) {
+      if (i % 100 == 0) {
+        cout << " " << setw(10) << i << flush;
+      }
+        
+      if (i % 800 == 0) {
+        cout << endl;
+      }
+        
+      ++i;
     }
-    
-    ++i;
   }
   
-  cout << "done!" << endl;
-
-  cout << "Compositioning image... " << flush;
-
+  if (!s->silent) cout << " done!" << endl;
+  if (!s->silent) cout << "Compositioning image... " << flush;
+  
   int diffx = maxx - minx;
   int diffz = maxz - minz;
   int image_width = diffx * 16 + 16;
   int image_height = diffz * 16 + 16;
+  size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4;
   
-  cout << minx << " - " << maxx << endl;
-  cout << minz << " - " << maxz << endl;
-  cout << image_width << endl;
-  cout << image_height << endl;
+  if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
+       << approx_memory << " bytes of memory ... " << flush;
   
   Image all(image_width, image_height);
   
@@ -337,41 +264,34 @@ void do_work(settings_t *s, string path, string out) {
     partials.pop();
     int xoffset = (p.xPos - minx) * 16;
     int yoffset = (p.zPos - minz) * 16;
-    cout << xoffset << ":" << yoffset << endl;
     all.composite(xoffset, yoffset, *p.image);
     delete p.image;
   }
   
-  cout << "done!" << endl;
+  if (!s->silent) cout << "done!" << endl;
+  if (!s->silent) cout << "Saving image to " << output << "... " << flush;
   
-  cout << "Saving image " << pngname << "... " << flush;
-  
-  if (write_image(s, pngname.c_str(), all, "Title stuff") != 0) {
-    cout << "failed! " << strerror(errno) << endl;
+  if (write_image(s, output.c_str(), all, "Map generated by c10t") != 0) {
+    cerr << "failed! " << strerror(errno) << endl;
     exit(1);
   }
   
-  cout << "done!" << endl;
-
-  cout << "Saving txt " << txtname << "... " << flush;
-
-  if (save_txt(txtname, cc) != 0) {
-    cout << "failed!" << endl;
-      exit(1);
-    }
-
-    cout << "done!" << endl;
+  if (!s->silent) cout << "done!" << endl;
 }
 
 void do_help() {
-  cout << "Usage: cart5 <world-directory> <output> [options]" << endl;
-  cout << "Valid options:" << endl
-    << "W - water; C - cave mode" << endl
-    << "R - rotate; F - flip  " << endl
-    << "D - day; d -day/night; N - night " << endl
-    << "Hc - heightcolor; Hg - heightgray; Or - Ore " << endl
-    << "Ob - oblique; Oa - oblique angle" << endl
-    << "E - exclude " << endl << ":" << flush;
+  cout << "This program was made possible by the inspiration and work of ZomBuster and Firemark" << endl;
+  cout << "Written by Udoprog" << endl;
+  cout << endl;
+  cout << "Usage: c10t [options]" << endl;
+  cout << "Options:" << endl
+    << "  -w <world-directory> : use this world directory as input" << endl
+    << "  -o <outputfile> : use this file as output file for generated png" << endl
+    << "  -s : execute silently, printing nothing except errors" << endl;
+  cout << endl;
+  cout << "Typical usage:" << endl;
+  cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
+  cout << endl;
 }
 
 int do_colors() {
@@ -387,68 +307,55 @@ int do_colors() {
 int main(int argc, char *argv[]){
   mc::initialize_constants();
 
-  string flag = "";
+  settings_t *s = new settings_t();
   
-  cout << "Cartography rewritten for linux by Firemark [pozdrawiam halp]" << std::endl;
+  string world;
+  string output;
+  int c;
   
-  settings_t *settings = new settings_t();
-  settings->slide = -1;
-  settings->water = 0;
-  settings->cave = 0;
-  settings->Rotate = 0;
-  settings->flip = 0;
-  settings->daynight = 0;
-
-  for (int i = 1; i < argc; i++) {
-    string opt(argv[i]);
-    
-    if (opt.compare("--colors") == 0) {
-      return do_colors();
-    }
-    
-    if (opt.compare("W") == 0) {
-      settings->water = 1;
-    }
-  
-    else if ( opt.compare("C") == 0) {
-      settings->cave = 1;
-    }
-    else if ( opt.compare("R") == 0) {
-      settings->Rotate = 1;
-    }
-    else if ( opt.compare("F") == 0) {
-      settings->flip = 1;
-    }
-    
-    else if ( opt.compare("D") == 0)
-      settings->daynight = 0;
-    else if ( opt.compare("d") == 0)
-      settings->daynight = 1;
-    else if ( opt.find("n") == 0)
-      settings->daynight = 2;
-    else if ( opt.compare("Hc") == 0)
-      settings->slide = -3;
-    else if ( opt.compare("Hg") == 0)
-      settings->slide = -4;
-    else if ( opt.compare("Or") == 0)
-      settings->slide = -5;
-    else if ( opt.compare("Ob") == 0)
-      //--yeah funny
-      // -- i lolled aswell
-      settings->slide = 69;
-    else if ( opt.compare("Oa") == 0)
-      settings->slide = 70;
+  while ((c = getopt (argc, argv, "shw:o:")) != -1)
+  {
+    switch (c)
+    {
+    case 'w': world = optarg; break;
+    case 'o': output = optarg; break;
+    case 's': s->silent = true; break;
+    case 'h':
+      do_help();
+      return 0;
+    case '?':
+      if (optopt == 'c')
+        fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+      else if (isprint (optopt))
+        fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+      else
+        fprintf (stderr,
+              "Unknown option character `\\x%x'.\n",
+              optopt);
+       return 1;
+     default:
+       abort ();
+     }
   }
   
-  if (argc < 3) {
+  if (!s->silent) {
+    cout << "type '-h' for help" << endl;
+    cout << endl;
+  }
+  
+  if (!world.empty()) {
+    if (output.empty()) {
+      cout << "error: You must specify output file using '-o' to generate world" << endl;
+      cout << endl;
+      do_help();
+      return 1;
+    }
+
+    do_world(s, world, output);
+  } else {
     do_help();
     return 1;
   }
-
-  string path(argv[1]);
-  string out(argv[2]);
-  
-  do_work(settings, path, out);
   
   return 0;
 };

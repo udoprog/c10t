@@ -1,5 +1,7 @@
 #include <assert.h>
 
+#include "global.h"
+
 #include "Level.h"
 #include "blocks.h"
 
@@ -79,7 +81,7 @@ nbt::Byte bget(nbt::ByteArray *blocks, int x, int y, int z) {
   return blocks->values[p];
 }
 
-Image *Level::get_image() {
+Image *Level::get_image(settings_t *s) {
   Image *img = new Image(16, 16);
   
   if (!islevel) {
@@ -94,8 +96,15 @@ Image *Level::get_image() {
       int z;
       
       // do incremental color fill until color is opaque
-      for (z = 126; z > 0; z--) {
+      for (z = s->top; z > s->bottom; z--) {
         blocktype = bget(blocks, x, y, z);
+        
+        if (s->exclude) {
+          if (s->excludes[blocktype]) {
+            continue;
+          }
+        }
+        
         Color *bc = mc::MaterialColor[blocktype];
         base.underlay(*bc);
         

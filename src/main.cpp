@@ -208,7 +208,7 @@ void do_world(settings_t *s, string world, string output) {
   while (listing.hasnext()) {
     string path = listing.next();
     Level level(path.c_str());
-
+    
     if (level.xPos < minx) {
       minx = level.xPos;
     }
@@ -220,13 +220,13 @@ void do_world(settings_t *s, string world, string output) {
     if (level.zPos < minz) {
       minz = level.zPos;
     }
-
+    
     if (level.zPos > maxz) {
       maxz = level.zPos;
     }
     
     partial p;
-    p.image = level.get_image();
+    p.image = level.get_image(s);
     p.xPos = level.xPos;
     p.zPos = level.zPos;
     partials.push(p);
@@ -286,7 +286,12 @@ void do_help() {
   cout << "Options:" << endl
     << "  -w <world-directory> : use this world directory as input" << endl
     << "  -o <outputfile> : use this file as output file for generated png" << endl
-    << "  -s : execute silently, printing nothing except errors" << endl;
+    << "  -s : execute silently, printing nothing except errors" << endl
+    << "  -l : list all available colors and block types" << endl
+    << "  -e <blockid> : exclude block-id from render" << endl
+    << "  -i <blockid> : include only this block-id in render" << endl
+    << "  -t <int> : splice from the top, must be less than 128" << endl
+    << "  -b <int> : splice from the bottom, must be greater than or equal to 0" << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
@@ -303,22 +308,65 @@ int do_colors() {
   return 0;
 }
 
+settings_t *init_settings() {
+  settings_t *s = new settings_t;
+  s->excludes = new bool[mc::MaterialCount];
+  
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    s->excludes[i] = false;
+  }
+
+  s->exclude = false;
+
+  s->top = 127;
+  s->bottom = 0;
+  return s;
+}
+
 int main(int argc, char *argv[]){
   mc::initialize_constants();
 
-  settings_t *s = new settings_t();
+  settings_t *s = init_settings();
   
   string world;
   string output;
-  int c;
+  int c, blockid;
   
-  while ((c = getopt (argc, argv, "shw:o:")) != -1)
+  while ((c = getopt (argc, argv, "lshw:o:e:t:b:i:")) != -1)
   {
     switch (c)
     {
+    case 'e':
+      s->exclude = true;
+      blockid = atoi(optarg);
+      assert(blockid >= 0 && blockid < mc::MaterialCount);
+      s->excludes[blockid] = true;
+      break;
+    case 'i':
+      s->exclude = true;
+      blockid = atoi(optarg);
+      assert(blockid >= 0 && blockid < mc::MaterialCount);
+      
+      for (int i = 0; i < mc::MaterialCount; i++) {
+        s->excludes[i] = true;
+      }
+      
+      s->excludes[blockid] = false;
+      break;
     case 'w': world = optarg; break;
     case 'o': output = optarg; break;
     case 's': s->silent = true; break;
+    case 't':
+      s->top = atoi(optarg);
+      assert(s->top > s->bottom && s->top < 128);
+      break;
+    case 'b':
+      s->bottom = atoi(optarg);
+      assert(s->bottom < s->top && s->bottom >= 0);
+      break;
+    case 'l':
+      return do_colors();
+      break;
     case 'h':
       do_help();
       return 0;

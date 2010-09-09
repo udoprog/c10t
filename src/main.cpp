@@ -140,7 +140,7 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
    row = (png_bytep) malloc(4 * img.get_width() * sizeof(png_byte));
 
    int x, y;
-   for (y=0 ; y<img.get_width(); y++) {
+   for (y=0 ; y<img.get_height(); y++) {
       for (x=0 ; x<img.get_width(); x++) {
         Color c = img.get_pixel(x, y);
         row[0 + x*4] = c.r;

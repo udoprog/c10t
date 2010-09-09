@@ -18,6 +18,13 @@ void Color::overlay(const Color &other) {
   a = a + (other.a * (0xff - a)) / 0xff;
 }
 
+void Color::underlay(const Color &other) {
+  r = alpha_over_c(r, a, other.r, other.a);
+  g = alpha_over_c(g, a, other.g, other.a);
+  b = alpha_over_c(b, a, other.b, other.a);
+  a = other.a + (a * (0xff - other.a)) / 0xff;
+}
+
 std::string Color::to_s() {
   std::stringstream ss(std::stringstream::out | std::stringstream::in);
   ss << "(" << (int)r << "," << (int)g << "," << (int)b << "," << (int)a << ")";

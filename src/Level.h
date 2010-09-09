@@ -238,10 +238,10 @@ class Level
 {
   public:
     // these must be public for the parser to be able to reach them.
-    nbt::ByteArray blocks;
-    nbt::ByteArray skylight;
-    nbt::ByteArray heightmap;
-    nbt::ByteArray blocklight;
+    nbt::ByteArray *blocks;
+    nbt::ByteArray *skylight;
+    nbt::ByteArray *heightmap;
+    nbt::ByteArray *blocklight;
     nbt::Int xPos;
     nbt::Int zPos;
     bool islevel;

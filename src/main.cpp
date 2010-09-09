@@ -71,7 +71,7 @@ public:
       }
       
       dirent *ent; 
-    
+      
       while((ent = readdir(dir)) != NULL)
       {
         string temp_str = ent->d_name;
@@ -260,6 +260,12 @@ int save_txt(string txtname, int cc)
     return 0;
 }
 
+struct partial {
+  int xPos;
+  int zPos;
+  Image image;
+};
+
 void do_work(settings_t *s, string path, string out) {
   string txtname = out + ".txt";
   string pngname = out + ".png";
@@ -272,25 +278,44 @@ void do_work(settings_t *s, string path, string out) {
   
   int cc = 0;
   
-  cout << "Unpacking and drawing... " << flush;
-
+  cout << "Reading and projecting blocks ... " << flush;
+  
   dirlist listing(path);
 
-  Image all(4096, 4096);
-  
   int i = 0;
   
+  list<partial> partials;
+  
   while (listing.hasnext()) {
-    string p = listing.next();
-    Level level(p.c_str());
-    Image partial = level.get_image();
-    all.composite(2048 + level.xPos * 16, 2048 + level.zPos * 16, partial);
+    cout << "here" << endl;
+    string path = listing.next();
+    Level level(path.c_str());
+    
+    partial p;
+    p.xPos = level.xPos;
+    p.zPos = level.zPos;
+    p.image = level.get_image();
+    
+    cout << "wtf" << endl;
+    partials.push_back(p);
+    cout << "wtf" << endl;
     
     if (i % 100 == 0) {
       cout << i << " " << flush;
     }
     
     ++i;
+  }
+  
+  cout << "done!" << endl;
+
+  cout << "Compositioning image... " << flush;
+  
+  Image all(4096, 4096);
+  
+  for (list<partial>::iterator it = partials.begin(); it != partials.end(); it++) {
+    partial p = *it;
+    all.composite(2048 + p.xPos * 16, 2048 + p.zPos * 16, p.image);
   }
   
   cout << "done!" << endl;

@@ -23,30 +23,53 @@ void register_int(void *context, nbt::String name, nbt::Int i) {
 
 void register_byte_array(void *context, nbt::String name, nbt::ByteArray byte_array) {
   if (name.compare("Blocks") == 0) {
-    ((Level *)context)->blocks = byte_array;
+    ((Level *)context)->blocks = &byte_array;
     return;
   }
 
   if (name.compare("SkyLight") == 0) {
-    ((Level *)context)->skylight = byte_array;
+    ((Level *)context)->skylight = &byte_array;
     return;
   }
 
   if (name.compare("HeightMap") == 0) {
-    ((Level *)context)->heightmap = byte_array;
+    ((Level *)context)->heightmap = &byte_array;
     return;
   }
 
   if (name.compare("BlockLight") == 0) {
-    ((Level *)context)->blocklight = byte_array;
+    ((Level *)context)->blocklight = &byte_array;
     return;
   }
 }
 
 Level::~Level(){
+  if (blocks != NULL) {
+    delete blocks;
+  }
+  
+  if (blocklight != NULL) {
+    delete blocklight;
+  }
+  
+  if (skylight != NULL) {
+    delete skylight;
+  }
+  
+  if (heightmap != NULL) {
+    delete heightmap;
+  }
 }
 
 Level::Level(const char *path) {
+  blocks = NULL;
+  skylight = NULL;
+  heightmap = NULL;
+  blocklight = NULL;
+  xPos = 0;
+  zPos = 0;
+  islevel = false;
+  
   nbt::Parser parser(this);
   parser.register_byte_array = register_byte_array;
   parser.register_int = register_int;
@@ -71,21 +94,42 @@ nbt::Byte bget(nbt::ByteArray blocks, int x, int y, int z) {
 
 Image Level::get_image() {
   Image img(16, 16);
-
+  
   if (!islevel) {
     return img;
   }
-
+  
   for (int x = 0; x < 16; x++) {
     for (int y = 0; y < 16; y++) {
-      Color base(255, 255, 255, 255);
+      Color base(255, 255, 255, 0);
       
-      for (int z = 0; z < 128; z++) {
-        int blocktype = bget(blocks, x, y, z);
+      int blocktype;
+      int z;
+      
+      // do incremental color fill until color is opaque
+      for (z = 126; z > 0; z--) {
+        blocktype = bget(*blocks, x, y, z);
         Color bc = blockcolors[blocktype];
-        base.overlay(bc);
+        base.underlay(bc);
+        
+        if (base.a == 0xff) {
+          break;
+        }
       }
-
+      
+      // check specific last block options
+      switch (blocktype) {
+        case mc::Dirt:
+        case mc::Grass:
+        case mc::Stone:
+        case mc::Cobblestone:
+          // do an color overlay for mapped height
+          Color height(0, 0, 0, 0);
+          height.a = (127 - z);
+          base.overlay(height);
+          break;
+      }
+      
       img.set_pixel(x, y, base);
     }
   }

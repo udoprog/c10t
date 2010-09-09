@@ -22,6 +22,7 @@ struct Color{
   }
 
   void overlay(const Color &other);
+  void underlay(const Color &other);
 
   std::string to_s();
 };

@@ -20,10 +20,16 @@ namespace nbt {
   typedef std::string String;
   typedef float Float;
   typedef double Double;
-  typedef struct _byte_array {
+  
+  struct ByteArray {
     Int length;
     Byte *values;
-  } ByteArray;
+    ~ByteArray() {
+      if (values != NULL) {
+        delete [] values;
+      }
+    }
+  };
   
   const Byte TAG_End = 0x0;
   const Byte TAG_Byte = 0x1;

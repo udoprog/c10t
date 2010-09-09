@@ -8,6 +8,7 @@ SOURCES=src/main.cpp
 SOURCES+=src/Level.cpp
 SOURCES+=src/Image.cpp
 SOURCES+=src/Color.cpp
+SOURCES+=src/blocks.cpp
 SOURCES+=src/nbt/nbt.cpp
 OBJS=$(SOURCES:.cpp=.o)
 

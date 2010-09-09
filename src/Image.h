@@ -34,7 +34,7 @@ class Image {
         }
       }
     }
-
+    
     ~Image(){
       delete [] colors;
     }

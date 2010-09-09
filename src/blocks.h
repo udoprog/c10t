@@ -1,6 +1,8 @@
 #ifndef _BLOCKS_H_
 #define _BLOCKS_H_
 
+#include "Color.h"
+
 namespace mc {
   enum {
     Air = 0x00,
@@ -66,6 +68,7 @@ namespace mc {
     Soil = 0x3C,
     Furnace = 0x3D,
     BurningFurnace = 0x3E,
+    SignPost = 0x3F,
     WoodenDoor = 0x40,
     Ladder = 0x41,
     MinecartTracks = 0x42,
@@ -89,8 +92,12 @@ namespace mc {
     Jukebox = 0x54,
     Fence = 0x55
   };
+
+  void initialize_constants();
   
-  const int MaterialCount = 0x56;
+  extern int MaterialCount;
+  extern const char **MaterialName;
+  extern Color **MaterialColor;
 };
 
 #endif /* _BLOCKS_H_ */

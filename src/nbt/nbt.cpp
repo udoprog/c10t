@@ -38,7 +38,7 @@ void nbt::default_register_byte(void *context, nbt::String name, nbt::Byte f) {
   //std::cout << "TAG_Byte('" << name << "'): " << (int)f << std::endl;
 }
 
-void nbt::default_register_byte_array(void *context, nbt::String name, nbt::ByteArray byte_array) {
+void nbt::default_register_byte_array(void *context, nbt::String name, nbt::ByteArray *byte_array) {
   //std::cout << "TAG_Byte_Array('" << name << "'): " << length << std::endl;
   //for (int i = 0; i < length && i < 10; i++) {
   //  std::cout << "   " << (int)a[i] << std::endl;

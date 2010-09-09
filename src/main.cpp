@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 #include <stack>
-#include <list>
 #include <queue>
 #include <iostream>
 #include <fstream>
@@ -18,14 +17,7 @@
 #include "global.h"
 #include "Level.h"
 #include "Image.h"
-
-int Rotate;
-int daynight;
-int cave;
-int exclude;
-int slide;
-int flip;
-int water;
+#include "blocks.h"
 
 using namespace std;
 
@@ -60,7 +52,7 @@ public:
     }
     
     // work until you find any files
-    while (files.empty() && !directories.empty()) {
+    while (!directories.empty()) {
       string path = directories.front();
       directories.pop();
       
@@ -263,7 +255,7 @@ int save_txt(string txtname, int cc)
 struct partial {
   int xPos;
   int zPos;
-  Image image;
+  Image *image;
 };
 
 void do_work(settings_t *s, string path, string out) {
@@ -279,26 +271,43 @@ void do_work(settings_t *s, string path, string out) {
   int cc = 0;
   
   cout << "Reading and projecting blocks ... " << flush;
+
+  queue<partial> partials;
   
   dirlist listing(path);
 
   int i = 0;
-  
-  list<partial> partials;
+
+  int minx = INT_MAX;
+  int minz = INT_MAX;
+  int maxx = INT_MIN;
+  int maxz = INT_MIN;
   
   while (listing.hasnext()) {
-    cout << "here" << endl;
     string path = listing.next();
     Level level(path.c_str());
+
+    if (level.xPos < minx) {
+      minx = level.xPos;
+    }
+
+    if (level.xPos > maxx) {
+      maxx = level.xPos;
+    }
+
+    if (level.zPos < minz) {
+      minz = level.zPos;
+    }
+
+    if (level.zPos > maxz) {
+      maxz = level.zPos;
+    }
     
     partial p;
+    p.image = level.get_image();
     p.xPos = level.xPos;
     p.zPos = level.zPos;
-    p.image = level.get_image();
-    
-    cout << "wtf" << endl;
-    partials.push_back(p);
-    cout << "wtf" << endl;
+    partials.push(p);
     
     if (i % 100 == 0) {
       cout << i << " " << flush;
@@ -310,12 +319,27 @@ void do_work(settings_t *s, string path, string out) {
   cout << "done!" << endl;
 
   cout << "Compositioning image... " << flush;
+
+  int diffx = maxx - minx;
+  int diffz = maxz - minz;
+  int image_width = diffx * 16 + 16;
+  int image_height = diffz * 16 + 16;
   
-  Image all(4096, 4096);
+  cout << minx << " - " << maxx << endl;
+  cout << minz << " - " << maxz << endl;
+  cout << image_width << endl;
+  cout << image_height << endl;
   
-  for (list<partial>::iterator it = partials.begin(); it != partials.end(); it++) {
-    partial p = *it;
-    all.composite(2048 + p.xPos * 16, 2048 + p.zPos * 16, p.image);
+  Image all(image_width, image_height);
+  
+  while (!partials.empty()) {
+    partial p = partials.front();
+    partials.pop();
+    int xoffset = (p.xPos - minx) * 16;
+    int yoffset = (p.zPos - minz) * 16;
+    cout << xoffset << ":" << yoffset << endl;
+    all.composite(xoffset, yoffset, *p.image);
+    delete p.image;
   }
   
   cout << "done!" << endl;
@@ -350,16 +374,20 @@ void do_help() {
     << "E - exclude " << endl << ":" << flush;
 }
 
-int main(int argc, char *argv[]){
-  string flag = "";
+int do_colors() {
+  cout << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
-  if (argc < 3) {
-    do_help();
-    exit(1);
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    cout << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i]->to_s() << endl;
   }
+  
+  return 0;
+}
 
-  string path(argv[1]);
-  string out(argv[2]);
+int main(int argc, char *argv[]){
+  mc::initialize_constants();
+
+  string flag = "";
   
   cout << "Cartography rewritten for linux by Firemark [pozdrawiam halp]" << std::endl;
   
@@ -371,8 +399,12 @@ int main(int argc, char *argv[]){
   settings->flip = 0;
   settings->daynight = 0;
 
-  for (int i = 3; i < argc; i++) {
+  for (int i = 1; i < argc; i++) {
     string opt(argv[i]);
+    
+    if (opt.compare("--colors") == 0) {
+      return do_colors();
+    }
     
     if (opt.compare("W") == 0) {
       settings->water = 1;
@@ -406,15 +438,15 @@ int main(int argc, char *argv[]){
       settings->slide = 69;
     else if ( opt.compare("Oa") == 0)
       settings->slide = 70;
-    else if ( opt.compare("E") == 0) {
-      cout << "Write number to exclude [0-128]" << endl << ":" << flush;
-      cin >> exclude;
-    }
-    else {
-      cerr << "Unkown option: " << opt << endl;
-      exit(1);
-    }
   }
+  
+  if (argc < 3) {
+    do_help();
+    return 1;
+  }
+
+  string path(argv[1]);
+  string out(argv[2]);
   
   do_work(settings, path, out);
   

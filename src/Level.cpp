@@ -21,51 +21,38 @@ void register_int(void *context, nbt::String name, nbt::Int i) {
   }
 }
 
-void register_byte_array(void *context, nbt::String name, nbt::ByteArray byte_array) {
+void register_byte_array(void *context, nbt::String name, nbt::ByteArray *byte_array) {
   if (name.compare("Blocks") == 0) {
-    ((Level *)context)->blocks = &byte_array;
+    ((Level *)context)->blocks = byte_array;
     return;
   }
 
   if (name.compare("SkyLight") == 0) {
-    ((Level *)context)->skylight = &byte_array;
+    ((Level *)context)->skylight = byte_array;
     return;
   }
 
   if (name.compare("HeightMap") == 0) {
-    ((Level *)context)->heightmap = &byte_array;
+    ((Level *)context)->heightmap = byte_array;
     return;
   }
 
   if (name.compare("BlockLight") == 0) {
-    ((Level *)context)->blocklight = &byte_array;
+    ((Level *)context)->blocklight = byte_array;
     return;
   }
 }
 
 Level::~Level(){
-  if (blocks != NULL) {
+  if (islevel) {
     delete blocks;
-  }
-  
-  if (blocklight != NULL) {
-    delete blocklight;
-  }
-  
-  if (skylight != NULL) {
     delete skylight;
-  }
-  
-  if (heightmap != NULL) {
     delete heightmap;
+    delete blocklight;
   }
 }
 
 Level::Level(const char *path) {
-  blocks = NULL;
-  skylight = NULL;
-  heightmap = NULL;
-  blocklight = NULL;
   xPos = 0;
   zPos = 0;
   islevel = false;
@@ -83,17 +70,17 @@ Level::Level(const char *path) {
 /**
  * Blocks[ y + ( z * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
  */
-nbt::Byte bget(nbt::ByteArray blocks, int x, int y, int z) {
+nbt::Byte bget(nbt::ByteArray *blocks, int x, int y, int z) {
   assert(x >= 0 && x < 16);
   assert(y >= 0 && y < 16);
   assert(z >= 0 && z < 128);
   int p = z + (y * 128 + (x * 128 * 16));
-  assert (p >= 0 && p < blocks.length);
-  return blocks.values[p];
+  assert (p >= 0 && p < blocks->length);
+  return blocks->values[p];
 }
 
-Image Level::get_image() {
-  Image img(16, 16);
+Image *Level::get_image() {
+  Image *img = new Image(16, 16);
   
   if (!islevel) {
     return img;
@@ -108,9 +95,9 @@ Image Level::get_image() {
       
       // do incremental color fill until color is opaque
       for (z = 126; z > 0; z--) {
-        blocktype = bget(*blocks, x, y, z);
-        Color bc = blockcolors[blocktype];
-        base.underlay(bc);
+        blocktype = bget(blocks, x, y, z);
+        Color *bc = mc::MaterialColor[blocktype];
+        base.underlay(*bc);
         
         if (base.a == 0xff) {
           break;
@@ -130,7 +117,7 @@ Image Level::get_image() {
           break;
       }
       
-      img.set_pixel(x, y, base);
+      img->set_pixel(x, y, base);
     }
   }
   

@@ -9,6 +9,7 @@
 #include <list>
 
 #include <iostream>
+#include <string.h>
 
 namespace nbt {
   #define BUFFER_SIZE 1024
@@ -25,9 +26,7 @@ namespace nbt {
     Int length;
     Byte *values;
     ~ByteArray() {
-      if (values != NULL) {
-        delete [] values;
-      }
+      delete [] values;
     }
   };
   
@@ -82,7 +81,7 @@ namespace nbt {
   typedef void (*register_double_t)(void *context, String name, Double l);
   typedef void (*register_int_t)(void *context, String name, Int l);
   typedef void (*register_byte_t)(void *context, String name, Byte b);
-  typedef void (*register_byte_array_t)(void *context, String name, ByteArray array);
+  typedef void (*register_byte_array_t)(void *context, String name, ByteArray *array);
 
   void default_begin_compound(void *context, nbt::String name);
   void default_end_compound(void *context);
@@ -93,7 +92,7 @@ namespace nbt {
   void default_register_double(void *context, nbt::String name, nbt::Double f);
   void default_register_int(void *context, nbt::String name, nbt::Int f);
   void default_register_byte(void *context, nbt::String name, nbt::Byte f);
-  void default_register_byte_array(void *context, nbt::String name, nbt::ByteArray byte_array);
+  void default_register_byte_array(void *context, nbt::String name, nbt::ByteArray *byte_array);
   void default_begin_list(void *context, nbt::String name, nbt::Byte type, nbt::Int length);
   void default_end_list(void *context);
   
@@ -319,11 +318,11 @@ namespace nbt {
       
       void handle_byte_array(String name, gzFile file) {
         Int length = IntTag::read(file);
-        Byte *a = new Byte[length];
-        assert(gzread(file, a, length) == length);
-        ByteArray array;
-        array.values = a;
-        array.length = length;
+        Byte *values = new Byte[length];
+        assert(gzread(file, values, length) == length);
+        ByteArray *array = new ByteArray();
+        array->values = values;
+        array->length = length;
         register_byte_array(context, name, array);
       }
 

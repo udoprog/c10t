@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-g -Wall
 LDFLAGS=-lpng
 
-OUT=src/cart5
+OUT=src/c10t
 
 SOURCES=src/main.cpp
 SOURCES+=src/Level.cpp
@@ -14,8 +14,13 @@ OBJS=$(SOURCES:.cpp=.o)
 
 .SUFFIXES: .cpp .o
 
-cart5: $(OBJS) 
+all: $(OUT) $(OUT)-static
+
+$(OUT): $(OBJS) 
 	$(CC) $(OBJS) -o $(OUT) $(LDFLAGS)
+
+$(OUT)-static: $(OBJS) 
+	$(CC) $(OBJS) -o $(OUT)-static -static $(LDFLAGS) -lz
 
 nbt:
 	cd src/nbt && make
@@ -26,3 +31,4 @@ nbt:
 clean:
 	$(RM) $(OBJS)
 	$(RM) $(OUT)
+	$(RM) $(OUT)-static

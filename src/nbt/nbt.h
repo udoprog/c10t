@@ -20,6 +20,10 @@ namespace nbt {
   typedef std::string String;
   typedef float Float;
   typedef double Double;
+  typedef struct _byte_array {
+    Int length;
+    Byte *values;
+  } ByteArray;
   
   const Byte TAG_End = 0x0;
   const Byte TAG_Byte = 0x1;
@@ -72,7 +76,7 @@ namespace nbt {
   typedef void (*register_double_t)(void *context, String name, Double l);
   typedef void (*register_int_t)(void *context, String name, Int l);
   typedef void (*register_byte_t)(void *context, String name, Byte b);
-  typedef void (*register_byte_array_t)(void *context, String name, Int length, Byte *b);
+  typedef void (*register_byte_array_t)(void *context, String name, ByteArray array);
 
   void default_begin_compound(void *context, nbt::String name);
   void default_end_compound(void *context);
@@ -83,7 +87,7 @@ namespace nbt {
   void default_register_double(void *context, nbt::String name, nbt::Double f);
   void default_register_int(void *context, nbt::String name, nbt::Int f);
   void default_register_byte(void *context, nbt::String name, nbt::Byte f);
-  void default_register_byte_array(void *context, nbt::String name, nbt::Int length, nbt::Byte *a);
+  void default_register_byte_array(void *context, nbt::String name, nbt::ByteArray byte_array);
   void default_begin_list(void *context, nbt::String name, nbt::Byte type, nbt::Int length);
   void default_end_list(void *context);
   
@@ -311,8 +315,10 @@ namespace nbt {
         Int length = IntTag::read(file);
         Byte *a = new Byte[length];
         assert(gzread(file, a, length) == length);
-        register_byte_array(context, name, length, a);
-        delete [] a;
+        ByteArray array;
+        array.values = a;
+        array.length = length;
+        register_byte_array(context, name, array);
       }
 
       void handle_compound(String name, gzFile file) {

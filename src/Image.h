@@ -7,27 +7,30 @@ class Image {
   private:
     int w;
     int h;
+    
+    Color *colors;
   
   public:
-    Color *d;
-
     Image(){
-      w = 16;h = 16;
-      d = new Color[w*h];
+      w = 16;
+      h = 16;
+      colors = new Color[w*h];
     }
     
     Image(int width, int height){
-      w = width; h = height;
-      d = new Color[w*h];
+      w = width;
+      h = height;
+      colors = new Color[w*h];
     }
 
     ~Image(){
-      delete [] d;
+      delete [] colors;
     }
-
-    void SetPixel(int x, int y, Color q);
-    Color GetPixel(int x, int y);
-    Color *GetPPointer(int x, int y);
+    
+    void set_pixel(int x, int y, Color q);
+    Color get_pixel(int x, int y);
+    int get_width();
+    int get_height();
 };
 
 #endif /* _IMG_H_ */

@@ -3,20 +3,22 @@
 
 #include <assert.h>
 
-void Image::SetPixel(int x, int y, Color q){
+void Image::set_pixel(int x, int y, Color q){
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
-  this->d[x+y*w] = q;
+  this->colors[x+y*w] = q;
 }
 
-Color Image::GetPixel(int x,int y){
+Color Image::get_pixel(int x,int y){
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
-  return this->d[x+y*w];
+  return this->colors[x+y*w];
 }
 
-Color *Image::GetPPointer(int x, int y){
-  assert(x >= 0 && x < w);
-  assert(y >= 0 && y < h);
-  return &this->d[x+y*w];
+int Image::get_width() {
+  return w;
+}
+
+int Image::get_height() {
+  return h;
 }

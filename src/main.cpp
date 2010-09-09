@@ -16,7 +16,6 @@
 
 #include <png.h>
 
-#include "resource.h"
 #include "global.h"
 #include "Level.h"
 #include "Image.h"

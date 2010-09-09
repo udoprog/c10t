@@ -163,12 +163,12 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
         row[0 + x*4] = c.r;
         row[1 + x*4] = c.g;
         row[2 + x*4] = c.b;
-        row[3 + x*4] = c.b;
+        row[3 + x*4] = 0xff;
       }
 
       png_write_row(png_ptr, row);
    }
-
+  
    png_write_end(png_ptr, NULL);
 
 finalise:
@@ -275,29 +275,33 @@ void do_work(settings_t *s, string path, string out) {
   cout << "Unpacking and drawing... " << flush;
 
   dirlist listing(path);
+
+  Image all(4096, 4096);
+  
+  int i = 0;
   
   while (listing.hasnext()) {
     string p = listing.next();
     Level level(p.c_str());
-    Image img = level.get_image();
+    Image partial = level.get_image();
+    all.composite(2048 + level.xPos * 16, 2048 + level.zPos * 16, partial);
     
-    cout << p << endl;
-    
-    if (write_image(s, pngname.c_str(), img, "Title stuff") != 0) {
-      cout << "failed! " << strerror(errno) << endl;
-      exit(1);
+    if (i % 100 == 0) {
+      cout << i << " " << flush;
     }
     
-    break;
+    ++i;
   }
-
-  return;
   
   cout << "done!" << endl;
   
   cout << "Saving image " << pngname << "... " << flush;
   
-
+  if (write_image(s, pngname.c_str(), all, "Title stuff") != 0) {
+    cout << "failed! " << strerror(errno) << endl;
+    exit(1);
+  }
+  
   cout << "done!" << endl;
 
   cout << "Saving txt " << txtname << "... " << flush;
@@ -323,16 +327,7 @@ void do_help() {
 
 int main(int argc, char *argv[]){
   string flag = "";
-
-
-  Color c1(255, 0, 0, 255);
-  Color c2(0, 0, 128, 128);
-  Color o = c1.overlay(c2);
   
-  cout << (int)o.r << ", " << (int)o.g << ", " << (int)o.b << " " << (int)o.a << endl;
-  
-  exit(2);
-
   if (argc < 3) {
     do_help();
     exit(1);

@@ -139,10 +139,12 @@ Image *Level::get_oblique_image(settings_t *s) {
   }
 
   int blocktype;
+
+  Color light(0, 0, 0, 64);
   
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
-      for (int z = mc::MapZ - 1; z > 0; z--) {
+      for (int z = s->bottom; z < s->top; z++) {
         blocktype = bget(blocks, x, y, z);
         
         if (s->excludes[blocktype]) {
@@ -155,7 +157,22 @@ Image *Level::get_oblique_image(settings_t *s) {
         height.a = (127 - z);
         Color p(bc);
         p.overlay(&height);
-        img->set_pixel(x, y + (mc::MapZ - z), &p);
+        img->set_pixel(x, y + (mc::MapZ - z) - 1, &p);
+        
+        switch (blocktype) {
+          case mc::Grass:
+            {
+              Color side(mc::MaterialColor[mc::Dirt]);
+              side.overlay(&light);
+              img->set_pixel(x, y + (mc::MapZ - z), &side);
+            }
+            break;
+          default:
+            Color side(&p);
+            side.overlay(&light);
+            img->set_pixel(x, y + (mc::MapZ - z), &side);
+            break;
+        }
       }
     }
   }

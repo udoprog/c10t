@@ -396,7 +396,8 @@ void do_help() {
     << "  -a                   - show no blocks except those specified with '-i'" << endl
     << "  -n                   - do not check for <world>/level.dat" << endl
     << "Rendering modes:" << endl
-    << "  -q                   - do oblique rendering" << endl;
+    << "  -q                   - do oblique rendering" << endl
+    << "  -f                   - flip the oblique rendering 90 degrees" << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
@@ -427,6 +428,7 @@ settings_t *init_settings() {
   s->mode = Top;
   s->nocheck = false;
   s->silent = false;
+  s->oblique_flip = false;
   
   return s;
 }
@@ -450,7 +452,7 @@ int main(int argc, char *argv[]){
   string output;
   int c, blockid;
   
-  while ((c = getopt (argc, argv, "nqalshw:o:e:t:b:i:")) != -1)
+  while ((c = getopt (argc, argv, "fnqalshw:o:e:t:b:i:")) != -1)
   {
     blockid = -1;
     
@@ -476,6 +478,7 @@ int main(int argc, char *argv[]){
     case 'w': world = optarg; break;
     case 'o': output = optarg; break;
     case 's': s->silent = true; break;
+    case 'f': s->oblique_flip = true; break;
     case 'n': s->nocheck = true; break;
     case 't':
       s->top = atoi(optarg);

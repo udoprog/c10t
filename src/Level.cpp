@@ -137,11 +137,13 @@ Image *Level::get_oblique_image(settings_t *s) {
   if (!islevel) {
     return img;
   }
+
+  int blocktype;
   
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
       for (int z = mc::MapZ - 1; z > 0; z--) {
-        int blocktype = bget(blocks, x, y, z);
+        blocktype = bget(blocks, x, y, z);
         
         if (blocktype == mc::Air) {
           continue;

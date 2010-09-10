@@ -25,10 +25,10 @@ OBJS=$(SOURCES:.cpp=.o)
 all: $(OUT) $(OUT)-static
 
 $(OUT): $(OBJS) 
-	$(CC) $(OBJS) -o $(OUT) $(CFLAGS) $(LDFLAGS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(OUT) $(LDFLAGS)
 
 $(OUT)-static: $(OBJS) 
-	$(CC) $(OBJS) -o $(OUT)-static $(CFLAGS) -static $(LDFLAGS) -lz
+	$(CC) $(CFLAGS) $(OBJS) -o $(OUT)-static -static $(LDFLAGS) -lz
 
 nbt:
 	cd src/nbt && make

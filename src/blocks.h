@@ -96,6 +96,9 @@ namespace mc {
   void initialize_constants();
   
   extern int MaterialCount;
+  extern int MapZ;
+  extern int MapX;
+  extern int MapY;
   extern const char **MaterialName;
   extern Color **MaterialColor;
 };

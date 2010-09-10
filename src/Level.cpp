@@ -73,24 +73,24 @@ Level::Level(const char *path) {
  * Blocks[ y + ( z * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
  */
 nbt::Byte bget(nbt::ByteArray *blocks, int x, int y, int z) {
-  assert(x >= 0 && x < 16);
-  assert(y >= 0 && y < 16);
-  assert(z >= 0 && z < 128);
-  int p = z + (y * 128 + (x * 128 * 16));
+  assert(x >= 0 && x < mc::MapX);
+  assert(y >= 0 && y < mc::MapY);
+  assert(z >= 0 && z < mc::MapZ);
+  int p = z + (y * mc::MapZ + (x * mc::MapZ * mc::MapY));
   assert (p >= 0 && p < blocks->length);
   return blocks->values[p];
 }
 
 Image *Level::get_image(settings_t *s) {
-  Image *img = new Image(16, 16);
+  Image *img = new Image(mc::MapX, mc::MapY);
   
   if (!islevel) {
     return img;
   }
   
-  for (int x = 0; x < 16; x++) {
-    for (int y = 0; y < 16; y++) {
-      Color base(255, 255, 255, 0);
+  for (int x = 0; x < mc::MapX; x++) {
+    for (int y = 0; y < mc::MapY; y++) {
+      Color *base = new Color(255, 255, 255, 0);
       
       int blocktype;
       int z;
@@ -99,16 +99,14 @@ Image *Level::get_image(settings_t *s) {
       for (z = s->top; z > s->bottom; z--) {
         blocktype = bget(blocks, x, y, z);
         
-        if (s->exclude) {
-          if (s->excludes[blocktype]) {
-            continue;
-          }
+        if (s->excludes[blocktype]) {
+          continue;
         }
         
         Color *bc = mc::MaterialColor[blocktype];
-        base.underlay(*bc);
+        base->underlay(bc);
         
-        if (base.a == 0xff) {
+        if (base->a == 0xff) {
           break;
         }
       }
@@ -122,11 +120,41 @@ Image *Level::get_image(settings_t *s) {
           // do an color overlay for mapped height
           Color height(0, 0, 0, 0);
           height.a = (127 - z);
-          base.overlay(height);
+          base->overlay(&height);
           break;
       }
       
       img->set_pixel(x, y, base);
+    }
+  }
+  
+  return img;
+}
+
+Image *Level::get_oblique_image(settings_t *s) {
+  Image *img = new Image(mc::MapX, mc::MapY + mc::MapZ);
+  
+  if (!islevel) {
+    return img;
+  }
+  
+  for (int y = 0; y < mc::MapY; y++) {
+    for (int x = 0; x < mc::MapX; x++) {
+      for (int z = mc::MapZ - 1; z > 0; z--) {
+        int blocktype = bget(blocks, x, y, z);
+        
+        if (blocktype == mc::Air) {
+          continue;
+        }
+        
+        Color *bc = mc::MaterialColor[blocktype];
+        
+        Color height(0, 0, 0, 0);
+        height.a = (127 - z);
+        Color p(bc);
+        p.overlay(&height);
+        img->set_pixel(x, y + (mc::MapZ - z), &p);
+      }
     }
   }
   

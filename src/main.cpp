@@ -23,6 +23,22 @@
 
 using namespace std;
 
+#ifdef _WIN32
+const char *dir_sep = "\\";
+const char dir_sep_c = '\\';
+#else
+const char *dir_sep = "/";
+const char dir_sep_c = '/';
+#endif
+
+inline string path_join(string a, string b) {
+  if (a.at(a.size() - 1) == dir_sep_c) {
+    return a.substr(0, a.size() - 1) + dir_sep + b;
+  }
+  
+  return a + dir_sep + b;
+}
+
 class dirlist {
 private:
   queue<string> directories;
@@ -68,10 +84,10 @@ public:
         }
         
         if (ent->d_type == DT_DIR) {
-          directories.push(path + "/" + temp_str);
+          directories.push(path_join(path, temp_str));
         }
         else if (ent->d_type == DT_REG) {
-          files.push(path + "/" + temp_str);
+          files.push(path_join(path, temp_str));
         }
       }
       
@@ -142,11 +158,20 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
    int x, y;
    for (y=0 ; y<img.get_height(); y++) {
       for (x=0 ; x<img.get_width(); x++) {
-        Color c = img.get_pixel(x, y);
-        row[0 + x*4] = c.r;
-        row[1 + x*4] = c.g;
-        row[2 + x*4] = c.b;
-        row[3 + x*4] = 0xff;
+        Color *c = img.get_pixel(x, y);
+        
+        if (c == NULL) {
+          row[0 + x*4] = 0;
+          row[1 + x*4] = 0;
+          row[2 + x*4] = 0;
+          row[3 + x*4] = 0x00;
+        }
+        else {
+          row[0 + x*4] = c->r;
+          row[1 + x*4] = c->g;
+          row[2 + x*4] = c->b;
+          row[3 + x*4] = 0xff;
+        }
       }
 
       png_write_row(png_ptr, row);
@@ -185,16 +210,44 @@ struct partial {
   Image *image;
 };
 
-void do_world(settings_t *s, string world, string output) {
+bool compare_partials(partial first, partial second)
+{
+  if (first.zPos < second.zPos) {
+    return true;
+  }
+  
+  if (first.zPos > second.zPos) {
+    return false;
+  }
+  
+  return first.xPos < second.xPos;;
+}
+
+int do_world(settings_t *s, string world, string output) {
+
+  if (!s->nocheck)
+  {
+    string level_dat = path_join(world, "level.dat");
+    
+    FILE *f = fopen(level_dat.c_str(), "r");
+    
+    if (f == NULL) {
+      cerr << "could not stat file: " << level_dat << " - " << strerror(errno) << endl;
+      return 1;
+    }
+
+    fclose(f);
+  }
+  
   if (!s->silent) {
     cout << "world:  " << world << " " << endl;
     cout << "output: " << output << " " << endl;
     cout << endl;
   }
   
-  if (!s->silent) cout << "Reading and projecting blocks ... " << endl;
+  list<partial> partials;
   
-  queue<partial> partials;
+  if (!s->silent) cout << "Reading and projecting blocks ... " << endl;
   
   dirlist listing(world);
 
@@ -204,7 +257,7 @@ void do_world(settings_t *s, string world, string output) {
   int minz = INT_MAX;
   int maxx = INT_MIN;
   int maxz = INT_MIN;
-
+  
   while (listing.hasnext()) {
     string path = listing.next();
     Level level(path.c_str());
@@ -226,17 +279,26 @@ void do_world(settings_t *s, string world, string output) {
     }
     
     partial p;
-    p.image = level.get_image(s);
+
+    switch (s->mode) {
+    case Top:
+      p.image = level.get_image(s);
+      break;
+    case Oblique:
+      p.image = level.get_oblique_image(s);
+      break;
+    }
+    
     p.xPos = level.xPos;
     p.zPos = level.zPos;
-    partials.push(p);
+    partials.push_back(p);
     
     if (!s->silent) {
       if (i % 100 == 0) {
-        cout << " " << setw(10) << i << flush;
+        cout << " " << setw(9) << i << flush;
       }
         
-      if (i % 800 == 0) {
+      if (i % 1000 == 0) {
         cout << endl;
       }
         
@@ -244,38 +306,76 @@ void do_world(settings_t *s, string world, string output) {
     }
   }
   
-  if (!s->silent) cout << " done!" << endl;
+  if (!s->silent) cout << setw(10) << i << setw(10) << "done!" << endl;
   if (!s->silent) cout << "Compositioning image... " << flush;
+
+  Image *all;
   
-  int diffx = maxx - minx;
-  int diffz = maxz - minz;
-  int image_width = diffx * 16 + 16;
-  int image_height = diffz * 16 + 16;
-  size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4;
-  
-  if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
-       << approx_memory << " bytes of memory ... " << flush;
-  
-  Image all(image_width, image_height);
-  
-  while (!partials.empty()) {
-    partial p = partials.front();
-    partials.pop();
-    int xoffset = (p.xPos - minx) * 16;
-    int yoffset = (p.zPos - minz) * 16;
-    all.composite(xoffset, yoffset, *p.image);
-    delete p.image;
+  switch (s->mode) {
+  case Top:
+    {
+      int diffx = maxx - minx;
+      int diffz = maxz - minz;
+      int image_width = diffx * mc::MapX + mc::MapX;
+      int image_height = diffz * mc::MapY + mc::MapY;
+      size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
+      
+      if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
+           << approx_memory << " bytes of memory ... " << flush;
+      
+      all = new Image(image_width, image_height);
+      
+      while (!partials.empty()) {
+        partial p = partials.back();
+        partials.pop_back();
+        int xoffset = (p.xPos - minx) * mc::MapX;
+        int yoffset = (p.zPos - minz) * mc::MapY;
+        all->composite(xoffset, yoffset, *p.image);
+        delete p.image;
+      }
+    }
+    break;
+  case Oblique:
+    {
+      // we must order all the partials in order to do this, otherwise compositioning might end up weird
+      partials.sort(compare_partials);
+      
+      int diffx = maxx - minx;
+      int diffz = maxz - minz;
+      int image_width = diffx * mc::MapX + mc::MapX;
+      int image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
+      size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
+      
+      if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
+           << approx_memory << " bytes of memory ... " << flush;
+      
+      all = new Image(image_width, image_height);
+      
+      while (!partials.empty()) {
+        partial p = partials.front();
+        partials.pop_front();
+        int xoffset = (p.xPos - minx) * mc::MapX;
+        int yoffset = (p.zPos - minz) * mc::MapY;
+        all->composite(xoffset, yoffset, *p.image);
+        delete p.image;
+      }
+    }
+    break;
   }
   
   if (!s->silent) cout << "done!" << endl;
   if (!s->silent) cout << "Saving image to " << output << "... " << flush;
   
-  if (write_image(s, output.c_str(), all, "Map generated by c10t") != 0) {
+  if (write_image(s, output.c_str(), *all, "Map generated by c10t") != 0) {
     cerr << "failed! " << strerror(errno) << endl;
-    exit(1);
+    return 1;
   }
   
   if (!s->silent) cout << "done!" << endl;
+
+  delete all;
+
+  return 0;
 }
 
 void do_help() {
@@ -284,14 +384,19 @@ void do_help() {
   cout << endl;
   cout << "Usage: c10t [options]" << endl;
   cout << "Options:" << endl
-    << "  -w <world-directory> : use this world directory as input" << endl
-    << "  -o <outputfile> : use this file as output file for generated png" << endl
-    << "  -s : execute silently, printing nothing except errors" << endl
-    << "  -l : list all available colors and block types" << endl
-    << "  -e <blockid> : exclude block-id from render" << endl
-    << "  -i <blockid> : include only this block-id in render" << endl
-    << "  -t <int> : splice from the top, must be less than 128" << endl
-    << "  -b <int> : splice from the bottom, must be greater than or equal to 0" << endl;
+    << "  -w <world-directory> - use this world directory as input" << endl
+    << "  -o <outputfile>      - use this file as output file for generated png" << endl
+    << endl
+    << "  -s                   - execute silently, printing nothing except errors" << endl
+    << "  -l                   - list all available colors and block types" << endl
+    << "  -e <blockid>         - exclude block-id from render (multiple occurences is possible)" << endl
+    << "  -i <blockid>         - include only this block-id in render (multiple occurences is possible)" << endl
+    << "  -t <int>             - splice from the top, must be less than 128" << endl
+    << "  -b <int>             - splice from the bottom, must be greater than or equal to 0" << endl
+    << "  -a                   - show no blocks except those specified with '-i'" << endl
+    << "  -n                   - do not check for <world>/level.dat" << endl
+    << "Rendering modes:" << endl
+    << "  -q                   - do oblique rendering" << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
@@ -315,12 +420,25 @@ settings_t *init_settings() {
   for (int i = 0; i < mc::MaterialCount; i++) {
     s->excludes[i] = false;
   }
-
-  s->exclude = false;
-
+  
+  s->excludes[mc::Air] = true;
   s->top = 127;
   s->bottom = 0;
+  s->mode = Top;
+  s->nocheck = false;
+  s->silent = false;
+  
   return s;
+}
+
+int get_blockid(const char *blockid) {
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    if (strcmp(mc::MaterialName[i], blockid) == 0) {
+      return i;
+    }
+  }
+  
+  return atoi(blockid);
 }
 
 int main(int argc, char *argv[]){
@@ -332,33 +450,36 @@ int main(int argc, char *argv[]){
   string output;
   int c, blockid;
   
-  while ((c = getopt (argc, argv, "lshw:o:e:t:b:i:")) != -1)
+  while ((c = getopt (argc, argv, "nqalshw:o:e:t:b:i:")) != -1)
   {
+    blockid = -1;
+    
     switch (c)
     {
     case 'e':
-      s->exclude = true;
-      blockid = atoi(optarg);
+      blockid = get_blockid(optarg);
       assert(blockid >= 0 && blockid < mc::MaterialCount);
       s->excludes[blockid] = true;
       break;
-    case 'i':
-      s->exclude = true;
-      blockid = atoi(optarg);
-      assert(blockid >= 0 && blockid < mc::MaterialCount);
-      
+    case 'q':
+      s->mode = Oblique;
+      break;
+    case 'a':
       for (int i = 0; i < mc::MaterialCount; i++) {
         s->excludes[i] = true;
       }
-      
+    case 'i':
+      blockid = get_blockid(optarg);
+      assert(blockid >= 0 && blockid < mc::MaterialCount);
       s->excludes[blockid] = false;
       break;
     case 'w': world = optarg; break;
     case 'o': output = optarg; break;
     case 's': s->silent = true; break;
+    case 'n': s->nocheck = true; break;
     case 't':
       s->top = atoi(optarg);
-      assert(s->top > s->bottom && s->top < 128);
+      assert(s->top > s->bottom && s->top < mc::MapZ);
       break;
     case 'b':
       s->bottom = atoi(optarg);
@@ -397,8 +518,8 @@ int main(int argc, char *argv[]){
       do_help();
       return 1;
     }
-
-    do_world(s, world, output);
+    
+    return do_world(s, world, output);
   } else {
     do_help();
     return 1;

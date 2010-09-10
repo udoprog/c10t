@@ -3,13 +3,21 @@
 
 #include <assert.h>
 
-void Image::set_pixel(int x, int y, Color q){
+void Image::set_pixel(int x, int y, Color *q){
+  if (q == NULL) return;
+
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
-  this->colors[x+y*w] = q;
+  size_t p = x+y*w;
+  
+  if (this->colors[p] != NULL) {
+    delete this->colors[p];
+  }
+
+  this->colors[p] = new Color(q);
 }
 
-Color Image::get_pixel(int x, int y){
+Color *Image::get_pixel(int x, int y){
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
   return this->colors[x+y*w];

@@ -1,6 +1,10 @@
 #include "blocks.h"
 
 int mc::MaterialCount = 0x56;
+int mc::MapX = 0x10;
+int mc::MapY = 0x10;
+int mc::MapZ = 0x80;
+
 const char **mc::MaterialName;
 Color **mc::MaterialColor;
 
@@ -103,8 +107,8 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Wood] = new Color(157,128,79,255);
   mc::MaterialColor[mc::Sapling] = new Color(120,120,120,0);
   mc::MaterialColor[mc::Bedrock] = new Color(84,84,84,255);
-  mc::MaterialColor[mc::Water] = new Color(38,92,255,51);
-  mc::MaterialColor[mc::StationaryWater] = new Color(38,92,255,51);
+  mc::MaterialColor[mc::Water] = new Color(38,92,255,80);
+  mc::MaterialColor[mc::StationaryWater] = new Color(38,92,255,80);
   mc::MaterialColor[mc::Lava] = new Color(255,90,0,255);
   mc::MaterialColor[mc::StationaryLava] = new Color(255,90,0,255);
   mc::MaterialColor[mc::Sand] = new Color(218,210,158,255);

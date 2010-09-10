@@ -37,6 +37,7 @@ class Level
     
     Image *get_image(settings_t *s);
     Image *get_oblique_image(settings_t *s);
+    Image *get_obliqueangle_image(settings_t *s);
 };
 
 #endif /* _LEVEL_H_ */

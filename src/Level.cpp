@@ -145,7 +145,7 @@ Image *Level::get_oblique_image(settings_t *s) {
       for (int z = mc::MapZ - 1; z > 0; z--) {
         blocktype = bget(blocks, x, y, z);
         
-        if (blocktype == mc::Air) {
+        if (s->excludes[blocktype]) {
           continue;
         }
         
@@ -160,5 +160,10 @@ Image *Level::get_oblique_image(settings_t *s) {
     }
   }
   
+  return img;
+}
+
+Image *Level::get_obliqueangle_image(settings_t *s) {
+  Image *img = new Image(mc::MapX, mc::MapY + mc::MapZ);
   return img;
 }

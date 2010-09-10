@@ -5,7 +5,8 @@
 
 enum mode {
   Top,
-  Oblique
+  Oblique,
+  ObliqueAngle
 };
 
 typedef struct _settings {

@@ -287,6 +287,9 @@ int do_world(settings_t *s, string world, string output) {
     case Oblique:
       p.image = level.get_oblique_image(s);
       break;
+    case ObliqueAngle:
+      p.image = level.get_obliqueangle_image(s);
+      break;
     }
     
     p.xPos = level.xPos;
@@ -336,6 +339,32 @@ int do_world(settings_t *s, string world, string output) {
     }
     break;
   case Oblique:
+    {
+      // we must order all the partials in order to do this, otherwise compositioning might end up weird
+      partials.sort(compare_partials);
+      
+      int diffx = maxx - minx;
+      int diffz = maxz - minz;
+      int image_width = diffx * mc::MapX + mc::MapX;
+      int image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
+      size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
+      
+      if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
+           << approx_memory << " bytes of memory ... " << flush;
+      
+      all = new Image(image_width, image_height);
+      
+      while (!partials.empty()) {
+        partial p = partials.front();
+        partials.pop_front();
+        int xoffset = (p.xPos - minx) * mc::MapX;
+        int yoffset = (p.zPos - minz) * mc::MapY;
+        all->composite(xoffset, yoffset, *p.image);
+        delete p.image;
+      }
+    }
+    break;
+  case ObliqueAngle:
     {
       // we must order all the partials in order to do this, otherwise compositioning might end up weird
       partials.sort(compare_partials);
@@ -435,6 +464,7 @@ settings_t *init_settings() {
 
 int get_blockid(const char *blockid) {
   for (int i = 0; i < mc::MaterialCount; i++) {
+    cout << blockid << endl;
     if (strcmp(mc::MaterialName[i], blockid) == 0) {
       return i;
     }
@@ -470,6 +500,7 @@ int main(int argc, char *argv[]){
       for (int i = 0; i < mc::MaterialCount; i++) {
         s->excludes[i] = true;
       }
+      break;
     case 'i':
       blockid = get_blockid(optarg);
       assert(blockid >= 0 && blockid < mc::MaterialCount);

@@ -159,20 +159,8 @@ Image *Level::get_oblique_image(settings_t *s) {
         p.overlay(&height);
         img->set_pixel(x, y + (mc::MapZ - z) - 1, &p);
         
-        switch (blocktype) {
-          case mc::Grass:
-            {
-              Color side(mc::MaterialColor[mc::Dirt]);
-              side.overlay(&light);
-              img->set_pixel(x, y + (mc::MapZ - z), &side);
-            }
-            break;
-          default:
-            Color side(&p);
-            side.overlay(&light);
-            img->set_pixel(x, y + (mc::MapZ - z), &side);
-            break;
-        }
+        Color *bcs = mc::MaterialSideColor[blocktype];
+        img->set_pixel(x, y + (mc::MapZ - z), bcs);
       }
     }
   }
@@ -188,8 +176,6 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
     return img;
   }
   
-  Color light(0, 0, 0, 64);
-
   for (int y = 0; y < mc::MapY; y++) {
     for (int z = s->bottom; z < s->top; z++) {
       for (int x = 0; x < mc::MapX; x++) {
@@ -212,22 +198,9 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         img->set_pixel(_x, _y - 1, &p);
         img->set_pixel(_x + 1, _y - 1, &p);
         
-        switch (blocktype) {
-          case mc::Grass:
-            {
-              Color side(mc::MaterialColor[mc::Dirt]);
-              side.overlay(&light);
-              img->set_pixel(_x, _y, &side);
-              img->set_pixel(_x + 1, _y, &side);
-            }
-            break;
-          default:
-            Color side(&p);
-            side.overlay(&light);
-            img->set_pixel(_x, _y, &side);
-            img->set_pixel(_x + 1, _y, &side);
-            break;
-        }
+        Color *bcs = mc::MaterialSideColor[blocktype];
+        img->set_pixel(_x, _y, bcs);
+        img->set_pixel(_x + 1, _y, bcs);
       }
     }
   }

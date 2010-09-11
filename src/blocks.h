@@ -101,6 +101,7 @@ namespace mc {
   extern int MapY;
   extern const char **MaterialName;
   extern Color **MaterialColor;
+  extern Color **MaterialSideColor;
 };
 
 #endif /* _BLOCKS_H_ */

@@ -7,10 +7,12 @@ int mc::MapZ = 0x80;
 
 const char **mc::MaterialName;
 Color **mc::MaterialColor;
+Color **mc::MaterialSideColor;
 
 void mc::initialize_constants() {
   mc::MaterialName = new const char*[mc::MaterialCount];
   mc::MaterialColor = new Color*[mc::MaterialCount];
+  mc::MaterialSideColor = new Color*[mc::MaterialCount];
 
   mc::MaterialName[mc::Air] = "Air";
   mc::MaterialName[mc::Stone] = "Stone";
@@ -185,4 +187,101 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Reed] = new Color(193,234,150,255);
   mc::MaterialColor[mc::Jukebox] = new Color();
   mc::MaterialColor[mc::Fence] = new Color(0x58, 0x36, 0x16, 200);
+  
+  mc::MaterialSideColor[mc::Air] = new Color(mc::MaterialColor[mc::Air]);
+  mc::MaterialSideColor[mc::Stone] = new Color(mc::MaterialColor[mc::Stone]);
+  mc::MaterialSideColor[mc::Grass] = new Color(mc::MaterialColor[mc::Dirt]);
+  mc::MaterialSideColor[mc::Dirt] = new Color(mc::MaterialColor[mc::Dirt]);
+  mc::MaterialSideColor[mc::Cobblestone] = new Color(mc::MaterialColor[mc::Cobblestone]);
+  mc::MaterialSideColor[mc::Wood] = new Color(mc::MaterialColor[mc::Wood]);
+  mc::MaterialSideColor[mc::Sapling] = new Color(mc::MaterialColor[mc::Sapling]);
+  mc::MaterialSideColor[mc::Bedrock] = new Color(mc::MaterialColor[mc::Bedrock]);
+  mc::MaterialSideColor[mc::Water] = new Color(mc::MaterialColor[mc::Water]);
+  mc::MaterialSideColor[mc::StationaryWater] = new Color(mc::MaterialColor[mc::StationaryWater]);
+  mc::MaterialSideColor[mc::Lava] = new Color(mc::MaterialColor[mc::Lava]);
+  mc::MaterialSideColor[mc::StationaryLava] = new Color(mc::MaterialColor[mc::StationaryLava]);
+  mc::MaterialSideColor[mc::Sand] = new Color(mc::MaterialColor[mc::Sand]);
+  mc::MaterialSideColor[mc::Gravel] = new Color(mc::MaterialColor[mc::Gravel]);
+  mc::MaterialSideColor[mc::GoldOre] = new Color(mc::MaterialColor[mc::GoldOre]);
+  mc::MaterialSideColor[mc::IronOre] = new Color(mc::MaterialColor[mc::IronOre]);
+  mc::MaterialSideColor[mc::CoalOre] = new Color(mc::MaterialColor[mc::CoalOre]);
+  mc::MaterialSideColor[mc::Log] = new Color(mc::MaterialColor[mc::Log]);
+  mc::MaterialSideColor[mc::Leaves] = new Color(mc::MaterialColor[mc::Leaves]);
+  mc::MaterialSideColor[mc::Sponge] = new Color(mc::MaterialColor[mc::Sponge]);
+  mc::MaterialSideColor[mc::Glass] = new Color(mc::MaterialColor[mc::Glass]);
+  mc::MaterialSideColor[mc::RedCloth] = new Color(mc::MaterialColor[mc::RedCloth]);
+  mc::MaterialSideColor[mc::OrangeCloth] = new Color(mc::MaterialColor[mc::OrangeCloth]);
+  mc::MaterialSideColor[mc::YellowCloth] = new Color(mc::MaterialColor[mc::YellowCloth]);
+  mc::MaterialSideColor[mc::LimeCloth] = new Color(mc::MaterialColor[mc::LimeCloth]);
+  mc::MaterialSideColor[mc::GreenCloth] = new Color(mc::MaterialColor[mc::GreenCloth]);
+  mc::MaterialSideColor[mc::AquaGreenCloth] = new Color(mc::MaterialColor[mc::AquaGreenCloth]);
+  mc::MaterialSideColor[mc::CyanCloth] = new Color(mc::MaterialColor[mc::CyanCloth]);
+  mc::MaterialSideColor[mc::BlueCloth] = new Color(mc::MaterialColor[mc::BlueCloth]);
+  mc::MaterialSideColor[mc::PurpleCloth] = new Color(mc::MaterialColor[mc::PurpleCloth]);
+  mc::MaterialSideColor[mc::IndigoCloth] = new Color(mc::MaterialColor[mc::IndigoCloth]);
+  mc::MaterialSideColor[mc::VioletCloth] = new Color(mc::MaterialColor[mc::VioletCloth]);
+  mc::MaterialSideColor[mc::MagentaCloth] = new Color(mc::MaterialColor[mc::MagentaCloth]);
+  mc::MaterialSideColor[mc::PinkCloth] = new Color(mc::MaterialColor[mc::PinkCloth]);
+  mc::MaterialSideColor[mc::BlackCloth] = new Color(mc::MaterialColor[mc::BlackCloth]);
+  mc::MaterialSideColor[mc::GrayCloth] = new Color(mc::MaterialColor[mc::GrayCloth]);
+  mc::MaterialSideColor[mc::WhiteCloth] = new Color(mc::MaterialColor[mc::WhiteCloth]);
+  mc::MaterialSideColor[mc::YellowFlower] = new Color(mc::MaterialColor[mc::YellowFlower]);
+  mc::MaterialSideColor[mc::RedRose] = new Color(mc::MaterialColor[mc::RedRose]);
+  mc::MaterialSideColor[mc::BrownMushroom] = new Color(mc::MaterialColor[mc::BrownMushroom]);
+  mc::MaterialSideColor[mc::RedMushroom] = new Color(mc::MaterialColor[mc::RedMushroom]);
+  mc::MaterialSideColor[mc::GoldBlock] = new Color(mc::MaterialColor[mc::GoldBlock]);
+  mc::MaterialSideColor[mc::IronBlock] = new Color(mc::MaterialColor[mc::IronBlock]);
+  mc::MaterialSideColor[mc::DoubleStep] = new Color(mc::MaterialColor[mc::DoubleStep]);
+  mc::MaterialSideColor[mc::Step] = new Color(mc::MaterialColor[mc::Step]);
+  mc::MaterialSideColor[mc::Brick] = new Color(mc::MaterialColor[mc::Brick]);
+  mc::MaterialSideColor[mc::TNT] = new Color(mc::MaterialColor[mc::TNT]);
+  mc::MaterialSideColor[mc::Bookcase] = new Color(mc::MaterialColor[mc::Bookcase]);
+  mc::MaterialSideColor[mc::MossyCobblestone] = new Color(mc::MaterialColor[mc::MossyCobblestone]);
+  mc::MaterialSideColor[mc::Obsidian] = new Color(mc::MaterialColor[mc::Obsidian]);
+  mc::MaterialSideColor[mc::Torch] = new Color(mc::MaterialColor[mc::Torch]);
+  mc::MaterialSideColor[mc::Fire] = new Color(mc::MaterialColor[mc::Fire]);
+  mc::MaterialSideColor[mc::MobSpawner] = new Color(mc::MaterialColor[mc::MobSpawner]);
+  mc::MaterialSideColor[mc::WoodenStairs] = new Color(mc::MaterialColor[mc::WoodenStairs]);
+  mc::MaterialSideColor[mc::Chest] = new Color(mc::MaterialColor[mc::Chest]);
+  mc::MaterialSideColor[mc::RedstoneWire] = new Color(mc::MaterialColor[mc::RedstoneWire]);
+  mc::MaterialSideColor[mc::DiamondOre] = new Color(mc::MaterialColor[mc::DiamondOre]);
+  mc::MaterialSideColor[mc::DiamondBlock] = new Color(mc::MaterialColor[mc::DiamondBlock]);
+  mc::MaterialSideColor[mc::Workbench] = new Color(mc::MaterialColor[mc::Workbench]);
+  mc::MaterialSideColor[mc::Crops] = new Color(mc::MaterialColor[mc::Crops]);
+  mc::MaterialSideColor[mc::Soil] = new Color(mc::MaterialColor[mc::Soil]);
+  mc::MaterialSideColor[mc::Furnace] = new Color(mc::MaterialColor[mc::Furnace]);
+  mc::MaterialSideColor[mc::BurningFurnace] = new Color(mc::MaterialColor[mc::BurningFurnace]);
+  mc::MaterialSideColor[mc::SignPost] = new Color(mc::MaterialColor[mc::SignPost]);
+  mc::MaterialSideColor[mc::WoodenDoor] = new Color(mc::MaterialColor[mc::WoodenDoor]);
+  mc::MaterialSideColor[mc::Ladder] = new Color(mc::MaterialColor[mc::Ladder]);
+  mc::MaterialSideColor[mc::MinecartTracks] = new Color(mc::MaterialColor[mc::MinecartTracks]);
+  mc::MaterialSideColor[mc::CobblestoneStairs] = new Color(mc::MaterialColor[mc::CobblestoneStairs]);
+  mc::MaterialSideColor[mc::WallSign] = new Color(mc::MaterialColor[mc::WallSign]);
+  mc::MaterialSideColor[mc::Lever] = new Color(mc::MaterialColor[mc::Lever]);
+  mc::MaterialSideColor[mc::StonePressurePlate] = new Color(mc::MaterialColor[mc::StonePressurePlate]);
+  mc::MaterialSideColor[mc::IronDoor] = new Color(mc::MaterialColor[mc::IronDoor]);
+  mc::MaterialSideColor[mc::WoodenPressurePlate] = new Color(mc::MaterialColor[mc::WoodenPressurePlate]);
+  mc::MaterialSideColor[mc::RedstoneOre] = new Color(mc::MaterialColor[mc::RedstoneOre]);
+  mc::MaterialSideColor[mc::GlowingRedstoneOre] = new Color(mc::MaterialColor[mc::GlowingRedstoneOre]);
+  mc::MaterialSideColor[mc::RedstoneTorchOff] = new Color(mc::MaterialColor[mc::RedstoneTorchOff]);
+  mc::MaterialSideColor[mc::RedstoneTorchOn] = new Color(mc::MaterialColor[mc::RedstoneTorchOn]);
+  mc::MaterialSideColor[mc::StoneButton] = new Color(mc::MaterialColor[mc::StoneButton]);
+  mc::MaterialSideColor[mc::Snow] = new Color(mc::MaterialColor[mc::Snow]);
+  mc::MaterialSideColor[mc::Ice] = new Color(mc::MaterialColor[mc::Ice]);
+  mc::MaterialSideColor[mc::SnowBlock] = new Color(mc::MaterialColor[mc::SnowBlock]);
+  mc::MaterialSideColor[mc::Cactus] = new Color(mc::MaterialColor[mc::Cactus]);
+  mc::MaterialSideColor[mc::Clay] = new Color(mc::MaterialColor[mc::Clay]);
+  mc::MaterialSideColor[mc::Reed] = new Color(mc::MaterialColor[mc::Reed]);
+  mc::MaterialSideColor[mc::Jukebox] = new Color(mc::MaterialColor[mc::Jukebox]);
+  mc::MaterialSideColor[mc::Fence] = new Color(mc::MaterialColor[mc::Fence]);
+
+  Color dark(0, 0, 0, 60);
+  
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    mc::MaterialSideColor[i]->overlay(&dark);
+  }
+  
+  mc::MaterialSideColor[mc::Air] = mc::MaterialColor[mc::Air];
+  mc::MaterialSideColor[mc::Water] = mc::MaterialColor[mc::Water];
+  mc::MaterialSideColor[mc::StationaryWater] = mc::MaterialColor[mc::StationaryWater];
 };

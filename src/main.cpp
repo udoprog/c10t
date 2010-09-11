@@ -452,8 +452,8 @@ void do_help() {
     << "Rendering modes:" << endl
     << "  -q                   - do oblique rendering" << endl
     << "  -y                   - do oblique angle rendering" << endl
-    << "  -f                   - flip the oblique rendering 90 degrees" << endl
-    << "  -r                   - flip the oblique rendering 180 degrees" << endl;
+    << "  -f                   - flip the rendering 90 degrees CCW" << endl
+    << "  -r                   - flip the rendering 180 degrees CCW" << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;

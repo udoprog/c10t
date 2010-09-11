@@ -379,8 +379,8 @@ int do_world(settings_t *s, string world, string output) {
       
       int diffx = maxx - minx;
       int diffz = maxz - minz;
-      int image_width = diffx * mc::MapX + mc::MapX;
-      int image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
+      int image_width = (diffx + diffz) * mc::MapX + 1;
+      int image_height = (diffx + diffz) * mc::MapX + mc::MapZ + mc::MapX + mc::MapX + 2;
       size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
       
       if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
@@ -391,8 +391,12 @@ int do_world(settings_t *s, string world, string output) {
       while (!partials.empty()) {
         partial p = partials.front();
         partials.pop_front();
-        int xoffset = (p.xPos - minx) * mc::MapX;
-        int yoffset = (p.zPos - minz) * mc::MapY;
+
+        int mapx = (p.xPos - minx);
+        int mapy = (p.zPos - minz);
+        
+        int xoffset = mc::MapX * mapx + mc::MapY * diffz - (mapy * mc::MapY);
+        int yoffset = mc::MapX * (p.xPos - minx) + mapy * mc::MapY;
         all->composite(xoffset, yoffset, *p.image);
         delete p.image;
       }
@@ -434,6 +438,7 @@ void do_help() {
     << "  -n                   - do not check for <world>/level.dat" << endl
     << "Rendering modes:" << endl
     << "  -q                   - do oblique rendering" << endl
+    << "  -y                   - do oblique angle rendering" << endl
     << "  -f                   - flip the oblique rendering 90 degrees" << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
@@ -490,7 +495,7 @@ int main(int argc, char *argv[]){
   string output;
   int c, blockid;
   
-  while ((c = getopt (argc, argv, "fnqalshw:o:e:t:b:i:")) != -1)
+  while ((c = getopt (argc, argv, "fnqyalshw:o:e:t:b:i:")) != -1)
   {
     blockid = -1;
     
@@ -503,6 +508,9 @@ int main(int argc, char *argv[]){
       break;
     case 'q':
       s->mode = Oblique;
+      break;
+    case 'y':
+      s->mode = ObliqueAngle;
       break;
     case 'a':
       for (int i = 0; i < mc::MaterialCount; i++) {

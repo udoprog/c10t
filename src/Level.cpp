@@ -181,6 +181,56 @@ Image *Level::get_oblique_image(settings_t *s) {
 }
 
 Image *Level::get_obliqueangle_image(settings_t *s) {
-  Image *img = new Image(mc::MapX, mc::MapY + mc::MapZ);
+  Image *img = new Image(mc::MapX * 2 + 1, mc::MapX + mc::MapZ + mc::MapY);
+  int blocktype;
+  
+  if (!islevel) {
+    return img;
+  }
+  
+  Color light(0, 0, 0, 64);
+
+  for (int y = 0; y < mc::MapY; y++) {
+    for (int z = s->bottom; z < s->top; z++) {
+      for (int x = 0; x < mc::MapX; x++) {
+        blocktype = bget(blocks, x, y, z);
+    
+        if (s->excludes[blocktype]) {
+          continue;
+        }
+    
+        Color *bc = mc::MaterialColor[blocktype];
+        
+        Color height(0, 0, 0, 0);
+        height.a = (127 - z);
+        Color p(bc);
+        p.overlay(&height);
+        
+        int _x = mc::MapX + x - y;
+        int _y = mc::MapZ + x - z + y;
+        
+        img->set_pixel(_x, _y - 1, &p);
+        img->set_pixel(_x + 1, _y - 1, &p);
+        
+        switch (blocktype) {
+          case mc::Grass:
+            {
+              Color side(mc::MaterialColor[mc::Dirt]);
+              side.overlay(&light);
+              img->set_pixel(_x, _y, &side);
+              img->set_pixel(_x + 1, _y, &side);
+            }
+            break;
+          default:
+            Color side(&p);
+            side.overlay(&light);
+            img->set_pixel(_x, _y, &side);
+            img->set_pixel(_x + 1, _y, &side);
+            break;
+        }
+      }
+    }
+  }
+  
   return img;
 }

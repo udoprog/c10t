@@ -81,6 +81,19 @@ nbt::Byte bget(nbt::ByteArray *blocks, int x, int y, int z) {
   return blocks->values[p];
 }
 
+void transform_xy(settings_t *s, int &x, int &y) {
+  if (s->flip) {
+    int t = x;
+    x = y; 
+    y = mc::MapY - t - 1;
+  }
+  
+  if (s->invert) {
+    y = mc::MapY - y - 1;
+    x = mc::MapX - x - 1;
+  }
+}
+
 Image *Level::get_image(settings_t *s) {
   Image *img = new Image(mc::MapX, mc::MapY);
   
@@ -88,8 +101,11 @@ Image *Level::get_image(settings_t *s) {
     return img;
   }
   
-  for (int x = 0; x < mc::MapX; x++) {
-    for (int y = 0; y < mc::MapY; y++) {
+  for (int y = 0; y < mc::MapY; y++) {
+    for (int x = 0; x < mc::MapX; x++) {
+      int _x = x, _y = y;
+      transform_xy(s, _x, _y);
+
       Color *base = new Color(255, 255, 255, 0);
       
       int blocktype;
@@ -97,7 +113,7 @@ Image *Level::get_image(settings_t *s) {
       
       // do incremental color fill until color is opaque
       for (z = s->top; z > s->bottom; z--) {
-        blocktype = bget(blocks, x, y, z);
+        blocktype = bget(blocks, _x, _y, z);
         
         if (s->excludes[blocktype]) {
           continue;
@@ -125,6 +141,7 @@ Image *Level::get_image(settings_t *s) {
       }
       
       img->set_pixel(x, y, base);
+      delete base;
     }
   }
   
@@ -145,7 +162,10 @@ Image *Level::get_oblique_image(settings_t *s) {
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
       for (int z = s->bottom; z < s->top; z++) {
-        blocktype = bget(blocks, x, y, z);
+        int _x = x, _y = y;
+        transform_xy(s, _x, _y);
+        
+        blocktype = bget(blocks, _x, _y, z);
         
         if (s->excludes[blocktype]) {
           continue;
@@ -179,8 +199,11 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
   for (int y = 0; y < mc::MapY; y++) {
     for (int z = s->bottom; z < s->top; z++) {
       for (int x = 0; x < mc::MapX; x++) {
-        blocktype = bget(blocks, x, y, z);
-    
+        int _x = x, _y = y;
+        transform_xy(s, _x, _y);
+        
+        blocktype = bget(blocks, _x, _y, z);
+        
         if (s->excludes[blocktype]) {
           continue;
         }
@@ -192,15 +215,15 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         Color p(bc);
         p.overlay(&height);
         
-        int _x = mc::MapX + x - y;
-        int _y = mc::MapZ + x - z + y;
+        int _px = mc::MapX + x - y;
+        int _py = mc::MapZ + x - z + y;
         
-        img->set_pixel(_x, _y - 1, &p);
-        img->set_pixel(_x + 1, _y - 1, &p);
+        img->set_pixel(_px, _py - 1, &p);
+        img->set_pixel(_px + 1, _py - 1, &p);
         
         Color *bcs = mc::MaterialSideColor[blocktype];
-        img->set_pixel(_x, _y, bcs);
-        img->set_pixel(_x + 1, _y, bcs);
+        img->set_pixel(_px, _py, bcs);
+        img->set_pixel(_px + 1, _py, bcs);
       }
     }
   }

@@ -17,7 +17,8 @@ typedef struct _settings {
   int top;
   int bottom;
   enum mode mode;
-  bool oblique_flip;
+  bool flip;
+  bool invert;
 } settings_t;
 
 #endif

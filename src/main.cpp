@@ -270,22 +270,6 @@ int do_world(settings_t *s, string world, string output) {
     string path = listing.next();
     Level level(path.c_str());
     
-    if (level.xPos < minx) {
-      minx = level.xPos;
-    }
-
-    if (level.xPos > maxx) {
-      maxx = level.xPos;
-    }
-
-    if (level.zPos < minz) {
-      minz = level.zPos;
-    }
-    
-    if (level.zPos > maxz) {
-      maxz = level.zPos;
-    }
-    
     partial p;
 
     switch (s->mode) {
@@ -302,6 +286,34 @@ int do_world(settings_t *s, string world, string output) {
     
     p.xPos = level.xPos;
     p.zPos = level.zPos;
+    
+    if (s->flip) {
+      int t = p.zPos;
+      p.zPos = p.xPos;
+      p.xPos = -t;
+    }
+    
+    if (s->invert) {
+      p.zPos = -p.zPos;
+      p.xPos = -p.xPos;
+    }
+    
+    if (p.xPos < minx) {
+      minx = p.xPos;
+    }
+
+    if (p.xPos > maxx) {
+      maxx = p.xPos;
+    }
+
+    if (p.zPos < minz) {
+      minz = p.zPos;
+    }
+    
+    if (p.zPos > maxz) {
+      maxz = p.zPos;
+    }
+
     partials.push_back(p);
     
     if (!s->silent) {
@@ -439,7 +451,8 @@ void do_help() {
     << "Rendering modes:" << endl
     << "  -q                   - do oblique rendering" << endl
     << "  -y                   - do oblique angle rendering" << endl
-    << "  -f                   - flip the oblique rendering 90 degrees" << endl;
+    << "  -f                   - flip the oblique rendering 90 degrees" << endl
+    << "  -r                   - flip the oblique rendering 180 degrees" << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
@@ -470,7 +483,8 @@ settings_t *init_settings() {
   s->mode = Top;
   s->nocheck = false;
   s->silent = false;
-  s->oblique_flip = false;
+  s->flip = false;
+  s->invert = false;
   
   return s;
 }
@@ -495,7 +509,7 @@ int main(int argc, char *argv[]){
   string output;
   int c, blockid;
   
-  while ((c = getopt (argc, argv, "fnqyalshw:o:e:t:b:i:")) != -1)
+  while ((c = getopt (argc, argv, "rfnqyalshw:o:e:t:b:i:")) != -1)
   {
     blockid = -1;
     
@@ -525,7 +539,8 @@ int main(int argc, char *argv[]){
     case 'w': world = optarg; break;
     case 'o': output = optarg; break;
     case 's': s->silent = true; break;
-    case 'f': s->oblique_flip = true; break;
+    case 'f': s->flip = true; break;
+    case 'r': s->invert = true; break;
     case 'n': s->nocheck = true; break;
     case 't':
       s->top = atoi(optarg);

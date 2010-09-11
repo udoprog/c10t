@@ -167,7 +167,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::SignPost] = new Color();
   mc::MaterialColor[mc::WoodenDoor] = new Color();
   mc::MaterialColor[mc::Ladder] = new Color();
-  mc::MaterialColor[mc::MinecartTracks] = new Color();
+  mc::MaterialColor[mc::MinecartTracks] = new Color(120, 120, 120, 128);
   mc::MaterialColor[mc::CobblestoneStairs] = new Color();
   mc::MaterialColor[mc::WallSign] = new Color();
   mc::MaterialColor[mc::Lever] = new Color();
@@ -275,7 +275,7 @@ void mc::initialize_constants() {
   mc::MaterialSideColor[mc::Jukebox] = new Color(mc::MaterialColor[mc::Jukebox]);
   mc::MaterialSideColor[mc::Fence] = new Color(mc::MaterialColor[mc::Fence]);
 
-  Color dark(0, 0, 0, 60);
+  Color dark(0, 0, 0, 80);
   
   for (int i = 0; i < mc::MaterialCount; i++) {
     mc::MaterialSideColor[i]->overlay(&dark);

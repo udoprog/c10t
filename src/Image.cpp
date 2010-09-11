@@ -3,24 +3,28 @@
 
 #include <assert.h>
 
-void Image::set_pixel(int x, int y, Color *q){
-  if (q == NULL) return;
-
+void Image::set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
-  size_t p = x+y*w;
-  
-  if (this->colors[p] != NULL) {
-    delete this->colors[p];
-  }
-
-  this->colors[p] = new Color(q);
+  size_t p = (x * COLOR_TYPE) + (y * w * COLOR_TYPE);
+  colors[p] = r;
+  colors[p+1] = g;
+  colors[p+2] = b;
+  colors[p+3] = a;
 }
 
-Color *Image::get_pixel(int x, int y){
+void Image::set_pixel(int x, int y, Color &q){
+  set_pixel(x, y, q.r, q.g, q.b, q.a);
+}
+
+void Image::get_pixel(int x, int y, Color &c){
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
-  return this->colors[x+y*w];
+  size_t p = (x * COLOR_TYPE) + (y * w * COLOR_TYPE);
+  c.r = this->colors[p];
+  c.g = this->colors[p+1];
+  c.b = this->colors[p+2];
+  c.a = this->colors[p+3];
 }
 
 int Image::get_width() {
@@ -37,9 +41,13 @@ void Image::composite(int xoffset, int yoffset, Image &img) {
   assert(yoffset >= 0);
   assert(yoffset + img.get_height() <= h);
   
+  Color c;
+  
   for (int x = 0; x < img.get_width(); x++) {
     for (int y = 0; y < img.get_height(); y++) {
-      set_pixel(xoffset + x, yoffset + y, img.get_pixel(x, y));
+      img.get_pixel(x, y, c);
+      if (c.a == 0x00) continue;
+      set_pixel(xoffset + x, yoffset + y, c);
     }
   }
 }

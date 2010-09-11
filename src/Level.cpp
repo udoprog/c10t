@@ -106,7 +106,7 @@ Image *Level::get_image(settings_t *s) {
       int _x = x, _y = y;
       transform_xy(s, _x, _y);
 
-      Color *base = new Color(255, 255, 255, 0);
+      Color base(255, 255, 255, 0);
       
       int blocktype;
       int z;
@@ -120,9 +120,9 @@ Image *Level::get_image(settings_t *s) {
         }
         
         Color *bc = mc::MaterialColor[blocktype];
-        base->underlay(bc);
+        base.underlay(bc);
         
-        if (base->a == 0xff) {
+        if (base.a == 0xff) {
           break;
         }
       }
@@ -136,12 +136,11 @@ Image *Level::get_image(settings_t *s) {
           // do an color overlay for mapped height
           Color height(0, 0, 0, 0);
           height.a = (127 - z);
-          base->overlay(&height);
+          base.overlay(&height);
           break;
       }
       
       img->set_pixel(x, y, base);
-      delete base;
     }
   }
   
@@ -177,10 +176,10 @@ Image *Level::get_oblique_image(settings_t *s) {
         height.a = (127 - z);
         Color p(bc);
         p.overlay(&height);
-        img->set_pixel(x, y + (mc::MapZ - z) - 1, &p);
+        img->set_pixel(x, y + (mc::MapZ - z) - 1, p);
         
         Color *bcs = mc::MaterialSideColor[blocktype];
-        img->set_pixel(x, y + (mc::MapZ - z), bcs);
+        img->set_pixel(x, y + (mc::MapZ - z), *bcs);
       }
     }
   }
@@ -218,12 +217,12 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         int _px = mc::MapX + x - y;
         int _py = mc::MapZ + x - z + y;
         
-        img->set_pixel(_px, _py - 1, &p);
-        img->set_pixel(_px + 1, _py - 1, &p);
+        img->set_pixel(_px, _py - 1, p);
+        img->set_pixel(_px + 1, _py - 1, p);
         
         Color *bcs = mc::MaterialSideColor[blocktype];
-        img->set_pixel(_px, _py, bcs);
-        img->set_pixel(_px + 1, _py, bcs);
+        img->set_pixel(_px, _py, *bcs);
+        img->set_pixel(_px + 1, _py, *bcs);
       }
     }
   }

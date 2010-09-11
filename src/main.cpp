@@ -168,20 +168,22 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
    row = (png_bytep) malloc(4 * img.get_width() * sizeof(png_byte));
 
    int x, y;
+   
    for (y=0 ; y<img.get_height(); y++) {
       for (x=0 ; x<img.get_width(); x++) {
-        Color *c = img.get_pixel(x, y);
+        Color c;
+        img.get_pixel(x, y, c);
         
-        if (c == NULL) {
+        if (c.a == 0x0) {
           row[0 + x*4] = 0;
           row[1 + x*4] = 0;
           row[2 + x*4] = 0;
           row[3 + x*4] = 0x00;
         }
         else {
-          row[0 + x*4] = c->r;
-          row[1 + x*4] = c->g;
-          row[2 + x*4] = c->b;
+          row[0 + x*4] = c.r;
+          row[1 + x*4] = c.g;
+          row[2 + x*4] = c.b;
           row[3 + x*4] = 0xff;
         }
       }
@@ -427,7 +429,6 @@ int do_world(settings_t *s, string world, string output) {
   if (!s->silent) cout << "done!" << endl;
 
   delete all;
-
   return 0;
 }
 

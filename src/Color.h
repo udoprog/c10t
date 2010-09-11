@@ -11,7 +11,7 @@ struct Color{
   uint8_t g;
   uint8_t b;
   uint8_t a;
-
+  
   Color(Color *c) : r(c->r), g(c->g), b(c->b), a(c->a) { }
   
   Color() : r(0xff), g(0xff), b(0xff), a(0x00) { }
@@ -22,7 +22,7 @@ struct Color{
   
   ~Color(){
   }
-
+  
   void overlay(const Color *other);
   void underlay(const Color *other);
 

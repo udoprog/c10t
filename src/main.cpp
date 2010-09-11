@@ -1,3 +1,5 @@
+#include <sys/stat.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -31,11 +33,19 @@ const char *dir_sep = "/";
 const char dir_sep_c = '/';
 #endif
 
+inline bool is_dir(string &path) {
+   struct stat st;
+   stat(path.c_str(), &st);
+   return S_ISDIR(st.st_mode);
+}
+
+inline bool is_file(string &path) {
+   struct stat st;
+   stat(path.c_str(), &st);
+   return S_ISREG(st.st_mode);
+}
+
 inline string path_join(string a, string b) {
-  if (a.at(a.size() - 1) == dir_sep_c) {
-    return a.substr(0, a.size() - 1) + dir_sep + b;
-  }
-  
   return a + dir_sep + b;
 }
 
@@ -83,11 +93,13 @@ public:
           continue;
         }
         
-        if (ent->d_type == DT_DIR) {
-          directories.push(path_join(path, temp_str));
+        string fullpath = path_join(path, temp_str);
+        
+        if (is_dir(fullpath)) {
+          directories.push(fullpath);
         }
-        else if (ent->d_type == DT_REG) {
-          files.push(path_join(path, temp_str));
+        else if (is_file(fullpath)) {
+          files.push(fullpath);
         }
       }
       
@@ -228,15 +240,11 @@ int do_world(settings_t *s, string world, string output) {
   if (!s->nocheck)
   {
     string level_dat = path_join(world, "level.dat");
-    
-    FILE *f = fopen(level_dat.c_str(), "r");
-    
-    if (f == NULL) {
+  
+    if (!is_file(level_dat)) {
       cerr << "could not stat file: " << level_dat << " - " << strerror(errno) << endl;
       return 1;
     }
-
-    fclose(f);
   }
   
   if (!s->silent) {

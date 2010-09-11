@@ -1,7 +1,7 @@
 CC=g++
 XCFLAGS=
 CFLAGS=-g -Wall $(XCFLAGS)
-LDFLAGS=-lpng
+LDFLAGS=-lpng14 -lz
 
 OUT=src/c10t
 

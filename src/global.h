@@ -14,6 +14,7 @@ typedef struct _settings {
   bool silent;
   bool nocheck;
   bool *excludes;
+  bool binary;
   // top/bottom used for slicing
   int top;
   int bottom;

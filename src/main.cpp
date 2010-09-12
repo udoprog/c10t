@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
 #include <stack>
@@ -28,6 +29,12 @@
 #include "threadworker.h"
 
 using namespace std;
+
+stringstream error;
+const uint8_t ERROR_BYTE = 0x01;
+const uint8_t RENDER_BYTE = 0x10;
+const uint8_t COMP_BYTE = 0x20;
+const uint8_t IMAGE_BYTE = 0x30;
 
 #ifdef _WIN32
 const char *dir_sep = "\\";
@@ -174,6 +181,11 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
    int x, y;
    
    for (y=0 ; y<img.get_height(); y++) {
+      if (s->binary) {
+        uint8_t b = ((y * 0xff) / img.get_height());
+        cout << IMAGE_BYTE << b << flush;
+      }
+      
       for (x=0 ; x<img.get_width(); x++) {
         Color c;
         img.get_pixel(x, y, c);
@@ -245,15 +257,9 @@ public:
     p->zPos = level->zPos;
     
     switch (s->mode) {
-    case Top:
-      p->image = level->get_image(s);
-      break;
-    case Oblique:
-      p->image = level->get_oblique_image(s);
-      break;
-    case ObliqueAngle:
-      p->image = level->get_obliqueangle_image(s);
-      break;
+    case Top:           p->image = level->get_image(s); break;
+    case Oblique:       p->image = level->get_oblique_image(s); break;
+    case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
     }
     
     if (s->flip) {
@@ -286,15 +292,84 @@ bool compare_partials(partial first, partial second)
   return first.xPos < second.xPos;;
 }
 
-int do_world(settings_t *s, string world, string output) {
+inline void calc_image_width_height(settings_t *s, int maxx, int maxz, int minx, int minz, int &image_width, int &image_height) {
+  int diffx = maxx - minx;
+  int diffz = maxz - minz;
+  
+  switch (s->mode) {
+  case Top:
+    image_width = diffx * mc::MapX + mc::MapX;
+    image_height = diffz * mc::MapY + mc::MapY;
+    break;
+  case Oblique:
+    image_width = diffx * mc::MapX + mc::MapX;
+    image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
+    break;
+  case ObliqueAngle:
+    image_width = (diffx + diffz) * mc::MapX + 1;
+    image_height = (diffx + diffz) * mc::MapX + mc::MapZ + mc::MapX + mc::MapX + 2;
+    break;
+  }
+}
 
+inline void calc_partials_pre(settings_t *s, boost::ptr_list<partial> &partials) {
+  switch (s->mode) {
+  case Oblique: partials.sort(compare_partials); break;
+  case ObliqueAngle: partials.sort(compare_partials); break;
+  default: break;
+  }
+
+}
+
+inline void calc_image_partial(settings_t *s, partial &p, Image &all, int maxx, int maxz, int minx, int minz, int image_width, int image_height) {
+  int diffz = maxz - minz;
+  
+  switch (s->mode) {
+  case Top:
+    {
+      int xoffset = (p.xPos - minx) * mc::MapX;
+      int yoffset = (p.zPos - minz) * mc::MapY;
+      all.composite(xoffset, yoffset, *p.image);
+    }
+    break;
+  case Oblique:
+    {
+      int xoffset = (p.xPos - minx) * mc::MapX;
+      int yoffset = (p.zPos - minz) * mc::MapY;
+      all.composite(xoffset, yoffset, *p.image);
+    }
+    break;
+  case ObliqueAngle:
+    {
+      int mapx = (p.xPos - minx);
+      int mapy = (p.zPos - minz);
+      
+      int xoffset = mc::MapX * mapx + mc::MapY * diffz - (mapy * mc::MapY);
+      int yoffset = mc::MapX * mapx + mapy * mc::MapY;
+      all.composite(xoffset, yoffset, *p.image);
+    }
+    break;
+  }
+}
+
+bool do_world(settings_t *s, string world, string output) {
+  if (world.empty()) {
+    error << "You must specify world using '-w' to generate map";
+    return false;
+  }
+  
+  if (output.empty()) {
+    error << "You must specify output file using '-o' to generate map";
+    return false;
+  }
+  
   if (!s->nocheck)
   {
     string level_dat = path_join(world, "level.dat");
-  
+    
     if (!is_file(level_dat)) {
-      cerr << "could not stat file: " << level_dat << " - " << strerror(errno) << endl;
-      return 1;
+      error << "could not stat file: " << level_dat << " - " << strerror(errno);
+      return false;
     }
   }
   
@@ -319,150 +394,107 @@ int do_world(settings_t *s, string world, string output) {
 
   partial_renderer renderer(s, s->threads);
   
-  int jobs = 0;
-
-  while (listing.hasnext()) {
-    renderer.give(listing.next());
-    ++jobs;
-  }
-
-  renderer.start();
-  
-  while (jobs-- > 0) {
-    partial *p = renderer.get();
+  {
+    int jobs = 0;
     
-    if (p->xPos < minx) {
-      minx = p->xPos;
+    while (listing.hasnext()) {
+      renderer.give(listing.next());
+      ++jobs;
     }
     
-    if (p->xPos > maxx) {
-      maxx = p->xPos;
-    }
-
-    if (p->zPos < minz) {
-      minz = p->zPos;
-    }
+    renderer.start();
     
-    if (p->zPos > maxz) {
-      maxz = p->zPos;
-    }
-    
-    partials.push_back(p);
-    
-    if (!s->silent) {
-      if (i % 100 == 0) {
-        cout << " " << setw(9) << i << flush;
+    for (int j = 0; j < jobs; j++) {
+      partial *p = renderer.get();
+      
+      if (p->xPos < minx) {
+        minx = p->xPos;
       }
       
-      if (i % 1000 == 0) {
-        cout << endl;
+      if (p->xPos > maxx) {
+        maxx = p->xPos;
       }
-        
-      ++i;
-    }
-  }
 
-  renderer.join();
+      if (p->zPos < minz) {
+        minz = p->zPos;
+      }
+      
+      if (p->zPos > maxz) {
+        maxz = p->zPos;
+      }
+      
+      partials.push_back(p);
+      
+      if (!s->silent) {
+        if (i % 100 == 0) {
+          cout << " " << setw(9) << i << flush;
+        }
+        
+        if (i % 1000 == 0) {
+          cout << endl;
+        }
+          
+        ++i;
+      }
+      
+      if (s->binary) {
+        int8_t p = (j * 0xff) / jobs;
+        cout << RENDER_BYTE << p << flush;
+      }
+    }
+
+    renderer.join();
+  }
   
   if (!s->silent) cout << setw(10) << i << setw(10) << "done!" << endl;
   if (!s->silent) cout << "Compositioning image... " << flush;
   
-  Image *all = NULL;
   
-  switch (s->mode) {
-  case Top:
-    {
-      int diffx = maxx - minx;
-      int diffz = maxz - minz;
-      int image_width = diffx * mc::MapX + mc::MapX;
-      int image_height = diffz * mc::MapY + mc::MapY;
-      size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
-      
-      if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
-           << approx_memory << " bytes of memory ... " << flush;
-      
-      all = new Image(image_width, image_height);
-      
-      while (!partials.empty()) {
-        partial p = partials.back();
-        partials.pop_back();
-        int xoffset = (p.xPos - minx) * mc::MapX;
-        int yoffset = (p.zPos - minz) * mc::MapY;
-        all->composite(xoffset, yoffset, *p.image);
-        delete p.image;
-      }
-    }
-    break;
-  case Oblique:
-    {
-      // we must order all the partials in order to do this, otherwise compositioning might end up weird
-      partials.sort(compare_partials);
-      
-      int diffx = maxx - minx;
-      int diffz = maxz - minz;
-      int image_width = diffx * mc::MapX + mc::MapX;
-      int image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
-      size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
-      
-      if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
-           << approx_memory << " bytes of memory ... " << flush;
-      
-      all = new Image(image_width, image_height);
-      
-      while (!partials.empty()) {
-        partial p = partials.front();
-        partials.pop_front();
-        int xoffset = (p.xPos - minx) * mc::MapX;
-        int yoffset = (p.zPos - minz) * mc::MapY;
-        all->composite(xoffset, yoffset, *p.image);
-        delete p.image;
-      }
-    }
-    break;
-  case ObliqueAngle:
-    {
-      // we must order all the partials in order to do this, otherwise compositioning might end up weird
-      partials.sort(compare_partials);
-      
-      int diffx = maxx - minx;
-      int diffz = maxz - minz;
-      int image_width = (diffx + diffz) * mc::MapX + 1;
-      int image_height = (diffx + diffz) * mc::MapX + mc::MapZ + mc::MapX + mc::MapX + 2;
-      size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
-      
-      if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
-           << approx_memory << " bytes of memory ... " << flush;
-      
-      all = new Image(image_width, image_height);
-      
-      while (!partials.empty()) {
-        partial p = partials.front();
-        partials.pop_front();
+  int image_width = 0, image_height = 0;
+  
+  // calculate image_width / image_height
+  {
+    calc_image_width_height(s, maxx, maxz, minx, minz, image_width, image_height);
+    
+    size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
+    
+    if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
+         << approx_memory << " bytes of memory ... " << flush;
+  }
+  
+  Image all(image_width, image_height);
+  
+  {
+    int j = 0;
+    int jobs = partials.size();
 
-        int mapx = (p.xPos - minx);
-        int mapy = (p.zPos - minz);
-        
-        int xoffset = mc::MapX * mapx + mc::MapY * diffz - (mapy * mc::MapY);
-        int yoffset = mc::MapX * mapx + mapy * mc::MapY;
-        all->composite(xoffset, yoffset, *p.image);
-        delete p.image;
+    calc_partials_pre(s, partials);
+    
+    while (!partials.empty()) {
+      partial p = partials.front();
+      partials.pop_front();
+      calc_image_partial(s, p, all, maxx, maxz, minx, minz, image_width, image_height);
+      
+      if (s->binary) {
+        int8_t p = (j++ * 0xff) / jobs;
+        cout << COMP_BYTE << p << flush;
       }
+      
+      delete p.image;
     }
-    break;
   }
   
   if (!s->silent) cout << "done!" << endl;
   if (!s->silent) cout << "Saving image to " << output << "... " << flush;
   
-  if (write_image(s, output.c_str(), *all, "Map generated by c10t") != 0) {
-    cerr << "failed! " << strerror(errno) << endl;
-    return 1;
+  if (write_image(s, output.c_str(), all, "Map generated by c10t") != 0) {
+    error << strerror(errno);
+    return false;
   }
   
   if (!s->silent) cout << "done!" << endl;
-
-  delete all;
-  return 0;
+  
+  return true;
 }
 
 void do_help() {
@@ -537,6 +569,7 @@ static struct option long_options[] =
    {"180",              no_argument, 0, 'r'},
    {"threads",          no_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
+   {"binary",           no_argument, 0, 'x'},
    {0, 0, 0, 0}
  };
 
@@ -558,6 +591,7 @@ settings_t *init_settings() {
   s->flip = false;
   s->invert = false;
   s->threads = 1;
+  s->binary = false;
   
   return s;
 }
@@ -583,7 +617,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "crfnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "xcrfnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -617,6 +651,10 @@ int main(int argc, char *argv[]){
     case 'w': world = optarg; break;
     case 'o': output = optarg; break;
     case 's': s->silent = true; break;
+    case 'x':
+      s->silent = true;
+      s->binary = true;
+      break;
     case 'f': s->flip = true; break;
     case 'r': s->invert = true; break;
     case 'n': s->nocheck = true; break;
@@ -650,22 +688,23 @@ int main(int argc, char *argv[]){
      }
   }
   
+  
+  
   if (!s->silent) {
     cout << "type '-h' for help" << endl;
     cout << endl;
   }
-  
-  if (!world.empty()) {
-    if (output.empty()) {
-      cout << "error: You must specify output file using '-o' to generate world" << endl;
-      cout << endl;
-      do_help();
-      return 1;
+
+  if (!do_world(s, world, output))  {
+    if (s->binary) {
+      cout << ERROR_BYTE << flush;
+      cout << error.str() << flush;
     }
     
-    return do_world(s, world, output);
-  } else {
-    do_help();
+    if (!s->silent) {
+      cout << error.str() << endl;
+    }
+
     return 1;
   }
   

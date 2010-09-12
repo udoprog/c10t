@@ -1,7 +1,7 @@
 CC=g++
 XCFLAGS=
-CFLAGS=-g -Wall $(XCFLAGS)
-LDFLAGS=-lpng14 -lz -lboost_thread -lpthread
+CFLAGS=-Wall -O3 $(XCFLAGS)
+LDFLAGS=-lpng -lz -lboost_thread -lpthread
 
 OUT=src/c10t
 

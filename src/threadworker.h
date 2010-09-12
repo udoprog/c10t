@@ -13,13 +13,13 @@ template <class I, class O>
 class threadworker
 {
 private:
-  std::queue<I> queue_in;
-  std::queue<O> queue_out;
+  std::queue<I> in;
+  std::queue<O> out;
   std::list<boost::thread *> threads;
-  boost::mutex queue_in_mutex;
-  boost::mutex queue_out_mutex;
-  boost::condition queue_in_cond;
-  boost::condition queue_out_cond;
+  boost::condition in_cond;
+  boost::condition out_cond;
+  boost::mutex in_mutex;
+  boost::mutex out_mutex;
   volatile int running;
 public:
   threadworker(int c) : running(1) {
@@ -37,9 +37,9 @@ public:
   }
   
   void give(I t) {
-    boost::mutex::scoped_lock lock(queue_in_mutex);
-    queue_in.push(t);
-    queue_in_cond.notify_one();
+    boost::mutex::scoped_lock lock(in_mutex);
+    in.push(t);
+    in_cond.notify_one();
   }
   
   void run(int id) {
@@ -47,43 +47,43 @@ public:
       I i;
       
       {
-        boost::mutex::scoped_lock lock(queue_in_mutex);
+        boost::mutex::scoped_lock lock(in_mutex);
         
-        while (queue_in.empty()) {
-          queue_in_cond.wait(lock);
+        while (in.empty()) {
+          in_cond.wait(lock);
           
           if (!running) {
             return;
           }
         }
         
-        i = queue_in.front();
-        queue_in.pop();
+        i = in.front();
+        in.pop();
       }
       
       O o = work(i);
       
       {
-        boost::mutex::scoped_lock lock(queue_out_mutex);
-        queue_out.push(o);
-        queue_out_cond.notify_one();
+        boost::mutex::scoped_lock lock(out_mutex);
+        out.push(o);
+        out_cond.notify_one();
       }
     }
   }
 
   virtual O work(I) = 0;
   
-  O yield() {
+  O get() {
     O o;
     
-    boost::mutex::scoped_lock lock(queue_out_mutex);
+    boost::mutex::scoped_lock lock(out_mutex);
     
-    while (queue_out.empty()) {
-      queue_out_cond.wait(lock);
+    while (out.empty()) {
+      out_cond.wait(lock);
     }
     
-    o = queue_out.front();
-    queue_out.pop();
+    o = out.front();
+    out.pop();
     
     return o;
   }
@@ -92,8 +92,8 @@ public:
     running = 0;
     
     {
-      boost::mutex::scoped_lock lock(queue_in_mutex);
-      queue_in_cond.notify_all();
+      boost::mutex::scoped_lock lock(in_mutex);
+      in_cond.notify_all();
     }
     
     for (std::list<boost::thread *>::iterator it = threads.begin(); it != threads.end(); it++)

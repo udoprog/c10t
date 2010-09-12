@@ -81,6 +81,26 @@ nbt::Byte bget(nbt::ByteArray *blocks, int x, int y, int z) {
   return blocks->values[p];
 }
 
+nbt::Byte bsget(nbt::ByteArray *skylight, int x, int y, int z) {
+  assert(x >= 0 && x < mc::MapX);
+  assert(y >= 0 && y < mc::MapY);
+  assert(z >= 0 && z < mc::MapZ);
+  int p = z + (y * mc::MapZ + (x * mc::MapZ * mc::MapY));
+  int ap = p / 2;
+
+  assert (ap >= 0 && ap < skylight->length);
+  
+  // force unsigned
+  uint8_t bp = skylight->values[ap] & 0xff;
+  
+  if (p % 2 == 0) {
+    return bp >> 4;
+  }
+  else {
+    return bp & 0xf;
+  }
+}
+
 void transform_xy(settings_t *s, int &x, int &y) {
   if (s->flip) {
     int t = x;
@@ -108,18 +128,18 @@ Image *Level::get_image(settings_t *s) {
 
       Color base(255, 255, 255, 0);
       
-      int blocktype;
+      int bt = mc::Air;
       int z;
       
       // do incremental color fill until color is opaque
       for (z = s->top; z > s->bottom; z--) {
-        blocktype = bget(blocks, _x, _y, z);
+        bt = bget(blocks, _x, _y, z);
         
-        if (s->excludes[blocktype]) {
+        if (s->excludes[bt]) {
           continue;
         }
         
-        Color *bc = mc::MaterialColor[blocktype];
+        Color *bc = mc::MaterialColor[bt];
         base.underlay(bc);
         
         if (base.a == 0xff) {
@@ -128,7 +148,7 @@ Image *Level::get_image(settings_t *s) {
       }
       
       // check specific last block options
-      switch (blocktype) {
+      switch (bt) {
         case mc::Dirt:
         case mc::Grass:
         case mc::Stone:
@@ -136,7 +156,7 @@ Image *Level::get_image(settings_t *s) {
           // do an color overlay for mapped height
           Color height(0, 0, 0, 0);
           height.a = (127 - z);
-          base.overlay(&height);
+          base.overlay(height);
           break;
       }
       
@@ -154,32 +174,44 @@ Image *Level::get_oblique_image(settings_t *s) {
     return img;
   }
 
-  int blocktype;
-
-  Color light(0, 0, 0, 64);
+  // block type
+  int bt;
+  
+  // block skylight
+  int sl;
+  
+  // skylight modifier
+  // alpha channel is calculated depending on skylight value
+  Color slmod(255, 255, 255, 0);
+  
+  // height modifier
+  // alpha channel is calculated depending on height
+  Color heightmod(0, 0, 0, 0);
   
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
       for (int z = s->bottom; z < s->top; z++) {
         int _x = x, _y = y;
         transform_xy(s, _x, _y);
+        bt = bget(blocks, _x, _y, z);
         
-        blocktype = bget(blocks, _x, _y, z);
-        
-        if (s->excludes[blocktype]) {
+        if (s->excludes[bt]) {
           continue;
         }
         
-        Color *bc = mc::MaterialColor[blocktype];
+        sl = bsget(skylight, _x, _y, z);
         
-        Color height(0, 0, 0, 0);
-        height.a = (127 - z);
-        Color p(bc);
-        p.overlay(&height);
-        img->set_pixel(x, y + (mc::MapZ - z) - 1, p);
+        heightmod.a = (127 - z);
+        slmod.a = (sl * 0x2);
         
-        Color *bcs = mc::MaterialSideColor[blocktype];
-        img->set_pixel(x, y + (mc::MapZ - z), *bcs);
+        Color top(mc::MaterialColor[bt]);
+        top.overlay(heightmod);
+        top.overlay(slmod);
+        img->set_pixel(x, y + (mc::MapZ - z) - 1, top);
+        
+        Color side(mc::MaterialSideColor[bt]);
+        side.overlay(slmod);
+        img->set_pixel(x, y + (mc::MapZ - z), side);
       }
     }
   }
@@ -189,11 +221,24 @@ Image *Level::get_oblique_image(settings_t *s) {
 
 Image *Level::get_obliqueangle_image(settings_t *s) {
   Image *img = new Image(mc::MapX * 2 + 1, mc::MapX + mc::MapZ + mc::MapY);
-  int blocktype;
   
   if (!islevel) {
     return img;
   }
+
+  // block type
+  int bt;
+  
+  // block skylight
+  int sl;
+  
+  // skylight modifier
+  // alpha channel is calculated depending on skylight value
+  Color slmod(255, 255, 255, 0);
+  
+  // height modifier
+  // alpha channel is calculated depending on height
+  Color heightmod(0, 0, 0, 0);
   
   for (int y = 0; y < mc::MapY; y++) {
     for (int z = s->bottom; z < s->top; z++) {
@@ -201,28 +246,32 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         int _x = x, _y = y;
         transform_xy(s, _x, _y);
         
-        blocktype = bget(blocks, _x, _y, z);
+        bt = bget(blocks, _x, _y, z);
         
-        if (s->excludes[blocktype]) {
+        if (s->excludes[bt]) {
           continue;
         }
     
-        Color *bc = mc::MaterialColor[blocktype];
+        sl = bsget(skylight, _x, _y, z);
         
-        Color height(0, 0, 0, 0);
-        height.a = (127 - z);
-        Color p(bc);
-        p.overlay(&height);
+        heightmod.a = (127 - z);
+        slmod.a = (sl * 0x2);
+        
+        Color top(mc::MaterialColor[bt]);
+        top.overlay(heightmod);
+        top.overlay(slmod);
         
         int _px = mc::MapX + x - y;
         int _py = mc::MapZ + x - z + y;
         
-        img->set_pixel(_px, _py - 1, p);
-        img->set_pixel(_px + 1, _py - 1, p);
+        img->set_pixel(_px, _py - 1, top);
+        img->set_pixel(_px + 1, _py - 1, top);
         
-        Color *bcs = mc::MaterialSideColor[blocktype];
-        img->set_pixel(_px, _py, *bcs);
-        img->set_pixel(_px + 1, _py, *bcs);
+        Color side(mc::MaterialSideColor[bt]);
+        side.overlay(heightmod);
+        side.overlay(slmod);
+        img->set_pixel(_px, _py, side);
+        img->set_pixel(_px + 1, _py, side);
       }
     }
   }

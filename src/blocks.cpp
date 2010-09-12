@@ -182,7 +182,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Snow] = new Color(255, 255, 255, 255);
   mc::MaterialColor[mc::Ice] = new Color(120, 120, 255, 120);
   mc::MaterialColor[mc::SnowBlock] = new Color(255, 255, 255, 255);
-  mc::MaterialColor[mc::Cactus] = new Color();
+  mc::MaterialColor[mc::Cactus] = new Color(64, 255, 64, 255);
   mc::MaterialColor[mc::Clay] = new Color();
   mc::MaterialColor[mc::Reed] = new Color(193,234,150,255);
   mc::MaterialColor[mc::Jukebox] = new Color();

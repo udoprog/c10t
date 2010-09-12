@@ -1,5 +1,7 @@
 #include <sys/stat.h>
 
+#include <boost/ptr_container/ptr_list.hpp>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -131,7 +133,7 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
       code = 1;
       goto finalise;
    }
-
+   
    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
    if (png_ptr == NULL) {
       code = 1;
@@ -225,43 +227,43 @@ struct partial {
   Image *image;
 };
 
-class partial_renderer : public threadworker<Level*, partial> {
+class partial_renderer : public threadworker<Level*, partial*> {
 public:
   settings_t *s;
   
-  partial_renderer(settings_t *s, int n) : threadworker<Level*, partial>(n) {
+  partial_renderer(settings_t *s, int n) : threadworker<Level*, partial*>(n) {
     this->s = s;
   }
   
-  partial work(Level *level) {
-    partial p;
+  partial *work(Level *level) {
+    partial *p = new partial;
     
-    p.xPos = level->xPos;
-    p.zPos = level->zPos;
+    p->xPos = level->xPos;
+    p->zPos = level->zPos;
     
     switch (s->mode) {
     case Top:
-      p.image = level->get_image(s);
+      p->image = level->get_image(s);
       break;
     case Oblique:
-      p.image = level->get_oblique_image(s);
+      p->image = level->get_oblique_image(s);
       break;
     case ObliqueAngle:
-      p.image = level->get_obliqueangle_image(s);
+      p->image = level->get_obliqueangle_image(s);
       break;
     }
     
     if (s->flip) {
-      int t = p.zPos;
-      p.zPos = p.xPos;
-      p.xPos = -t;
+      int t = p->zPos;
+      p->zPos = p->xPos;
+      p->xPos = -t;
     }
     
     if (s->invert) {
-      p.zPos = -p.zPos;
-      p.xPos = -p.xPos;
+      p->zPos = -p->zPos;
+      p->xPos = -p->xPos;
     }
-
+    
     delete level;
     
     return p;
@@ -299,7 +301,7 @@ int do_world(settings_t *s, string world, string output) {
     cout << endl;
   }
   
-  list<partial> partials;
+  boost::ptr_list<partial> partials;
   
   if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
   
@@ -324,22 +326,22 @@ int do_world(settings_t *s, string world, string output) {
   }
   
   while (jobs-- > 0) {
-    partial p = renderer.yield();
+    partial *p = renderer.get();
     
-    if (p.xPos < minx) {
-      minx = p.xPos;
+    if (p->xPos < minx) {
+      minx = p->xPos;
     }
     
-    if (p.xPos > maxx) {
-      maxx = p.xPos;
+    if (p->xPos > maxx) {
+      maxx = p->xPos;
     }
 
-    if (p.zPos < minz) {
-      minz = p.zPos;
+    if (p->zPos < minz) {
+      minz = p->zPos;
     }
     
-    if (p.zPos > maxz) {
-      maxz = p.zPos;
+    if (p->zPos > maxz) {
+      maxz = p->zPos;
     }
     
     partials.push_back(p);
@@ -348,7 +350,7 @@ int do_world(settings_t *s, string world, string output) {
       if (i % 100 == 0) {
         cout << " " << setw(9) << i << flush;
       }
-        
+      
       if (i % 1000 == 0) {
         cout << endl;
       }
@@ -356,11 +358,13 @@ int do_world(settings_t *s, string world, string output) {
       ++i;
     }
   }
+
+  renderer.join();
   
   if (!s->silent) cout << setw(10) << i << setw(10) << "done!" << endl;
   if (!s->silent) cout << "Compositioning image... " << flush;
-
-  Image *all;
+  
+  Image *all = NULL;
   
   switch (s->mode) {
   case Top:
@@ -436,7 +440,7 @@ int do_world(settings_t *s, string world, string output) {
         int mapy = (p.zPos - minz);
         
         int xoffset = mc::MapX * mapx + mc::MapY * diffz - (mapy * mc::MapY);
-        int yoffset = mc::MapX * (p.xPos - minx) + mapy * mc::MapY;
+        int yoffset = mc::MapX * mapx + mapy * mc::MapY;
         all->composite(xoffset, yoffset, *p.image);
         delete p.image;
       }
@@ -475,11 +479,12 @@ void do_help() {
     << "  -b <int>             - splice from the bottom, must be greater than or equal to 0" << endl
     << "  -a                   - show no blocks except those specified with '-i'" << endl
     << "  -n                   - do not check for <world>/level.dat" << endl
-    << "Rendering modes:" << endl
-    << "  -q                   - do oblique rendering" << endl
-    << "  -y                   - do oblique angle rendering" << endl
+    << "Rendering options:" << endl
+    << "  -q                   - oblique rendering" << endl
+    << "  -y                   - oblique angle rendering" << endl
     << "  -f                   - flip the rendering 90 degrees CCW" << endl
-    << "  -r                   - flip the rendering 180 degrees CCW" << endl;
+    << "  -r                   - flip the rendering 180 degrees CCW" << endl
+    << "  -c <int>             - Specify the amount of threads to use, this should match the amount of cores for your machine" << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;

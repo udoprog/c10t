@@ -357,6 +357,8 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         
         img->set_pixel(_px, _py - 1, top);
         img->set_pixel(_px + 1, _py - 1, top);
+        img->set_pixel(_px, _py - 2, top);
+        img->set_pixel(_px + 1, _py - 2, top);
         
         Color side(mc::MaterialSideColor[bt]);
         side.overlay(heightmod);

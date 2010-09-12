@@ -226,7 +226,7 @@ Image *Level::get_oblique_image(settings_t *s) {
   
   // skylight modifier
   // alpha channel is calculated depending on skylight value
-  Color slmod(0, 0, 0, 0);
+  Color slmod(255, 255, 255, 0);
   
   // height modifier
   // alpha channel is calculated depending on height
@@ -307,7 +307,7 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
   
   // skylight modifier
   // alpha channel is calculated depending on skylight value
-  Color slmod(0, 0, 0, 0);
+  Color slmod(255, 255, 255, 0);
   
   // height modifier
   // alpha channel is calculated depending on height

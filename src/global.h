@@ -16,6 +16,7 @@ typedef struct _settings {
   // top/bottom used for slicing
   int top;
   int bottom;
+  int threads;
   enum mode mode;
   bool flip;
   bool invert;

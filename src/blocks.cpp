@@ -168,7 +168,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::WoodenDoor] = new Color();
   mc::MaterialColor[mc::Ladder] = new Color();
   mc::MaterialColor[mc::MinecartTracks] = new Color(120, 120, 120, 128);
-  mc::MaterialColor[mc::CobblestoneStairs] = new Color();
+  mc::MaterialColor[mc::CobblestoneStairs] = new Color(120, 120, 120, 128);
   mc::MaterialColor[mc::WallSign] = new Color();
   mc::MaterialColor[mc::Lever] = new Color();
   mc::MaterialColor[mc::StonePressurePlate] = new Color();
@@ -179,9 +179,9 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::RedstoneTorchOff] = new Color(181,140,64,32);
   mc::MaterialColor[mc::RedstoneTorchOn] = new Color(255,0,0,200);
   mc::MaterialColor[mc::StoneButton] = new Color();
-  mc::MaterialColor[mc::Snow] = new Color();
-  mc::MaterialColor[mc::Ice] = new Color();
-  mc::MaterialColor[mc::SnowBlock] = new Color();
+  mc::MaterialColor[mc::Snow] = new Color(255, 255, 255, 255);
+  mc::MaterialColor[mc::Ice] = new Color(120, 120, 255, 120);
+  mc::MaterialColor[mc::SnowBlock] = new Color(255, 255, 255, 255);
   mc::MaterialColor[mc::Cactus] = new Color();
   mc::MaterialColor[mc::Clay] = new Color();
   mc::MaterialColor[mc::Reed] = new Color(193,234,150,255);

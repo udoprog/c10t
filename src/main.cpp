@@ -22,6 +22,7 @@
 #include "Level.h"
 #include "Image.h"
 #include "blocks.h"
+#include "threadworker.h"
 
 using namespace std;
 
@@ -224,6 +225,49 @@ struct partial {
   Image *image;
 };
 
+class partial_renderer : public threadworker<Level*, partial> {
+public:
+  settings_t *s;
+  
+  partial_renderer(settings_t *s, int n) : threadworker<Level*, partial>(n) {
+    this->s = s;
+  }
+  
+  partial work(Level *level) {
+    partial p;
+    
+    p.xPos = level->xPos;
+    p.zPos = level->zPos;
+    
+    switch (s->mode) {
+    case Top:
+      p.image = level->get_image(s);
+      break;
+    case Oblique:
+      p.image = level->get_oblique_image(s);
+      break;
+    case ObliqueAngle:
+      p.image = level->get_obliqueangle_image(s);
+      break;
+    }
+    
+    if (s->flip) {
+      int t = p.zPos;
+      p.zPos = p.xPos;
+      p.xPos = -t;
+    }
+    
+    if (s->invert) {
+      p.zPos = -p.zPos;
+      p.xPos = -p.xPos;
+    }
+
+    delete level;
+    
+    return p;
+  }
+};
+
 bool compare_partials(partial first, partial second)
 {
   if (first.zPos < second.zPos) {
@@ -257,53 +301,35 @@ int do_world(settings_t *s, string world, string output) {
   
   list<partial> partials;
   
-  if (!s->silent) cout << "Reading and projecting blocks ... " << endl;
+  if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
   
   dirlist listing(world);
 
   int i = 1;
-
+  
   int minx = INT_MAX;
   int minz = INT_MAX;
   int maxx = INT_MIN;
   int maxz = INT_MIN;
+
+  partial_renderer renderer(s, s->threads);
   
+  int jobs = 0;
+
   while (listing.hasnext()) {
     string path = listing.next();
-    Level level(path.c_str());
-    
-    partial p;
-
-    switch (s->mode) {
-    case Top:
-      p.image = level.get_image(s);
-      break;
-    case Oblique:
-      p.image = level.get_oblique_image(s);
-      break;
-    case ObliqueAngle:
-      p.image = level.get_obliqueangle_image(s);
-      break;
-    }
-    
-    p.xPos = level.xPos;
-    p.zPos = level.zPos;
-    
-    if (s->flip) {
-      int t = p.zPos;
-      p.zPos = p.xPos;
-      p.xPos = -t;
-    }
-    
-    if (s->invert) {
-      p.zPos = -p.zPos;
-      p.xPos = -p.xPos;
-    }
+    Level *level = new Level(path.c_str());
+    renderer.give(level);
+    ++jobs;
+  }
+  
+  while (jobs-- > 0) {
+    partial p = renderer.yield();
     
     if (p.xPos < minx) {
       minx = p.xPos;
     }
-
+    
     if (p.xPos > maxx) {
       maxx = p.xPos;
     }
@@ -315,7 +341,7 @@ int do_world(settings_t *s, string world, string output) {
     if (p.zPos > maxz) {
       maxz = p.zPos;
     }
-
+    
     partials.push_back(p);
     
     if (!s->silent) {
@@ -486,6 +512,7 @@ settings_t *init_settings() {
   s->silent = false;
   s->flip = false;
   s->invert = false;
+  s->threads = 1;
   
   return s;
 }
@@ -510,7 +537,7 @@ int main(int argc, char *argv[]){
   string output;
   int c, blockid;
   
-  while ((c = getopt (argc, argv, "rfnqyalshw:o:e:t:b:i:")) != -1)
+  while ((c = getopt (argc, argv, "rfnqyalshw:o:e:t:b:i:c:")) != -1)
   {
     blockid = -1;
     
@@ -520,6 +547,10 @@ int main(int argc, char *argv[]){
       blockid = get_blockid(optarg);
       assert(blockid >= 0 && blockid < mc::MaterialCount);
       s->excludes[blockid] = true;
+      break;
+    case 'c':
+      s->threads = atoi(optarg);
+      assert(s->threads > 0);
       break;
     case 'q':
       s->mode = Oblique;

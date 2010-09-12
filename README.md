@@ -1,39 +1,16 @@
-Cartography for Minecraft
-=========================
+c10t - a cartography tool for Minecraft
+=======================================
 
-* Cartograph by ZomBuster
-* Linux version by Firemark
-* Additional work by Udoprog <johnjohn.tedro@gmail.com>
+I wrote c10t entirely because i liked the tool Cartograph by ZomBuster, but i wasn't too fond of a couple of aspects about how rendering was performed.
 
-See INSTALL for installation instructions
+Features
+--------
+ * Not using the old corona library, instead purely libpng
+ * Pipelined rendering process (using image compositioning) which allows for multithreaded rendering.
+ * A lot less memory intensive - the biggest concern is having to keep the entire (sometimes huge!) image in memory at once.
+ * Uses proper command line options.
+ * Can flip the map properly (90 - 180 - 270 degrees CCW), to get 270 use both -f and -i
+ * Clean code, for easing further development.
+ * Multiplatform - yes, it does compile properly on winblows and probably also on mac.
 
-See ChangeLog for changes
-
-This version is hosted at http://github.com/udoprog/cartography
-
-No features have been discarded, instead the code has been subtly refactored and improvements made where they dont effect functionality.
-
-Future work
------------
-
- * Making the cartographer more memory friendly by implementing incremental image rendering. Currently all renderblocks are kept in-memory prior to image generation, this can be improved upon.
- * Fixing proper commandline options and a gui wrapper similar to the windows version
-
-Options
--------
-
-    Normal : a normal top down map
-    heightmap: a colorized heightmap
-    Heightgray: a black and white heightmap
-    Slice: render a slice of the map (specify which one in the edit box below)
-    Oblique: Render the map in oblique projection mode
-    Obliqueangle: Render the map in angled oblique projection mode
-
-    Ignore water: removes water from normal mode
-    Flip : flip the map vertically in oblique mode
-    Rotate: rotate the map 90 degrees in oblique mode
-    Day: Set lighting to day
-    Day/Night: set lighting to sunrise/dawn
-    Night: set lighting to night 
-    Cave Mode: Renders caves (empty blocks not lit by sunlight)
-    Only: Only render a selected block, 0 to render everything, 1-66 to only render a certain block
+I would not have done this were it not for the excellent inspiration by ZomBuster and Firemark (the linux port of cartograph). Thank you for the inspiration.

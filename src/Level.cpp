@@ -121,14 +121,29 @@ Image *Level::get_image(settings_t *s) {
     return img;
   }
   
+  // block type
+  int bt;
+  
+  // block skylight
+  int sl;
+  
+  // skylight modifier
+  // alpha channel is calculated depending on skylight value
+  Color slmod(255, 255, 255, 0);
+  
+  // height modifier
+  // alpha channel is calculated depending on height
+  Color heightmod(0, 0, 0, 0);
+  
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
       int _x = x, _y = y;
       transform_xy(s, _x, _y);
-
+      
       Color base(255, 255, 255, 0);
       
-      int bt = mc::Air;
+      bt = mc::Air;
+      
       int z;
       
       // do incremental color fill until color is opaque
@@ -148,17 +163,13 @@ Image *Level::get_image(settings_t *s) {
       }
       
       // check specific last block options
-      switch (bt) {
-        case mc::Dirt:
-        case mc::Grass:
-        case mc::Stone:
-        case mc::Cobblestone:
-          // do an color overlay for mapped height
-          Color height(0, 0, 0, 0);
-          height.a = (127 - z);
-          base.overlay(height);
-          break;
-      }
+      heightmod.a = (127 - z);
+      
+      sl = bsget(skylight, _x, _y, z);
+      slmod.a = (sl * 0x2);
+      
+      base.overlay(heightmod);
+      base.overlay(slmod);
       
       img->set_pixel(x, y, base);
     }

@@ -114,6 +114,33 @@ void transform_xy(settings_t *s, int &x, int &y) {
   }
 }
 
+inline bool cavemode_isopen(int bt) {
+  switch(bt) {
+    case mc::Air: return true;
+    case mc::Leaves: return true;
+    default: return false;
+  }
+}
+
+inline bool cavemode_ignore_block(settings_t *s, int x, int y, int z, int bt, nbt::ByteArray *blocks, bool &cave_initial) {
+  if (cave_initial) {
+    if (!cavemode_isopen(bt)) {
+      cave_initial = false;
+      return true;
+    }
+    
+    return true;
+  }
+  
+  if (!cavemode_isopen(bt)) {
+    if (z < s->top && cavemode_isopen(bget(blocks, x, y, z + 1))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 Image *Level::get_image(settings_t *s) {
   Image *img = new Image(mc::MapX, mc::MapY);
   
@@ -134,7 +161,7 @@ Image *Level::get_image(settings_t *s) {
   // height modifier
   // alpha channel is calculated depending on height
   Color heightmod(0, 0, 0, 0);
-  
+
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
       int _x = x, _y = y;
@@ -146,9 +173,15 @@ Image *Level::get_image(settings_t *s) {
       
       int z;
       
+      bool cave_initial = true;
+      
       // do incremental color fill until color is opaque
       for (z = s->top; z > s->bottom; z--) {
         bt = bget(blocks, _x, _y, z);
+        
+        if (s->cavemode && cavemode_ignore_block(s, _x, _y, z, bt, blocks, cave_initial)) {
+          continue;
+        }
         
         if (s->excludes[bt]) {
           continue;
@@ -201,10 +234,33 @@ Image *Level::get_oblique_image(settings_t *s) {
   
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
+      bool cave_initial = true;
+      int cavemode_top = s->top;
+      
+      if (s->cavemode) {
+        for (int z = s->top; z > 0; z--) {
+          int _x = x, _y = y;
+          transform_xy(s, _x, _y);
+          
+          bt = bget(blocks, _x, _y, z);
+          
+          if (!cavemode_isopen(bt)) {
+            cavemode_top = z;
+            break;
+          }
+        }
+      }
+
       for (int z = s->bottom; z < s->top; z++) {
         int _x = x, _y = y;
         transform_xy(s, _x, _y);
         bt = bget(blocks, _x, _y, z);
+        
+        if (s->cavemode) {
+          if (cavemode_ignore_block(s, _x, _y, z, bt, blocks, cave_initial) || z >= cavemode_top) {
+            continue;
+          }
+        }
         
         if (s->excludes[bt]) {
           continue;
@@ -252,12 +308,36 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
   Color heightmod(0, 0, 0, 0);
   
   for (int y = 0; y < mc::MapY; y++) {
-    for (int z = s->bottom; z < s->top; z++) {
-      for (int x = 0; x < mc::MapX; x++) {
+    for (int x = 0; x < mc::MapX; x++) {
+      bool cave_initial = true;
+
+      int cavemode_top = s->top;
+
+      if (s->cavemode) {
+        for (int z = s->top; z > 0; z--) {
+          int _x = x, _y = y;
+          transform_xy(s, _x, _y);
+          
+          bt = bget(blocks, _x, _y, z);
+          
+          if (!cavemode_isopen(bt)) {
+            cavemode_top = z;
+            break;
+          }
+        }
+      }
+      
+      for (int z = s->bottom; z < s->top; z++) {
         int _x = x, _y = y;
         transform_xy(s, _x, _y);
         
         bt = bget(blocks, _x, _y, z);
+        
+        if (s->cavemode) {
+          if (cavemode_ignore_block(s, _x, _y, z, bt, blocks, cave_initial) || z >= cavemode_top) {
+            continue;
+          }
+        }
         
         if (s->excludes[bt]) {
           continue;

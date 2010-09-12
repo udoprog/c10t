@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 
 #include <string>
 #include <vector>
@@ -227,15 +228,17 @@ struct partial {
   Image *image;
 };
 
-class partial_renderer : public threadworker<Level*, partial*> {
+class partial_renderer : public threadworker<string, partial*> {
 public:
   settings_t *s;
   
-  partial_renderer(settings_t *s, int n) : threadworker<Level*, partial*>(n) {
+  partial_renderer(settings_t *s, int n) : threadworker<string, partial*>(n) {
     this->s = s;
   }
   
-  partial *work(Level *level) {
+  partial *work(string path) {
+    Level *level = new Level(path.c_str());
+    
     partial *p = new partial;
     
     p->xPos = level->xPos;
@@ -319,11 +322,11 @@ int do_world(settings_t *s, string world, string output) {
   int jobs = 0;
 
   while (listing.hasnext()) {
-    string path = listing.next();
-    Level *level = new Level(path.c_str());
-    renderer.give(level);
+    renderer.give(listing.next());
     ++jobs;
   }
+
+  renderer.start();
   
   while (jobs-- > 0) {
     partial *p = renderer.get();
@@ -463,28 +466,42 @@ int do_world(settings_t *s, string world, string output) {
 }
 
 void do_help() {
-  cout << "This program was made possible by the inspiration and work of ZomBuster and Firemark" << endl;
+  cout << "This program was made possible because of the work and inspiration of ZomBuster and Firemark" << endl;
   cout << "Written by Udoprog" << endl;
   cout << endl;
   cout << "Usage: c10t [options]" << endl;
   cout << "Options:" << endl
-    << "  -w <world-directory> - use this world directory as input" << endl
-    << "  -o <outputfile>      - use this file as output file for generated png" << endl
+    << "  -w, --world <world>       - use this world directory as input" << endl
+    << "  -o, --output <output>     - use this file as output file for generated png" << endl
     << endl
-    << "  -s                   - execute silently, printing nothing except errors" << endl
-    << "  -l                   - list all available colors and block types" << endl
-    << "  -e <blockid>         - exclude block-id from render (multiple occurences is possible)" << endl
-    << "  -i <blockid>         - include only this block-id in render (multiple occurences is possible)" << endl
-    << "  -t <int>             - splice from the top, must be less than 128" << endl
-    << "  -b <int>             - splice from the bottom, must be greater than or equal to 0" << endl
-    << "  -a                   - show no blocks except those specified with '-i'" << endl
-    << "  -n                   - do not check for <world>/level.dat" << endl
+    << "  -s, --silent              - execute silently, printing nothing except errors" << endl
+    << "  -h, --help                - display this help text" << endl
+    << "  -l, --list-colors         - list all available colors and block types" << endl
+    << endl
+    << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
+    << "  -b, --bottom <int>        - splice from the bottom, must be greater than or" << endl
+    << "                              equal to 0" << endl
+    << endl
+    << "Filtering options:" << endl
+    << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences" << endl
+    << "                              is possible)" << endl
+    << "  -i, --include <blockid>   - include only this block-id in render (multiple" << endl
+    << "                              occurences is possible)" << endl
+    << "  -a, --hide-all            - show no blocks except those specified with '-i'" << endl
+    << "  -c, --cave-mode           - Cave mode - top down until solid block found," << endl
+    << "                              then render bottom outlines only" << endl
+    << endl
+    << "  -n, --no-check            - do not check for <world>/level.dat" << endl
+    << endl
     << "Rendering options:" << endl
-    << "  -q                   - oblique rendering" << endl
-    << "  -y                   - oblique angle rendering" << endl
-    << "  -f                   - flip the rendering 90 degrees CCW" << endl
-    << "  -r                   - flip the rendering 180 degrees CCW" << endl
-    << "  -c <int>             - Specify the amount of threads to use, this should match the amount of cores for your machine" << endl;
+    << "  -q, --oblique             - oblique rendering" << endl
+    << "  -y, --oblique-angle       - oblique angle rendering" << endl
+    << "  -f, --90                  - flip the rendering 90 degrees CCW" << endl
+    << "  -r, --180                 - flip the rendering 180 degrees CCW" << endl
+    << endl
+    << "  -t, --threads <int>       - Specify the amount of threads to use, this should" << endl
+    << "                              match the amount of cores for your machine" << endl
+    << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
@@ -501,6 +518,28 @@ int do_colors() {
   return 0;
 }
 
+static struct option long_options[] =
+ {
+   {"world",            required_argument, 0, 'w'},
+   {"output",           required_argument, 0, 'o'},
+   {"help",             no_argument, 0, 'h'},
+   {"silent",           no_argument, 0, 's'},
+   {"list-colors",      no_argument, 0, 'l'},
+   {"top",              required_argument, 0, 't'},
+   {"bottom",           required_argument, 0, 'b'},
+   {"exclude",          required_argument, 0, 'e'},
+   {"include",          required_argument, 0, 'i'},
+   {"hide-all",         no_argument, 0, 'a'},
+   {"no-check",         no_argument, 0, 'n'},
+   {"oblique",          no_argument, 0, 'q'},
+   {"oblique-angle",    no_argument, 0, 'y'},
+   {"90",               no_argument, 0, 'f'},
+   {"180",              no_argument, 0, 'r'},
+   {"threads",          no_argument, 0, 'm'},
+   {"cave-mode",        no_argument, 0, 'c'},
+   {0, 0, 0, 0}
+ };
+
 settings_t *init_settings() {
   settings_t *s = new settings_t;
   s->excludes = new bool[mc::MaterialCount];
@@ -509,6 +548,7 @@ settings_t *init_settings() {
     s->excludes[i] = false;
   }
   
+  s->cavemode = false;
   s->excludes[mc::Air] = true;
   s->top = 127;
   s->bottom = 0;
@@ -541,8 +581,10 @@ int main(int argc, char *argv[]){
   string world;
   string output;
   int c, blockid;
+
+  int option_index;
   
-  while ((c = getopt (argc, argv, "rfnqyalshw:o:e:t:b:i:c:")) != -1)
+  while ((c = getopt_long(argc, argv, "crfnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -553,7 +595,7 @@ int main(int argc, char *argv[]){
       assert(blockid >= 0 && blockid < mc::MaterialCount);
       s->excludes[blockid] = true;
       break;
-    case 'c':
+    case 'm':
       s->threads = atoi(optarg);
       assert(s->threads > 0);
       break;
@@ -579,6 +621,7 @@ int main(int argc, char *argv[]){
     case 'f': s->flip = true; break;
     case 'r': s->invert = true; break;
     case 'n': s->nocheck = true; break;
+    case 'c': s->cavemode = true; break;
     case 't':
       s->top = atoi(optarg);
       assert(s->top > s->bottom && s->top < mc::MapZ);

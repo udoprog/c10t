@@ -1,5 +1,6 @@
 CC=g++
 XCFLAGS=
+#CFLAGS=-g $(XCFLAGS)
 CFLAGS=-Wall -O3 $(XCFLAGS)
 LDFLAGS=-lpng -lz -lboost_thread -lpthread
 

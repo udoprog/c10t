@@ -10,6 +10,7 @@ enum mode {
 };
 
 typedef struct _settings {
+  bool cavemode;
   bool silent;
   bool nocheck;
   bool *excludes;

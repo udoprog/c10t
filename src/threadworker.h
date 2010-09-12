@@ -18,11 +18,14 @@ private:
   std::list<boost::thread *> threads;
   boost::condition in_cond;
   boost::condition out_cond;
+  boost::condition start_cond;
   boost::mutex in_mutex;
   boost::mutex out_mutex;
+  boost::mutex start_mutex;
   volatile int running;
+  volatile int started;
 public:
-  threadworker(int c) : running(1) {
+  threadworker(int c) : running(1), started(0) {
     for (int i = 0; i < c; i++) {
       boost::thread *t = new boost::thread(boost::bind(&threadworker::run, this, i));
       threads.push_back(t);
@@ -42,7 +45,21 @@ public:
     in_cond.notify_one();
   }
   
+  void start() {
+    started = 1;
+    boost::mutex::scoped_lock lock(start_mutex);
+    start_cond.notify_all();
+  }
+  
   void run(int id) {
+    {
+      boost::mutex::scoped_lock lock(start_mutex);
+      
+      while (started != 1) {
+        start_cond.wait(lock);
+      }
+    }
+
     while (running) {
       I i;
       

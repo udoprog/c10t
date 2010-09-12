@@ -466,7 +466,7 @@ int do_world(settings_t *s, string world, string output) {
 }
 
 void do_help() {
-  cout << "This program was made possible because of the work and inspiration of ZomBuster and Firemark" << endl;
+  cout << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
   cout << "Written by Udoprog" << endl;
   cout << endl;
   cout << "Usage: c10t [options]" << endl;

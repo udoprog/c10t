@@ -564,7 +564,6 @@ settings_t *init_settings() {
 
 int get_blockid(const char *blockid) {
   for (int i = 0; i < mc::MaterialCount; i++) {
-    cout << blockid << endl;
     if (strcmp(mc::MaterialName[i], blockid) == 0) {
       return i;
     }

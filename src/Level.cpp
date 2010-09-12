@@ -190,11 +190,15 @@ Image *Level::get_image(settings_t *s) {
         Color *bc = mc::MaterialColor[bt];
         base.underlay(bc);
         
-        if (base.a == 0xff) {
+        if (base.is_opaque()) {
           break;
         }
       }
       
+      if (base.is_transparent()) {
+        continue;
+      }
+
       // check specific last block options
       heightmod.a = (127 - z);
       

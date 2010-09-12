@@ -19,6 +19,14 @@ struct Color{
   Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
     r(r), g(g), b(b), a(a) {
   }
+
+  bool is_opaque() {
+    return a == 0xff;
+  }
+  
+  bool is_transparent() {
+    return a == 0x00;
+  }
   
   ~Color(){
   }

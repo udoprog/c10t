@@ -46,7 +46,7 @@ void Image::composite(int xoffset, int yoffset, Image &img) {
   for (int x = 0; x < img.get_width(); x++) {
     for (int y = 0; y < img.get_height(); y++) {
       img.get_pixel(x, y, c);
-      if (c.a == 0x00) continue;
+      if (c.is_transparent()) continue;
       set_pixel(xoffset + x, yoffset + y, c);
     }
   }

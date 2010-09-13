@@ -306,7 +306,7 @@ inline void calc_image_width_height(settings_t *s, int maxx, int maxz, int minx,
     image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
     break;
   case ObliqueAngle:
-    image_width = (diffx + diffz) * mc::MapX + 1;
+    image_width = (diffx + diffz) * mc::MapX + mc::MapX + mc::MapY + 2;
     image_height = (diffx + diffz) * mc::MapX + mc::MapZ + mc::MapX + mc::MapX + 2;
     break;
   }
@@ -346,6 +346,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int maxx, 
       
       int xoffset = mc::MapX * mapx + mc::MapY * diffz - (mapy * mc::MapY);
       int yoffset = mc::MapX * mapx + mapy * mc::MapY;
+      cout << xoffset << " " << yoffset << endl;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;

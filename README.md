@@ -27,14 +27,13 @@ inspiration.
 Building from Source
 --------------------
 
-Ubuntu
-^^^^^^
+### Ubuntu ###
 
-  1. Install dependencies::
+  1. Install dependencies:
 
     $ sudo apt-get install cmake libpng12-dev zlib1g-dev libboost-thread1.40-dev libboost-thread1.40.0
 
-  2. Run::
+  2. Run:
 
     $ cmake .
     $ make

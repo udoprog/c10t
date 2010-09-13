@@ -276,19 +276,19 @@ Image *Level::get_oblique_image(settings_t *s) {
         slmod.a = (sl * 0x2);
         
         // optimization, don't draw top of block
-        if (_z + 1 >= s->top || bget(blocks, _x, _y, _z + 1) == mc::Air) {
+        //if (_z + 1 >= s->top || bget(blocks, _x, _y, _z + 1) == mc::Air) {
           Color top(mc::MaterialColor[bt]);
           top.overlay(heightmod);
           top.overlay(slmod);
           img->set_pixel(x, y + (mc::MapZ - z) - 1, top);
-        }
+        //}
         
         // optimization, don't draw side of block if it has neighbour
-        if (_y + 1 >= mc::MapY || bget(blocks, _x, _y + 1, _z) == mc::Air) {
+        //if (_y + 1 >= mc::MapY || bget(blocks, _x, _y + 1, _z) == mc::Air) {
           Color side(mc::MaterialSideColor[bt]);
           side.overlay(slmod);
           img->set_pixel(x, y + (mc::MapZ - z), side);
-        }
+        //}
       }
     }
   }
@@ -362,7 +362,7 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         int _py = mc::MapZ + x - z + y;
         
         // optimization, don't draw top of block if it's blocked
-        if (z + 1 >= s->top || bget(blocks, _x, _y, z + 1) == mc::Air) {
+        //if (z + 1 >= s->top || bget(blocks, _x, _y, z + 1) == mc::Air) {
           Color top(mc::MaterialColor[bt]);
           top.overlay(heightmod);
           top.overlay(slmod);
@@ -371,17 +371,17 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
           img->set_pixel(_px + 1, _py - 1, top);
           img->set_pixel(_px, _py - 2, top);
           img->set_pixel(_px + 1, _py - 2, top);
-        }
+        //}
         
         // optimization, don't draw side of block if it has a neighbour
-        if (_x + 1 >= mc::MapX || _y + 1 >= mc::MapY || bget(blocks, _x + 1, _y + 1, z) == mc::Air) {
+        //if (_x + 1 >= mc::MapX || _y + 1 >= mc::MapY || bget(blocks, _x + 1, _y + 1, z) == mc::Air) {
           Color side(mc::MaterialSideColor[bt]);
           side.overlay(heightmod);
           side.overlay(slmod);
           
           img->set_pixel(_px, _py, side);
           img->set_pixel(_px + 1, _py, side);
-        }
+        //}
       }
     }
   }

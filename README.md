@@ -4,6 +4,16 @@ c10t - a cartography tool for Minecraft
 I wrote c10t entirely because i liked the tool Cartograph by ZomBuster, but i
 wasn't too fond of a couple of aspects about how rendering was performed.
 
+-- Udoprog <johnjohn.tedro@gmail.com>
+
+Requirements
+------------
+
+  * libz (?)
+  * libpng (=> 1.2)
+  * libboost_thread (>= 1.40)
+  * pthread (through boost)
+
 Features
 --------
 
@@ -24,8 +34,8 @@ ZomBuster and Firemark (the linux port of cartograph). Thank you for the
 inspiration.
 
 
-Building from Source
---------------------
+Building from Source (using cmake)
+----------------------------------
 
 ### Ubuntu ###
 
@@ -39,3 +49,9 @@ Building from Source
     $ make
 
   3. The executable (`c10t`) will be in the current directory.
+
+Contributions
+-------------
+ZomBuster and Firemark - for their original work
+Guardian9979 - for his continual nagging for improvements
+acleone - for his work with cmake [85e980a]

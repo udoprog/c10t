@@ -13,7 +13,7 @@ void mc::initialize_constants() {
   mc::MaterialName = new const char*[mc::MaterialCount];
   mc::MaterialColor = new Color*[mc::MaterialCount];
   mc::MaterialSideColor = new Color*[mc::MaterialCount];
-
+  
   mc::MaterialName[mc::Air] = "Air";
   mc::MaterialName[mc::Stone] = "Stone";
   mc::MaterialName[mc::Grass] = "Grass";
@@ -110,7 +110,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Sapling] = new Color(120,120,120,0);
   mc::MaterialColor[mc::Bedrock] = new Color(84,84,84,255);
   mc::MaterialColor[mc::Water] = new Color(38,92,255,80);
-  mc::MaterialColor[mc::StationaryWater] = new Color(38,92,255,80);
+  mc::MaterialColor[mc::StationaryWater] = new Color(38,92,255,255);
   mc::MaterialColor[mc::Lava] = new Color(255,90,0,255);
   mc::MaterialColor[mc::StationaryLava] = new Color(255,90,0,255);
   mc::MaterialColor[mc::Sand] = new Color(218,210,158,255);
@@ -119,7 +119,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::IronOre] = new Color(136,130,127,255);
   mc::MaterialColor[mc::CoalOre] = new Color(115,115,115,255);
   mc::MaterialColor[mc::Log] = new Color(102,81,51,255);
-  mc::MaterialColor[mc::Leaves] = new Color(60,192,41,100);
+  mc::MaterialColor[mc::Leaves] = new Color(60,192,41,255);
   mc::MaterialColor[mc::Sponge] = new Color();
   mc::MaterialColor[mc::Glass] = new Color(255,255,255,64);
   mc::MaterialColor[mc::RedCloth] = new Color();
@@ -151,7 +151,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Bookcase] = new Color(0xbf, 0xa9, 0x74, 0xff);
   mc::MaterialColor[mc::MossyCobblestone] = new Color(0x7f, 0xae, 0x7d, 0xff);
   mc::MaterialColor[mc::Obsidian] = new Color(0x53, 0x14, 0xd4, 0xff);
-  mc::MaterialColor[mc::Torch] = new Color(245,220,50,200);
+  mc::MaterialColor[mc::Torch] = new Color(0xff, 0xe1, 0x87,0xff);
   mc::MaterialColor[mc::Fire] = new Color(0xe0, 0xae, 0x15, 0xff);
   mc::MaterialColor[mc::MobSpawner] = new Color(0xff, 0xff, 0xff, 0x00);
   mc::MaterialColor[mc::WoodenStairs] = new Color(0xbf, 0xa9, 0x74, 0xff);
@@ -177,7 +177,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::RedstoneOre] = new Color();
   mc::MaterialColor[mc::GlowingRedstoneOre] = new Color();
   mc::MaterialColor[mc::RedstoneTorchOff] = new Color(181,140,64,32);
-  mc::MaterialColor[mc::RedstoneTorchOn] = new Color(255,0,0,200);
+  mc::MaterialColor[mc::RedstoneTorchOn] = new Color(255,0,0,0xff);
   mc::MaterialColor[mc::StoneButton] = new Color();
   mc::MaterialColor[mc::Snow] = new Color(255, 255, 255, 255);
   mc::MaterialColor[mc::Ice] = new Color(120, 120, 255, 120);
@@ -274,7 +274,7 @@ void mc::initialize_constants() {
   mc::MaterialSideColor[mc::Reed] = new Color(mc::MaterialColor[mc::Reed]);
   mc::MaterialSideColor[mc::Jukebox] = new Color(mc::MaterialColor[mc::Jukebox]);
   mc::MaterialSideColor[mc::Fence] = new Color(mc::MaterialColor[mc::Fence]);
-
+  
   Color dark(0, 0, 0, 80);
   
   for (int i = 0; i < mc::MaterialCount; i++) {

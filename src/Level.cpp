@@ -114,6 +114,15 @@ void transform_xy(settings_t *s, int &x, int &y) {
   }
 }
 
+inline void apply_shading(settings_t *s, int bl, int sl, int hm, Color &c) {
+  // if night, darken all colors not emitting light
+  if (s->night) {
+    c.darken((0xd0 * (16 - bl)) / 16);
+  }
+  
+  c.darken(sl);
+}
+
 inline bool cavemode_isopen(int bt) {
   switch(bt) {
     case mc::Air: return true;
@@ -151,27 +160,9 @@ Image *Level::get_image(settings_t *s) {
   // block type
   int bt;
   
-  // block skylight
-  int sl;
-
-  // block light
-  int bl;
-
   // night modifier
   Color nightmod(0x0, 0x0, 0x0, 200);
   
-  // blocklight modifier
-  Color blmod(0xff, 0xea, 0x86, 0);
-  // Color blmod(0xff, 0xff, 0xff, 0);
-  
-  // skylight modifier
-  // alpha channel is calculated depending on skylight value
-  Color slmod(255, 255, 255, 0);
-  
-  // height modifier
-  // alpha channel is calculated depending on height
-  Color heightmod(0, 0, 0, 0);
-
   for (int y = 0; y < mc::MapY; y++) {
     for (int x = 0; x < mc::MapX; x++) {
       int _x = x, _y = y;
@@ -208,27 +199,10 @@ Image *Level::get_image(settings_t *s) {
       if (base.is_transparent()) {
         continue;
       }
-
-      // check specific last block options
-      heightmod.a = (127 - z);
       
-      sl = bsget(skylight, _x, _y, z);
-      bl = bsget(blocklight, _x, _y, z);
-      
-      //std::cout << bl << std::endl;
-      slmod.a = sl;
-      blmod.a = (bl * 0x06);
-      
-      base.overlay(heightmod);
-      base.overlay(slmod);
-      
-      if (s->night) {
-        base.overlay(nightmod);
-
-        if (bl > 0) {
-          base.overlay(blmod);
-        }
-      }
+      int bl = bsget(blocklight, _x, _y, z);
+      int sl = bsget(skylight, _x, _y, z);
+      apply_shading(s, bl, sl, 0, base);
       
       img->set_pixel(x, y, base);
     }
@@ -246,12 +220,6 @@ Image *Level::get_oblique_image(settings_t *s) {
 
   // block type
   int bt;
-  
-  // block skylight
-  int sl;
-
-  // block light
-  int bl;
   
   // night modifier
   Color nightmod(0x0, 0x0, 0x0, 200);
@@ -300,44 +268,21 @@ Image *Level::get_oblique_image(settings_t *s) {
         if (s->excludes[bt]) {
           continue;
         }
-        
-        sl = bsget(skylight, _x, _y, _z);
-        bl = bsget(blocklight, _x, _y, _z);
-        
-        heightmod.a = (127 - _z);
-        slmod.a = (sl * 0x2);
-        blmod.a = (bl * 0x06);
+
+        int bl = bsget(blocklight, _x, _y, _z);
+        int sl = bsget(skylight, _x, _y, _z);
         
         // optimization, don't draw top of block
         //if (_z + 1 >= s->top || bget(blocks, _x, _y, _z + 1) == mc::Air) {
           Color top(mc::MaterialColor[bt]);
-          top.overlay(heightmod);
-          top.overlay(slmod);
-        
-          if (s->night) {
-            top.overlay(nightmod);
-          
-            if (bl > 0) {
-              top.overlay(blmod);
-            }
-          }
-          
+          apply_shading(s, bl, sl, 0, top);
           img->set_pixel(x, y + (mc::MapZ - z) - 1, top);
         //}
         
         // optimization, don't draw side of block if it has neighbour
         //if (_y + 1 >= mc::MapY || bget(blocks, _x, _y + 1, _z) == mc::Air) {
           Color side(mc::MaterialSideColor[bt]);
-          side.overlay(slmod);
-          
-          if (s->night) {
-            side.overlay(nightmod);
-          
-            if (bl > 0) {
-              side.overlay(blmod);
-            }
-          }
-          
+          apply_shading(s, bl, sl, 0, side);
           img->set_pixel(x, y + (mc::MapZ - z), side);
         //}
       }
@@ -356,12 +301,6 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
 
   // block type
   int bt;
-  
-  // block skylight
-  int sl;
-  
-  // block light
-  int bl;
   
   // night modifier
   Color nightmod(0x0, 0x0, 0x0, 200);
@@ -413,12 +352,8 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
           continue;
         }
     
-        sl = bsget(skylight, _x, _y, z);
-        bl = bsget(blocklight, _x, _y, z);
-        
-        heightmod.a = (127 - z);
-        slmod.a = (sl * 0x2);
-        blmod.a = (bl * 0x06);
+        int bl = bsget(blocklight, _x, _y, z);
+        int sl = bsget(skylight, _x, _y, z);
         
         int _px = mc::MapX + x - y;
         int _py = mc::MapZ + x - z + y;
@@ -426,17 +361,7 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         // optimization, don't draw top of block if it's blocked
         //if (z + 1 >= s->top || bget(blocks, _x, _y, z + 1) == mc::Air) {
           Color top(mc::MaterialColor[bt]);
-          top.overlay(heightmod);
-          top.overlay(slmod);
-        
-          if (s->night) {
-            top.overlay(nightmod);
-            
-            if (bl > 0) {
-              top.overlay(blmod);
-            }
-          }
-          
+          apply_shading(s, bl, sl, 0, top);
           img->set_pixel(_px, _py - 1, top);
           img->set_pixel(_px + 1, _py - 1, top);
           img->set_pixel(_px, _py - 2, top);
@@ -446,17 +371,7 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         // optimization, don't draw side of block if it has a neighbour
         //if (_x + 1 >= mc::MapX || _y + 1 >= mc::MapY || bget(blocks, _x + 1, _y + 1, z) == mc::Air) {
           Color side(mc::MaterialSideColor[bt]);
-          side.overlay(heightmod);
-          side.overlay(slmod);
-        
-          if (s->night) {
-            side.overlay(nightmod);
-          
-            if (bl > 0) {
-              side.overlay(blmod);
-            }
-          }
-          
+          apply_shading(s, bl, sl, 0, side);
           img->set_pixel(_px, _py, side);
           img->set_pixel(_px + 1, _py, side);
         //}

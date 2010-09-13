@@ -346,7 +346,6 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int maxx, 
       
       int xoffset = mc::MapX * mapx + mc::MapY * diffz - (mapy * mc::MapY);
       int yoffset = mc::MapX * mapx + mapy * mc::MapY;
-      cout << xoffset << " " << yoffset << endl;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;

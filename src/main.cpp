@@ -22,6 +22,8 @@
 
 #include <png.h>
 
+#include "config.h"
+
 #include "global.h"
 #include "Level.h"
 #include "Image.h"
@@ -508,6 +510,7 @@ void do_help() {
     << endl
     << "  -s, --silent              - execute silently, printing nothing except errors" << endl
     << "  -h, --help                - display this help text" << endl
+    << "  -v, --version             - display version information" << endl
     << "  -l, --list-colors         - list all available colors and block types" << endl
     << endl
     << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
@@ -545,6 +548,12 @@ void do_help() {
   cout << endl;
 }
 
+int do_version() {
+  cout << "c10t - cartography tool for minecraft" << endl;
+  cout << "  VERSION: " << C10T_VERSION << endl;
+  return 0;
+}
+
 int do_colors() {
   cout << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
@@ -561,6 +570,7 @@ static struct option long_options[] =
    {"output",           required_argument, 0, 'o'},
    {"help",             no_argument, 0, 'h'},
    {"silent",           no_argument, 0, 's'},
+   {"version",          no_argument, 0, 'v'},
    {"list-colors",      no_argument, 0, 'l'},
    {"top",              required_argument, 0, 't'},
    {"bottom",           required_argument, 0, 'b'},
@@ -622,7 +632,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "xcrfnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "vxcrfnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -640,6 +650,8 @@ int main(int argc, char *argv[]){
     case 'q':
       s->mode = Oblique;
       break;
+    case 'v':
+      return do_version();
     case 'y':
       s->mode = ObliqueAngle;
       break;
@@ -692,8 +704,6 @@ int main(int argc, char *argv[]){
        abort ();
      }
   }
-  
-  
   
   if (!s->silent) {
     cout << "type '-h' for help" << endl;

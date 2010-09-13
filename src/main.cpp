@@ -525,6 +525,7 @@ void do_help() {
     << "  -a, --hide-all            - show no blocks except those specified with '-i'" << endl
     << "  -c, --cave-mode           - Cave mode - top down until solid block found," << endl
     << "                              then render bottom outlines only" << endl
+    << "  -n, --night               - Night-time rendering mode" << endl
     << endl
     << "  -n, --no-check            - do not check for <world>/level.dat" << endl
     << endl
@@ -579,13 +580,14 @@ static struct option long_options[] =
    {"exclude",          required_argument, 0, 'e'},
    {"include",          required_argument, 0, 'i'},
    {"hide-all",         no_argument, 0, 'a'},
-   {"no-check",         no_argument, 0, 'n'},
+   {"no-check",         no_argument, 0, 'N'},
    {"oblique",          no_argument, 0, 'q'},
    {"oblique-angle",    no_argument, 0, 'y'},
    {"90",               no_argument, 0, 'f'},
    {"180",              no_argument, 0, 'r'},
    {"threads",          no_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
+   {"night",            no_argument, 0, 'n'},
    {"binary",           no_argument, 0, 'x'},
    {0, 0, 0, 0}
  };
@@ -609,6 +611,7 @@ settings_t *init_settings() {
   s->invert = false;
   s->threads = 1;
   s->binary = false;
+  s->night = false;
   
   return s;
 }
@@ -634,7 +637,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "vxcrfnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "vxcrfNnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -676,7 +679,8 @@ int main(int argc, char *argv[]){
       break;
     case 'f': s->flip = true; break;
     case 'r': s->invert = true; break;
-    case 'n': s->nocheck = true; break;
+    case 'N': s->nocheck = true; break;
+    case 'n': s->night = true; break;
     case 'c': s->cavemode = true; break;
     case 't':
       s->top = atoi(optarg);

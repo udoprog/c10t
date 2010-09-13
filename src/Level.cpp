@@ -153,6 +153,16 @@ Image *Level::get_image(settings_t *s) {
   
   // block skylight
   int sl;
+
+  // block light
+  int bl;
+
+  // night modifier
+  Color nightmod(0x0, 0x0, 0x0, 200);
+  
+  // blocklight modifier
+  Color blmod(0xff, 0xea, 0x86, 0);
+  // Color blmod(0xff, 0xff, 0xff, 0);
   
   // skylight modifier
   // alpha channel is calculated depending on skylight value
@@ -203,10 +213,22 @@ Image *Level::get_image(settings_t *s) {
       heightmod.a = (127 - z);
       
       sl = bsget(skylight, _x, _y, z);
-      slmod.a = (sl * 0x2);
+      bl = bsget(blocklight, _x, _y, z);
+      
+      //std::cout << bl << std::endl;
+      slmod.a = sl;
+      blmod.a = (bl * 0x06);
       
       base.overlay(heightmod);
       base.overlay(slmod);
+      
+      if (s->night) {
+        base.overlay(nightmod);
+
+        if (bl > 0) {
+          base.overlay(blmod);
+        }
+      }
       
       img->set_pixel(x, y, base);
     }
@@ -227,6 +249,15 @@ Image *Level::get_oblique_image(settings_t *s) {
   
   // block skylight
   int sl;
+
+  // block light
+  int bl;
+  
+  // night modifier
+  Color nightmod(0x0, 0x0, 0x0, 200);
+  
+  // blocklight modifier
+  Color blmod(0xff, 0xea, 0x86, 0);
   
   // skylight modifier
   // alpha channel is calculated depending on skylight value
@@ -271,15 +302,26 @@ Image *Level::get_oblique_image(settings_t *s) {
         }
         
         sl = bsget(skylight, _x, _y, _z);
+        bl = bsget(blocklight, _x, _y, _z);
         
         heightmod.a = (127 - _z);
         slmod.a = (sl * 0x2);
+        blmod.a = (bl * 0x06);
         
         // optimization, don't draw top of block
         //if (_z + 1 >= s->top || bget(blocks, _x, _y, _z + 1) == mc::Air) {
           Color top(mc::MaterialColor[bt]);
           top.overlay(heightmod);
           top.overlay(slmod);
+        
+          if (s->night) {
+            top.overlay(nightmod);
+          
+            if (bl > 0) {
+              top.overlay(blmod);
+            }
+          }
+          
           img->set_pixel(x, y + (mc::MapZ - z) - 1, top);
         //}
         
@@ -287,6 +329,15 @@ Image *Level::get_oblique_image(settings_t *s) {
         //if (_y + 1 >= mc::MapY || bget(blocks, _x, _y + 1, _z) == mc::Air) {
           Color side(mc::MaterialSideColor[bt]);
           side.overlay(slmod);
+          
+          if (s->night) {
+            side.overlay(nightmod);
+          
+            if (bl > 0) {
+              side.overlay(blmod);
+            }
+          }
+          
           img->set_pixel(x, y + (mc::MapZ - z), side);
         //}
       }
@@ -308,6 +359,15 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
   
   // block skylight
   int sl;
+  
+  // block light
+  int bl;
+  
+  // night modifier
+  Color nightmod(0x0, 0x0, 0x0, 200);
+  
+  // blocklight modifier
+  Color blmod(0xff, 0xea, 0x86, 0);
   
   // skylight modifier
   // alpha channel is calculated depending on skylight value
@@ -354,9 +414,11 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         }
     
         sl = bsget(skylight, _x, _y, z);
+        bl = bsget(blocklight, _x, _y, z);
         
         heightmod.a = (127 - z);
         slmod.a = (sl * 0x2);
+        blmod.a = (bl * 0x06);
         
         int _px = mc::MapX + x - y;
         int _py = mc::MapZ + x - z + y;
@@ -366,6 +428,14 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
           Color top(mc::MaterialColor[bt]);
           top.overlay(heightmod);
           top.overlay(slmod);
+        
+          if (s->night) {
+            top.overlay(nightmod);
+            
+            if (bl > 0) {
+              top.overlay(blmod);
+            }
+          }
           
           img->set_pixel(_px, _py - 1, top);
           img->set_pixel(_px + 1, _py - 1, top);
@@ -378,6 +448,14 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
           Color side(mc::MaterialSideColor[bt]);
           side.overlay(heightmod);
           side.overlay(slmod);
+        
+          if (s->night) {
+            side.overlay(nightmod);
+          
+            if (bl > 0) {
+              side.overlay(blmod);
+            }
+          }
           
           img->set_pixel(_px, _py, side);
           img->set_pixel(_px + 1, _py, side);

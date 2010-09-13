@@ -284,4 +284,4 @@ void mc::initialize_constants() {
   mc::MaterialSideColor[mc::Air] = mc::MaterialColor[mc::Air];
   mc::MaterialSideColor[mc::Water] = mc::MaterialColor[mc::Water];
   mc::MaterialSideColor[mc::StationaryWater] = mc::MaterialColor[mc::StationaryWater];
-};
+}

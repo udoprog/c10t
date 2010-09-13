@@ -116,9 +116,11 @@ namespace nbt {
     public:
       static String read(gzFile file) {
         Short s = ShortTag::read(file);
-        uint8_t str[s + 1];
+        uint8_t *str = new uint8_t[s + 1];
         assert(gzread(file, str, s) == s);
-        return String((const char*)str, s);
+        String so((const char*)str, s);
+        delete str;
+        return so;
       }
   };
   
@@ -354,6 +356,6 @@ namespace nbt {
       NBTFile() : tags() {
       }
   };
-};
+}
 
 #endif /* _NBT_H_ */

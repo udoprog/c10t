@@ -8,6 +8,9 @@ else (EXISTS .git/refs/heads/master)
   set(C10T_VERSION "SNAPSHOT")
 endif (EXISTS .git/refs/heads/master)
 
+set(C10T_SITE "http://github.com/udoprog/c10t")
+set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com>")
+
 # output the binary to the current directory instead of in src/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 

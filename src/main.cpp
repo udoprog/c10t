@@ -549,8 +549,10 @@ void do_help() {
 }
 
 int do_version() {
-  cout << "c10t - cartography tool for minecraft" << endl;
-  cout << "  VERSION: " << C10T_VERSION << endl;
+  cout << "c10t - a cartography tool for minecraft" << endl;
+  cout << "   version: " << C10T_VERSION << endl;
+  cout << "        by: " << C10T_CONTACT << endl;
+  cout << "      site: " << C10T_SITE << endl;
   return 0;
 }
 

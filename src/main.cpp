@@ -531,8 +531,9 @@ void do_help() {
     << "  -f, --90                  - flip the rendering 90 degrees CCW" << endl
     << "  -r, --180                 - flip the rendering 180 degrees CCW" << endl
     << endl
-    << "  -t, --threads <int>       - Specify the amount of threads to use, this should" << endl
-    << "                              match the amount of cores for your machine" << endl
+    << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
+    << "                              efficency, this should match the amount of cores" << endl
+    << "                              on your machine" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;

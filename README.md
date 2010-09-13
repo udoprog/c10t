@@ -52,6 +52,6 @@ Building from Source (using cmake)
 
 Contributions
 -------------
-ZomBuster and Firemark - for their original work
-Guardian9979 - for his continual nagging for improvements
-acleone - for his work with cmake [85e980a]
+    ZomBuster and Firemark - for their original work
+    Guardian9979 - for his continual nagging for improvements
+    acleone - for his work with cmake [85e980a]

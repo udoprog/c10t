@@ -534,6 +534,10 @@ void do_help() {
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores" << endl
     << "                              on your machine" << endl
+    << endl
+    << "Other Options:" << endl
+    << "  -x, --binary              - Will output progress information in a binary form," << endl
+    << "                              good for integration with third party tools" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;

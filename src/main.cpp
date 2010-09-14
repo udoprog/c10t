@@ -578,7 +578,7 @@ void do_help() {
     << "                              then render bottom outlines only" << endl
     << "  -n, --night               - Night-time rendering mode" << endl
     << endl
-    << "  -n, --no-check            - do not check for <world>/level.dat" << endl
+    << "  -N, --no-check            - do not check for <world>/level.dat" << endl
     << endl
     << "Rendering options:" << endl
     << "  -q, --oblique             - oblique rendering" << endl

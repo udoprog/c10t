@@ -11,6 +11,7 @@ enum mode {
 
 typedef struct _settings {
   bool cavemode;
+  bool night;
   bool silent;
   bool nocheck;
   bool *excludes;
@@ -22,6 +23,8 @@ typedef struct _settings {
   enum mode mode;
   bool flip;
   bool invert;
+  bool debug;
+  bool require_all;
 } settings_t;
 
 #endif

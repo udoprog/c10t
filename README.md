@@ -24,15 +24,15 @@ Features
     entire (sometimes huge!) image in memory at once.
   * Uses proper command line options.
   * Can flip the map properly (90 - 180 - 270 degrees CCW), to get 270 use both
-    -f and -i
+    -f and -r
   * Clean code, for easing further development.
-  * Multiplatform - yes, it does compile properly on winblows and probably also
+  * Multiplatform - yes, it does compile properly on windows and probably also
     on mac.
+  * A gui wrapper, see: http://github.com/udoprog/c10t-swt (native gui with java bindings)
 
 I would not have done this were it not for the excellent inspiration by
 ZomBuster and Firemark (the linux port of cartograph). Thank you for the
 inspiration.
-
 
 Building from Source (using cmake)
 ----------------------------------
@@ -48,7 +48,18 @@ Building from Source (using cmake)
     $ cmake .
     $ make
 
+  note: CMake should generate a file called src/config.h from the input file src/config.h.cmake
+
   3. The executable (`c10t`) will be in the current directory.
+
+Issues
+------
+
+ * Issues should be posted on http://github.com/udoprog/c10t/issues
+ * Run the program in debug mode (c10t --debug), this will print useful information, but be much slower.
+ * ALWAYS include `c10t --version` information when posting issues, that way it can be determined weither the issue already has been resolved or not, if this information is missing, the issue probably cannot be resolved.
+ * ALWAYS include the following information: Platform (e.g. Windows, Linux, Mac) and Architecture (x86, x86_64)
+ * IF POSSIBLE include information which can help us reproduce the problem.
 
 Contributions
 -------------

@@ -22,6 +22,8 @@
 
 #include <png.h>
 
+#include "config.h"
+
 #include "global.h"
 #include "Level.h"
 #include "Image.h"
@@ -238,6 +240,11 @@ struct partial {
   int xPos;
   int zPos;
   Image *image;
+  bool islevel;
+  bool grammar_error;
+  size_t grammar_error_where;
+  const char *grammar_error_why;
+  string path;
 };
 
 class partial_renderer : public threadworker<string, partial*> {
@@ -252,7 +259,22 @@ public:
     Level *level = new Level(path.c_str());
     
     partial *p = new partial;
+    p->islevel = false;
+    p->grammar_error = false;
+    p->path = path;
     
+    if (level->grammar_error) {
+      p->grammar_error = true;
+      p->grammar_error_where = level->grammar_error_where;
+      p->grammar_error_why = level->grammar_error_why;
+      return p;
+    }
+    
+    if (!level->islevel) {
+      return p;
+    }
+    
+    p->islevel = true;
     p->xPos = level->xPos;
     p->zPos = level->zPos;
     
@@ -306,7 +328,7 @@ inline void calc_image_width_height(settings_t *s, int maxx, int maxz, int minx,
     image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
     break;
   case ObliqueAngle:
-    image_width = (diffx + diffz) * mc::MapX + 1;
+    image_width = (diffx + diffz) * mc::MapX + mc::MapX + mc::MapY + 2;
     image_height = (diffx + diffz) * mc::MapX + mc::MapZ + mc::MapX + mc::MapX + 2;
     break;
   }
@@ -398,7 +420,13 @@ bool do_world(settings_t *s, string world, string output) {
     int jobs = 0;
     
     while (listing.hasnext()) {
-      renderer.give(listing.next());
+      string path = listing.next();
+
+      if (s->debug) {
+        cout << "using file: " << path << endl;
+      }
+      
+      renderer.give(path);
       ++jobs;
     }
     
@@ -406,6 +434,30 @@ bool do_world(settings_t *s, string world, string output) {
     
     for (int j = 0; j < jobs; j++) {
       partial *p = renderer.get();
+      
+      if (p->grammar_error) {
+        if (s->require_all) {
+          error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
+            << " - " << p->grammar_error_why;
+          
+          // effectively join all worker threads and prepare for exit
+          renderer.join();
+          return false;
+        }
+
+        if (!s->silent) {
+          cout << "Ignoring unparseable file: " << p->path << endl;
+          continue;
+        }
+      }
+      
+      if (!p->islevel) {
+        if (s->debug) {
+          cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
+        }
+
+        continue;
+      }
       
       if (p->xPos < minx) {
         minx = p->xPos;
@@ -508,6 +560,8 @@ void do_help() {
     << endl
     << "  -s, --silent              - execute silently, printing nothing except errors" << endl
     << "  -h, --help                - display this help text" << endl
+    << "  -v, --version             - display version information" << endl
+    << "  -D, --debug               - display debug information while executing" << endl
     << "  -l, --list-colors         - list all available colors and block types" << endl
     << endl
     << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
@@ -522,6 +576,7 @@ void do_help() {
     << "  -a, --hide-all            - show no blocks except those specified with '-i'" << endl
     << "  -c, --cave-mode           - Cave mode - top down until solid block found," << endl
     << "                              then render bottom outlines only" << endl
+    << "  -n, --night               - Night-time rendering mode" << endl
     << endl
     << "  -n, --no-check            - do not check for <world>/level.dat" << endl
     << endl
@@ -534,11 +589,25 @@ void do_help() {
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores" << endl
     << "                              on your machine" << endl
+    << endl
+    << "Other Options:" << endl
+    << "  -x, --binary              - Will output progress information in a binary form," << endl
+    << "                              good for integration with third party tools" << endl
+    << "  --require-all             - Will force c10t to require all chunks or fail" << endl
+    << "                              not ignoring bad chunks" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
   cout << endl;
+}
+
+int do_version() {
+  cout << "c10t - a cartography tool for minecraft" << endl;
+  cout << "   version: " << C10T_VERSION << endl;
+  cout << "        by: " << C10T_CONTACT << endl;
+  cout << "      site: " << C10T_SITE << endl;
+  return 0;
 }
 
 int do_colors() {
@@ -557,19 +626,23 @@ static struct option long_options[] =
    {"output",           required_argument, 0, 'o'},
    {"help",             no_argument, 0, 'h'},
    {"silent",           no_argument, 0, 's'},
+   {"version",          no_argument, 0, 'v'},
+   {"debug",            no_argument, 0, 'D'},
    {"list-colors",      no_argument, 0, 'l'},
    {"top",              required_argument, 0, 't'},
    {"bottom",           required_argument, 0, 'b'},
    {"exclude",          required_argument, 0, 'e'},
    {"include",          required_argument, 0, 'i'},
    {"hide-all",         no_argument, 0, 'a'},
-   {"no-check",         no_argument, 0, 'n'},
+   {"no-check",         no_argument, 0, 'N'},
    {"oblique",          no_argument, 0, 'q'},
    {"oblique-angle",    no_argument, 0, 'y'},
    {"90",               no_argument, 0, 'f'},
    {"180",              no_argument, 0, 'r'},
    {"threads",          no_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
+   {"require-all",      no_argument, 0, 'Q'},
+   {"night",            no_argument, 0, 'n'},
    {"binary",           no_argument, 0, 'x'},
    {0, 0, 0, 0}
  };
@@ -593,6 +666,9 @@ settings_t *init_settings() {
   s->invert = false;
   s->threads = 1;
   s->binary = false;
+  s->night = false;
+  s->debug = false;
+  s->require_all = false;
   
   return s;
 }
@@ -618,7 +694,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "xcrfnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "vxcrfDNnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -635,6 +711,11 @@ int main(int argc, char *argv[]){
       break;
     case 'q':
       s->mode = Oblique;
+      break;
+    case 'v':
+      return do_version();
+    case 'D':
+      s->debug = true;
       break;
     case 'y':
       s->mode = ObliqueAngle;
@@ -658,7 +739,8 @@ int main(int argc, char *argv[]){
       break;
     case 'f': s->flip = true; break;
     case 'r': s->invert = true; break;
-    case 'n': s->nocheck = true; break;
+    case 'N': s->nocheck = true; break;
+    case 'n': s->night = true; break;
     case 'c': s->cavemode = true; break;
     case 't':
       s->top = atoi(optarg);
@@ -674,6 +756,9 @@ int main(int argc, char *argv[]){
     case 'h':
       do_help();
       return 0;
+    case 'Q':
+      s->require_all = true;
+      break;
     case '?':
       if (optopt == 'c')
         fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -688,8 +773,6 @@ int main(int argc, char *argv[]){
        abort ();
      }
   }
-  
-  
   
   if (!s->silent) {
     cout << "type '-h' for help" << endl;

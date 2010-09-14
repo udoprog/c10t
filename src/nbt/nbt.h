@@ -4,14 +4,15 @@
 #include <string>
 #include <stdint.h>
 #include <zlib.h>
-#include <assert.h>
 #include <stack>
 #include <list>
 
 #include <iostream>
 #include <string.h>
+#include <exception>
 
 namespace nbt {
+  class bad_grammar : std::exception {};
   #define BUFFER_SIZE 1024
   
   typedef int8_t Byte;
@@ -82,7 +83,8 @@ namespace nbt {
   typedef void (*register_int_t)(void *context, String name, Int l);
   typedef void (*register_byte_t)(void *context, String name, Byte b);
   typedef void (*register_byte_array_t)(void *context, String name, ByteArray *array);
-
+  typedef void (*error_handler_t)(void *context, size_t where, const char *why);
+  
   void default_begin_compound(void *context, nbt::String name);
   void default_end_compound(void *context);
   void default_register_long(void *context, nbt::String name, nbt::Long l);
@@ -95,42 +97,70 @@ namespace nbt {
   void default_register_byte_array(void *context, nbt::String name, nbt::ByteArray *byte_array);
   void default_begin_list(void *context, nbt::String name, nbt::Byte type, nbt::Int length);
   void default_end_list(void *context);
+  void default_error_handler(void *context, size_t where, const char *why);
   
   bool is_big_endian();
   
-  class Tag {
-    public:
-  };
+  class Parser {
+    private:
+      void *context;
 
-  class ShortTag : Tag {
-    public:
-      static Short read(gzFile file) {
+      void assert_error(gzFile file, bool a, const char *why) {
+        if (!a) {
+          size_t where = file == NULL ? 0 : gztell(file);
+          error_handler(context, where, why);
+          throw bad_grammar();
+        }
+      }
+
+      Byte read_byte(gzFile file) {
+        Byte b;
+        assert_error(file, gzread(file, &b, sizeof(Byte)) == sizeof(Byte), "Buffer too short to read Byte");
+        return b;
+      }
+      
+      Short read_short(gzFile file) {
         uint8_t b[2];
-        assert(gzread(file, b, sizeof(b)) == sizeof(b));
+        assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Short");
         Short s = (b[0] << 8) + b[1];
         return s;
       }
-  };
 
-  class StringTag : Tag {
-    public:
-      static String read(gzFile file) {
-        Short s = ShortTag::read(file);
+      Int read_int(gzFile file) {
+        Int i;
+        Byte b[sizeof(i)];
+        assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Int");
+        Int *ip = &i;
+        
+        if (is_big_endian()) {
+          *((Byte*)ip) = b[0];
+          *((Byte*)ip + 1) = b[1];
+          *((Byte*)ip + 2) = b[2];
+          *((Byte*)ip + 3) = b[3];
+        } else {
+          *((Byte*)ip) = b[3];
+          *((Byte*)ip + 1) = b[2];
+          *((Byte*)ip + 2) = b[1];
+          *((Byte*)ip + 3) = b[0];
+        }
+        
+        return i;
+      }
+      
+      String read_string(gzFile file) {
+        Short s = read_short(file);
         uint8_t *str = new uint8_t[s + 1];
-        assert(gzread(file, str, s) == s);
+        assert_error(file, gzread(file, str, s) == s, "Buffer to short to read String");
         String so((const char*)str, s);
         delete str;
         return so;
       }
-  };
-  
-  class FloatTag : Tag {
-    public:
-      static Float read(gzFile file)
+      
+      Float read_float(gzFile file)
       {
         Float f;
         Byte b[sizeof(f)];
-        assert(gzread(file, b, sizeof(f)) == sizeof(f));
+        assert_error(file, gzread(file, b, sizeof(f)) == sizeof(f), "Buffer to short to read Float");
         Float *fp = &f;
         
         if (is_big_endian()) {
@@ -147,14 +177,11 @@ namespace nbt {
         
         return f;
       }
-  };
       
-  class LongTag : Tag {
-    public:
-      static Long read(gzFile file) {
+      Long read_long(gzFile file) {
         Long l;
         Byte b[sizeof(l)];
-        assert(gzread(file, b, sizeof(b)) == sizeof(b));
+        assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Long");
         Long *lp = &l;
         
         if (is_big_endian()) {
@@ -179,14 +206,11 @@ namespace nbt {
         
         return l;
       }
-  };
-
-  class DoubleTag : Tag {
-    public:
-      static Double read(gzFile file) {
+      
+      Double read_double(gzFile file) {
         Double d;
         Byte b[sizeof(d)];
-        assert(gzread(file, b, sizeof(d)) == sizeof(d));
+        assert_error(file, gzread(file, b, sizeof(d)) == sizeof(d), "Buffer to short to read Double");
         Double *dp = &d;
         
         if (is_big_endian()) {
@@ -211,44 +235,6 @@ namespace nbt {
         
         return d;
       }
-  };
-
-  class IntTag : Tag {
-    public:
-      static Int read(gzFile file) {
-        Int i;
-        Byte b[sizeof(i)];
-        assert(gzread(file, b, sizeof(b)) == sizeof(b));
-        Int *ip = &i;
-        
-        if (is_big_endian()) {
-          *((Byte*)ip) = b[0];
-          *((Byte*)ip + 1) = b[1];
-          *((Byte*)ip + 2) = b[2];
-          *((Byte*)ip + 3) = b[3];
-        } else {
-          *((Byte*)ip) = b[3];
-          *((Byte*)ip + 1) = b[2];
-          *((Byte*)ip + 2) = b[1];
-          *((Byte*)ip + 3) = b[0];
-        }
-        
-        return i;
-      }
-  };
-
-  class ByteTag : Tag {
-    public:
-      static Byte read(gzFile file) {
-        Byte b;
-        assert(gzread(file, &b, sizeof(Byte)) == sizeof(Byte));
-        return b;
-      }
-  };
-  
-  class Parser {
-    private:
-      void *context;
     public:
       begin_compound_t begin_compound;
       register_long_t register_long;
@@ -263,6 +249,7 @@ namespace nbt {
       
       begin_list_t begin_list;
       end_list_t end_list;
+      error_handler_t error_handler;
       
       Parser() :
         context(NULL),
@@ -277,7 +264,8 @@ namespace nbt {
         register_byte_array(default_register_byte_array),
         end_compound(default_end_compound),
         begin_list(default_begin_list),
-        end_list(default_end_list)
+        end_list(default_end_list),
+        error_handler(default_error_handler)
       {
       }
       
@@ -294,20 +282,21 @@ namespace nbt {
         register_byte_array(default_register_byte_array),
         end_compound(default_end_compound),
         begin_list(default_begin_list),
-        end_list(default_end_list)
+        end_list(default_end_list),
+        error_handler(default_error_handler)
       {
         this->context = context;
       }
       
       Byte read_tagType(gzFile file) {
-        Byte type = ByteTag::read(file);
-        assert(type >= 0 && type <= TAG_Compound);
+        Byte type = read_byte(file);
+        assert_error(file, type >= 0 && type <= TAG_Compound, "Not a valid tag type");
         return type;
       }
       
       void handle_list(String name, gzFile file) {
-        Byte type = ByteTag::read(file);
-        Int length = IntTag::read(file);
+        Byte type = read_byte(file);
+        Int length = read_int(file);
         
         begin_list(context, name, type, length);
         
@@ -319,9 +308,9 @@ namespace nbt {
       }
       
       void handle_byte_array(String name, gzFile file) {
-        Int length = IntTag::read(file);
+        Int length = read_int(file);
         Byte *values = new Byte[length];
-        assert(gzread(file, values, length) == length);
+        assert_error(file, gzread(file, values, length) == length, "Buffer to short to read ByteArray");
         ByteArray *array = new ByteArray();
         array->values = values;
         array->length = length;
@@ -338,7 +327,7 @@ namespace nbt {
             break;
           }
           
-          name = StringTag::read(file);
+          name = read_string(file);
           handle_type(type, name, file);
         } while(1);
         
@@ -347,14 +336,6 @@ namespace nbt {
       
       void handle_type(Byte type, String name, gzFile file);
       void parse_file(const char *path);
-  };
-  
-  class NBTFile {
-    private:
-      std::list<Tag> tags;
-    public:
-      NBTFile() : tags() {
-      }
   };
 }
 

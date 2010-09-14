@@ -25,6 +25,13 @@ void Color::underlay(const Color &other) {
   a = other.a + (a * (0xff - other.a)) / 0xff;
 }
 
+// pull color down towards black
+void Color::darken(uint8_t f) {
+  r -= ((r * f) / 0xff);
+  g -= ((g * f) / 0xff);
+  b -= ((b * f) / 0xff);
+}
+
 std::string Color::to_s() {
   std::stringstream ss(std::stringstream::out | std::stringstream::in);
   ss << "(" << (int)r << "," << (int)g << "," << (int)b << "," << (int)a << ")";

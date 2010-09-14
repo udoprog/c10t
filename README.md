@@ -56,9 +56,10 @@ Issues
 ------
 
  * Issues should be posted on http://github.com/udoprog/c10t/issues
+ * Run the program in debug mode (c10t --debug), this will print useful information, but be much slower.
  * ALWAYS include `c10t --version` information when posting issues, that way it can be determined weither the issue already has been resolved or not, if this information is missing, the issue probably cannot be resolved.
  * ALWAYS include the following information: Platform (e.g. Windows, Linux, Mac) and Architecture (x86, x86_64)
- * IF POSSIBLE include information which can help use reproduce the problem.
+ * IF POSSIBLE include information which can help us reproduce the problem.
 
 Contributions
 -------------

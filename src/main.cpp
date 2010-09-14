@@ -664,7 +664,7 @@ settings_t *init_settings() {
   s->silent = false;
   s->flip = false;
   s->invert = false;
-  s->threads = 1;
+  s->threads = boost::thread::hardware_concurrency();
   s->binary = false;
   s->night = false;
   s->debug = false;

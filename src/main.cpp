@@ -321,15 +321,15 @@ inline void calc_image_width_height(settings_t *s, int maxx, int maxz, int minx,
   switch (s->mode) {
   case Top:
     image_width = diffx * mc::MapX + mc::MapX;
-    image_height = diffz * mc::MapY + mc::MapY;
+    image_height = diffz * mc::MapZ + mc::MapZ;
     break;
   case Oblique:
     image_width = diffx * mc::MapX + mc::MapX;
-    image_height = diffz * mc::MapY + mc::MapY + mc::MapZ;
+    image_height = diffz * mc::MapZ + mc::MapZ + mc::MapY;
     break;
   case ObliqueAngle:
-    image_width = (diffx + diffz) * mc::MapX + mc::MapX + mc::MapY + 2;
-    image_height = (diffx + diffz) * mc::MapX + mc::MapZ + mc::MapX + mc::MapX + 2;
+    image_width = (diffx + diffz) * mc::MapX + mc::MapX + mc::MapZ + 2;
+    image_height = (diffx + diffz) * mc::MapX + mc::MapY + mc::MapX + mc::MapX + 2;
     break;
   }
 }
@@ -350,14 +350,14 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int maxx, 
   case Top:
     {
       int xoffset = (p.xPos - minx) * mc::MapX;
-      int yoffset = (p.zPos - minz) * mc::MapY;
+      int yoffset = (p.zPos - minz) * mc::MapZ;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
   case Oblique:
     {
       int xoffset = (p.xPos - minx) * mc::MapX;
-      int yoffset = (p.zPos - minz) * mc::MapY;
+      int yoffset = (p.zPos - minz) * mc::MapZ;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
@@ -366,8 +366,8 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int maxx, 
       int mapx = (p.xPos - minx);
       int mapy = (p.zPos - minz);
       
-      int xoffset = mc::MapX * mapx + mc::MapY * diffz - (mapy * mc::MapY);
-      int yoffset = mc::MapX * mapx + mapy * mc::MapY;
+      int xoffset = mc::MapX * mapx + mc::MapZ * diffz - (mapy * mc::MapZ);
+      int yoffset = mc::MapX * mapx + mapy * mc::MapZ;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
@@ -744,7 +744,7 @@ int main(int argc, char *argv[]){
     case 'c': s->cavemode = true; break;
     case 't':
       s->top = atoi(optarg);
-      assert(s->top > s->bottom && s->top < mc::MapZ);
+      assert(s->top > s->bottom && s->top < mc::MapY);
       break;
     case 'b':
       s->bottom = atoi(optarg);

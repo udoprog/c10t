@@ -45,6 +45,12 @@ void register_byte_array(void *context, nbt::String name, nbt::ByteArray *byte_a
   }
 }
 
+void error_handler(void *context, size_t where, const char *why) {
+  ((Level *)context)->grammar_error = true;
+  ((Level *)context)->grammar_error_where = where;
+  ((Level *)context)->grammar_error_why = why;
+}
+
 Level::~Level(){
   if (islevel) {
     delete blocks;
@@ -58,14 +64,18 @@ Level::Level(const char *path) {
   xPos = 0;
   zPos = 0;
   islevel = false;
+  grammar_error = false;
   
   nbt::Parser parser(this);
   parser.register_byte_array = register_byte_array;
   parser.register_int = register_int;
   parser.begin_compound = begin_compound;
-  parser.parse_file(path);
+  parser.error_handler = error_handler;
   
-  if (islevel) {
+  try {
+    parser.parse_file(path);
+  } catch(nbt::bad_grammar &bg) {
+    grammar_error = true;
   }
 }
 

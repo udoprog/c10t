@@ -1,6 +1,8 @@
 #include "nbt.h"
 
 #include <iostream>
+#include <stdlib.h>
+#include <errno.h>
 
 void nbt::default_begin_compound(void *context, nbt::String name) {
   //std::cout << "TAG_Compound('" << name << "') BEGIN" << std::endl;
@@ -53,6 +55,11 @@ void nbt::default_end_list(void *context) {
   //std::cout << "TAG_List END" << std::endl;
 }
 
+void nbt::default_error_handler(void *context, size_t where, const char *why) {
+  std::cerr << "Unhandled nbt parser error at byte " << where << ": " << why << std::endl;
+  exit(1);
+}
+
 bool nbt::is_big_endian() {
   int32_t i = 1;
   return ((int8_t*)(&i))[0] == 0;
@@ -61,13 +68,13 @@ bool nbt::is_big_endian() {
 void nbt::Parser::handle_type(Byte type, String name, gzFile file)
 {
   switch(type) {
-  case TAG_Long:    register_long(context,    name, LongTag::read(file));   break;
-  case TAG_Short:   register_short(context,   name, ShortTag::read(file));  break;
-  case TAG_String:  register_string(context,  name, StringTag::read(file)); break;
-  case TAG_Float:   register_float(context,   name, FloatTag::read(file));  break;
-  case TAG_Double:  register_double(context,  name, DoubleTag::read(file)); break;
-  case TAG_Int:     register_int(context,     name, IntTag::read(file));    break;
-  case TAG_Byte:    register_byte(context,    name, ByteTag::read(file));   break;
+  case TAG_Long:    register_long(context,    name, read_long(file));   break;
+  case TAG_Short:   register_short(context,   name, read_short(file));  break;
+  case TAG_String:  register_string(context,  name, read_string(file)); break;
+  case TAG_Float:   register_float(context,   name, read_float(file));  break;
+  case TAG_Double:  register_double(context,  name, read_double(file)); break;
+  case TAG_Int:     register_int(context,     name, read_int(file));    break;
+  case TAG_Byte:    register_byte(context,    name, read_byte(file));   break;
   case TAG_Compound:
     handle_compound(name, file);
     break;
@@ -83,16 +90,16 @@ void nbt::Parser::handle_type(Byte type, String name, gzFile file)
 void nbt::Parser::parse_file(const char *path)
 {
   gzFile file = gzopen(path, "rb");
-  assert(file != NULL);
+  assert_error(file, file != NULL, strerror(errno));
+  
   Byte type = read_tagType(file);
   
   switch(type) {
   case TAG_Compound:
-    String name = StringTag::read(file);
+    String name = read_string(file);
     handle_type(type, name, file);
     break;
   }
   
-  assert(file != NULL);
   gzclose(file);
 }

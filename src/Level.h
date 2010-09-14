@@ -31,6 +31,9 @@ class Level
     nbt::Int xPos;
     nbt::Int zPos;
     bool islevel;
+    bool grammar_error;
+    size_t grammar_error_where;
+    const char *grammar_error_why;
 
     Level(const char *path);
     ~Level();

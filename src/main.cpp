@@ -240,6 +240,11 @@ struct partial {
   int xPos;
   int zPos;
   Image *image;
+  bool islevel;
+  bool grammar_error;
+  size_t grammar_error_where;
+  const char *grammar_error_why;
+  string path;
 };
 
 class partial_renderer : public threadworker<string, partial*> {
@@ -254,7 +259,22 @@ public:
     Level *level = new Level(path.c_str());
     
     partial *p = new partial;
+    p->islevel = false;
+    p->grammar_error = false;
+    p->path = path;
     
+    if (level->grammar_error) {
+      p->grammar_error = true;
+      p->grammar_error_where = level->grammar_error_where;
+      p->grammar_error_why = level->grammar_error_why;
+      return p;
+    }
+    
+    if (!level->islevel) {
+      return p;
+    }
+    
+    p->islevel = true;
     p->xPos = level->xPos;
     p->zPos = level->zPos;
     
@@ -400,7 +420,13 @@ bool do_world(settings_t *s, string world, string output) {
     int jobs = 0;
     
     while (listing.hasnext()) {
-      renderer.give(listing.next());
+      string path = listing.next();
+
+      if (s->debug) {
+        cout << "using file: " << path << endl;
+      }
+      
+      renderer.give(path);
       ++jobs;
     }
     
@@ -408,6 +434,23 @@ bool do_world(settings_t *s, string world, string output) {
     
     for (int j = 0; j < jobs; j++) {
       partial *p = renderer.get();
+      
+      if (p->grammar_error) {
+        error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
+          << " - " << p->grammar_error_why;
+        
+        // effectively join all worker threads and prepare for exit
+        renderer.join();
+        return false;
+      }
+      
+      if (!p->islevel) {
+        if (s->debug) {
+          cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
+        }
+
+        continue;
+      }
       
       if (p->xPos < minx) {
         minx = p->xPos;
@@ -511,6 +554,7 @@ void do_help() {
     << "  -s, --silent              - execute silently, printing nothing except errors" << endl
     << "  -h, --help                - display this help text" << endl
     << "  -v, --version             - display version information" << endl
+    << "  -D, --debug               - display debug information while executing" << endl
     << "  -l, --list-colors         - list all available colors and block types" << endl
     << endl
     << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
@@ -574,6 +618,7 @@ static struct option long_options[] =
    {"help",             no_argument, 0, 'h'},
    {"silent",           no_argument, 0, 's'},
    {"version",          no_argument, 0, 'v'},
+   {"debug",            no_argument, 0, 'D'},
    {"list-colors",      no_argument, 0, 'l'},
    {"top",              required_argument, 0, 't'},
    {"bottom",           required_argument, 0, 'b'},
@@ -612,6 +657,7 @@ settings_t *init_settings() {
   s->threads = 1;
   s->binary = false;
   s->night = false;
+  s->debug = false;
   
   return s;
 }
@@ -637,7 +683,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "vxcrfNnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "vxcrfDNnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -657,6 +703,9 @@ int main(int argc, char *argv[]){
       break;
     case 'v':
       return do_version();
+    case 'D':
+      s->debug = true;
+      break;
     case 'y':
       s->mode = ObliqueAngle;
       break;

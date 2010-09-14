@@ -23,6 +23,7 @@ typedef struct _settings {
   enum mode mode;
   bool flip;
   bool invert;
+  bool debug;
 } settings_t;
 
 #endif

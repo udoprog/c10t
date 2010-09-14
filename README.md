@@ -55,3 +55,4 @@ Contributions
     ZomBuster and Firemark - for their original work
     Guardian9979 - for his continual nagging for improvements
     acleone - for his work with cmake [85e980a]
+    j005u - for explaining how cocoa works

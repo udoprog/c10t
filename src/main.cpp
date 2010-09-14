@@ -689,7 +689,7 @@ int main(int argc, char *argv[]){
   settings_t *s = init_settings();
   
   string world;
-  string output;
+  string output("out.png");
   int c, blockid;
 
   int option_index;

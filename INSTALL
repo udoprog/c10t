@@ -1,26 +1,25 @@
-ORIGINAL INSTALLATION INSTRUCTIONS
-You must have corona 1.0.2 lib - http://corona.sourceforge.net/
-solution to install corona : http://www.spheredev.org/smforums/index.php?topic=3152.0;wap2
-To install Cartograph type 'make' . Enjoy
+Dependencies
+------------
+zlib
+libpng (>= 1.2)
+libboost_thread (>= 1.40)
+pthread (through boost)
 
-ADDITIONAL
-I've bundled corona with cartography to make it easier to compile everything, the Makefile will attempt to statically link corona
+To install dependencies on Ubuntu:
+$ sudo apt-get install cmake libpng12-dev zlib1g-dev libboost-thread1.40-dev libboost-thread1.40.0
 
-There is also a patch under corona which fixes a couple of includes which messes with the g++ compiler.
+Building Source
+---------------
+To build the source run:
+$ cmake .
+$ make
 
-First step (build corona):
+The c10t executable will be in the current directory.
 
-#> cd corona
-#> make
-#> cd ..
+Running
+-------
+To run:
+$ ./c10t
 
-This will build corona with the prefix corona/usr to get a nice directory for the libraries and such.
-
-Second step (build cartographer in the root directory)
-#> make
-
-If something goes wrong, please remember: this is a dirty hack.
-
-Enjoy!
-
--- udoprog
+To get a list of all options run:
+$ ./c10t -h

@@ -436,12 +436,19 @@ bool do_world(settings_t *s, string world, string output) {
       partial *p = renderer.get();
       
       if (p->grammar_error) {
-        error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
-          << " - " << p->grammar_error_why;
-        
-        // effectively join all worker threads and prepare for exit
-        renderer.join();
-        return false;
+        if (s->require_all) {
+          error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
+            << " - " << p->grammar_error_why;
+          
+          // effectively join all worker threads and prepare for exit
+          renderer.join();
+          return false;
+        }
+
+        if (!s->silent) {
+          cout << "Ignoring unparseable file: " << p->path << endl;
+          continue;
+        }
       }
       
       if (!p->islevel) {
@@ -586,6 +593,8 @@ void do_help() {
     << "Other Options:" << endl
     << "  -x, --binary              - Will output progress information in a binary form," << endl
     << "                              good for integration with third party tools" << endl
+    << "  --require-all             - Will force c10t to require all chunks or fail" << endl
+    << "                              not ignoring bad chunks" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
@@ -632,6 +641,7 @@ static struct option long_options[] =
    {"180",              no_argument, 0, 'r'},
    {"threads",          no_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
+   {"require-all",      no_argument, 0, 'Q'},
    {"night",            no_argument, 0, 'n'},
    {"binary",           no_argument, 0, 'x'},
    {0, 0, 0, 0}
@@ -658,6 +668,7 @@ settings_t *init_settings() {
   s->binary = false;
   s->night = false;
   s->debug = false;
+  s->require_all = false;
   
   return s;
 }
@@ -745,6 +756,9 @@ int main(int argc, char *argv[]){
     case 'h':
       do_help();
       return 0;
+    case 'Q':
+      s->require_all = true;
+      break;
     case '?':
       if (optopt == 'c')
         fprintf (stderr, "Option -%c requires an argument.\n", optopt);

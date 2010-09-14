@@ -24,6 +24,7 @@ typedef struct _settings {
   bool flip;
   bool invert;
   bool debug;
+  bool require_all;
 } settings_t;
 
 #endif

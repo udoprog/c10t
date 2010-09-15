@@ -109,7 +109,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Wood] = new Color(157,128,79,255);
   mc::MaterialColor[mc::Sapling] = new Color(120,120,120,0);
   mc::MaterialColor[mc::Bedrock] = new Color(84,84,84,255);
-  mc::MaterialColor[mc::Water] = new Color(38,92,255,80);
+  mc::MaterialColor[mc::Water] = new Color(38,92,255,0xd0);
   mc::MaterialColor[mc::StationaryWater] = new Color(38,92,255,80);
   mc::MaterialColor[mc::Lava] = new Color(255,90,0,255);
   mc::MaterialColor[mc::StationaryLava] = new Color(255,90,0,255);
@@ -119,7 +119,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::IronOre] = new Color(136,130,127,255);
   mc::MaterialColor[mc::CoalOre] = new Color(115,115,115,255);
   mc::MaterialColor[mc::Log] = new Color(102,81,51,255);
-  mc::MaterialColor[mc::Leaves] = new Color(60,192,41,180);
+  mc::MaterialColor[mc::Leaves] = new Color(60,192,41,120);
   mc::MaterialColor[mc::Sponge] = new Color();
   mc::MaterialColor[mc::Glass] = new Color(255,255,255,64);
   mc::MaterialColor[mc::RedCloth] = new Color();

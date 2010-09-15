@@ -27,7 +27,7 @@ void Image::blend_pixel(int x, int y, Color &c){
   }
   
   o.blend(c);
-  set_pixel(x, y, c);
+  set_pixel(x, y, o);
 }
 
 void Image::get_pixel(int x, int y, Color &c){
@@ -62,7 +62,7 @@ void Image::composite(int xoffset, int yoffset, Image &img) {
       if (c.is_transparent()) continue;
       get_pixel(xoffset + x, yoffset + y, o);
       o.blend(c);
-      set_pixel(xoffset + x, yoffset + y, c);
+      set_pixel(xoffset + x, yoffset + y, o);
     }
   }
 }

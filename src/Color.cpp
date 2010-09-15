@@ -2,6 +2,8 @@
 #include <sstream>
 #include <string>
 
+uint8_t alpha_over_c(uint8_t u, uint8_t o, uint8_t ua, uint8_t oa);
+
 /**
  * Takes two color values and does an alpha over blending without using floats.
  */
@@ -41,11 +43,4 @@ void Color::darken(uint8_t f) {
   r -= ((r * f) / 0xff);
   g -= ((g * f) / 0xff);
   b -= ((b * f) / 0xff);
-}
-
-std::string Color::to_s() {
-  std::stringstream ss(std::stringstream::out | std::stringstream::in);
-  ss << "(" << (int)r << "," << (int)g << "," << (int)b << "," << (int)a << ")";
-  std::string s = ss.str();
-  return s;
 }

@@ -619,7 +619,7 @@ int do_colors() {
   cout << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
-    cout << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i]->to_s() << endl;
+    cout << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i] << endl;
   }
   
   return 0;

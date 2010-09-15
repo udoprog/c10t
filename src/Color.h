@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 #include <string>
-
-uint8_t alpha_over_c(uint8_t u, uint8_t o, uint8_t ua, uint8_t oa);
+#include <ostream>
 
 struct Color{
   uint8_t r;
@@ -36,7 +35,11 @@ struct Color{
   void darken(uint8_t c);
   void blend(const Color &other);
     
-  std::string to_s();
+  friend std::ostream& operator<<(std::ostream& out, const Color& c) // output
+  {
+      out << "Color(" << (int)c.r << ", " << (int)c.g << ", " << (int)c.b << ", " << (int)c.a << ")";
+      return out;
+  }
 };
 
 #endif /* _COLOR_H_ */

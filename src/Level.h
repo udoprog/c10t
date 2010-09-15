@@ -19,7 +19,6 @@
 #include "Image.h"
 #include "blocks.h"
 
-
 class Level
 {
   public:

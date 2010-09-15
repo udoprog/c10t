@@ -67,3 +67,4 @@ Contributions
     Guardian9979 - for his continual nagging for improvements
     acleone - for his work with cmake [85e980a]
     j005u - for explaining how cocoa works
+    michaelu238 - for mapping out the Mac OS X building process

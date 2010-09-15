@@ -4,6 +4,7 @@ add_executable(c10t
 	Image.cpp
 	Color.cpp
 	blocks.cpp
+  fileutils.cpp
 	nbt/nbt.cpp)
 
 # see /usr/share/cmake-2.8/Modules/Find*.cmake

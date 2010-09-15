@@ -53,7 +53,7 @@ void error_handler(void *context, size_t where, const char *why) {
 }
 
 Level::~Level(){
-  if (islevel) {
+  if (!ignore_blocks && islevel) {
     delete blocks;
     delete skylight;
     delete heightmap;
@@ -61,14 +61,20 @@ Level::~Level(){
   }
 }
 
-Level::Level(const char *path) {
+Level::Level(const char *path, bool ignore_blocks)
+  : path(path), ignore_blocks(ignore_blocks)
+{
   xPos = 0;
   zPos = 0;
   islevel = false;
   grammar_error = false;
   
   nbt::Parser parser(this);
-  parser.register_byte_array = register_byte_array;
+  
+  if (!ignore_blocks) {
+    parser.register_byte_array = register_byte_array;
+  }
+  
   parser.register_int = register_int;
   parser.begin_compound = begin_compound;
   parser.error_handler = error_handler;

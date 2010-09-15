@@ -87,14 +87,6 @@ namespace nbt {
   
   void default_begin_compound(void *context, nbt::String name);
   void default_end_compound(void *context);
-  void default_register_long(void *context, nbt::String name, nbt::Long l);
-  void default_register_short(void *context, nbt::String name, nbt::Short s);
-  void default_register_string(void *context, nbt::String name, nbt::String s);
-  void default_register_float(void *context, nbt::String name, nbt::Float f);
-  void default_register_double(void *context, nbt::String name, nbt::Double f);
-  void default_register_int(void *context, nbt::String name, nbt::Int f);
-  void default_register_byte(void *context, nbt::String name, nbt::Byte f);
-  void default_register_byte_array(void *context, nbt::String name, nbt::ByteArray *byte_array);
   void default_begin_list(void *context, nbt::String name, nbt::Byte type, nbt::Int length);
   void default_end_list(void *context);
   void default_error_handler(void *context, size_t where, const char *why);
@@ -154,6 +146,11 @@ namespace nbt {
         String so((const char*)str, s);
         delete str;
         return so;
+      }
+      
+      void flush_string(gzFile file) {
+        Short s = read_short(file);
+        assert_error(file, gzseek(file, s, SEEK_CUR) != -1, "Buffer to short to flush String");
       }
       
       Float read_float(gzFile file)
@@ -254,14 +251,14 @@ namespace nbt {
       Parser() :
         context(NULL),
         begin_compound(default_begin_compound),
-        register_long(default_register_long),
-        register_short(default_register_short),
-        register_string(default_register_string),
-        register_float(default_register_float),
-        register_double(default_register_double),
-        register_int(default_register_int),
-        register_byte(default_register_byte),
-        register_byte_array(default_register_byte_array),
+        register_long(NULL),
+        register_short(NULL),
+        register_string(NULL),
+        register_float(NULL),
+        register_double(NULL),
+        register_int(NULL),
+        register_byte(NULL),
+        register_byte_array(NULL),
         end_compound(default_end_compound),
         begin_list(default_begin_list),
         end_list(default_end_list),
@@ -272,14 +269,14 @@ namespace nbt {
       Parser(void *context) :
         context(context),
         begin_compound(default_begin_compound),
-        register_long(default_register_long),
-        register_short(default_register_short),
-        register_string(default_register_string),
-        register_float(default_register_float),
-        register_double(default_register_double),
-        register_int(default_register_int),
-        register_byte(default_register_byte),
-        register_byte_array(default_register_byte_array),
+        register_long(NULL),
+        register_short(NULL),
+        register_string(NULL),
+        register_float(NULL),
+        register_double(NULL),
+        register_int(NULL),
+        register_byte(NULL),
+        register_byte_array(NULL),
         end_compound(default_end_compound),
         begin_list(default_begin_list),
         end_list(default_end_list),
@@ -305,6 +302,12 @@ namespace nbt {
         }
 
         end_list(context);
+      }
+
+      void flush_byte_array(gzFile file) {
+        Int length = read_int(file);
+        assert_error(file, gzseek(file, length, SEEK_CUR) != -1,
+          "Buffer to short to flush ByteArray");
       }
       
       void handle_byte_array(String name, gzFile file) {

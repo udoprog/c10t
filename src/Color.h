@@ -2,6 +2,7 @@
 #define _COLOR_H_
 
 #include <stdint.h>
+
 #include <string>
 #include <ostream>
 

@@ -1,24 +1,18 @@
-#include <sys/stat.h>
-
-#include <boost/ptr_container/ptr_list.hpp>
-
-#include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
-#include <limits.h>
-#include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <getopt.h>
+
+#include <errno.h>
 
 #include <sstream>
 #include <string>
 #include <vector>
-#include <stack>
-#include <queue>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+
+#include <boost/ptr_container/ptr_list.hpp>
+#include <boost/thread.hpp>
 
 #include <png.h>
 
@@ -30,6 +24,8 @@
 #include "Image.h"
 #include "blocks.h"
 #include "threadworker.h"
+#include "fileutils.h"
+#include "World.h"
 
 using namespace std;
 
@@ -38,97 +34,6 @@ const uint8_t ERROR_BYTE = 0x01;
 const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
 const uint8_t IMAGE_BYTE = 0x30;
-
-#ifdef _WIN32
-const char *dir_sep = "\\";
-const char dir_sep_c = '\\';
-#else
-const char *dir_sep = "/";
-const char dir_sep_c = '/';
-#endif
-
-inline bool is_dir(string &path) {
-   struct stat st;
-   stat(path.c_str(), &st);
-   return S_ISDIR(st.st_mode);
-}
-
-inline bool is_file(string &path) {
-   struct stat st;
-   stat(path.c_str(), &st);
-   return S_ISREG(st.st_mode);
-}
-
-inline string path_join(string a, string b) {
-  return a + dir_sep + b;
-}
-
-class dirlist {
-private:
-  queue<string> directories;
-  queue<string> files;
-
-public:
-  dirlist(string path) {
-    directories.push(path);
-  }
-  
-  bool hasnext() {
-    if (!files.empty()) {
-      return true;
-    }
-
-    if (directories.empty()) {
-      return false;
-    }
-    
-    // work until you find any files
-    while (!directories.empty()) {
-      string path = directories.front();
-      directories.pop();
-      
-      DIR *dir = opendir(path.c_str()); 
-      
-      if (!dir) {
-        return false;
-      }
-      
-      dirent *ent; 
-      
-      while((ent = readdir(dir)) != NULL)
-      {
-        string temp_str = ent->d_name;
-
-        if (temp_str.compare(".") == 0) {
-          continue;
-        }
-        
-        if (temp_str.compare("..") == 0) {
-          continue;
-        }
-        
-        string fullpath = path_join(path, temp_str);
-        
-        if (is_dir(fullpath)) {
-          directories.push(fullpath);
-        }
-        else if (is_file(fullpath)) {
-          files.push(fullpath);
-        }
-      }
-      
-      closedir(dir);
-    }
-    
-    return !files.empty();
-  }
-
-  string next() {
-    string next = files.front();
-    files.pop();
-    return next;
-  }
-};
 
 int write_image(settings_t *s, const char *filename, Image &img, const char *title)
 {
@@ -257,7 +162,7 @@ public:
   }
   
   partial *work(string path) {
-    Level *level = new Level(path.c_str());
+    Level *level = new Level(path.c_str(), false);
     
     partial *p = new partial;
     p->islevel = false;
@@ -302,19 +207,6 @@ public:
   }
 };
 
-bool compare_partials(partial first, partial second)
-{
-  if (first.zPos < second.zPos) {
-    return true;
-  }
-  
-  if (first.zPos > second.zPos) {
-    return false;
-  }
-  
-  return first.xPos < second.xPos;;
-}
-
 inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &image_width, int &image_height) {
   Cube c((diffx + 1) * mc::MapX, mc::MapY, (diffz + 1) * mc::MapZ);
   
@@ -338,15 +230,6 @@ inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &im
     c.project_obliqueangle(farthest_southwest, xy, image_height);
     break;
   }
-}
-
-inline void calc_partials_pre(settings_t *s, boost::ptr_list<partial> &partials) {
-  switch (s->mode) {
-  case Oblique: partials.sort(compare_partials); break;
-  case ObliqueAngle: partials.sort(compare_partials); break;
-  default: break;
-  }
-
 }
 
 inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, int minz, int maxx, int maxz, int image_width, int image_height) {
@@ -379,8 +262,8 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
   }
 }
 
-bool do_world(settings_t *s, string world, string output) {
-  if (world.empty()) {
+bool do_world(settings_t *s, string world_path, string output) {
+  if (world_path.empty()) {
     error << "You must specify world using '-w' to generate map";
     return false;
   }
@@ -392,7 +275,7 @@ bool do_world(settings_t *s, string world, string output) {
   
   if (!s->nocheck)
   {
-    string level_dat = path_join(world, "level.dat");
+    string level_dat = path_join(world_path, "level.dat");
     
     if (!is_file(level_dat)) {
       error << "could not stat file: " << level_dat << " - " << strerror(errno);
@@ -401,43 +284,41 @@ bool do_world(settings_t *s, string world, string output) {
   }
   
   if (!s->silent) {
-    cout << "world:  " << world << " " << endl;
+    cout << "world:  " << world_path << " " << endl;
     cout << "output: " << output << " " << endl;
     cout << endl;
   }
   
   boost::ptr_list<partial> partials;
   
+  if (!s->silent) cout << "Performing broad phase scan of world directory... " << flush;
+  World world(world_path);
+  if (!s->silent) cout << "found " << world.levels.size() << " files!" << endl;
+
   if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
   
-  dirlist listing(world);
-
-  int i = 1;
-  
-  int minx = INT_MAX;
-  int minz = INT_MAX;
-  int maxx = INT_MIN;
-  int maxz = INT_MIN;
-
   partial_renderer renderer(s, s->threads);
   
+  dirlist listing(world_path);
+  
   {
-    int jobs = 0;
-    
-    while (listing.hasnext()) {
-      string path = listing.next();
+    for (std::list<level>::iterator it = world.levels.begin(); it != world.levels.end(); it++) {
+      level l = *it;
 
+      string path = world.get_level_path(l.xPos, l.zPos);
+      
       if (s->debug) {
         cout << "using file: " << path << endl;
       }
       
       renderer.give(path);
-      ++jobs;
     }
     
     renderer.start();
+
+    unsigned int world_size = world.levels.size();
     
-    for (int j = 0; j < jobs; j++) {
+    for (unsigned int i = 0; i < world_size; i++) {
       partial *p = renderer.get();
       
       if (p->grammar_error) {
@@ -464,54 +345,35 @@ bool do_world(settings_t *s, string world, string output) {
         continue;
       }
       
-      if (p->xPos < minx) {
-        minx = p->xPos;
-      }
-      
-      if (p->xPos > maxx) {
-        maxx = p->xPos;
-      }
-
-      if (p->zPos < minz) {
-        minz = p->zPos;
-      }
-      
-      if (p->zPos > maxz) {
-        maxz = p->zPos;
-      }
-      
       partials.push_back(p);
       
       if (!s->silent) {
-        if (i % 100 == 0) {
+        if (i % 100 == 0 && i > 0) {
           cout << " " << setw(9) << i << flush;
-        }
-        
-        if (i % 1000 == 0) {
-          cout << endl;
-        }
           
-        ++i;
+          if (i % 1000 == 0) {
+            cout << endl;
+          }
+        }
       }
       
       if (s->binary) {
-        int8_t p = (j * 0xff) / jobs;
+        int8_t p = (i * 0xff) / world_size;
         cout << RENDER_BYTE << p << flush;
       }
     }
-
+    
     renderer.join();
   }
   
-  if (!s->silent) cout << setw(10) << i << setw(10) << "done!" << endl;
+  if (!s->silent) cout << setw(10) << "done!" << endl;
   if (!s->silent) cout << "Compositioning image... " << flush;
-  
   
   int image_width = 0, image_height = 0;
   
   // calculate image_width / image_height
   {
-    calc_image_width_height(s, maxx - minx, maxz - minz, image_width, image_height);
+    calc_image_width_height(s, world.max_x - world.min_x, world.max_z - world.min_z, image_width, image_height);
     
     size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
     
@@ -522,18 +384,16 @@ bool do_world(settings_t *s, string world, string output) {
   Image all(image_width, image_height);
   
   {
-    int j = 0;
+    int i = 0;
     int jobs = partials.size();
-
-    calc_partials_pre(s, partials);
     
     while (!partials.empty()) {
       partial p = partials.front();
       partials.pop_front();
-      calc_image_partial(s, p, all, minx, minz, maxx, maxz, image_width, image_height);
+      calc_image_partial(s, p, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
       
       if (s->binary) {
-        int8_t p = (j++ * 0xff) / jobs;
+        int8_t p = (i++ * 0xff) / jobs;
         cout << COMP_BYTE << p << flush;
       }
       

@@ -33,8 +33,10 @@ class Level
     bool grammar_error;
     size_t grammar_error_where;
     const char *grammar_error_why;
-
-    Level(const char *path);
+    const char *path;
+    bool ignore_blocks;
+    
+    Level(const char *path, bool ignore_blocks);
     ~Level();
     
     Image *get_image(settings_t *s);

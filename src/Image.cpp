@@ -17,6 +17,19 @@ void Image::set_pixel(int x, int y, Color &q){
   set_pixel(x, y, q.r, q.g, q.b, q.a);
 }
 
+void Image::blend_pixel(int x, int y, Color &c){
+  Color o;
+  get_pixel(x, y, o);
+
+  if (o.is_transparent()) {
+    set_pixel(x, y, c);
+    return;
+  }
+  
+  o.blend(c);
+  set_pixel(x, y, c);
+}
+
 void Image::get_pixel(int x, int y, Color &c){
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
@@ -41,12 +54,14 @@ void Image::composite(int xoffset, int yoffset, Image &img) {
   assert(yoffset >= 0);
   assert(yoffset + img.get_height() <= h);
   
-  Color c;
+  Color c, o;
   
   for (int x = 0; x < img.get_width(); x++) {
     for (int y = 0; y < img.get_height(); y++) {
       img.get_pixel(x, y, c);
       if (c.is_transparent()) continue;
+      get_pixel(xoffset + x, yoffset + y, o);
+      o.blend(c);
       set_pixel(xoffset + x, yoffset + y, c);
     }
   }

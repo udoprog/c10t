@@ -24,6 +24,7 @@
 
 #include "config.h"
 
+#include "2d/cube.h"
 #include "global.h"
 #include "Level.h"
 #include "Image.h"
@@ -314,22 +315,27 @@ bool compare_partials(partial first, partial second)
   return first.xPos < second.xPos;;
 }
 
-inline void calc_image_width_height(settings_t *s, int maxx, int maxz, int minx, int minz, int &image_width, int &image_height) {
-  int diffx = maxx - minx;
-  int diffz = maxz - minz;
+inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &image_width, int &image_height) {
+  Cube c((diffx + 1) * mc::MapX, mc::MapY, (diffz + 1) * mc::MapZ);
+  
+  point farthest_southwest((diffx + 1) * mc::MapX, 0, (diffz + 1) * mc::MapZ);
   
   switch (s->mode) {
   case Top:
-    image_width = diffx * mc::MapX + mc::MapX;
-    image_height = diffz * mc::MapZ + mc::MapZ;
+    c.project_top(farthest_southwest, image_width, image_height);
     break;
   case Oblique:
-    image_width = diffx * mc::MapX + mc::MapX;
-    image_height = diffz * mc::MapZ + mc::MapZ + mc::MapY;
+    c.project_oblique(farthest_southwest, image_width, image_height);
     break;
   case ObliqueAngle:
-    image_width = (diffx + diffz) * mc::MapX + mc::MapX + mc::MapZ + 2;
-    image_height = (diffx + diffz) * mc::MapX + mc::MapY + mc::MapX + mc::MapX + 2;
+    int xy;
+    // calculate the farthest point to the south,
+    // and the farthest point to the south-west to use
+    // as iamge height/image width
+    point farthest_southeast(diffx * mc::MapX, 0, 0);
+    
+    c.project_obliqueangle(farthest_southeast, image_width, xy);
+    c.project_obliqueangle(farthest_southwest, xy, image_height);
     break;
   }
 }
@@ -343,31 +349,30 @@ inline void calc_partials_pre(settings_t *s, boost::ptr_list<partial> &partials)
 
 }
 
-inline void calc_image_partial(settings_t *s, partial &p, Image &all, int maxx, int maxz, int minx, int minz, int image_width, int image_height) {
+inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, int minz, int maxx, int maxz, int image_width, int image_height) {
+  int diffx = maxx - minx;
   int diffz = maxz - minz;
+  
+  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
+  point topleft((p.xPos - minx) * mc::MapX, mc::MapY, (p.zPos - minz) * mc::MapZ);
+  int xoffset, yoffset;
   
   switch (s->mode) {
   case Top:
     {
-      int xoffset = (p.xPos - minx) * mc::MapX;
-      int yoffset = (p.zPos - minz) * mc::MapZ;
+      c.project_top(topleft, xoffset, yoffset);
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
   case Oblique:
     {
-      int xoffset = (p.xPos - minx) * mc::MapX;
-      int yoffset = (p.zPos - minz) * mc::MapZ;
+      c.project_oblique(topleft, xoffset, yoffset);
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
   case ObliqueAngle:
     {
-      int mapx = (p.xPos - minx);
-      int mapy = (p.zPos - minz);
-      
-      int xoffset = mc::MapX * mapx + mc::MapZ * diffz - (mapy * mc::MapZ);
-      int yoffset = mc::MapX * mapx + mapy * mc::MapZ;
+      c.project_obliqueangle(topleft, xoffset, yoffset);
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
@@ -506,7 +511,7 @@ bool do_world(settings_t *s, string world, string output) {
   
   // calculate image_width / image_height
   {
-    calc_image_width_height(s, maxx, maxz, minx, minz, image_width, image_height);
+    calc_image_width_height(s, maxx - minx, maxz - minz, image_width, image_height);
     
     size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
     
@@ -525,7 +530,7 @@ bool do_world(settings_t *s, string world, string output) {
     while (!partials.empty()) {
       partial p = partials.front();
       partials.pop_front();
-      calc_image_partial(s, p, all, maxx, maxz, minx, minz, image_width, image_height);
+      calc_image_partial(s, p, all, minx, minz, maxx, maxz, image_width, image_height);
       
       if (s->binary) {
         int8_t p = (j++ * 0xff) / jobs;

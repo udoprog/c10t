@@ -20,11 +20,11 @@ struct Color{
     r(r), g(g), b(b), a(a) {
   }
 
-  bool is_opaque() {
+  bool is_opaque() const {
     return a == 0xff;
   }
   
-  bool is_transparent() {
+  bool is_transparent() const {
     return a == 0x00;
   }
   
@@ -34,6 +34,7 @@ struct Color{
   void overlay(const Color &other);
   void underlay(const Color &other);
   void darken(uint8_t c);
+  void blend(const Color &other);
     
   std::string to_s();
 };

@@ -4,6 +4,7 @@
 
 #include "Level.h"
 #include "blocks.h"
+#include "2d/cube.h"
 
 void begin_compound(void *context, nbt::String name) {
   if (name.compare("Level") == 0) {
@@ -170,9 +171,6 @@ Image *Level::get_image(settings_t *s) {
   // block type
   int bt;
   
-  // night modifier
-  Color nightmod(0x0, 0x0, 0x0, 200);
-  
   for (int z = 0; z < mc::MapZ; z++) {
     for (int x = 0; x < mc::MapX; x++) {
       int _x = x, _z = z;
@@ -227,23 +225,11 @@ Image *Level::get_oblique_image(settings_t *s) {
   if (!islevel) {
     return img;
   }
+  
+  Cube c(mc::MapX, mc::MapY, mc::MapZ);
 
   // block type
   int bt;
-  
-  // night modifier
-  Color nightmod(0x0, 0x0, 0x0, 200);
-  
-  // blocklight modifier
-  Color blmod(0xff, 0xea, 0x86, 0);
-  
-  // skylight modifier
-  // alpha channel is calculated depending on skylight value
-  Color slmod(255, 255, 255, 0);
-  
-  // height modifier
-  // alpha channel is calculated depending on height
-  Color heightmod(0, 0, 0, 0);
   
   for (int z = 0; z < mc::MapZ; z++) {
     for (int x = 0; x < mc::MapX; x++) {
@@ -265,6 +251,7 @@ Image *Level::get_oblique_image(settings_t *s) {
       }
 
       for (int y = s->bottom; y < s->top; y++) {
+        point p(x, y, z);
         int _x = x, _z = z, _y = y;
         transform_xz(s, _x, _z);
         bt = bget(blocks, _x, _z, _y);
@@ -282,19 +269,16 @@ Image *Level::get_oblique_image(settings_t *s) {
         int bl = bsget(blocklight, _x, _z, _y);
         int sl = bsget(skylight, _x, _z, _y);
         
-        // optimization, don't draw top of block
-        //if (_y + 1 >= s->top || bget(blocks, _x, _z, _y + 1) == mc::Air) {
-          Color top(mc::MaterialColor[bt]);
-          apply_shading(s, bl, sl, 0, top);
-          img->set_pixel(x, z + (mc::MapY - y) - 1, top);
-        //}
+        int _px, _py;
+        c.project_oblique(p, _px, _py);
         
-        // optimization, don't draw side of block if it has neighbour
-        //if (_z + 1 >= mc::MapZ || bget(blocks, _x, _z + 1, _y) == mc::Air) {
-          Color side(mc::MaterialSideColor[bt]);
-          apply_shading(s, bl, sl, 0, side);
-          img->set_pixel(x, z + (mc::MapY - y), side);
-        //}
+        Color top(mc::MaterialColor[bt]);
+        apply_shading(s, bl, sl, 0, top);
+        img->set_pixel(_px, _py - 1, top);
+        
+        Color side(mc::MaterialSideColor[bt]);
+        apply_shading(s, bl, sl, 0, side);
+        img->set_pixel(_px, _py, side);
       }
     }
   }
@@ -308,26 +292,14 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
   if (!islevel) {
     return img;
   }
-
+  
+  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  
   // block type
   int bt;
   
-  // night modifier
-  Color nightmod(0x0, 0x0, 0x0, 200);
-  
-  // blocklight modifier
-  Color blmod(0xff, 0xea, 0x86, 0);
-  
-  // skylight modifier
-  // alpha channel is calculated depending on skylight value
-  Color slmod(255, 255, 255, 0);
-  
-  // height modifier
-  // alpha channel is calculated depending on height
-  Color heightmod(0, 0, 0, 0);
-  
-  for (int z = 0; z < mc::MapZ; z++) {
-    for (int x = 0; x < mc::MapX; x++) {
+  for (int z = 0; z < c.z; z++) {
+    for (int x = 0; x < c.x; x++) {
       bool cave_initial = true;
 
       int cavemode_top = s->top;
@@ -347,6 +319,8 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
       }
       
       for (int y = s->bottom; y < s->top; y++) {
+        point p(x, y, z);
+        
         int _x = x, _z = z;
         transform_xz(s, _x, _z);
         
@@ -365,26 +339,20 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         int bl = bsget(blocklight, _x, _z, y);
         int sl = bsget(skylight, _x, _z, y);
         
-        int _px = mc::MapX + x - z;
-        int _py = mc::MapY + x - y + z;
+        int _px, _py;
+        c.project_obliqueangle(p, _px, _py);
         
-        // optimization, don't draw top of block if it's blocked
-        //if (y + 1 >= s->top || bget(blocks, _x, _z, y + 1) == mc::Air) {
-          Color top(mc::MaterialColor[bt]);
-          apply_shading(s, bl, sl, 0, top);
-          img->set_pixel(_px, _py - 1, top);
-          img->set_pixel(_px + 1, _py - 1, top);
-          img->set_pixel(_px, _py - 2, top);
-          img->set_pixel(_px + 1, _py - 2, top);
-        //}
+        Color top(mc::MaterialColor[bt]);
+        apply_shading(s, bl, sl, 0, top);
+        img->set_pixel(_px, _py - 1, top);
+        img->set_pixel(_px + 1, _py - 1, top);
+        img->set_pixel(_px, _py - 2, top);
+        img->set_pixel(_px + 1, _py - 2, top);
         
-        // optimization, don't draw side of block if it has a neighbour
-        //if (_x + 1 >= mc::MapX || _z + 1 >= mc::MapZ || bget(blocks, _x + 1, _z + 1, y) == mc::Air) {
-          Color side(mc::MaterialSideColor[bt]);
-          apply_shading(s, bl, sl, 0, side);
-          img->set_pixel(_px, _py, side);
-          img->set_pixel(_px + 1, _py, side);
-        //}
+        Color side(mc::MaterialSideColor[bt]);
+        apply_shading(s, bl, sl, 0, side);
+        img->set_pixel(_px, _py, side);
+        img->set_pixel(_px + 1, _py, side);
       }
     }
   }

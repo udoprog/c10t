@@ -167,8 +167,8 @@ inline bool cavemode_ignore_block(settings_t *s, int x, int z, int y, int bt, nb
   return true;
 }
 
-Image *Level::get_image(settings_t *s) {
-  Image *img = new Image(mc::MapX, mc::MapZ);
+ImageBuffer *Level::get_image(settings_t *s) {
+  ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ, 1);
   
   if (!islevel) {
     return img;
@@ -218,15 +218,16 @@ Image *Level::get_image(settings_t *s) {
       int sl = bsget(skylight, _x, _z, y);
       apply_shading(s, bl, sl, 0, base);
       
-      img->set_pixel(x, z, base);
+      img->set_pixel(x, z, 0, base);
+      img->set_pixel_depth(x, z, 1);
     }
   }
   
   return img;
 }
 
-Image *Level::get_oblique_image(settings_t *s) {
-  Image *img = new Image(mc::MapX, mc::MapZ + mc::MapY);
+ImageBuffer *Level::get_oblique_image(settings_t *s) {
+  ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ + mc::MapY, mc::MapY + mc::MapZ);
   
   if (!islevel) {
     return img;
@@ -280,11 +281,11 @@ Image *Level::get_oblique_image(settings_t *s) {
         
         Color top(mc::MaterialColor[bt]);
         apply_shading(s, bl, sl, 0, top);
-        img->set_pixel(_px, _py - 1, top);
+        img->add_pixel(_px, _py - 1, top);
         
         Color side(mc::MaterialSideColor[bt]);
         apply_shading(s, bl, sl, 0, side);
-        img->set_pixel(_px, _py, side);
+        img->add_pixel(_px, _py, side);
       }
     }
   }
@@ -292,8 +293,8 @@ Image *Level::get_oblique_image(settings_t *s) {
   return img;
 }
 
-Image *Level::get_obliqueangle_image(settings_t *s) {
-  Image *img = new Image(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ);
+ImageBuffer *Level::get_obliqueangle_image(settings_t *s) {
+  ImageBuffer *img = new ImageBuffer(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
   
   if (!islevel) {
     return img;
@@ -350,15 +351,15 @@ Image *Level::get_obliqueangle_image(settings_t *s) {
         
         Color top(mc::MaterialColor[bt]);
         apply_shading(s, bl, sl, 0, top);
-        img->set_pixel(_px, _py - 1, top);
-        img->set_pixel(_px + 1, _py - 1, top);
-        img->set_pixel(_px, _py - 2, top);
-        img->set_pixel(_px + 1, _py - 2, top);
+        img->add_pixel(_px, _py - 1, top);
+        img->add_pixel(_px + 1, _py - 1, top);
+        //img->add_pixel(_px, _py - 2, top);
+        //img->add_pixel(_px + 1, _py - 2, top);
         
         Color side(mc::MaterialSideColor[bt]);
         apply_shading(s, bl, sl, 0, side);
-        img->set_pixel(_px, _py, side);
-        img->set_pixel(_px + 1, _py, side);
+        img->add_pixel(_px, _py, side);
+        img->add_pixel(_px + 1, _py, side);
       }
     }
   }

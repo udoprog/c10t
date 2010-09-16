@@ -145,7 +145,7 @@ finalise:
 struct partial {
   int xPos;
   int zPos;
-  Image *image;
+  ImageBuffer *image;
   bool islevel;
   bool grammar_error;
   size_t grammar_error_where;

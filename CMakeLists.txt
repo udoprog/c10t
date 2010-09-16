@@ -14,7 +14,7 @@ set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com>")
 # output the binary to the current directory instead of in src/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-add_definitions("-Wall -pedantic -O3")
+add_definitions("-Wall -pedantic -O3 -g")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
 
 add_subdirectory(src)

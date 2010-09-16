@@ -25,6 +25,11 @@ public:
     }
   }
 
+  ~ImageBuffer() {
+    delete [] colors;
+    delete [] heights;
+  }
+
   int get_width() { return w; };
   int get_height() { return h; };
   int get_depth() { return d; };

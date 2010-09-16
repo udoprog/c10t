@@ -6,7 +6,7 @@
 
 #include <sstream>
 #include <string>
-#include <vector>
+#include <list>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -153,6 +153,19 @@ struct partial {
   string path;
 };
 
+static bool compare_partials(partial first, partial second)
+{
+  if (first.zPos < second.zPos) {
+    return true;
+  }
+  
+  if (first.zPos > second.zPos) {
+    return false;
+  }
+  
+  return first.xPos < second.xPos;;
+}
+
 class partial_renderer : public threadworker<string, partial*> {
 public:
   settings_t *s;
@@ -289,86 +302,32 @@ bool do_world(settings_t *s, string world_path, string output) {
     cout << endl;
   }
   
-  boost::ptr_list<partial> partials;
-  
   if (!s->silent) cout << "Performing broad phase scan of world directory... " << flush;
   World world(world_path);
   if (!s->silent) cout << "found " << world.levels.size() << " files!" << endl;
-
+  
   if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
   
   partial_renderer renderer(s, s->threads);
   
   dirlist listing(world_path);
   
-  {
-    for (std::list<level>::iterator it = world.levels.begin(); it != world.levels.end(); it++) {
-      level l = *it;
+  for (std::list<level>::iterator it = world.levels.begin(); it != world.levels.end(); it++) {
+    level l = *it;
 
-      string path = world.get_level_path(l.xPos, l.zPos);
-      
-      if (s->debug) {
-        cout << "using file: " << path << endl;
-      }
-      
-      renderer.give(path);
+    string path = world.get_level_path(l.xPos, l.zPos);
+    
+    if (s->debug) {
+      cout << "using file: " << path << endl;
     }
     
-    renderer.start();
-
-    unsigned int world_size = world.levels.size();
-    
-    for (unsigned int i = 0; i < world_size; i++) {
-      partial *p = renderer.get();
-      
-      if (p->grammar_error) {
-        if (s->require_all) {
-          error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
-            << " - " << p->grammar_error_why;
-          
-          // effectively join all worker threads and prepare for exit
-          renderer.join();
-          return false;
-        }
-
-        if (!s->silent) {
-          cout << "Ignoring unparseable file: " << p->path << endl;
-          continue;
-        }
-      }
-      
-      if (!p->islevel) {
-        if (s->debug) {
-          cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
-        }
-
-        continue;
-      }
-      
-      partials.push_back(p);
-      
-      if (!s->silent) {
-        if (i % 100 == 0 && i > 0) {
-          cout << " " << setw(9) << i << flush;
-          
-          if (i % 1000 == 0) {
-            cout << endl;
-          }
-        }
-      }
-      
-      if (s->binary) {
-        int8_t p = (i * 0xff) / world_size;
-        cout << RENDER_BYTE << p << flush;
-      }
-    }
-    
-    renderer.join();
+    renderer.give(path);
   }
   
-  if (!s->silent) cout << setw(10) << "done!" << endl;
-  if (!s->silent) cout << "Compositioning image... " << flush;
-  
+  renderer.start();
+
+  unsigned int world_size = world.levels.size();
+
   int image_width = 0, image_height = 0;
   
   // calculate image_width / image_height
@@ -378,30 +337,73 @@ bool do_world(settings_t *s, string world_path, string output) {
     size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
     
     if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
-         << approx_memory << " bytes of memory ... " << flush;
+         << approx_memory << " bytes of memory ... " << endl;
   }
   
-  Image all(image_width, image_height);
+  boost::ptr_list<partial> buffer;
   
-  {
-    int i = 0;
-    int jobs = partials.size();
-    
-    while (!partials.empty()) {
-      partial p = partials.front();
-      partials.pop_front();
-      calc_image_partial(s, p, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
-      
-      if (s->binary) {
-        int8_t p = (i++ * 0xff) / jobs;
-        cout << COMP_BYTE << p << flush;
+  for (unsigned int i = 0; i < world_size; i++) {
+    partial *p = renderer.get();
+
+    if (p->grammar_error) {
+      if (s->require_all) {
+        error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
+          << " - " << p->grammar_error_why;
+        
+        // effectively join all worker threads and prepare for exit
+        renderer.join();
+        return false;
       }
+
+      if (!s->silent) {
+        cout << "Ignoring unparseable file: " << p->path << endl;
+        continue;
+      }
+    }
+    
+    if (!p->islevel) {
+      if (s->debug) {
+        cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
+      }
+
+      continue;
+    }
+    
+    buffer.push_back(p);
       
-      delete p.image;
+    if (!s->silent) {
+      if (i % 100 == 0 && i > 0) {
+        cout << " " << setw(9) << i << flush;
+        
+        if (i % 1000 == 0) {
+          cout << endl;
+        }
+      }
+    }
+    
+    if (s->binary) {
+      int8_t p = (i * 0xff) / world_size;
+      cout << RENDER_BYTE << p << flush;
     }
   }
   
-  if (!s->silent) cout << "done!" << endl;
+  renderer.join();
+
+  Image all(image_width, image_height);
+  
+  buffer.sort(compare_partials);
+  
+  while (!buffer.empty()) {
+    partial part = buffer.front();
+    
+    calc_image_partial(s, part, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
+    
+    buffer.pop_front();
+    delete part.image;
+  }
+  
+  if (!s->silent) cout << setw(10) << "done!" << endl;
+  
   if (!s->silent) cout << "Saving image to " << output << "... " << flush;
   
   if (write_image(s, output.c_str(), all, "Map generated by c10t") != 0) {

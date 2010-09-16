@@ -66,3 +66,38 @@ void Image::composite(int xoffset, int yoffset, Image &img) {
     }
   }
 }
+
+
+void ImageBuffer::set_pixel(int x, int y, int z, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+  assert(x >= 0 && x < w);
+  assert(y >= 0 && y < h);
+  assert(z >= 0 && z < d);
+  size_t p = (x * COLOR_TYPE) + (y * w * COLOR_TYPE) * (z * w * h * COLOR_TYPE);
+  colors[p] = r;
+  colors[p+1] = g;
+  colors[p+2] = b;
+  colors[p+3] = a;
+}
+
+void ImageBuffer::add_pixel(int x, int y, Color &c) {
+  if (c.is_opaque()) set_height(x, y, 0);
+  add_pixel(x, y, c.r, c.g, c.b, c.a);
+}
+
+void ImageBuffer::add_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+  uint16_t h = get_height(x, y);
+  set_pixel(x, y, h, r, g, b, a);
+  set_height(x, y, h + 1);
+}
+
+void ImageBuffer::set_height(int x, int y, uint16_t h) {
+  assert(x >= 0 && x < w);
+  assert(y >= 0 && y < h);
+  heights[x + (y * w)] = h;
+}
+
+uint16_t ImageBuffer::get_height(int x, int y) {
+  assert(x >= 0 && x < w);
+  assert(y >= 0 && y < h);
+  return heights[x + (y * w)];
+}

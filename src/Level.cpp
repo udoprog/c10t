@@ -173,6 +173,8 @@ ImageBuffer *Level::get_image(settings_t *s) {
   if (!islevel) {
     return img;
   }
+
+  img->set_reversed(true);
   
   // block type
   int bt;
@@ -202,24 +204,18 @@ ImageBuffer *Level::get_image(settings_t *s) {
           continue;
         }
         
-        Color *bc = mc::MaterialColor[bt];
-        base.underlay(bc);
+        Color bc(mc::MaterialColor[bt]);
         
-        if (base.is_opaque()) {
+        int bl = bsget(blocklight, _x, _z, y);
+        int sl = bsget(skylight, _x, _z, y);
+        apply_shading(s, bl, sl, 0, base);
+        
+        img->add_pixel(x, z, base);
+        
+        if (bc.is_opaque()) {
           break;
         }
       }
-      
-      if (base.is_transparent()) {
-        continue;
-      }
-      
-      int bl = bsget(blocklight, _x, _z, y);
-      int sl = bsget(skylight, _x, _z, y);
-      apply_shading(s, bl, sl, 0, base);
-      
-      img->set_pixel(x, z, 0, base);
-      img->set_pixel_depth(x, z, 1);
     }
   }
   

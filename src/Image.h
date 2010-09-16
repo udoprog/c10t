@@ -8,12 +8,13 @@ public:
   static const short COLOR_TYPE = 4;
   uint8_t *colors;
   uint16_t *heights;
+  bool reversed;
   
   int w;
   int h;
   int d;
   
-  ImageBuffer(int w, int h, int d) : w(w), h(h), d(d) {
+  ImageBuffer(int w, int h, int d) : w(w), h(h), d(d), reversed(false) {
     colors = new uint8_t[COLOR_TYPE * w * h * d];
     heights = new uint16_t[w * h];
     
@@ -39,6 +40,7 @@ public:
   void set_pixel(int x, int y, int z, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   void set_pixel(int x, int y, int z, Color &c);
   
+  void set_reversed(bool);
   void set_pixel_depth(int x, int y, uint16_t h);
   uint16_t get_pixel_depth(int x, int y);
 

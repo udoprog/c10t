@@ -119,7 +119,7 @@ nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
 }
 
 void transform_xz(settings_t *s, int &x, int &z) {
-  if (s->flip) {
+  /*if (s->flip) {
     int t = x;
     x = z; 
     z = mc::MapZ - t - 1;
@@ -128,7 +128,7 @@ void transform_xz(settings_t *s, int &x, int &z) {
   if (s->invert) {
     z = mc::MapZ - z - 1;
     x = mc::MapX - x - 1;
-  }
+  }*/
 }
 
 inline void apply_shading(settings_t *s, int bl, int sl, int hm, Color &c) {
@@ -351,15 +351,21 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s) {
         
         Color top(mc::MaterialColor[bt]);
         apply_shading(s, bl, sl, 0, top);
-        img->add_pixel(_px, _py - 1, top);
-        img->add_pixel(_px + 1, _py - 1, top);
-        //img->add_pixel(_px, _py - 2, top);
-        //img->add_pixel(_px + 1, _py - 2, top);
-        
         Color side(mc::MaterialSideColor[bt]);
         apply_shading(s, bl, sl, 0, side);
-        img->add_pixel(_px, _py, side);
-        img->add_pixel(_px + 1, _py, side);
+
+        switch(mc::MaterialModes[bt]) {
+        case mc::Block:
+          img->add_pixel(_px, _py - 1, top);
+          img->add_pixel(_px + 1, _py - 1, top);
+          img->add_pixel(_px, _py, side);
+          img->add_pixel(_px + 1, _py, side);
+          break;
+        case mc::HalfBlock:
+          img->add_pixel(_px, _py, top);
+          img->add_pixel(_px + 1, _py, top);
+          break;
+        }
       }
     }
   }

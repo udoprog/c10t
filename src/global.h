@@ -21,8 +21,7 @@ typedef struct _settings {
   int bottom;
   unsigned int threads;
   enum mode mode;
-  bool flip;
-  bool invert;
+  unsigned int rotation;
   bool debug;
   bool require_all;
 } settings_t;

@@ -153,7 +153,7 @@ struct partial {
   string path;
 };
 
-static bool compare_partials(partial first, partial second)
+/*static bool compare_partials(partial first, partial second)
 {
   if (first.zPos < second.zPos) {
     return true;
@@ -164,7 +164,7 @@ static bool compare_partials(partial first, partial second)
   }
   
   return first.xPos < second.xPos;;
-}
+}*/
 
 class partial_renderer : public threadworker<string, partial*> {
 public:
@@ -202,20 +202,8 @@ public:
     case Oblique:       p->image = level->get_oblique_image(s); break;
     case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
     }
-    
-    if (s->flip) {
-      int t = p->zPos;
-      p->zPos = p->xPos;
-      p->xPos = -t;
-    }
-    
-    if (s->invert) {
-      p->zPos = -p->zPos;
-      p->xPos = -p->xPos;
-    }
-    
+
     delete level;
-    
     return p;
   }
 };
@@ -320,7 +308,7 @@ bool do_world(settings_t *s, string world_path, string output) {
     if (s->debug) {
       cout << "using file: " << path << endl;
     }
-    
+
     renderer.give(path);
   }
   
@@ -341,6 +329,8 @@ bool do_world(settings_t *s, string world_path, string output) {
   }
   
   boost::ptr_list<partial> buffer;
+  
+  Image all(image_width, image_height);
   
   for (unsigned int i = 0; i < world_size; i++) {
     partial *p = renderer.get();
@@ -369,8 +359,6 @@ bool do_world(settings_t *s, string world_path, string output) {
       continue;
     }
     
-    buffer.push_back(p);
-      
     if (!s->silent) {
       if (i % 100 == 0 && i > 0) {
         cout << " " << setw(9) << i << flush;
@@ -385,22 +373,13 @@ bool do_world(settings_t *s, string world_path, string output) {
       int8_t p = (i * 0xff) / world_size;
       cout << RENDER_BYTE << p << flush;
     }
+    
+    calc_image_partial(s, *p, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
+    delete p->image;
+    delete p;
   }
   
   renderer.join();
-
-  Image all(image_width, image_height);
-  
-  buffer.sort(compare_partials);
-  
-  while (!buffer.empty()) {
-    partial part = buffer.front();
-    
-    calc_image_partial(s, part, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
-    
-    buffer.pop_front();
-    delete part.image;
-  }
   
   if (!s->silent) cout << setw(10) << "done!" << endl;
   
@@ -450,8 +429,7 @@ void do_help() {
     << "Rendering options:" << endl
     << "  -q, --oblique             - oblique rendering" << endl
     << "  -y, --oblique-angle       - oblique angle rendering" << endl
-    << "  -f, --90                  - flip the rendering 90 degrees CCW" << endl
-    << "  -r, --180                 - flip the rendering 180 degrees CCW" << endl
+    << "  -f <degrees>              - flip the rendering 90, 180 or 270 degrees CCW" << endl
     << endl
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores" << endl
@@ -504,8 +482,7 @@ static struct option long_options[] =
    {"no-check",         no_argument, 0, 'N'},
    {"oblique",          no_argument, 0, 'q'},
    {"oblique-angle",    no_argument, 0, 'y'},
-   {"90",               no_argument, 0, 'f'},
-   {"180",              no_argument, 0, 'r'},
+   {"rotate",           no_argument, 0, 'r'},
    {"threads",          no_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
    {"require-all",      no_argument, 0, 'Q'},
@@ -529,8 +506,7 @@ settings_t *init_settings() {
   s->mode = Top;
   s->nocheck = false;
   s->silent = false;
-  s->flip = false;
-  s->invert = false;
+  s->rotation = 0;
   s->threads = boost::thread::hardware_concurrency();
   s->binary = false;
   s->night = false;
@@ -561,7 +537,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "vxcrfDNnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "vxcDNnqyalshw:o:e:t:b:i:m:r:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -604,8 +580,10 @@ int main(int argc, char *argv[]){
       s->silent = true;
       s->binary = true;
       break;
-    case 'f': s->flip = true; break;
-    case 'r': s->invert = true; break;
+    case 'r':
+      s->rotation = atoi(optarg);
+      assert(s->rotation == 90 || s->rotation == 180 || s->rotation == 270);
+      break;
     case 'N': s->nocheck = true; break;
     case 'n': s->night = true; break;
     case 'c': s->cavemode = true; break;

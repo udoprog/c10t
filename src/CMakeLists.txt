@@ -23,5 +23,5 @@ target_link_libraries(c10t ${CMAKE_THREAD_LIBS_INIT})
 # set(Boost_DEBUG TRUE)
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
-target_link_libraries(c10t boost_thread)
+target_link_libraries(c10t boost_thread-mt)
 

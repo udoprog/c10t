@@ -18,12 +18,13 @@
 
 #include "config.h"
 
+#include "threads/threadworker.h"
 #include "2d/cube.h"
+
 #include "global.h"
 #include "Level.h"
 #include "Image.h"
 #include "blocks.h"
-#include "threadworker.h"
 #include "fileutils.h"
 #include "World.h"
 

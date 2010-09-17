@@ -1,41 +1,17 @@
-add_executable(c10t
-	main.cpp
-	Level.cpp
-	Image.cpp
-	Color.cpp
-	blocks.cpp
-  fileutils.cpp
-	nbt/nbt.cpp)
+set(c10t_SOURCES Level.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} Image.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} Color.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} blocks.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} fileutils.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} nbt/nbt.cpp)
 
-add_executable(c10t-test
-	test.cpp
-	Level.cpp
-	Image.cpp
-	Color.cpp
-	blocks.cpp
-  fileutils.cpp
-	nbt/nbt.cpp)
+add_library(c10t-lib ${c10t_SOURCES})
+add_executable(c10t main.cpp ${c10t_SOURCES})
+add_executable(c10t-debug main.cpp ${c10t_SOURCES})
 
-# see /usr/share/cmake-2.8/Modules/Find*.cmake
+set_target_properties(c10t PROPERTIES COMPILE_FLAGS "-O3 -Wall -pedantic")
+set_target_properties(c10t-debug PROPERTIES COMPILE_FLAGS "-Wall -pedantic -g")
+set_target_properties(c10t-lib PROPERTIES COMPILE_FLAGS "-O3 -Wall -pedantic -g")
 
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIR})
-target_link_libraries(c10t ${ZLIB_LIBRARIES})
-
-find_package(PNG REQUIRED)
-include_directories(${PNG_INCLUDE_DIR})
-target_link_libraries(c10t ${PNG_LIBRARIES})
-
-find_package(Threads REQUIRED)
-target_link_libraries(c10t ${CMAKE_THREAD_LIBS_INIT})
-
-# set(Boost_DEBUG TRUE)
-find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIR})
-target_link_libraries(c10t boost_thread)
-
-target_link_libraries(c10t-test ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(c10t-test ${PNG_LIBRARIES})
-target_link_libraries(c10t-test ${ZLIB_LIBRARIES})
-target_link_libraries(c10t-test boost_thread)
-target_link_libraries(c10t-test boost_unit_test_framework)
+target_link_libraries(c10t ${c10t_LIBRARIES})
+target_link_libraries(c10t-debug ${c10t_LIBRARIES})

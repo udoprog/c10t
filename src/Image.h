@@ -7,15 +7,16 @@ class ImageBuffer {
 public:
   static const short COLOR_TYPE = 4;
   uint8_t *colors;
-  uint16_t *heights;
+  uint8_t *heights;
   
   int w;
   int h;
   int d;
+  bool reversed;
   
-  ImageBuffer(int w, int h, int d) : w(w), h(h), d(d) {
+  ImageBuffer(int w, int h, int d) : w(w), h(h), d(d), reversed(false) {
     colors = new uint8_t[COLOR_TYPE * w * h * d];
-    heights = new uint16_t[w * h];
+    heights = new uint8_t[w * h];
     
     for (int x = 0; x < w; x++) {
       for (int y = 0; y < h; y++) {
@@ -39,8 +40,9 @@ public:
   void set_pixel(int x, int y, int z, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   void set_pixel(int x, int y, int z, Color &c);
   
-  void set_pixel_depth(int x, int y, uint16_t h);
-  uint16_t get_pixel_depth(int x, int y);
+  void set_reversed(bool);
+  void set_pixel_depth(int x, int y, uint8_t h);
+  uint8_t get_pixel_depth(int x, int y);
 
   void get_pixel(int x, int y, int z, Color &c);
 };

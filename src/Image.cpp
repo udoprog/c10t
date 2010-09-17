@@ -54,17 +54,24 @@ void Image::composite(int xoffset, int yoffset, ImageBuffer &img) {
   assert(yoffset >= 0);
   assert(yoffset + img.get_height() <= h);
   
-  Color c, o;
+  Color hp;
   
   for (int x = 0; x < img.get_width(); x++) {
     for (int y = 0; y < img.get_height(); y++) {
       Color base;
       get_pixel(xoffset + x, yoffset + y, base);
-
-      for (int h = 0; h < img.get_pixel_depth(x, y); h++) {
-        Color hp;
-        img.get_pixel(x, y, h, hp);
-        base.blend(hp);
+      
+      if (img.reversed) {
+        for (int h = img.get_pixel_depth(x, y); h >= 0; h--) {
+          img.get_pixel(x, y, h, hp);
+          base.blend(hp);
+        }
+      } else {
+        for (int h = 0; h < img.get_pixel_depth(x, y); h++) {
+          Color hp;
+          img.get_pixel(x, y, h, hp);
+          base.blend(hp);
+        }
       }
       
       set_pixel(xoffset + x, yoffset + y, base);
@@ -112,13 +119,17 @@ void ImageBuffer::add_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8
   set_pixel_depth(x, y, ph + 1);
 }
 
-void ImageBuffer::set_pixel_depth(int x, int y, uint16_t ph) {
+void ImageBuffer::set_reversed(bool reversed) {
+  this->reversed = reversed;
+}
+
+void ImageBuffer::set_pixel_depth(int x, int y, uint8_t ph) {
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
   heights[x + (y * w)] = ph;
 }
 
-uint16_t ImageBuffer::get_pixel_depth(int x, int y) {
+uint8_t ImageBuffer::get_pixel_depth(int x, int y) {
   assert(x >= 0 && x < w);
   assert(y >= 0 && y < h);
   return heights[x + (y * w)];

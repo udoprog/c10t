@@ -294,6 +294,14 @@ bool do_world(settings_t *s, string world_path, string output) {
   if (!s->silent) cout << "Performing broad phase scan of world directory... " << flush;
   World world(world_path);
   if (!s->silent) cout << "found " << world.levels.size() << " files!" << endl;
+
+  if (s->debug) {
+    cout << "World" << endl;
+    cout << "  min_x: " << world.min_x << endl;
+    cout << "  max_x: " << world.max_x << endl;
+    cout << "  min_z: " << world.min_z << endl;
+    cout << "  max_z: " << world.max_z << endl;
+  }
   
   if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
   

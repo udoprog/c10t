@@ -209,7 +209,7 @@ public:
 };
 
 inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &image_width, int &image_height) {
-  Cube c((diffx + 1) * mc::MapX, mc::MapY, (diffz + 1) * mc::MapZ);
+  Cube c((diffz + 1) * mc::MapZ, mc::MapY, (diffx + 1) * mc::MapX);
   
   switch (s->mode) {
   case Top:
@@ -219,7 +219,8 @@ inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &im
     c.get_oblique_limits(image_width, image_height);
     break;
   case ObliqueAngle:
-    c.get_obliqueangle_limits(image_width, image_height);
+    // yes, these are meant to be flipped
+    c.get_obliqueangle_limits(image_height, image_width);
     break;
   }
 }

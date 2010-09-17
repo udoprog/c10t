@@ -42,7 +42,7 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
    png_structp png_ptr = NULL;
    png_infop info_ptr = NULL;
    png_bytep row = NULL;
-
+   
    fp = fopen(filename, "wb");
 
    if (fp == NULL) {
@@ -211,24 +211,15 @@ public:
 inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &image_width, int &image_height) {
   Cube c((diffx + 1) * mc::MapX, mc::MapY, (diffz + 1) * mc::MapZ);
   
-  point farthest_southwest((diffx + 1) * mc::MapX, 0, (diffz + 1) * mc::MapZ);
-  
   switch (s->mode) {
   case Top:
-    c.project_top(farthest_southwest, image_width, image_height);
+    c.get_top_limits(image_width, image_height);
     break;
   case Oblique:
-    c.project_oblique(farthest_southwest, image_width, image_height);
+    c.get_oblique_limits(image_width, image_height);
     break;
   case ObliqueAngle:
-    int xy;
-    // calculate the farthest point to the south,
-    // and the farthest point to the south-west to use
-    // as iamge height/image width
-    point farthest_southeast(diffx * mc::MapX, 0, 0);
-    
-    c.project_obliqueangle(farthest_southeast, image_width, xy);
-    c.project_obliqueangle(farthest_southwest, xy, image_height);
+    c.get_obliqueangle_limits(image_width, image_height);
     break;
   }
 }
@@ -237,26 +228,34 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
   int diffx = maxx - minx;
   int diffz = maxz - minz;
   
-  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
-  point topleft((p.xPos - minx) * mc::MapX, mc::MapY, (p.zPos - minz) * mc::MapZ);
+  Cube c(diffx, 1, diffz);
   int xoffset, yoffset;
   
   switch (s->mode) {
   case Top:
     {
+      point topleft(diffz - (p.zPos - minz), 1, (p.xPos - minx));
       c.project_top(topleft, xoffset, yoffset);
+      xoffset *= mc::MapX;
+      yoffset *= mc::MapZ;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
   case Oblique:
     {
+      point topleft(diffz - (p.zPos - minz), 1, (p.xPos - minx));
       c.project_oblique(topleft, xoffset, yoffset);
+      xoffset *= mc::MapX;
+      yoffset *= mc::MapZ;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;
   case ObliqueAngle:
     {
+      point topleft(p.xPos - minx, 1, p.zPos - minz);
       c.project_obliqueangle(topleft, xoffset, yoffset);
+      xoffset *= mc::MapX;
+      yoffset *= mc::MapZ;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;

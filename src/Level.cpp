@@ -177,24 +177,21 @@ ImageBuffer *Level::get_image(settings_t *s) {
   // block type
   int bt;
   
-  for (int z = 0; z < mc::MapZ; z++) {
-    for (int x = 0; x < mc::MapX; x++) {
-      int _x = x, _z = z;
-      transform_xz(s, _x, _z);
-      
+  for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
+    for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
       Color base(255, 255, 255, 0);
       
       bt = mc::Air;
       
-      int y;
-      
       bool cave_initial = true;
+
+      int my;
       
       // do incremental color fill until color is opaque
-      for (y = s->top; y > s->bottom; y--) {
-        bt = bget(blocks, _x, _z, y);
+      for (my = s->top; my > s->bottom; my--) {
+        bt = bget(blocks, mx, mz, my);
         
-        if (s->cavemode && cavemode_ignore_block(s, _x, _z, y, bt, blocks, cave_initial)) {
+        if (s->cavemode && cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial)) {
           continue;
         }
         
@@ -214,19 +211,20 @@ ImageBuffer *Level::get_image(settings_t *s) {
         continue;
       }
       
-      int bl = bsget(blocklight, _x, _z, y);
-      int sl = bsget(skylight, _x, _z, y);
+      int bl = bsget(blocklight, mx, mz, my);
+      int sl = bsget(skylight, mx, mz, my);
       apply_shading(s, bl, sl, 0, base);
       
-      img->set_pixel(x, z, 0, base);
-      img->set_pixel_depth(x, z, 1);
+      img->set_pixel(x, y, 0, base);
+      img->set_pixel_depth(x, y, 1);
     }
   }
   
   return img;
 }
 
-ImageBuffer *Level::get_oblique_image(settings_t *s) {
+ImageBuffer *Level::get_oblique_image(settings_t *s)
+{
   ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ + mc::MapY, mc::MapY + mc::MapZ);
   
   if (!islevel) {
@@ -238,33 +236,29 @@ ImageBuffer *Level::get_oblique_image(settings_t *s) {
   // block type
   int bt;
   
-  for (int z = 0; z < mc::MapZ; z++) {
-    for (int x = 0; x < mc::MapX; x++) {
+  for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
+    for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
       bool cave_initial = true;
       int cavemode_top = s->top;
       
       if (s->cavemode) {
-        for (int y = s->top; y > 0; y--) {
-          int _x = x, _z = z;
-          transform_xz(s, _x, _z);
-          
-          bt = bget(blocks, _x, _z, y);
+        for (int my = s->top; my > 0; my--) {
+          bt = bget(blocks, mx, mz, y);
           
           if (!cavemode_isopen(bt)) {
-            cavemode_top = y;
+            cavemode_top = my;
             break;
           }
         }
       }
 
-      for (int y = s->bottom; y < s->top; y++) {
-        point p(x, y, z);
-        int _x = x, _z = z, _y = y;
-        transform_xz(s, _x, _z);
-        bt = bget(blocks, _x, _z, _y);
+      for (int my = s->bottom; my < s->top; my++) {
+        point p(x, my, y);
+        
+        bt = bget(blocks, mx, mz, my);
         
         if (s->cavemode) {
-          if (cavemode_ignore_block(s, _x, _z, _y, bt, blocks, cave_initial) || _y >= cavemode_top) {
+          if (cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial) || my >= cavemode_top) {
             continue;
           }
         }
@@ -273,8 +267,8 @@ ImageBuffer *Level::get_oblique_image(settings_t *s) {
           continue;
         }
 
-        int bl = bsget(blocklight, _x, _z, _y);
-        int sl = bsget(skylight, _x, _z, _y);
+        int bl = bsget(blocklight, mx, mz, my);
+        int sl = bsget(skylight, mx, mz, my);
         
         int _px, _py;
         c.project_oblique(p, _px, _py);
@@ -293,7 +287,8 @@ ImageBuffer *Level::get_oblique_image(settings_t *s) {
   return img;
 }
 
-ImageBuffer *Level::get_obliqueangle_image(settings_t *s) {
+ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
+{
   ImageBuffer *img = new ImageBuffer(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
   
   if (!islevel) {

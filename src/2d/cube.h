@@ -47,6 +47,21 @@ public:
     rx = x + p.x - p.z;
     ry = y + p.x - p.y + p.z;
   }
+  
+  void get_top_limits(int &rx, int &ry) {
+    rx = x;
+    ry = z;
+  }
+  
+  void get_oblique_limits(int &rx, int &ry) {
+    rx = x;
+    ry = z + y;
+  }
+  
+  void get_obliqueangle_limits(int &rx, int &ry) {
+    rx = x * 2;
+    ry = y + z * 2;
+  }
 };
 
 #endif /* _CUBE_H_ */

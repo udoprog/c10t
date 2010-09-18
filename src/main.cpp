@@ -292,7 +292,7 @@ bool do_world(settings_t *s, string world_path, string output) {
   }
   
   if (!s->silent) cout << "Performing broad phase scan of world directory... " << flush;
-  World world(world_path);
+  World world(s, world_path);
   if (!s->silent) cout << "found " << world.levels.size() << " files!" << endl;
 
   if (s->debug) {
@@ -528,6 +528,8 @@ settings_t *init_settings() {
   s->night = false;
   s->debug = false;
   s->require_all = false;
+  s->use_limits = false;
+  s->limits = new int[4];
   
   return s;
 }
@@ -544,17 +546,17 @@ int get_blockid(const char *blockid) {
 
 // Convert a string such as "-30,40,50,30" to the corresponding integer array,
 // and place the result in limits_rect.
-int* parse_limits(const char *limits_str, int** limits_rect) {
+void parse_limits(const char *limits_str, int*& limits_rect) {
   istringstream iss(limits_str);
   string item;
+  
   for (int i=0; i < 4; i++) {
     if (!getline(iss, item, ','))
       break;
-    (*limits_rect)[i] = atoi(item.c_str());
+    limits_rect[i] = atoi(item.c_str());
     // negative sign added -- south is +x, west is +z.
     // also swap south and north, east and west with mod 2 stuff.
   }
-  return *limits_rect;
 }
 
 int main(int argc, char *argv[]){
@@ -623,7 +625,7 @@ int main(int argc, char *argv[]){
       assert(s->top > s->bottom && s->top < mc::MapY);
       break;
     case 'L':
-      s->limits = parse_limits(optarg, &(s->limits));
+      parse_limits(optarg, s->limits);
       s->use_limits = true;
       break;
     case 'b':

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "fileutils.h"
+#include "global.h"
 
 struct level {
   int xPos;
@@ -39,7 +40,7 @@ public:
     return first.xPos < second.xPos;;
   }
   
-  World(std::string world_path)
+  World(settings_t *s, std::string world_path)
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN)
   {
     dirlist broadlisting(world_path);

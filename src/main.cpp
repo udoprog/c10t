@@ -417,7 +417,7 @@ bool do_world(settings_t *s, string world_path, string output) {
 
 void do_help() {
   cout << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
-  cout << "Written by Udoprog" << endl;
+  cout << "Written by Udoprog et al." << endl;
   cout << endl;
   cout << "Usage: c10t [options]" << endl;
   cout << "Options:" << endl

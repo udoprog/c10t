@@ -256,8 +256,8 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
     {
       point topleft(p.xPos - minx, 1, p.zPos - minz);
       c.project_obliqueangle(topleft, xoffset, yoffset);
-      xoffset *= mc::MapX;
-      yoffset *= mc::MapZ;
+      xoffset = xoffset * mc::MapX - mc::MapZ;
+      yoffset = yoffset * mc::MapZ - mc::MapY - mc::MapX;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;

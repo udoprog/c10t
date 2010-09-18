@@ -12,4 +12,6 @@ dist:
 	tar -cvf ${TARGET}.tar ${TARGET}
 	gzip ${TARGET}.tar
 	mv ${TARGET}.tar.gz ${TARGET}-${ARCH}.tar.gz
-	rm -Rf ${TARGET}
+	rm -f ${TARGET}/README
+	rm -f ${TARGET}/c10t
+	rmdir ${TARGET}

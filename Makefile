@@ -1,9 +1,8 @@
-VERSION=1.0
-target=c10t-${VERSION}
+all: dist-linux-x86_64 dist-linux-x86
+	echo "All done"
 
-dist:
-	mkdir -p ${target}
-	g++ src/*.cpp src/nbt/*.cpp -static -lpng -lz -lboost_thread -lpthread -o ${target}/c10t
-	cp README.md ${target}/README
-	tar -cvf ${target}.tar ${target}
-	gzip ${target}.tar
+dist-linux-x86:
+	make -Bf dist/Makefile.linux CC="i686-pc-linux-gnu-g++" ARCH="x86" dist
+
+dist-linux-x86_64:
+	make -Bf dist/Makefile.linux ARCH="x86_64" dist 

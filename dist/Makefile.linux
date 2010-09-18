@@ -12,3 +12,4 @@ dist:
 	tar -cvf ${TARGET}.tar ${TARGET}
 	gzip ${TARGET}.tar
 	mv ${TARGET}.tar.gz ${TARGET}-${ARCH}.tar.gz
+	rm -Rf ${TARGET}

@@ -33,7 +33,7 @@ private:
   volatile int input;
   boost::detail::atomic_count output;
 public:
-  threadworker(int c) : thread_count(c), running(1), started(0), input(0), output(0) {
+  threadworker(int c) : thread_count(c), running(1), started(0), input(0), output(1) {
     for (int i = 0; i < c; i++) {
       boost::thread *t = new boost::thread(boost::bind(&threadworker::run, this, i));
       threads.push_back(t);
@@ -48,12 +48,9 @@ public:
   }
   
   void give(I t) {
-    assert(!started);
     boost::mutex::scoped_lock lock(in_mutex);
     in.push(t);
     in_cond.notify_one();
-    ++input;
-    ++output;
   }
   
   void start() {
@@ -89,7 +86,7 @@ public:
         
         i = in.front();
         in.pop();
-        qp = input--;
+        qp = ++input;
       }
       
       O o = work(i);
@@ -104,7 +101,7 @@ public:
         boost::mutex::scoped_lock lock(out_mutex);
         out.push(o);
         out_cond.notify_one();
-        --output;
+        ++output;
       }
     }
   }

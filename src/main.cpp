@@ -36,7 +36,7 @@ const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
 const uint8_t IMAGE_BYTE = 0x30;
 
-int write_image(settings_t *s, const char *filename, Image &img, const char *title)
+int write_image(settings_t *s, const char *filename, Image *img, const char *title)
 {
    int code = 0;
    FILE *fp;
@@ -71,7 +71,7 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
 
    png_init_io(png_ptr, fp);
 
-   png_set_IHDR(png_ptr, info_ptr, img.get_width(), img.get_height(),
+   png_set_IHDR(png_ptr, info_ptr, img->get_width(), img->get_height(),
          8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
          PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     
@@ -85,19 +85,19 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
 
    png_write_info(png_ptr, info_ptr);
 
-   row = (png_bytep) malloc(4 * img.get_width() * sizeof(png_byte));
+   row = (png_bytep) malloc(4 * img->get_width() * sizeof(png_byte));
 
    int x, y;
    
-   for (y=0 ; y<img.get_height(); y++) {
+   for (y=0 ; y<img->get_height(); y++) {
       if (s->binary) {
-        uint8_t b = ((y * 0xff) / img.get_height());
+        uint8_t b = ((y * 0xff) / img->get_height());
         cout << IMAGE_BYTE << b << flush;
       }
       
-      for (x=0 ; x<img.get_width(); x++) {
+      for (x=0 ; x<img->get_width(); x++) {
         Color c;
-        img.get_pixel(x, y, c);
+        img->get_pixel(x, y, c);
         
         if (c.a == 0x0) {
           row[0 + x*4] = 0;
@@ -227,7 +227,7 @@ inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &im
   }
 }
 
-inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, int minz, int maxx, int maxz, int image_width, int image_height) {
+inline void calc_image_partial(settings_t *s, partial &p, Image *all, int minx, int minz, int maxx, int maxz, int image_width, int image_height) {
   int diffx = maxx - minx;
   int diffz = maxz - minz;
   
@@ -241,7 +241,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
       c.project_top(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
-      all.composite(xoffset, yoffset, *p.image);
+      all->composite(xoffset, yoffset, *p.image);
     }
     break;
   case Oblique:
@@ -250,7 +250,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
       c.project_oblique(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
-      all.composite(xoffset, yoffset, *p.image);
+      all->composite(xoffset, yoffset, *p.image);
     }
     break;
   case ObliqueAngle:
@@ -259,7 +259,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
       c.project_obliqueangle(topleft, xoffset, yoffset);
       xoffset = xoffset * mc::MapX;
       yoffset = yoffset * mc::MapZ;
-      all.composite(xoffset, yoffset, *p.image);
+      all->composite(xoffset, yoffset, *p.image);
     }
     break;
   }
@@ -305,26 +305,6 @@ bool do_world(settings_t *s, string world_path, string output) {
   }
   
   if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
-  
-  partial_renderer renderer(s, s->threads);
-  
-  dirlist listing(world_path);
-  
-  for (std::list<level>::iterator it = world.levels.begin(); it != world.levels.end(); it++) {
-    level l = *it;
-
-    string path = world.get_level_path(l.xPos, l.zPos);
-    
-    if (s->debug) {
-      cout << "using file: " << path << endl;
-    }
-
-    renderer.give(path);
-  }
-  
-  renderer.start();
-
-  unsigned int world_size = world.levels.size();
 
   int image_width = 0, image_height = 0;
   
@@ -337,12 +317,42 @@ bool do_world(settings_t *s, string world_path, string output) {
     if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
          << approx_memory << " bytes of memory ... " << endl;
   }
+
+  Image *all;
   
-  boost::ptr_list<partial> buffer;
+  all = new MemoryImage(image_width, image_height);
+
+  // cached image in the future
+  /*if (image_width * image_height > 1000) {
+    all = new CachedImage("cache.dat", image_width, image_height);
+  } else {
+  }*/
   
-  Image all(image_width, image_height);
+  partial_renderer renderer(s, s->threads);
+  renderer.start();
+  unsigned int world_size = world.levels.size();
+  
+  std::list<level>::iterator lvlit = world.levels.begin();
+  
+  unsigned int lvlq = 0;
   
   for (unsigned int i = 0; i < world_size; i++) {
+    if (lvlq == 0) {
+      for (; lvlq < s->threads && lvlit != world.levels.end(); lvlq++) {
+        level l = *lvlit;
+        
+        string path = world.get_level_path(l.xPos, l.zPos);
+        
+        if (s->debug) {
+          cout << "using file: " << path << endl;
+        }
+        
+        renderer.give(path);
+        lvlit++;
+      }
+    }
+    
+    --lvlq;
     partial *p = renderer.get();
 
     if (p->grammar_error) {

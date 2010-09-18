@@ -49,10 +49,15 @@ int Image::get_height() {
 }
 
 void Image::composite(int xoffset, int yoffset, ImageBuffer &img) {
-  assert(xoffset >= 0);
+  if (xoffset < 0) return;
+  if (xoffset + img.get_width() > w) return;
+  if (yoffset < 0) return;
+  if (yoffset + img.get_height() > h) return;
+
+  /*assert(xoffset >= 0);
   assert(xoffset + img.get_width() <= w);
   assert(yoffset >= 0);
-  assert(yoffset + img.get_height() <= h);
+  assert(yoffset + img.get_height() <= h);*/
   
   Color hp;
   

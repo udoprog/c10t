@@ -221,7 +221,8 @@ inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &im
     break;
   case ObliqueAngle:
     // yes, these are meant to be flipped
-    c.get_obliqueangle_limits(image_height, image_width);
+    c.get_obliqueangle_limits(image_width, image_height);
+    image_width += 2;
     break;
   }
 }
@@ -230,13 +231,13 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
   int diffx = maxx - minx;
   int diffz = maxz - minz;
   
-  Cube c(diffx, 1, diffz);
+  Cube c(diffx, 16, diffz);
   int xoffset, yoffset;
   
   switch (s->mode) {
   case Top:
     {
-      point topleft(diffz - (p.zPos - minz), 1, (p.xPos - minx));
+      point topleft(diffz - (p.zPos - minz), 16, (p.xPos - minx));
       c.project_top(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -245,7 +246,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
     break;
   case Oblique:
     {
-      point topleft(diffz - (p.zPos - minz), 1, (p.xPos - minx));
+      point topleft(diffz - (p.zPos - minz), 16, (p.xPos - minx));
       c.project_oblique(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -254,10 +255,10 @@ inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, 
     break;
   case ObliqueAngle:
     {
-      point topleft(p.xPos - minx, 1, p.zPos - minz);
+      point topleft(p.xPos - minx, 16, p.zPos - minz);
       c.project_obliqueangle(topleft, xoffset, yoffset);
-      xoffset = xoffset * mc::MapX - mc::MapZ;
-      yoffset = yoffset * mc::MapZ - mc::MapY - mc::MapX;
+      xoffset = xoffset * mc::MapX;
+      yoffset = yoffset * mc::MapZ;
       all.composite(xoffset, yoffset, *p.image);
     }
     break;

@@ -53,6 +53,16 @@ public:
         if (!leveldata.islevel || leveldata.grammar_error) {
           continue;
         }
+
+        if (s->use_limits && (
+            leveldata.xPos < s->limits[0] ||
+            leveldata.xPos > s->limits[1] ||
+            leveldata.zPos < s->limits[2] ||
+            leveldata.zPos > s->limits[3])
+          )
+        {
+          continue;
+        }
         
         level l;
         l.xPos = leveldata.xPos;

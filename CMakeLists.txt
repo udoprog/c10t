@@ -21,7 +21,7 @@ include_directories(${PNG_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIR})
 
 set(c10t_LIBRARIES ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-set(c10t_LIBRARIES ${c10t_LIBRARIES} boost_thread)
+set(c10t_LIBRARIES ${c10t_LIBRARIES} boost_thread-mt)
 
 # set(Boost_DEBUG TRUE)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/")

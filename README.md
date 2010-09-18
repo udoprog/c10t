@@ -23,8 +23,6 @@ Features
   * A lot less memory intensive - the biggest concern is having to keep the
     entire (sometimes huge!) image in memory at once.
   * Uses proper command line options.
-  * Can flip the map properly (90 - 180 - 270 degrees CCW), to get 270 use both
-    -f and -r
   * Clean code, for easing further development.
   * Multiplatform - yes, it does compile properly on windows and probably also
     on mac.
@@ -68,3 +66,4 @@ Contributions
     acleone - for his work with cmake [85e980a]
     j005u - for explaining how cocoa works
     michaelu238 - for mapping out the Mac OS X building process
+    jnnnnn - for limit options which are helpful when debugging (and quite cool aswell!)

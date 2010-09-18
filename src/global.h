@@ -19,12 +19,13 @@ typedef struct _settings {
   // top/bottom used for slicing
   int top;
   int bottom;
-  int threads;
+  unsigned int threads;
   enum mode mode;
-  bool flip;
-  bool invert;
+  unsigned int rotation;
   bool debug;
   bool require_all;
+  int* limits; // north-south-west-east. (xmax, xmin, zmax, zmin)
+  bool use_limits;
 } settings_t;
 
 #endif

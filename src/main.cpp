@@ -6,7 +6,7 @@
 
 #include <sstream>
 #include <string>
-#include <vector>
+#include <list>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -18,12 +18,13 @@
 
 #include "config.h"
 
+#include "threads/threadworker.h"
 #include "2d/cube.h"
+
 #include "global.h"
 #include "Level.h"
 #include "Image.h"
 #include "blocks.h"
-#include "threadworker.h"
 #include "fileutils.h"
 #include "World.h"
 
@@ -35,14 +36,14 @@ const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
 const uint8_t IMAGE_BYTE = 0x30;
 
-int write_image(settings_t *s, const char *filename, Image &img, const char *title)
+int write_image(settings_t *s, const char *filename, Image *img, const char *title)
 {
    int code = 0;
    FILE *fp;
    png_structp png_ptr = NULL;
    png_infop info_ptr = NULL;
    png_bytep row = NULL;
-
+   
    fp = fopen(filename, "wb");
 
    if (fp == NULL) {
@@ -70,7 +71,7 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
 
    png_init_io(png_ptr, fp);
 
-   png_set_IHDR(png_ptr, info_ptr, img.get_width(), img.get_height(),
+   png_set_IHDR(png_ptr, info_ptr, img->get_width(), img->get_height(),
          8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
          PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     
@@ -84,19 +85,19 @@ int write_image(settings_t *s, const char *filename, Image &img, const char *tit
 
    png_write_info(png_ptr, info_ptr);
 
-   row = (png_bytep) malloc(4 * img.get_width() * sizeof(png_byte));
+   row = (png_bytep) malloc(4 * img->get_width() * sizeof(png_byte));
 
    int x, y;
    
-   for (y=0 ; y<img.get_height(); y++) {
+   for (y=0 ; y<img->get_height(); y++) {
       if (s->binary) {
-        uint8_t b = ((y * 0xff) / img.get_height());
+        uint8_t b = ((y * 0xff) / img->get_height());
         cout << IMAGE_BYTE << b << flush;
       }
       
-      for (x=0 ; x<img.get_width(); x++) {
+      for (x=0 ; x<img->get_width(); x++) {
         Color c;
-        img.get_pixel(x, y, c);
+        img->get_pixel(x, y, c);
         
         if (c.a == 0x0) {
           row[0 + x*4] = 0;
@@ -145,13 +146,26 @@ finalise:
 struct partial {
   int xPos;
   int zPos;
-  Image *image;
+  ImageBuffer *image;
   bool islevel;
   bool grammar_error;
   size_t grammar_error_where;
   const char *grammar_error_why;
   string path;
 };
+
+/*static bool compare_partials(partial first, partial second)
+{
+  if (first.zPos < second.zPos) {
+    return true;
+  }
+  
+  if (first.zPos > second.zPos) {
+    return false;
+  }
+  
+  return first.xPos < second.xPos;;
+}*/
 
 class partial_renderer : public threadworker<string, partial*> {
 public:
@@ -189,74 +203,63 @@ public:
     case Oblique:       p->image = level->get_oblique_image(s); break;
     case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
     }
-    
-    if (s->flip) {
-      int t = p->zPos;
-      p->zPos = p->xPos;
-      p->xPos = -t;
-    }
-    
-    if (s->invert) {
-      p->zPos = -p->zPos;
-      p->xPos = -p->xPos;
-    }
-    
+
     delete level;
-    
     return p;
   }
 };
 
 inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &image_width, int &image_height) {
-  Cube c((diffx + 1) * mc::MapX, mc::MapY, (diffz + 1) * mc::MapZ);
-  
-  point farthest_southwest((diffx + 1) * mc::MapX, 0, (diffz + 1) * mc::MapZ);
+  Cube c((diffz + 1) * mc::MapZ, mc::MapY, (diffx + 1) * mc::MapX);
   
   switch (s->mode) {
   case Top:
-    c.project_top(farthest_southwest, image_width, image_height);
+    c.get_top_limits(image_width, image_height);
     break;
   case Oblique:
-    c.project_oblique(farthest_southwest, image_width, image_height);
+    c.get_oblique_limits(image_width, image_height);
     break;
   case ObliqueAngle:
-    int xy;
-    // calculate the farthest point to the south,
-    // and the farthest point to the south-west to use
-    // as iamge height/image width
-    point farthest_southeast(diffx * mc::MapX, 0, 0);
-    
-    c.project_obliqueangle(farthest_southeast, image_width, xy);
-    c.project_obliqueangle(farthest_southwest, xy, image_height);
+    // yes, these are meant to be flipped
+    c.get_obliqueangle_limits(image_width, image_height);
+    image_width += 2;
     break;
   }
 }
 
-inline void calc_image_partial(settings_t *s, partial &p, Image &all, int minx, int minz, int maxx, int maxz, int image_width, int image_height) {
+inline void calc_image_partial(settings_t *s, partial &p, Image *all, int minx, int minz, int maxx, int maxz, int image_width, int image_height) {
   int diffx = maxx - minx;
   int diffz = maxz - minz;
   
-  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
-  point topleft((p.xPos - minx) * mc::MapX, mc::MapY, (p.zPos - minz) * mc::MapZ);
+  Cube c(diffx, 16, diffz);
   int xoffset, yoffset;
   
   switch (s->mode) {
   case Top:
     {
+      point topleft(diffz - (p.zPos - minz), 16, (p.xPos - minx));
       c.project_top(topleft, xoffset, yoffset);
-      all.composite(xoffset, yoffset, *p.image);
+      xoffset *= mc::MapX;
+      yoffset *= mc::MapZ;
+      all->composite(xoffset, yoffset, *p.image);
     }
     break;
   case Oblique:
     {
+      point topleft(diffz - (p.zPos - minz), 16, (p.xPos - minx));
       c.project_oblique(topleft, xoffset, yoffset);
-      all.composite(xoffset, yoffset, *p.image);
+      xoffset *= mc::MapX;
+      yoffset *= mc::MapZ;
+      all->composite(xoffset, yoffset, *p.image);
     }
     break;
   case ObliqueAngle:
     {
+      point topleft(p.xPos - minx, 16, p.zPos - minz);
       c.project_obliqueangle(topleft, xoffset, yoffset);
-      all.composite(xoffset, yoffset, *p.image);
+      xoffset = xoffset * mc::MapX;
+      yoffset = yoffset * mc::MapZ;
+      all->composite(xoffset, yoffset, *p.image);
     }
     break;
   }
@@ -289,119 +292,117 @@ bool do_world(settings_t *s, string world_path, string output) {
     cout << endl;
   }
   
-  boost::ptr_list<partial> partials;
-  
   if (!s->silent) cout << "Performing broad phase scan of world directory... " << flush;
-  World world(world_path);
+  World world(s, world_path);
   if (!s->silent) cout << "found " << world.levels.size() << " files!" << endl;
 
-  if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
-  
-  partial_renderer renderer(s, s->threads);
-  
-  dirlist listing(world_path);
-  
-  {
-    for (std::list<level>::iterator it = world.levels.begin(); it != world.levels.end(); it++) {
-      level l = *it;
-
-      string path = world.get_level_path(l.xPos, l.zPos);
-      
-      if (s->debug) {
-        cout << "using file: " << path << endl;
-      }
-      
-      renderer.give(path);
-    }
-    
-    renderer.start();
-
-    unsigned int world_size = world.levels.size();
-    
-    for (unsigned int i = 0; i < world_size; i++) {
-      partial *p = renderer.get();
-      
-      if (p->grammar_error) {
-        if (s->require_all) {
-          error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
-            << " - " << p->grammar_error_why;
-          
-          // effectively join all worker threads and prepare for exit
-          renderer.join();
-          return false;
-        }
-
-        if (!s->silent) {
-          cout << "Ignoring unparseable file: " << p->path << endl;
-          continue;
-        }
-      }
-      
-      if (!p->islevel) {
-        if (s->debug) {
-          cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
-        }
-
-        continue;
-      }
-      
-      partials.push_back(p);
-      
-      if (!s->silent) {
-        if (i % 100 == 0 && i > 0) {
-          cout << " " << setw(9) << i << flush;
-          
-          if (i % 1000 == 0) {
-            cout << endl;
-          }
-        }
-      }
-      
-      if (s->binary) {
-        int8_t p = (i * 0xff) / world_size;
-        cout << RENDER_BYTE << p << flush;
-      }
-    }
-    
-    renderer.join();
+  if (s->debug) {
+    cout << "World" << endl;
+    cout << "  min_x: " << world.min_x << endl;
+    cout << "  max_x: " << world.max_x << endl;
+    cout << "  min_z: " << world.min_z << endl;
+    cout << "  max_z: " << world.max_z << endl;
   }
   
-  if (!s->silent) cout << setw(10) << "done!" << endl;
-  if (!s->silent) cout << "Compositioning image... " << flush;
-  
+  if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
+
   int image_width = 0, image_height = 0;
   
   // calculate image_width / image_height
   {
     calc_image_width_height(s, world.max_x - world.min_x, world.max_z - world.min_z, image_width, image_height);
     
-    size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
+    size_t approx_memory = image_width * image_height * 4 * sizeof(uint8_t);
     
-    if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
-         << approx_memory << " bytes of memory ... " << flush;
+    if (!s->silent) cout << "Image will be " << image_width << "x" << image_height << " and required approx. "
+         << approx_memory << " bytes of memory ... " << endl;
   }
+
+  Image *all;
   
-  Image all(image_width, image_height);
+  all = new MemoryImage(image_width, image_height);
+
+  // cached image in the future
+  /*if (image_width * image_height > 1000) {
+    all = new CachedImage("cache.dat", image_width, image_height);
+  } else {
+  }*/
   
-  {
-    int i = 0;
-    int jobs = partials.size();
-    
-    while (!partials.empty()) {
-      partial p = partials.front();
-      partials.pop_front();
-      calc_image_partial(s, p, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
-      
-      if (s->binary) {
-        int8_t p = (i++ * 0xff) / jobs;
-        cout << COMP_BYTE << p << flush;
+  partial_renderer renderer(s, s->threads);
+  renderer.start();
+  unsigned int world_size = world.levels.size();
+  
+  std::list<level>::iterator lvlit = world.levels.begin();
+  
+  unsigned int lvlq = 0;
+  
+  for (unsigned int i = 0; i < world_size; i++) {
+    if (lvlq == 0) {
+      for (; lvlq < s->threads && lvlit != world.levels.end(); lvlq++) {
+        level l = *lvlit;
+        
+        string path = world.get_level_path(l.xPos, l.zPos);
+        
+        if (s->debug) {
+          cout << "using file: " << path << endl;
+        }
+        
+        renderer.give(path);
+        lvlit++;
       }
-      
-      delete p.image;
     }
+    
+    --lvlq;
+    partial *p = renderer.get();
+
+    if (p->grammar_error) {
+      if (s->require_all) {
+        error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
+          << " - " << p->grammar_error_why;
+        
+        // effectively join all worker threads and prepare for exit
+        renderer.join();
+        return false;
+      }
+
+      if (!s->silent) {
+        cout << "Ignoring unparseable file: " << p->path << endl;
+        continue;
+      }
+    }
+    
+    if (!p->islevel) {
+      if (s->debug) {
+        cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
+      }
+
+      continue;
+    }
+    
+    if (!s->silent) {
+      if (i % 100 == 0 && i > 0) {
+        cout << " " << setw(9) << i << flush;
+        
+        if (i % 1000 == 0) {
+          cout << endl;
+        }
+      }
+    }
+    
+    if (s->binary) {
+      int8_t p = (i * 0xff) / world_size;
+      cout << RENDER_BYTE << p << flush;
+    }
+    
+    calc_image_partial(s, *p, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
+    delete p->image;
+    delete p;
   }
   
-  if (!s->silent) cout << "done!" << endl;
+  renderer.join();
+  
+  if (!s->silent) cout << setw(10) << "done!" << endl;
+  
   if (!s->silent) cout << "Saving image to " << output << "... " << flush;
   
   if (write_image(s, output.c_str(), all, "Map generated by c10t") != 0) {
@@ -416,7 +417,7 @@ bool do_world(settings_t *s, string world_path, string output) {
 
 void do_help() {
   cout << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
-  cout << "Written by Udoprog" << endl;
+  cout << "Written by Udoprog et al." << endl;
   cout << endl;
   cout << "Usage: c10t [options]" << endl;
   cout << "Options:" << endl
@@ -431,6 +432,12 @@ void do_help() {
     << endl
     << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
     << "  -b, --bottom <int>        - splice from the bottom, must be greater than or" << endl
+    << "  -L, --limits <int-list>   - limit render to certain area. int-list form:" << endl
+    << "                              North,South,West,East, e.g." << endl
+    << "                              -L 0,100,-10,20 limiting between 0 and 100 in the " << endl
+    << "                              north-south direction and between -10 and 20 in " << endl
+    << "                              the east-west direction. " << endl
+    << "                              Note: South and West are the positive directions." << endl
     << "                              equal to 0" << endl
     << endl
     << "Filtering options:" << endl
@@ -448,8 +455,7 @@ void do_help() {
     << "Rendering options:" << endl
     << "  -q, --oblique             - oblique rendering" << endl
     << "  -y, --oblique-angle       - oblique angle rendering" << endl
-    << "  -f, --90                  - flip the rendering 90 degrees CCW" << endl
-    << "  -r, --180                 - flip the rendering 180 degrees CCW" << endl
+    << "  -f <degrees>              - flip the rendering 90, 180 or 270 degrees CCW" << endl
     << endl
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores" << endl
@@ -469,9 +475,9 @@ void do_help() {
 
 int do_version() {
   cout << "c10t - a cartography tool for minecraft" << endl;
-  cout << "   version: " << C10T_VERSION << endl;
-  cout << "        by: " << C10T_CONTACT << endl;
-  cout << "      site: " << C10T_SITE << endl;
+  cout << "version " << C10T_VERSION << endl;
+  cout << "by: " << C10T_CONTACT << endl;
+  cout << "site: " << C10T_SITE << endl;
   return 0;
 }
 
@@ -496,14 +502,14 @@ static struct option long_options[] =
    {"list-colors",      no_argument, 0, 'l'},
    {"top",              required_argument, 0, 't'},
    {"bottom",           required_argument, 0, 'b'},
+   {"limits",           required_argument, 0, 'L'},
    {"exclude",          required_argument, 0, 'e'},
    {"include",          required_argument, 0, 'i'},
    {"hide-all",         no_argument, 0, 'a'},
    {"no-check",         no_argument, 0, 'N'},
    {"oblique",          no_argument, 0, 'q'},
    {"oblique-angle",    no_argument, 0, 'y'},
-   {"90",               no_argument, 0, 'f'},
-   {"180",              no_argument, 0, 'r'},
+   {"rotate",           no_argument, 0, 'r'},
    {"threads",          no_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
    {"require-all",      no_argument, 0, 'Q'},
@@ -527,13 +533,14 @@ settings_t *init_settings() {
   s->mode = Top;
   s->nocheck = false;
   s->silent = false;
-  s->flip = false;
-  s->invert = false;
+  s->rotation = 0;
   s->threads = boost::thread::hardware_concurrency();
   s->binary = false;
   s->night = false;
   s->debug = false;
   s->require_all = false;
+  s->use_limits = false;
+  s->limits = new int[4];
   
   return s;
 }
@@ -548,6 +555,21 @@ int get_blockid(const char *blockid) {
   return atoi(blockid);
 }
 
+// Convert a string such as "-30,40,50,30" to the corresponding integer array,
+// and place the result in limits_rect.
+void parse_limits(const char *limits_str, int*& limits_rect) {
+  istringstream iss(limits_str);
+  string item;
+  
+  for (int i=0; i < 4; i++) {
+    if (!getline(iss, item, ','))
+      break;
+    limits_rect[i] = atoi(item.c_str());
+    // negative sign added -- south is +x, west is +z.
+    // also swap south and north, east and west with mod 2 stuff.
+  }
+}
+
 int main(int argc, char *argv[]){
   mc::initialize_constants();
 
@@ -559,7 +581,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "vxcrfDNnqyalshw:o:e:t:b:i:m:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "vxcDNnqyalshL:w:o:e:t:b:i:m:r:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -602,14 +624,20 @@ int main(int argc, char *argv[]){
       s->silent = true;
       s->binary = true;
       break;
-    case 'f': s->flip = true; break;
-    case 'r': s->invert = true; break;
+    case 'r':
+      s->rotation = atoi(optarg);
+      assert(s->rotation == 90 || s->rotation == 180 || s->rotation == 270);
+      break;
     case 'N': s->nocheck = true; break;
     case 'n': s->night = true; break;
     case 'c': s->cavemode = true; break;
     case 't':
       s->top = atoi(optarg);
       assert(s->top > s->bottom && s->top < mc::MapY);
+      break;
+    case 'L':
+      parse_limits(optarg, s->limits);
+      s->use_limits = true;
       break;
     case 'b':
       s->bottom = atoi(optarg);

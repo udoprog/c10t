@@ -144,7 +144,7 @@ namespace nbt {
         uint8_t *str = new uint8_t[s + 1];
         assert_error(file, gzread(file, str, s) == s, "Buffer to short to read String");
         String so((const char*)str, s);
-        delete str;
+        delete [] str;
         return so;
       }
       

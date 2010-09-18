@@ -4,6 +4,11 @@
 #include "Color.h"
 
 namespace mc {
+  enum MaterialMode {
+    Block,
+    HalfBlock
+  };
+  
   enum {
     Air = 0x00,
     Stone = 0x01,
@@ -102,6 +107,7 @@ namespace mc {
   extern const char **MaterialName;
   extern Color **MaterialColor;
   extern Color **MaterialSideColor;
+  extern enum MaterialMode *MaterialModes;
 }
 
 #endif /* _BLOCKS_H_ */

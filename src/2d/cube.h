@@ -39,13 +39,27 @@ public:
   }
   
   void project_obliqueangle(point &p, point2 &r) {
-    r.x = x + p.x - p.z;
-    r.y = y + p.x - p.y + p.z;
+    project_obliqueangle(p, r.x, r.y);
   }
   
   void project_obliqueangle(point &p, int &rx, int &ry) {
-    rx = x + p.x - p.z;
-    ry = y + p.x - p.y + p.z;
+    rx = z + p.x - p.z;
+    ry = (y - p.y) + p.z + p.x;
+  }
+  
+  void get_top_limits(int &rx, int &ry) {
+    rx = x;
+    ry = z;
+  }
+  
+  void get_oblique_limits(int &rx, int &ry) {
+    rx = x;
+    ry = z + y;
+  }
+  
+  void get_obliqueangle_limits(int &rx, int &ry) {
+    rx = z + x;
+    ry = y + z + x;
   }
 };
 

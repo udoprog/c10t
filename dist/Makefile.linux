@@ -1,0 +1,17 @@
+VERSION=1.0
+TARGET=c10t-${VERSION}
+ARCH=x86_64
+CC=g++
+
+SOURCES=src/*.cpp src/nbt/*.cpp 
+
+dist:
+	mkdir -p ${TARGET}
+	$(CC) ${SOURCES} -static -lz -lpng -lboost_thread -lpthread -o ${TARGET}/c10t
+	cp README.md ${TARGET}/README
+	tar -cvf ${TARGET}.tar ${TARGET}
+	gzip ${TARGET}.tar
+	mv ${TARGET}.tar.gz ${TARGET}-${ARCH}.tar.gz
+	rm -f ${TARGET}/README
+	rm -f ${TARGET}/c10t
+	rmdir ${TARGET}

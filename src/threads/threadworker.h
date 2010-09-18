@@ -1,5 +1,7 @@
 #ifndef _THREADWORKER_H_
 #define _THREADWORKER_H_
+#include <assert.h>
+
 #include <queue>
 #include <list>
 
@@ -8,6 +10,8 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+
+#include <iostream>
 
 template <class I, class O>
 class threadworker
@@ -22,16 +26,20 @@ private:
   boost::mutex in_mutex;
   boost::mutex out_mutex;
   boost::mutex start_mutex;
+  
+  const int thread_count;
   volatile int running;
   volatile int started;
+  volatile int input;
+  boost::detail::atomic_count output;
 public:
-  threadworker(int c) : running(1), started(0) {
+  threadworker(int c) : thread_count(c), running(1), started(0), input(0), output(1) {
     for (int i = 0; i < c; i++) {
       boost::thread *t = new boost::thread(boost::bind(&threadworker::run, this, i));
       threads.push_back(t);
     }
   }
-
+  
   ~threadworker() {
     for (std::list<boost::thread *>::iterator it = threads.begin(); it != threads.end(); it++)
     {
@@ -59,9 +67,11 @@ public:
         start_cond.wait(lock);
       }
     }
-
+    
     while (running) {
       I i;
+
+      int qp;
       
       {
         boost::mutex::scoped_lock lock(in_mutex);
@@ -76,14 +86,22 @@ public:
         
         i = in.front();
         in.pop();
+        qp = ++input;
       }
       
       O o = work(i);
       
       {
+        // first, make sure that we output the results in the same order they came in
+        // try to make it as lock-free as possible
+        while (qp != output) {
+          boost::thread::yield();
+        }
+        
         boost::mutex::scoped_lock lock(out_mutex);
         out.push(o);
         out_cond.notify_one();
+        ++output;
       }
     }
   }

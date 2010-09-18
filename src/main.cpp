@@ -421,6 +421,12 @@ void do_help() {
     << endl
     << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
     << "  -b, --bottom <int>        - splice from the bottom, must be greater than or" << endl
+    << "  -L, --limits <int-list>   - limit render to certain area. int-list form:" << endl
+    << "                              North,South,West,East, e.g." << endl
+    << "                              -L 0,100,-10,20 limiting between 0 and 100 in the " << endl
+    << "                              north-south direction and between -10 and 20 in " << endl
+    << "                              the east-west direction. " << endl
+    << "                              Note: South and West are the positive directions." << endl
     << "                              equal to 0" << endl
     << endl
     << "Filtering options:" << endl
@@ -485,6 +491,7 @@ static struct option long_options[] =
    {"list-colors",      no_argument, 0, 'l'},
    {"top",              required_argument, 0, 't'},
    {"bottom",           required_argument, 0, 'b'},
+   {"limits",           required_argument, 0, 'L'},
    {"exclude",          required_argument, 0, 'e'},
    {"include",          required_argument, 0, 'i'},
    {"hide-all",         no_argument, 0, 'a'},
@@ -535,6 +542,21 @@ int get_blockid(const char *blockid) {
   return atoi(blockid);
 }
 
+// Convert a string such as "-30,40,50,30" to the corresponding integer array,
+// and place the result in limits_rect.
+int* parse_limits(const char *limits_str, int** limits_rect) {
+  istringstream iss(limits_str);
+  string item;
+  for (int i=0; i < 4; i++) {
+    if (!getline(iss, item, ','))
+      break;
+    (*limits_rect)[i] = atoi(item.c_str());
+    // negative sign added -- south is +x, west is +z.
+    // also swap south and north, east and west with mod 2 stuff.
+  }
+  return *limits_rect;
+}
+
 int main(int argc, char *argv[]){
   mc::initialize_constants();
 
@@ -546,7 +568,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "vxcDNnqyalshw:o:e:t:b:i:m:r:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "vxcDNnqyalshL:w:o:e:t:b:i:m:r:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -599,6 +621,10 @@ int main(int argc, char *argv[]){
     case 't':
       s->top = atoi(optarg);
       assert(s->top > s->bottom && s->top < mc::MapY);
+      break;
+    case 'L':
+      s->limits = parse_limits(optarg, &(s->limits));
+      s->use_limits = true;
       break;
     case 'b':
       s->bottom = atoi(optarg);

@@ -24,6 +24,8 @@ typedef struct _settings {
   unsigned int rotation;
   bool debug;
   bool require_all;
+  int* limits; // north-south-west-east. (xmax, xmin, zmax, zmin)
+  bool use_limits;
 } settings_t;
 
 #endif

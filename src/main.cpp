@@ -312,9 +312,9 @@ bool do_world(settings_t *s, string world_path, string output) {
   {
     calc_image_width_height(s, world.max_x - world.min_x, world.max_z - world.min_z, image_width, image_height);
     
-    size_t approx_memory = image_width * image_height * sizeof(nbt::Byte) * 4 * 2;
+    size_t approx_memory = image_width * image_height * 4 * sizeof(uint8_t);
     
-    if (!s->silent) cout << "png will be " << image_width << "x" << image_height << " and required approx. "
+    if (!s->silent) cout << "Image will be " << image_width << "x" << image_height << " and required approx. "
          << approx_memory << " bytes of memory ... " << endl;
   }
 
@@ -475,9 +475,9 @@ void do_help() {
 
 int do_version() {
   cout << "c10t - a cartography tool for minecraft" << endl;
-  cout << "   version: " << C10T_VERSION << endl;
-  cout << "        by: " << C10T_CONTACT << endl;
-  cout << "      site: " << C10T_SITE << endl;
+  cout << "version " << C10T_VERSION << endl;
+  cout << "by: " << C10T_CONTACT << endl;
+  cout << "site: " << C10T_SITE << endl;
   return 0;
 }
 

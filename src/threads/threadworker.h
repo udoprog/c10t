@@ -40,7 +40,7 @@ public:
     }
   }
   
-  ~threadworker() {
+  virtual ~threadworker() {
     for (std::list<boost::thread *>::iterator it = threads.begin(); it != threads.end(); it++)
     {
       delete *it;

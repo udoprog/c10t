@@ -1,6 +1,8 @@
 #ifndef GUARD_H
 #define GUARD_H
 
+#include <string>
+
 #include "blocks.h"
 
 enum mode {
@@ -26,6 +28,8 @@ typedef struct _settings {
   bool require_all;
   int* limits; // north-south-west-east. (xmax, xmin, zmax, zmin)
   bool use_limits;
+  std::string cache_file;
+  size_t memory_limit;
 } settings_t;
 
 #endif

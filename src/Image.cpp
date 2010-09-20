@@ -23,15 +23,7 @@ void MemoryImage::get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &
   a = this->colors[p+3];
 }
 
-void Image::get_pixel(int x, int y, Color &c){
-  get_pixel_rgba(x, y, c.r, c.g, c.b, c.a);
-}
-
-void Image::set_pixel(int x, int y, Color &q){
-  set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
-}
-
-void Image::blend_pixel(int x, int y, Color &c){
+void MemoryImage::blend_pixel(int x, int y, Color &c){
   Color o;
   get_pixel(x, y, o);
 
@@ -42,6 +34,14 @@ void Image::blend_pixel(int x, int y, Color &c){
   
   o.blend(c);
   set_pixel(x, y, o);
+}
+
+void Image::get_pixel(int x, int y, Color &c){
+  get_pixel_rgba(x, y, c.r, c.g, c.b, c.a);
+}
+
+void Image::set_pixel(int x, int y, Color &q){
+  set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
 }
 
 void Image::composite(int xoffset, int yoffset, ImageBuffer &img) {
@@ -97,6 +97,32 @@ void CachedImage::get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &
   g = cb[1];
   b = cb[2];
   a = cb[3];
+}
+
+void CachedImage::blend_pixel(int x, int y, Color &c){
+  size_t s = (x + y * get_width()) % buffer_size;
+  
+  icache ic = buffer[s];
+  
+  // cache hit
+  if (ic.is_set) {
+    // cache hit, but wrong coordinatesflush pizel to file
+    if (ic.x != x || ic.y != y)  {
+      set_pixel(ic.x, ic.y, ic.c);
+      ic.c = c;
+      return;
+    }
+  }
+  else {
+    ic.c = c;
+    ic.is_set = true;
+  }
+  
+  if (ic.c.is_transparent()) {
+    return;
+  }
+  
+  ic.c.blend(c);
 }
 
 void ImageBuffer::set_pixel_rgba(int x, int y, int z, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {

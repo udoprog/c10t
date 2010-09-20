@@ -67,8 +67,6 @@ public:
   void set_pixel(int x, int y, Color &c);
   void get_pixel(int x, int y, Color &c);
   
-  void blend_pixel(int x, int y, Color &c);
-  
   inline int get_width() { return w; };
   inline int get_height() { return h; };
   
@@ -78,6 +76,7 @@ public:
     return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);
   }
   
+  virtual void blend_pixel(int x, int y, Color &c) = 0;
   virtual void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
   virtual void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) = 0;
 };
@@ -100,19 +99,28 @@ public:
     delete [] colors;
   }
 
+  void blend_pixel(int x, int y, Color &c);
   void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);
 };
 
 #include <iostream>
 
+struct icache {
+  Color c;
+  int x, y;
+  bool is_set;
+};
+
 class CachedImage : public Image {
 private:
   static const size_t WRITE_SIZE = 4096 * 8;
   FILE *f;
   const char *path;
+  icache *buffer;
+  int buffer_size;
 public:
-  CachedImage(const char *path, int w, int h) : Image(w, h), path(path) {
+  CachedImage(const char *path, int w, int h, int buffer_size) : Image(w, h), path(path), buffer_size(buffer_size) {
     size_t total = get_width() * get_height() * COLOR_TYPE;
     size_t write_size = WRITE_SIZE;
     uint8_t *nil = new uint8_t[write_size];
@@ -129,14 +137,38 @@ public:
     }
     
     delete nil;
+    
+    buffer = new icache[buffer_size];
+
+    for (int i = 0; i < buffer_size; i++) {
+      icache ic = buffer[i];
+      ic.c.r = 0x0;
+      ic.c.g = 0x0;
+      ic.c.b = 0x0;
+      ic.c.a = 0x0;
+      ic.is_set = false;
+      ic.x = 0;
+      ic.y = 0;
+    }
   }
   
   ~CachedImage() {
     if (f != NULL) {
       fclose(f);
+
+      for (int i = 0; i < buffer_size; i++) { 
+        icache ic = buffer[i];
+        if (ic.is_set) {
+          set_pixel(ic.x, ic.y, ic.c);
+          ic.is_set = false;
+        }
+      }
+      
+      delete [] buffer;
     }
   }
   
+  void blend_pixel(int x, int y, Color &c);
   void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);
 };

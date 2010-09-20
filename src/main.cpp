@@ -309,19 +309,21 @@ bool do_world(settings_t *s, string world_path, string output) {
   int image_width = 0, image_height = 0;
   
   // calculate image_width / image_height
-  {
-    calc_image_width_height(s, world.max_x - world.min_x, world.max_z - world.min_z, image_width, image_height);
-    
-    size_t approx_memory = image_width * image_height * 4 * sizeof(uint8_t);
-    
-    if (!s->silent) cout << "Image will be " << image_width << "x" << image_height << " and required approx. "
-         << approx_memory << " bytes of memory ... " << endl;
-  }
+  calc_image_width_height(s, world.max_x - world.min_x, world.max_z - world.min_z, image_width, image_height);
+  
+  size_t approx_memory = image_width * image_height * 4 * sizeof(uint8_t);
+  
+  if (!s->silent) cout << "Image will be " << image_width << "x" << image_height << " and required approx. "
+       << approx_memory << " bytes of memory ... " << endl;
 
   Image *all;
   
-  all = new MemoryImage(image_width, image_height);
-
+  if (approx_memory > s->memory_limit) {
+    all = new CachedImage(s->cache_file.c_str(), image_width, image_height, s->memory_limit / sizeof(icache));
+  }
+  else {
+    all = new MemoryImage(image_width, image_height);
+  }
   // cached image in the future
   /*if (image_width * image_height > 1000) {
     all = new CachedImage("cache.dat", image_width, image_height);
@@ -466,6 +468,9 @@ void do_help() {
     << "                              good for integration with third party tools" << endl
     << "  --require-all             - Will force c10t to require all chunks or fail" << endl
     << "                              not ignoring bad chunks" << endl
+    << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
+    << "                              file when necessary" << endl
+    << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
@@ -503,6 +508,8 @@ static struct option long_options[] =
    {"top",              required_argument, 0, 't'},
    {"bottom",           required_argument, 0, 'b'},
    {"limits",           required_argument, 0, 'L'},
+   {"memory-limit",     required_argument, 0, 'M'},
+   {"cache-file",       required_argument, 0, 'C'},
    {"exclude",          required_argument, 0, 'e'},
    {"include",          required_argument, 0, 'i'},
    {"hide-all",         no_argument, 0, 'a'},
@@ -541,6 +548,8 @@ settings_t *init_settings() {
   s->require_all = false;
   s->use_limits = false;
   s->limits = new int[4];
+  s->cache_file = "cache.dat";
+  s->memory_limit = 1024 * 1024 * 1000;
   
   return s;
 }
@@ -581,7 +590,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "vxcDNnqyalshL:w:o:e:t:b:i:m:r:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnqyalshM:C:L:w:o:e:t:b:i:m:r:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -651,6 +660,16 @@ int main(int argc, char *argv[]){
       return 0;
     case 'Q':
       s->require_all = true;
+      break;
+    case 'M':
+      {
+        int memory = atoi(optarg);
+        assert(memory > 0);
+        s->memory_limit = memory * 1024 * 1024;
+      }
+      break;
+    case 'C':
+      s->cache_file = optarg;
       break;
     case '?':
       if (optopt == 'c')

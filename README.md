@@ -66,4 +66,5 @@ Contributions
     acleone - for his work with cmake [85e980a]
     j005u - for explaining how cocoa works
     michaelu238 - for mapping out the Mac OS X building process
-    jnnnnn - for limit options which are helpful when debugging (and quite cool aswell!)
+    jnnnnn - for limit options which are helpful when debugging (and quite cool)
+    mudaltsov - for packaging a splendid mac build

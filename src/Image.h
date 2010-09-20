@@ -61,7 +61,7 @@ public:
   Image(int w, int h) : w(w), h(h) {
   }
 
-  ~Image() {
+  virtual ~Image() {
   }
   
   void set_pixel(int x, int y, Color &c);

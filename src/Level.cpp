@@ -131,11 +131,13 @@ void transform_xz(settings_t *s, int &x, int &z) {
   }*/
 }
 
-inline void apply_shading(settings_t *s, int bl, int sl, int hm, Color &c) {
+inline void apply_shading(settings_t *s, int bl, int sl, int hm, int y, Color &c) {
   // if night, darken all colors not emitting light
   if (s->night) {
     c.darken((0xd0 * (16 - bl)) / 16);
   }
+  
+  c.darken((mc::MapY - y));
   
   c.darken(sl);
 }
@@ -205,7 +207,7 @@ ImageBuffer *Level::get_image(settings_t *s) {
         
         int bl = bsget(blocklight, mx, mz, my);
         int sl = bsget(skylight, mx, mz, my);
-        apply_shading(s, bl, sl, 0, bc);
+        apply_shading(s, bl, sl, 0, my, bc);
         
         base.underlay(bc);
         
@@ -276,11 +278,11 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
         c.project_oblique(p, _px, _py);
         
         Color top(mc::MaterialColor[bt]);
-        apply_shading(s, bl, sl, 0, top);
+        apply_shading(s, bl, sl, 0, my, top);
         img->add_pixel(_px, _py - 1, top);
         
         Color side(mc::MaterialSideColor[bt]);
-        apply_shading(s, bl, sl, 0, side);
+        apply_shading(s, bl, sl, 0, my, side);
         img->add_pixel(_px, _py, side);
       }
     }
@@ -347,9 +349,9 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
         c.project_obliqueangle(p, _px, _py);
         
         Color top(mc::MaterialColor[bt]);
-        apply_shading(s, bl, sl, 0, top);
+        apply_shading(s, bl, sl, 0, y, top);
         Color side(mc::MaterialSideColor[bt]);
-        apply_shading(s, bl, sl, 0, side);
+        apply_shading(s, bl, sl, 0, y, side);
 
         switch(mc::MaterialModes[bt]) {
         case mc::Block:

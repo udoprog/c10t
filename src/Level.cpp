@@ -167,6 +167,14 @@ inline bool cavemode_ignore_block(settings_t *s, int x, int z, int y, int bt, nb
   return true;
 }
 
+inline bool in_bounding_box(int x, int z, int *limits) {
+  return 
+    x >= limits[0] &&
+    x <= limits[1] &&
+    z >= limits[2] &&
+    z <= limits[3];
+}
+
 ImageBuffer *Level::get_image(settings_t *s) {
   ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ, 1);
   
@@ -181,6 +189,11 @@ ImageBuffer *Level::get_image(settings_t *s) {
   
   for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
     for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
+      if (s->use_limits &&
+          !in_bounding_box(mx + xPos * mc::MapX, 
+                           mz + zPos * mc::MapZ, s->limits)) {
+        continue;
+      }
       Color base(255, 255, 255, 0);
       
       bt = mc::Air;
@@ -240,6 +253,11 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
   
   for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
     for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
+      if (s->use_limits &&
+          !in_bounding_box(mx + xPos * mc::MapX,
+                           mz + zPos * mc::MapZ, s->limits)) {
+        continue;
+      }
       bool cave_initial = true;
       int cavemode_top = s->top;
       

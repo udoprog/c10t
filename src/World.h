@@ -55,10 +55,10 @@ public:
         }
 
         if (s->use_limits && (
-            leveldata.xPos < s->limits[0] ||
-            leveldata.xPos > s->limits[1] ||
-            leveldata.zPos < s->limits[2] ||
-            leveldata.zPos > s->limits[3])
+            (leveldata.xPos+1) * mc::MapX < s->limits[0] ||
+            (leveldata.xPos  ) * mc::MapX > s->limits[1] ||
+            (leveldata.zPos+1) * mc::MapZ < s->limits[2] ||
+            (leveldata.zPos  ) * mc::MapZ > s->limits[3])
           )
         {
           continue;

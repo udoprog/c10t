@@ -67,4 +67,4 @@ Contributions
     j005u - for explaining how cocoa works
     jnnnnn - for limit options which are helpful when debugging (and quite cool)
     mudaltsov - for mapping out the Mac OS X building process and creating a splendid package!
-    
+    frozencow - for fixing boost_thread configuration for cmake

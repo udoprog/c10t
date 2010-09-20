@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project(c10t)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/;${CMAKE_MODULE_PATH}")
+
 # attempt to find out which revision we are building from
 set(C10T_VERSION "1.0")
 set(C10T_SITE "http://github.com/udoprog/c10t")
@@ -14,14 +16,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS THREAD REQUIRED)
 
 include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${PNG_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIR})
 
 set(c10t_LIBRARIES ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-set(c10t_LIBRARIES ${c10t_LIBRARIES} boost_thread)
+set(c10t_LIBRARIES ${c10t_LIBRARIES} ${Boost_LIBRARIES})
 
 # set(Boost_DEBUG TRUE)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/")

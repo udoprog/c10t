@@ -1,4 +1,4 @@
-add_executable(c10t-test EXCLUDE_FROM_ALL test.cpp)
+add_executable(c10t-test test.cpp)
 
 target_link_libraries(c10t-test c10t-lib)
 target_link_libraries(c10t-test ${c10t_LIBRARIES})

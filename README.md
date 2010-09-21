@@ -45,9 +45,12 @@ Building from Source (using cmake)
   2. Run:
 
     $ cmake .
-    $ make
+    $ make c10t
 
   note: CMake should generate a file called src/config.h from the input file src/config.h.cmake
+  note: There are several executables you can make.  c10t, c10t-lib, c10t-debug, and c10t-test.
+        If you wish to build all of these simply run `make`.  If you wish to build and individual
+        one run `make <executable>` e.g. `make c10t-test`.
 
   3. The executable (`c10t`) will be in the current directory.
 

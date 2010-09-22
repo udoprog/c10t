@@ -14,14 +14,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS thread REQUIRED)
 
 include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${PNG_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIR})
 
 set(c10t_LIBRARIES ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-set(c10t_LIBRARIES ${c10t_LIBRARIES} boost_thread)
+set(c10t_LIBRARIES ${c10t_LIBRARIES} ${Boost_LIBRARIES})
 
 # set(Boost_DEBUG TRUE)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/")

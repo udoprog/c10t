@@ -12,6 +12,7 @@ Requirements
   * libz (?)
   * libpng (=> 1.2)
   * libboost_thread (>= 1.40)
+  * libboost_test
   * pthread (through boost)
 
 Features
@@ -24,8 +25,7 @@ Features
     entire (sometimes huge!) image in memory at once.
   * Uses proper command line options.
   * Clean code, for easing further development.
-  * Multiplatform - yes, it does compile properly on windows and probably also
-    on mac.
+  * Multiplatform - yes, it does compile properly on windows and mac.
   * A gui wrapper, see: http://github.com/udoprog/c10t-swt (native gui with java bindings)
 
 I would not have done this were it not for the excellent inspiration by
@@ -39,14 +39,18 @@ Building from Source (using cmake)
 
   1. Install dependencies:
 
-    $ sudo apt-get install cmake libpng12-dev zlib1g-dev libboost-thread1.40-dev libboost-thread1.40.0
+    $ sudo apt-get install cmake libpng12-dev zlib1g-dev libboost-thread1.40-dev libboost-thread1.40.0 \
+    libboost-test1.40-dev libboost-test1.40.0
 
   2. Run:
 
     $ cmake .
-    $ make
+    $ make c10t
 
   note: CMake should generate a file called src/config.h from the input file src/config.h.cmake
+  note: There are several executables you can make.  c10t, c10t-lib, c10t-debug, and c10t-test.
+        If you wish to build all of these simply run `make`.  If you wish to build and individual
+        one run `make <executable>` e.g. `make c10t-test`.
 
   3. The executable (`c10t`) will be in the current directory.
 

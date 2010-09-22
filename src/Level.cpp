@@ -312,6 +312,10 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
 
   // block type
   int bt;
+      
+  BlockRotation blocks_r(s, blocks);
+  BlockRotation blocklight_r(s, blocklight);
+  BlockRotation skylight_r(s, skylight);
   
   for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
     for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
@@ -320,7 +324,7 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
       
       if (s->cavemode) {
         for (int my = s->top; my > 0; my--) {
-          bt = bget(blocks, mx, mz, y);
+          bt = blocks_r.get8(mx, mz, y);
           
           if (!cavemode_isopen(bt)) {
             cavemode_top = my;
@@ -332,7 +336,7 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
       for (int my = s->bottom; my < s->top; my++) {
         point p(x, my, y);
         
-        bt = bget(blocks, mx, mz, my);
+        bt = blocks_r.get8(mx, mz, my);
         
         if (s->cavemode) {
           if (cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial) || my >= cavemode_top) {
@@ -344,8 +348,8 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
           continue;
         }
 
-        int bl = bsget(blocklight, mx, mz, my);
-        int sl = bsget(skylight, mx, mz, my);
+        int bl = blocklight_r.get4(mx, mz, my);
+        int sl = skylight_r.get4(mx, mz, my);
         
         int _px, _py;
         c.project_oblique(p, _px, _py);
@@ -376,6 +380,10 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
   
   // block type
   int bt;
+      
+  BlockRotation blocks_r(s, blocks);
+  BlockRotation blocklight_r(s, blocklight);
+  BlockRotation skylight_r(s, skylight);
   
   for (int z = 0; z < c.z; z++) {
     for (int x = 0; x < c.x; x++) {
@@ -388,7 +396,7 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
           int _x = x, _z = z;
           transform_xz(s, _x, _z);
           
-          bt = bget(blocks, _x, _z, y);
+          bt = blocks_r.get8(_x, _z, y);
           
           if (!cavemode_isopen(bt)) {
             cavemode_top = y;
@@ -403,7 +411,7 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
         int _x = x, _z = z;
         transform_xz(s, _x, _z);
         
-        bt = bget(blocks, _x, _z, y);
+        bt = blocks_r.get8(_x, _z, y);
         
         if (s->cavemode) {
           if (cavemode_ignore_block(s, _x, _z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
@@ -414,9 +422,9 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
         if (s->excludes[bt]) {
           continue;
         }
-    
-        int bl = bsget(blocklight, _x, _z, y);
-        int sl = bsget(skylight, _x, _z, y);
+        
+        int bl = skylight_r.get4(_x, _z, y);
+        int sl = blocklight_r.get4(_x, _z, y);
         
         int _px, _py;
         c.project_obliqueangle(p, _px, _py);

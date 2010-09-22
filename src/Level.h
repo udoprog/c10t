@@ -35,10 +35,10 @@ class Level
     const char *grammar_error_why;
     const char *path;
     bool ignore_blocks;
-    
+
     Level(const char *path, bool ignore_blocks);
     ~Level();
-    
+
     ImageBuffer *get_image(settings_t& s);
     ImageBuffer *get_oblique_image(settings_t& s);
     ImageBuffer *get_obliqueangle_image(settings_t& s);

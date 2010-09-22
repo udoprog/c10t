@@ -36,11 +36,11 @@ struct settings_t {
 
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
-    
+
     for (int i = 0; i < mc::MaterialCount; i++) {
       this->excludes[i] = false;
     }
-    
+
     this->use_split = false;
     this->split = 1;
     this->cavemode = false;

@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <fstream>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
@@ -409,12 +410,11 @@ int do_help() {
     << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
     << "  -b, --bottom <int>        - splice from the bottom, must be greater than or" << endl
     << "  -L, --limits <int-list>   - limit render to certain area. int-list form:" << endl
-    << "                              North,South,West,East, e.g." << endl
+    << "                              North,South,East,West, e.g." << endl
     << "                              -L 0,100,-10,20 limiting between 0 and 100 in the " << endl
     << "                              north-south direction and between -10 and 20 in " << endl
     << "                              the east-west direction. " << endl
     << "                              Note: South and West are the positive directions." << endl
-    << "                              equal to 0" << endl
     << endl
     << "Filtering options:" << endl
     << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences" << endl
@@ -632,19 +632,19 @@ bool do_side_color_set(const char *set_str) {
   return true;
 }
 
-// Convert a string such as "-30,40,50,30" to the corresponding integer array,
-// and place the result in limits_rect.
-void parse_limits(const char *limits_str, int*& limits_rect) {
-  istringstream iss(limits_str);
-  string item;
-  
-  for (int i=0; i < 4; i++) {
-    if (!getline(iss, item, ','))
-      break;
-    limits_rect[i] = atoi(item.c_str());
-    // negative sign added -- south is +x, west is +z.
-    // also swap south and north, east and west with mod 2 stuff.
+// Convert a string such as "-30,40,50,30" to the corresponding N,S,E,W integers,
+// and fill in the min/max settings.
+void parse_limits(const string& limits_str, settings_t& s) {
+  std::vector<std::string> limits;
+  boost::split(limits, limits_str, boost::is_any_of(","));
+  if (limits.size() != 4) {
+    return;
   }
+
+  s.min_x = atoi(limits[0].c_str());
+  s.max_x = atoi(limits[1].c_str());
+  s.min_z = atoi(limits[2].c_str());
+  s.max_z = atoi(limits[3].c_str());
 }
 
 int main(int argc, char *argv[]){
@@ -655,6 +655,7 @@ int main(int argc, char *argv[]){
   string world_path;
   string output_path("out.png");
   string palette_write_path, palette_read_path;
+  string limits;
   
   int c, blockid;
 
@@ -735,8 +736,7 @@ int main(int argc, char *argv[]){
       
       break;
     case 'L':
-      parse_limits(optarg, s.limits);
-      s.use_limits = true;
+      limits = optarg;
       break;
     case 'b':
       s.bottom = atoi(optarg);
@@ -783,7 +783,9 @@ int main(int argc, char *argv[]){
       abort ();
     }
   }
-  
+
+  parse_limits(limits, s);
+
   if (!s.silent) {
     cout << "Type `-h' for help" << endl;
   }

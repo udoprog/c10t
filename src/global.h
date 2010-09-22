@@ -29,8 +29,7 @@ struct settings_t {
   enum mode mode;
   unsigned int rotation;
   bool require_all;
-  int* limits; // north-south-west-east. (xmax, xmin, zmax, zmin)
-  bool use_limits;
+  int min_x, max_x, min_z, max_z; // limits to draw
   std::string cache_file;
   size_t memory_limit;
 
@@ -56,15 +55,16 @@ struct settings_t {
     this->night = false;
     this->debug = false;
     this->require_all = false;
-    this->use_limits = false;
     this->cache_file = "cache.dat";
     this->memory_limit = 1024 * 1024 * 1000;
-    this->limits = new int[4];
+    this->min_x = INT_MIN;
+    this->max_x = INT_MAX;
+    this->min_z = INT_MIN;
+    this->max_z = INT_MAX;
   }
 
   ~settings_t() {
     delete [] this->excludes;
-    delete [] this->limits;
   }
 };
 

@@ -58,15 +58,12 @@ public:
         if (!leveldata.islevel || leveldata.grammar_error) {
           continue;
         }
-        
-        if (s.use_limits && (
-            leveldata.xPos < s.limits[0] ||
-            leveldata.xPos > s.limits[1] ||
-            leveldata.zPos < s.limits[2] ||
-            leveldata.zPos > s.limits[3])
-          )
-        {
-          continue;
+
+        if (leveldata.xPos < s.min_x ||
+            leveldata.xPos > s.max_z ||
+            leveldata.zPos < s.min_z ||
+            leveldata.zPos > s.max_z) {
+         continue;
         }
         
         level l;

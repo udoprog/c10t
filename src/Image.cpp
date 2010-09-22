@@ -3,6 +3,8 @@
 
 #include <assert.h>
 
+#include <png.h>
+
 void MemoryImage::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());
@@ -74,6 +76,106 @@ void Image::composite(int xoffset, int yoffset, ImageBuffer &img) {
     }
   }
 }
+
+bool Image::save_png(const char *filename, const char *title)
+{
+  bool ret = true;
+  
+  FILE *fp;
+  png_structp png_ptr = NULL;
+  png_infop info_ptr = NULL;
+  png_bytep row = NULL;
+  
+  fp = fopen(filename, "wb");
+
+  if (fp == NULL) {
+     ret = false;
+     goto finalise;
+  }
+  
+  png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+ 
+  if (png_ptr == NULL) {
+     ret = false;
+     goto finalise;
+  }
+
+  info_ptr = png_create_info_struct(png_ptr);
+
+  if (info_ptr == NULL) {
+     ret = false;
+     goto finalise;
+  }
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+     ret = false;
+     goto finalise;
+  }
+
+  png_init_io(png_ptr, fp);
+
+  png_set_IHDR(png_ptr, info_ptr, get_width(), get_height(),
+        8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+   
+  if (title != NULL) {
+     png_text title_text;
+     title_text.compression = PNG_TEXT_COMPRESSION_NONE;
+     title_text.key = (char *)"Title";
+     title_text.text = (char *)title;
+     png_set_text(png_ptr, info_ptr, &title_text, 1);
+  }
+
+  png_write_info(png_ptr, info_ptr);
+
+  row = (png_bytep) malloc(4 * get_width() * sizeof(png_byte));
+
+  int x, y;
+  
+  for (y=0 ; y < get_height(); y++) {
+     for (x=0 ; x < get_width(); x++) {
+       Color c;
+       get_pixel(x, y, c);
+       
+       if (c.a == 0x0) {
+         row[0 + x*4] = 0;
+         row[1 + x*4] = 0;
+         row[2 + x*4] = 0;
+         row[3 + x*4] = 0x00;
+       }
+       else {
+         row[0 + x*4] = c.r;
+         row[1 + x*4] = c.g;
+         row[2 + x*4] = c.b;
+         row[3 + x*4] = 0xff;
+       }
+     }
+
+     png_write_row(png_ptr, row);
+  }
+ 
+  png_write_end(png_ptr, NULL);
+
+finalise:
+  if (fp != NULL) {
+    fclose(fp);
+  }
+   
+  if (info_ptr != NULL) {
+    png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+  }
+
+  if (png_ptr != NULL) {
+    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+  }
+
+  if (row != NULL) {
+    free(row);
+  }
+  
+  return ret;
+}
+
 
 void CachedImage::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   assert(x >= 0 && x < get_width());

@@ -19,6 +19,10 @@ struct Color{
   Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
     r(r), g(g), b(b), a(a) {
   }
+  
+  Color(uint32_t rgba) :
+    r(r >> 24), g((g >> 16) & 0xff), b((b >> 8) & 0xff), a(a & 0xff) {
+  }
 
   bool is_opaque() const {
     return a == 0xff;

@@ -75,6 +75,8 @@ public:
   inline size_t get_offset(int x, int y) {
     return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);
   }
+
+  bool save_png(const char *filename, const char *title);
   
   virtual void blend_pixel(int x, int y, Color &c) = 0;
   virtual void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;

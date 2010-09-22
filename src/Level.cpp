@@ -138,8 +138,6 @@ inline void apply_shading(settings_t *s, int bl, int sl, int hm, int y, Color &c
   }
   
   c.darken((mc::MapY - y));
-  
-  c.darken(sl);
 }
 
 inline bool cavemode_isopen(int bt) {
@@ -174,7 +172,7 @@ private:
   settings_t *s;
   nbt::ByteArray *byte_array;
 
-  void transform_xzy(int& x, int& z, int& y) {
+  void transform_xz(int& x, int& z) {
     switch (s->rotation) {
       case 270:
         z = mc::MapZ - z - 1;
@@ -204,7 +202,7 @@ public:
     : s(s), byte_array(byte_array) {}
   
   uint8_t get8(int x, int z, int y) {
-    transform_xzy(x, z, y);
+    transform_xz(x, z);
     
     assert(x >= 0 && x < mc::MapX);
     assert(z >= 0 && z < mc::MapZ);
@@ -214,8 +212,18 @@ public:
     return byte_array->values[p];
   }
   
+  uint8_t get8(int x, int z) {
+    transform_xz(x, z);
+    
+    assert(x >= 0 && x < mc::MapX);
+    assert(z >= 0 && z < mc::MapZ);
+    int p = x + (z * mc::MapX);
+    assert (p >= 0 && p < byte_array->length);
+    return byte_array->values[p];
+  }
+  
   uint8_t get4(int x, int z, int y) {
-    transform_xzy(x, z, y);
+    transform_xz(x, z);
     
     assert(x >= 0 && x < mc::MapX);
     assert(z >= 0 && z < mc::MapZ);
@@ -277,8 +285,8 @@ ImageBuffer *Level::get_image(settings_t *s) {
         
         Color bc(mc::MaterialColor[bt]);
         
-        int bl = blocklight_r.get4(mx, mz, my);
-        int sl = skylight_r.get4(mx, mz, my);
+        int bl = blocklight_r.get4(mx, mz, my),
+            sl = skylight_r.get4(mx, mz, my);
         
         apply_shading(s, bl, sl, 0, my, bc);
         
@@ -348,19 +356,19 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
           continue;
         }
 
-        int bl = blocklight_r.get4(mx, mz, my);
-        int sl = skylight_r.get4(mx, mz, my);
+        int bl = blocklight_r.get4(mx, mz, my),
+            sl = skylight_r.get4(mx, mz, my);
         
-        int _px, _py;
-        c.project_oblique(p, _px, _py);
+        int px, py;
+        c.project_oblique(p, px, py);
         
         Color top(mc::MaterialColor[bt]);
         apply_shading(s, bl, sl, 0, my, top);
-        img->add_pixel(_px, _py - 1, top);
+        img->add_pixel(px, py - 1, top);
         
         Color side(mc::MaterialSideColor[bt]);
         apply_shading(s, bl, sl, 0, my, side);
-        img->add_pixel(_px, _py, side);
+        img->add_pixel(px, py, side);
       }
     }
   }
@@ -384,6 +392,7 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
   BlockRotation blocks_r(s, blocks);
   BlockRotation blocklight_r(s, blocklight);
   BlockRotation skylight_r(s, skylight);
+  BlockRotation heightmap_r(s, heightmap);
   
   for (int z = 0; z < c.z; z++) {
     for (int x = 0; x < c.x; x++) {
@@ -393,10 +402,7 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
 
       if (s->cavemode) {
         for (int y = s->top; y > 0; y--) {
-          int _x = x, _z = z;
-          transform_xz(s, _x, _z);
-          
-          bt = blocks_r.get8(_x, _z, y);
+          bt = blocks_r.get8(x, z, y);
           
           if (!cavemode_isopen(bt)) {
             cavemode_top = y;
@@ -404,17 +410,16 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
           }
         }
       }
+
+      int hmval = heightmap_r.get8(x, z);
       
       for (int y = s->bottom; y < s->top; y++) {
         point p(x, y, z);
         
-        int _x = x, _z = z;
-        transform_xz(s, _x, _z);
-        
-        bt = blocks_r.get8(_x, _z, y);
+        bt = blocks_r.get8(x, z, y);
         
         if (s->cavemode) {
-          if (cavemode_ignore_block(s, _x, _z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
+          if (cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
             continue;
           }
         }
@@ -423,27 +428,33 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
           continue;
         }
         
-        int bl = skylight_r.get4(_x, _z, y);
-        int sl = blocklight_r.get4(_x, _z, y);
+        int bl = skylight_r.get4(x, z, y),
+            sl = blocklight_r.get4(x, z, y);
         
-        int _px, _py;
-        c.project_obliqueangle(p, _px, _py);
+        int px, py;
+        c.project_obliqueangle(p, px, py);
         
         Color top(mc::MaterialColor[bt]);
-        apply_shading(s, bl, sl, 0, y, top);
         Color side(mc::MaterialSideColor[bt]);
-        apply_shading(s, bl, sl, 0, y, side);
-
+        
+        apply_shading(s, bl, sl, hmval, y, top);
+        apply_shading(s, bl, sl, hmval, y, side);
+        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
-          img->add_pixel(_px, _py - 1, top);
-          img->add_pixel(_px + 1, _py - 1, top);
-          img->add_pixel(_px, _py, side);
-          img->add_pixel(_px + 1, _py, side);
+          img->add_pixel(px, py - 1, top);
+          img->add_pixel(px + 1, py - 1, top);
+          img->add_pixel(px, py, side);
+          side.darken(0x20);
+          img->add_pixel(px + 1, py, side);
           break;
         case mc::HalfBlock:
-          img->add_pixel(_px, _py, top);
-          img->add_pixel(_px + 1, _py, top);
+          img->add_pixel(px, py, top);
+          img->add_pixel(px + 1, py, top);
+          break;
+        case mc::TopBlock:
+          img->add_pixel(px, py - 1, top);
+          img->add_pixel(px + 1, py - 1, top);
           break;
         }
       }

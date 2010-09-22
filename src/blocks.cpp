@@ -105,14 +105,14 @@ void mc::initialize_constants() {
   mc::MaterialName[mc::Fence] = "Fence";
 
   mc::MaterialColor[mc::Air] = new Color(255,255,255,0);
-  mc::MaterialColor[mc::Stone] = new Color(120,120,120,255);
+  mc::MaterialColor[mc::Stone] = new Color(0xcd, 0xcd, 0xcd, 0xff);
   mc::MaterialColor[mc::Grass] = new Color(117,176,73,255);
   mc::MaterialColor[mc::Dirt] = new Color(134,96,67,255);
   mc::MaterialColor[mc::Cobblestone] = new Color(115,115,115,255);
   mc::MaterialColor[mc::Wood] = new Color(157,128,79,255);
   mc::MaterialColor[mc::Sapling] = new Color(120,120,120,0);
   mc::MaterialColor[mc::Bedrock] = new Color(84,84,84,255);
-  mc::MaterialColor[mc::Water] = new Color(38,92,255,0xd0);
+  mc::MaterialColor[mc::Water] = new Color(0x67, 0x8d, 0xff, 0xd0);
   mc::MaterialColor[mc::StationaryWater] = new Color(38,92,255,80);
   mc::MaterialColor[mc::Lava] = new Color(255,90,0,255);
   mc::MaterialColor[mc::StationaryLava] = new Color(255,90,0,255);
@@ -122,7 +122,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::IronOre] = new Color(136,130,127,255);
   mc::MaterialColor[mc::CoalOre] = new Color(115,115,115,255);
   mc::MaterialColor[mc::Log] = new Color(102,81,51,255);
-  mc::MaterialColor[mc::Leaves] = new Color(60,192,41,200);//120);
+  mc::MaterialColor[mc::Leaves] = new Color(0x4a, 0x83, 0x42, 0xb0);//120);
   mc::MaterialColor[mc::Sponge] = new Color();
   mc::MaterialColor[mc::Glass] = new Color(255,255,255,64);
   mc::MaterialColor[mc::RedCloth] = new Color();
@@ -154,7 +154,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Bookcase] = new Color(0xbf, 0xa9, 0x74, 0xff);
   mc::MaterialColor[mc::MossyCobblestone] = new Color(0x7f, 0xae, 0x7d, 0xff);
   mc::MaterialColor[mc::Obsidian] = new Color(0x53, 0x14, 0xd4, 0xff);
-  mc::MaterialColor[mc::Torch] = new Color(0xff, 0xe1, 0x87,0x80);
+  mc::MaterialColor[mc::Torch] = new Color(0xff, 0xe1, 0x87,0xb0);
   mc::MaterialColor[mc::Fire] = new Color(0xe0, 0xae, 0x15, 0xff);
   mc::MaterialColor[mc::MobSpawner] = new Color(0xff, 0xff, 0xff, 0x00);
   mc::MaterialColor[mc::WoodenStairs] = new Color(0xbf, 0xa9, 0x74, 0xff);
@@ -180,7 +180,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::RedstoneOre] = new Color();
   mc::MaterialColor[mc::GlowingRedstoneOre] = new Color();
   mc::MaterialColor[mc::RedstoneTorchOff] = new Color(181,140,64,32);
-  mc::MaterialColor[mc::RedstoneTorchOn] = new Color(255,0,0,0x80);
+  mc::MaterialColor[mc::RedstoneTorchOn] = new Color(255,0,0,0xb0);
   mc::MaterialColor[mc::StoneButton] = new Color();
   mc::MaterialColor[mc::Snow] = new Color(255, 255, 255, 255);
   mc::MaterialColor[mc::Ice] = new Color(120, 120, 255, 120);
@@ -328,7 +328,7 @@ void mc::initialize_constants() {
   mc::MaterialModes[mc::Bookcase] = Block;
   mc::MaterialModes[mc::MossyCobblestone] = Block;
   mc::MaterialModes[mc::Obsidian] = Block;
-  mc::MaterialModes[mc::Torch] = Block;
+  mc::MaterialModes[mc::Torch] = TopBlock;
   mc::MaterialModes[mc::Fire] = Block;
   mc::MaterialModes[mc::MobSpawner] = Block;
   mc::MaterialModes[mc::WoodenStairs] = Block;
@@ -353,8 +353,8 @@ void mc::initialize_constants() {
   mc::MaterialModes[mc::WoodenPressurePlate] = Block;
   mc::MaterialModes[mc::RedstoneOre] = Block;
   mc::MaterialModes[mc::GlowingRedstoneOre] = Block;
-  mc::MaterialModes[mc::RedstoneTorchOff] = Block;
-  mc::MaterialModes[mc::RedstoneTorchOn] = Block;
+  mc::MaterialModes[mc::RedstoneTorchOff] = TopBlock;
+  mc::MaterialModes[mc::RedstoneTorchOn] = TopBlock;
   mc::MaterialModes[mc::StoneButton] = Block;
   mc::MaterialModes[mc::Snow] = Block;
   mc::MaterialModes[mc::Ice] = Block;

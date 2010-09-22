@@ -6,7 +6,8 @@
 namespace mc {
   enum MaterialMode {
     Block,
-    HalfBlock
+    HalfBlock,
+    TopBlock
   };
   
   enum {

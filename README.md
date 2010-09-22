@@ -48,9 +48,9 @@ Building from Source (using cmake)
     $ make c10t
 
   note: CMake should generate a file called src/config.h from the input file src/config.h.cmake
-  note: There are several executables you can make.  c10t, c10t-lib, c10t-debug, and c10t-test.
-        If you wish to build all of these simply run `make`.  If you wish to build and individual
-        one run `make <executable>` e.g. `make c10t-test`.
+  note: There are several targets you can make.  c10t, c10t-lib, c10t-debug, and c10t-test.
+        If you wish to build all of these simply run `make` which defaults to target `all`.
+        If you wish to build any individual one run `make <target>` e.g. `make c10t-test`.
 
   3. The executable (`c10t`) will be in the current directory.
 
@@ -72,3 +72,4 @@ Contributions
     jnnnnn - for limit options which are helpful when debugging (and quite cool)
     mudaltsov - for mapping out the Mac OS X building process and creating a splendid package!
     frozencow - for fixing boost_thread configuration for cmake
+    reportingjsr - for pointing out build issues

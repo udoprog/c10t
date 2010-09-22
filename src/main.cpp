@@ -310,7 +310,13 @@ bool do_world(settings_t *s, string world_path, string output) {
   
   // calculate image_width / image_height
   calc_image_width_height(s, world.max_x - world.min_x, world.max_z - world.min_z, image_width, image_height);
-  
+
+  if (!s->silent) cout << "World extents: " 
+          << world.min_z*mc::MapZ << ","
+          << (world.max_z+1)*mc::MapZ << ","
+          << world.min_x*mc::MapX << ","
+          << (world.max_x+1)*mc::MapX << endl;
+
   size_t approx_memory = image_width * image_height * 4 * sizeof(uint8_t);
   
   if (!s->silent) cout << "Image will be " << image_width << "x" << image_height << " and required approx. "

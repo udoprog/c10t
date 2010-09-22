@@ -150,8 +150,13 @@ struct partial {
   bool islevel;
   bool grammar_error;
   size_t grammar_error_where;
-  const char *grammar_error_why;
+  const char* grammar_error_why;
   string path;
+};
+
+struct render_job {
+  string path;
+  int xPos, zPos;
 };
 
 /*static bool compare_partials(partial first, partial second)
@@ -167,21 +172,21 @@ struct partial {
   return first.xPos < second.xPos;;
 }*/
 
-class partial_renderer : public threadworker<string, partial*> {
+class partial_renderer : public threadworker<render_job, partial*> {
 public:
   settings_t *s;
   
-  partial_renderer(settings_t *s, int n) : threadworker<string, partial*>(n) {
+  partial_renderer(settings_t *s, int n) : threadworker<render_job, partial*>(n) {
     this->s = s;
   }
   
-  partial *work(string path) {
-    Level *level = new Level(path.c_str(), false);
+  partial *work(render_job job) {
+    Level *level = new Level(job.path.c_str(), false);
     
     partial *p = new partial;
     p->islevel = false;
     p->grammar_error = false;
-    p->path = path;
+    p->path = job.path;
     
     if (level->grammar_error) {
       p->grammar_error = true;
@@ -195,8 +200,8 @@ public:
     }
     
     p->islevel = true;
-    p->xPos = level->xPos;
-    p->zPos = level->zPos;
+    p->xPos = job.xPos;
+    p->zPos = job.zPos;
     
     switch (s->mode) {
     case Top:           p->image = level->get_image(s); break;
@@ -227,9 +232,9 @@ inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &im
   }
 }
 
-inline void calc_image_partial(settings_t *s, partial &p, Image *all, int minx, int minz, int maxx, int maxz, int image_width, int image_height) {
-  int diffx = maxx - minx;
-  int diffz = maxz - minz;
+inline void calc_image_partial(settings_t *s, partial &p, Image *all, World &world, int image_width, int image_height) {
+  int diffx = world.max_x - world.min_x;
+  int diffz = world.max_z - world.min_z;
   
   Cube c(diffx, 16, diffz);
   int xoffset, yoffset;
@@ -237,7 +242,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image *all, int minx, 
   switch (s->mode) {
   case Top:
     {
-      point topleft(diffz - (p.zPos - minz), 16, (p.xPos - minx));
+      point topleft(diffz - (p.zPos - world.min_z), 16, (p.xPos - world.min_x));
       c.project_top(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -246,7 +251,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image *all, int minx, 
     break;
   case Oblique:
     {
-      point topleft(diffz - (p.zPos - minz), 16, (p.xPos - minx));
+      point topleft(diffz - (p.zPos - world.min_z), 16, (p.xPos - world.min_x));
       c.project_oblique(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -255,7 +260,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image *all, int minx, 
     break;
   case ObliqueAngle:
     {
-      point topleft(p.xPos - minx, 16, p.zPos - minz);
+      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
       c.project_obliqueangle(topleft, xoffset, yoffset);
       xoffset = xoffset * mc::MapX;
       yoffset = yoffset * mc::MapZ;
@@ -343,13 +348,18 @@ bool do_world(settings_t *s, string world_path, string output) {
       for (; lvlq < s->threads && lvlit != world.levels.end(); lvlq++) {
         level l = *lvlit;
         
-        string path = world.get_level_path(l.xPos, l.zPos);
+        string path = world.get_level_path(l);
         
         if (s->debug) {
           cout << "using file: " << path << endl;
         }
+
+        render_job job;
+        job.path = path;
+        job.xPos = l.xPos;
+        job.zPos = l.zPos;
         
-        renderer.give(path);
+        renderer.give(job);
         lvlit++;
       }
     }
@@ -368,7 +378,7 @@ bool do_world(settings_t *s, string world_path, string output) {
       }
 
       if (!s->silent) {
-        cout << "Ignoring unparseable file: " << p->path << endl;
+        cout << "Ignoring unparseable file: " << p->path << " - " << p->grammar_error_why << endl;
         continue;
       }
     }
@@ -396,7 +406,7 @@ bool do_world(settings_t *s, string world_path, string output) {
       cout << RENDER_BYTE << p << flush;
     }
     
-    calc_image_partial(s, *p, all, world.min_x, world.min_z, world.max_x, world.max_z, image_width, image_height);
+    calc_image_partial(s, *p, all, world, image_width, image_height);
     delete p->image;
     delete p;
   }

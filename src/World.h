@@ -11,8 +11,8 @@
 #include "global.h"
 
 struct level {
-  int xPos;
-  int zPos;
+  int xPos, zPos;
+  int xReal, zReal;
 };
 
 static const char *b36alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -53,7 +53,7 @@ public:
         if (!leveldata.islevel || leveldata.grammar_error) {
           continue;
         }
-
+        
         if (s->use_limits && (
             leveldata.xPos < s->limits[0] ||
             leveldata.xPos > s->limits[1] ||
@@ -65,8 +65,28 @@ public:
         }
         
         level l;
-        l.xPos = leveldata.xPos;
-        l.zPos = leveldata.zPos;
+
+        l.xReal = leveldata.xPos;
+        l.zReal = leveldata.zPos;
+        
+        switch (s->rotation) {
+        case 270:
+          l.xPos = leveldata.zPos;
+          l.zPos = -leveldata.xPos;
+          break;
+        case 180:
+          l.xPos = -leveldata.xPos;
+          l.zPos = -leveldata.zPos;
+          break;
+        case 90:
+          l.xPos = -leveldata.zPos;
+          l.zPos = leveldata.xPos;
+          break;
+        default:
+          l.xPos = leveldata.xPos;
+          l.zPos = leveldata.zPos;
+          break;
+        }
         
         if (l.xPos < min_x) {
           min_x = l.xPos;
@@ -121,12 +141,12 @@ public:
     return ss.str();
   }
   
-  std::string get_level_path(int x, int z) {
-    int modx = x % 64;
+  std::string get_level_path(level &l) {
+    int modx = l.xReal % 64;
     if (modx < 0) modx += 64;
-    int modz = z % 64;
+    int modz = l.zReal % 64;
     if (modz < 0) modz += 64;
-    return path_join(world_path, path_join(path_join(base36(modx), base36(modz)), "c." + base36(x) + "." + base36(z) + ".dat"));
+    return path_join(world_path, path_join(path_join(base36(modx), base36(modz)), "c." + base36(l.xReal) + "." + base36(l.zReal) + ".dat"));
   }
 };
 

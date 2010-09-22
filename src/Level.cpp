@@ -169,6 +169,74 @@ inline bool cavemode_ignore_block(settings_t *s, int x, int z, int y, int bt, nb
   return true;
 }
 
+class BlockRotation {
+private:
+  settings_t *s;
+  nbt::ByteArray *byte_array;
+
+  void transform_xzy(int& x, int& z, int& y) {
+    switch (s->rotation) {
+      case 270:
+        z = mc::MapZ - z - 1;
+        x = mc::MapX - x - 1;
+        {
+          int t = x;
+          x = z; 
+          z = mc::MapZ - t - 1;
+        }
+        break;
+      case 180:
+        z = mc::MapZ - z - 1;
+        x = mc::MapX - x - 1;
+        break;
+      case 90:
+        {
+          int t = x;
+          x = z; 
+          z = mc::MapZ - t - 1;
+        }
+        break;
+    };
+  }
+
+public:
+  BlockRotation(settings_t *s, nbt::ByteArray *byte_array)
+    : s(s), byte_array(byte_array) {}
+  
+  uint8_t get8(int x, int z, int y) {
+    transform_xzy(x, z, y);
+    
+    assert(x >= 0 && x < mc::MapX);
+    assert(z >= 0 && z < mc::MapZ);
+    assert(y >= 0 && y < mc::MapY);
+    int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
+    assert (p >= 0 && p < byte_array->length);
+    return byte_array->values[p];
+  }
+  
+  uint8_t get4(int x, int z, int y) {
+    transform_xzy(x, z, y);
+    
+    assert(x >= 0 && x < mc::MapX);
+    assert(z >= 0 && z < mc::MapZ);
+    assert(y >= 0 && y < mc::MapY);
+    int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
+    int ap = p / 2;
+
+    assert (ap >= 0 && ap < byte_array->length);
+    
+    // force unsigned
+    uint8_t bp = byte_array->values[ap] & 0xff;
+    
+    if (p % 2 == 0) {
+      return bp >> 4;
+    }
+    else {
+      return bp & 0xf;
+    }
+  }
+};
+
 ImageBuffer *Level::get_image(settings_t *s) {
   ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ, 1);
   
@@ -191,9 +259,13 @@ ImageBuffer *Level::get_image(settings_t *s) {
 
       int my;
       
+      BlockRotation blocks_r(s, blocks);
+      BlockRotation blocklight_r(s, blocklight);
+      BlockRotation skylight_r(s, skylight);
+      
       // do incremental color fill until color is opaque
       for (my = s->top; my > s->bottom; my--) {
-        bt = bget(blocks, mx, mz, my);
+        bt = blocks_r.get8(mx, mz, my);
         
         if (s->cavemode && cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial)) {
           continue;
@@ -205,8 +277,9 @@ ImageBuffer *Level::get_image(settings_t *s) {
         
         Color bc(mc::MaterialColor[bt]);
         
-        int bl = bsget(blocklight, mx, mz, my);
-        int sl = bsget(skylight, mx, mz, my);
+        int bl = blocklight_r.get4(mx, mz, my);
+        int sl = skylight_r.get4(mx, mz, my);
+        
         apply_shading(s, bl, sl, 0, my, bc);
         
         base.underlay(bc);

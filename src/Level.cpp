@@ -73,8 +73,6 @@ Level::~Level(){
     return;
   }
 
-  std::cout << "Deallocating blocks..." << std::endl;
-  
   if (blocks != NULL) delete blocks;
   if (skylight != NULL) delete skylight;
   if (heightmap != NULL) delete heightmap;

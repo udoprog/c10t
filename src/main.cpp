@@ -368,6 +368,15 @@ void do_help() {
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores" << endl
     << "                              on your machine" << endl
+    << "  -B <set>                  - Specify the base color for a specific block id" << endl
+    << "                              <set> has the format <blockid>=<8 digit hex>" << endl
+    << "                              <8 digit hex> specifies the RGBA values as" << endl
+    << "                              'RRGGBBAA'. This automatically sets the side color" << endl
+    << "                              to a darkened variant of the base" << endl
+    << "                              example: -s Grass=ff0000ff" << endl
+    << "  -S <set>                  - Specify the side color for a specific block id" << endl
+    << "                              this uses the same format as '-s' only the color" << endl
+    << "                              is applied to the side of the block" << endl
     << endl
     << "Other Options:" << endl
     << "  -x, --binary              - Will output progress information in a binary form," << endl
@@ -493,14 +502,75 @@ settings_t *init_settings() {
   return s;
 }
 
-int get_blockid(const char *blockid) {
+int get_blockid(const char *blockid_string) {
   for (int i = 0; i < mc::MaterialCount; i++) {
-    if (strcmp(mc::MaterialName[i], blockid) == 0) {
+    if (strcmp(mc::MaterialName[i], blockid_string) == 0) {
       return i;
     }
   }
   
-  return atoi(blockid);
+  int blockid = atoi(blockid_string);
+  assert(blockid >= 0 && blockid < mc::MaterialCount);
+  return blockid;
+}
+
+void parse_set(const char* set_str, int& blockid, Color& c)
+{
+  istringstream iss(set_str);
+  string key, color;
+  
+  assert(getline(iss, key, '='));
+  
+  int cr,cg,cb,ca;
+  blockid = get_blockid(key.c_str());
+  
+  assert(getline(iss, color, ','));
+  cr = boost::lexical_cast<int>(color.c_str());
+  assert(getline(iss, color, ','));
+  cg = boost::lexical_cast<int>(color.c_str());
+  assert(getline(iss, color, ','));
+  cb = boost::lexical_cast<int>(color.c_str());
+
+  if (getline(iss, color)) {
+    ca = boost::lexical_cast<int>(color.c_str());
+  } else {
+    ca = 0xff;
+  }
+
+  assert(cr >= 0 && cr <= 0xff);
+  assert(cg >= 0 && cg <= 0xff);
+  assert(cb >= 0 && cb <= 0xff);
+  assert(ca >= 0 && ca <= 0xff);
+
+  c.r = cr;
+  c.g = cg;
+  c.b = cb;
+  c.a = ca;
+}
+
+void do_base_color_set(const char *set_str) {
+  int blockid;
+  Color c;
+  
+  parse_set(set_str, blockid, c);
+  
+  delete mc::MaterialColor[blockid];
+  delete mc::MaterialSideColor[blockid];
+  
+  mc::MaterialColor[blockid] = new Color(c);
+  mc::MaterialSideColor[blockid] = new Color(mc::MaterialColor[blockid]);
+  mc::MaterialSideColor[blockid]->darken(0x20);
+}
+
+void do_side_color_set(const char *set_str) {
+  int blockid;
+  Color c;
+  
+  parse_set(set_str, blockid, c);
+
+  delete mc::MaterialSideColor[blockid];
+
+  mc::MaterialSideColor[blockid] = new Color(c);
 }
 
 // Convert a string such as "-30,40,50,30" to the corresponding integer array,
@@ -531,7 +601,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "DNvxcnqyalshM:C:L:w:o:e:t:b:i:m:r:W:P:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnqyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -539,7 +609,6 @@ int main(int argc, char *argv[]){
     {
     case 'e':
       blockid = get_blockid(optarg);
-      assert(blockid >= 0 && blockid < mc::MaterialCount);
       s->excludes[blockid] = true;
       break;
     case 'm':
@@ -564,7 +633,6 @@ int main(int argc, char *argv[]){
       break;
     case 'i':
       blockid = get_blockid(optarg);
-      assert(blockid >= 0 && blockid < mc::MaterialCount);
       s->excludes[blockid] = false;
       break;
     case 'w': world_path = optarg; break;
@@ -614,6 +682,8 @@ int main(int argc, char *argv[]){
       break;
     case 'W': palette_path = optarg; break;
     case 'P': palette_read_path = optarg; break;
+    case 'B': do_base_color_set(optarg); break;
+    case 'S': do_side_color_set(optarg); break;
     case '?':
       if (optopt == 'c')
         fprintf (stderr, "Option -%c requires an argument.\n", optopt);

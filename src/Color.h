@@ -1,9 +1,12 @@
 #ifndef _COLOR_H_
 #define _COLOR_H_
 
+#include <boost/lexical_cast.hpp>
 #include <stdint.h>
+#include <assert.h>
 
 #include <string>
+#include <sstream>
 #include <ostream>
 
 struct Color{
@@ -23,7 +26,7 @@ struct Color{
   Color(uint32_t rgba) :
     r(r >> 24), g((g >> 16) & 0xff), b((b >> 8) & 0xff), a(a & 0xff) {
   }
-
+  
   bool is_opaque() const {
     return a == 0xff;
   }

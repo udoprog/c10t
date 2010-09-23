@@ -1,10 +1,12 @@
-ARCH=x86_64
+ARCH=x86
 OS=linux
 VERSION=SNAPSHOT
 
-LDFLAGS=-static -lz -lpng -lboost_thread-mt -lpthread 
+LDFLAGS=-static -lz -lpng -lboost_thread -lpthread 
 DIST=c10t
 TARGET=c10t
+
+CXX=i686-pc-linux-gnu-g++
 
 include dist/config.mk
 

@@ -1,0 +1,8 @@
+This is what I do for building static binary for windows:
+i686-mingw32-g++ -DBOOST_THREAD_USE_LIB -I./contrib/include \
+   -static-libgcc $(find src -name "*.cpp") \
+  ./contrib/boost_thread/src/win32/thread.cpp \
+  ./contrib/boost_thread/src/win32/tss_pe.cpp \
+  ./contrib/tss_dummy.cpp \
+  -static -lpng14 -lz -lpthreadGC2 \
+  -o c10t.exe

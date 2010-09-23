@@ -33,6 +33,19 @@ const uint8_t ERROR_BYTE = 0x01;
 const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
 const uint8_t IMAGE_BYTE = 0x30;
+const uint8_t PARSE_BYTE = 0x40;
+
+inline void cout_progress(const uint8_t type, int part, int whole) {
+  uint8_t b = ((part * 0xff) / whole);
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type) << " "
+       << hex << std::setw(2) << setfill('0') << static_cast<int>(b)    << " " << flush;
+}
+
+inline void cout_error(const string& message) {
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE) << " "
+       << hex << message << flush;
+}
+
 
 /*
  * Store part of a level rendered as a small image.
@@ -298,8 +311,7 @@ bool do_world(settings_t *s, string world_path, string output) {
     }
     
     if (s->binary) {
-      int8_t p = (i * 0xff) / world_size;
-      cout << RENDER_BYTE << p << flush;
+      cout_progress(RENDER_BYTE, i, world_size);
     }
     
     calc_image_partial(s, *p, all, world, image_width, image_height);
@@ -707,8 +719,7 @@ int main(int argc, char *argv[]){
   if (!palette_path.empty()) {
     if (!do_palette(s, palette_path)) {
       if (s->binary) {
-        cout << ERROR_BYTE << flush;
-        cout << error.str() << flush;
+        cout_error(error.str());
       }
       
       if (!s->silent) cout << error.str() << endl;
@@ -720,8 +731,7 @@ int main(int argc, char *argv[]){
   if (!palette_read_path.empty()) {
     if (!do_read_palette(s, palette_read_path)) {
       if (s->binary) {
-        cout << ERROR_BYTE << flush;
-        cout << error.str() << flush;
+        cout_error(error.str());
       }
       
       if (!s->silent) cout << error.str() << endl;
@@ -733,8 +743,7 @@ int main(int argc, char *argv[]){
   if (!world_path.empty()) {
     if (!do_world(s, world_path, output_path))  {
       if (s->binary) {
-        cout << ERROR_BYTE << flush;
-        cout << error.str() << flush;
+        cout_error(error.str());
       }
       
       if (!s->silent) cout << error.str() << endl;

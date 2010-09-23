@@ -178,37 +178,7 @@ inline void calc_image_partial(settings_t& s, partial &p, Image *all, World &wor
   }
 }
 
-bool do_world(settings_t& s, string world_path, string output) {
-  if (world_path.empty()) {
-    error << "You must specify world using '-w' to generate map";
-    return false;
-  }
-  
-  if (output.empty()) {
-    error << "You must specify output file using '-o' to generate map";
-    return false;
-  }
-  
-  if (!s.nocheck)
-  {
-    string level_dat = path_join(world_path, "level.dat");
-    
-    if (!is_file(level_dat)) {
-      error << "could not stat file: " << level_dat << " - " << strerror(errno);
-      return false;
-    }
-  }
-  
-  if (!s.silent) {
-    cout << "world:  " << world_path << " " << endl;
-    cout << "output: " << output << " " << endl;
-    cout << endl;
-  }
-  
-  if (!s.silent) cout << "Performing broad phase scan of world directory... " << flush;
-  World world(s, world_path);
-  if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
-
+bool do_one_world(settings_t &s, World& world, string& world_path, string& output) {
   if (s.debug) {
     cout << "World" << endl;
     cout << "  min_x: " << world.min_x << endl;
@@ -331,6 +301,53 @@ bool do_world(settings_t& s, string world_path, string output) {
   if (!s.silent) cout << "done!" << endl;
   
   delete all;
+  return true;
+}
+
+bool do_world(settings_t& s, string world_path, string output) {
+  if (world_path.empty()) {
+    error << "You must specify world using '-w' to generate map";
+    return false;
+  }
+  
+  if (output.empty()) {
+    error << "You must specify output file using '-o' to generate map";
+    return false;
+  }
+  
+  if (!s.nocheck)
+  {
+    string level_dat = path_join(world_path, "level.dat");
+    
+    if (!is_file(level_dat)) {
+      error << "could not stat file: " << level_dat << " - " << strerror(errno);
+      return false;
+    }
+  }
+  
+  if (!s.silent) {
+    cout << "world:  " << world_path << " " << endl;
+    cout << "output: " << output << " " << endl;
+    cout << endl;
+  }
+  
+  if (!s.silent) cout << "Performing broad phase scan of world directory... " << flush;
+  World world(s, world_path);
+  if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
+
+  if (!s.use_split) {
+    return do_one_world(s, world, world_path, output);
+  }
+  
+  World** worlds = world.split(s.split);
+
+  int i = 0;
+  
+  while (worlds[i] != NULL) {
+    World* current = worlds[i++];
+    cout << current->min_x << " " << current->min_z << endl;
+  }
+  
   return true;
 }
 

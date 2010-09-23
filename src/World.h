@@ -39,6 +39,9 @@ public:
     
     return first.xPos < second.xPos;;
   }
+
+  World() {
+  }
   
   World(settings_t& s, std::string world_path)
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN)
@@ -147,6 +150,42 @@ public:
     int modz = l.zReal % 64;
     if (modz < 0) modz += 64;
     return path_join(world_path, path_join(path_join(base36(modx), base36(modz)), "c." + base36(l.xReal) + "." + base36(l.zReal) + ".dat"));
+  }
+
+  World** split(int chunk_size) {
+    int neg_x = -min_x / chunk_size + 1;
+    int neg_z = -min_z / chunk_size + 1;
+    int pos_x = max_x / chunk_size + 1;
+    int pos_z = max_z / chunk_size + 1;
+    
+    int wid_z = (neg_z + pos_z);
+    int wid_x = (neg_x + pos_x);
+    
+    int parts = neg_x + neg_z + pos_x + pos_z;
+    
+    World** worlds = new World*[parts + 1];
+    
+    for (int z = 0; z < wid_z; z++) {
+      for (int x = 0; x < wid_x; x++) {
+        int p = z + wid_x * x;
+        worlds[p] = new World();
+        worlds[p]->min_z = (z-neg_z) * chunk_size;
+        worlds[p]->max_z = (z-neg_z + 1) * chunk_size;
+        worlds[p]->min_x = (x-neg_x) * chunk_size;
+        worlds[p]->max_x = (x-pos_x + 1) * chunk_size;
+      }
+    }
+    
+    for (std::list<level>::iterator it = levels.begin(); it != levels.end(); it++) {
+      level l = *it;
+      int xp = (l.xPos - min_x) / chunk_size;
+      int zp = (l.zPos - min_z) / chunk_size;
+      worlds[zp + xp * wid_x]->levels.push_back(l);
+    }
+    
+    worlds[parts] = NULL;
+    
+    return worlds;
   }
 };
 

@@ -19,13 +19,15 @@ struct settings_t {
   bool nocheck;
   bool *excludes;
   bool binary;
+  bool debug;
+  bool use_split;
+  int split;
   // top/bottom used for slicing
   int top;
   int bottom;
   unsigned int threads;
   enum mode mode;
   unsigned int rotation;
-  bool debug;
   bool require_all;
   int* limits; // north-south-west-east. (xmax, xmin, zmax, zmin)
   bool use_limits;
@@ -39,6 +41,8 @@ struct settings_t {
       this->excludes[i] = false;
     }
     
+    this->use_split = true;
+    this->split = 2;
     this->cavemode = false;
     this->excludes[mc::Air] = true;
     this->top = 127;

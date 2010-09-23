@@ -37,12 +37,12 @@ const uint8_t PARSE_BYTE = 0x40;
 
 inline void cout_progress(const uint8_t type, int part, int whole) {
   uint8_t b = ((part * 0xff) / whole);
-  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type) << " "
-       << hex << std::setw(2) << setfill('0') << static_cast<int>(b)    << " " << flush;
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type)
+       << hex << std::setw(2) << setfill('0') << static_cast<int>(b) << flush;
 }
 
 inline void cout_error(const string& message) {
-  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE) << " "
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE)
        << hex << message << flush;
 }
 

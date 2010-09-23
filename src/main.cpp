@@ -335,7 +335,7 @@ bool do_world(settings_t *s, string world_path, string output) {
   return true;
 }
 
-void do_help() {
+int do_help() {
   cout << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
   cout << "Written by Udoprog et al." << endl;
   cout << endl;
@@ -405,6 +405,7 @@ void do_help() {
   cout << "Typical usage:" << endl;
   cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
   cout << endl;
+  return 0;
 }
 
 int do_version() {
@@ -415,7 +416,7 @@ int do_version() {
   return 0;
 }
 
-bool do_palette(settings_t* s, string& path) {
+bool do_write_palette(settings_t* s, string& path) {
   if (!s->silent) cout << "Writing palette to " << path << endl;
   
   MemoryImage palette(16, 32);
@@ -450,7 +451,7 @@ int do_colors() {
   cout << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
-    cout << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i] << endl;
+    cout << i << ": " << mc::MaterialName[i] << " = " << *mc::MaterialColor[i] << endl;
   }
   
   return 0;
@@ -514,57 +515,68 @@ settings_t *init_settings() {
   return s;
 }
 
-int get_blockid(const char *blockid_string) {
+bool get_blockid(const char *blockid_string, int& blockid) {
   for (int i = 0; i < mc::MaterialCount; i++) {
     if (strcmp(mc::MaterialName[i], blockid_string) == 0) {
-      return i;
+      blockid = i;
+      return true;
     }
   }
   
-  int blockid = atoi(blockid_string);
-  assert(blockid >= 0 && blockid < mc::MaterialCount);
-  return blockid;
+  blockid = atoi(blockid_string);
+  
+  if (!(blockid >= 0 && blockid < mc::MaterialCount)) {
+    error << "Not a valid blockid: " << blockid_string;
+    return false;
+  }
+  
+  return true;
 }
 
-void parse_set(const char* set_str, int& blockid, Color& c)
+bool parse_set(const char* set_str, int& blockid, Color& c)
 {
   istringstream iss(set_str);
-  string key, color;
+  string key, value;
   
   assert(getline(iss, key, '='));
+  assert(getline(iss, value));
   
-  int cr,cg,cb,ca;
-  blockid = get_blockid(key.c_str());
-  
-  assert(getline(iss, color, ','));
-  cr = boost::lexical_cast<int>(color.c_str());
-  assert(getline(iss, color, ','));
-  cg = boost::lexical_cast<int>(color.c_str());
-  assert(getline(iss, color, ','));
-  cb = boost::lexical_cast<int>(color.c_str());
-
-  if (getline(iss, color)) {
-    ca = boost::lexical_cast<int>(color.c_str());
-  } else {
-    ca = 0xff;
+  if (!get_blockid(key.c_str(), blockid)) {
+    return false;
   }
 
-  assert(cr >= 0 && cr <= 0xff);
-  assert(cg >= 0 && cg <= 0xff);
-  assert(cb >= 0 && cb <= 0xff);
-  assert(ca >= 0 && ca <= 0xff);
-
+  int cr, cg, cb, ca=0xff;
+  
+  if (!(sscanf(value.c_str(), "%d,%d,%d,%d", &cr, &cg, &cb, &ca) == 4 || 
+        sscanf(value.c_str(), "%d,%d,%d", &cr, &cg, &cb) == 3)) {
+    error << "Color sets must be of the form <red>,<green>,<blue>[,<alpha>] but was: " << value;
+    return false;
+  }
+  
+  if (!(
+      cr >= 0 && cr <= 0xff &&
+      cg >= 0 && cg <= 0xff &&
+      cb >= 0 && cb <= 0xff &&
+      ca >= 0 && ca <= 0xff)) {
+    error << "Color values must be between 0-255";
+    return false;
+  }
+  
   c.r = cr;
   c.g = cg;
   c.b = cb;
   c.a = ca;
+
+  return true;
 }
 
-void do_base_color_set(const char *set_str) {
+bool do_base_color_set(const char *set_str) {
   int blockid;
   Color c;
   
-  parse_set(set_str, blockid, c);
+  if (!parse_set(set_str, blockid, c)) {
+    return false;
+  }
   
   delete mc::MaterialColor[blockid];
   delete mc::MaterialSideColor[blockid];
@@ -572,17 +584,21 @@ void do_base_color_set(const char *set_str) {
   mc::MaterialColor[blockid] = new Color(c);
   mc::MaterialSideColor[blockid] = new Color(mc::MaterialColor[blockid]);
   mc::MaterialSideColor[blockid]->darken(0x20);
+  return true;
 }
 
-void do_side_color_set(const char *set_str) {
+bool do_side_color_set(const char *set_str) {
   int blockid;
   Color c;
   
-  parse_set(set_str, blockid, c);
+  if (!parse_set(set_str, blockid, c)) {
+    return false;
+  }
 
   delete mc::MaterialSideColor[blockid];
 
   mc::MaterialSideColor[blockid] = new Color(c);
+  return true;
 }
 
 // Convert a string such as "-30,40,50,30" to the corresponding integer array,
@@ -607,7 +623,7 @@ int main(int argc, char *argv[]){
   
   string world_path;
   string output_path("out.png");
-  string palette_path, palette_read_path;
+  string palette_write_path, palette_read_path;
   
   int c, blockid;
 
@@ -619,19 +635,26 @@ int main(int argc, char *argv[]){
     
     switch (c)
     {
+    case 'v':
+      return do_version();
+    case 'h':
+      return do_help();
     case 'e':
-      blockid = get_blockid(optarg);
+      if (!get_blockid(optarg, blockid)) goto exit_error;
       s->excludes[blockid] = true;
       break;
     case 'm':
       s->threads = atoi(optarg);
-      assert(s->threads > 0);
+      
+      if (s->threads <= 0) {
+        error << "Number of worker threads must be more than 0";
+        goto exit_error;
+      }
+      
       break;
     case 'q':
       s->mode = Oblique;
       break;
-    case 'v':
-      return do_version();
     case 'D':
       s->debug = true;
       break;
@@ -644,7 +667,7 @@ int main(int argc, char *argv[]){
       }
       break;
     case 'i':
-      blockid = get_blockid(optarg);
+      if (!get_blockid(optarg, blockid)) goto exit_error;
       s->excludes[blockid] = false;
       break;
     case 'w': world_path = optarg; break;
@@ -656,14 +679,24 @@ int main(int argc, char *argv[]){
       break;
     case 'r':
       s->rotation = atoi(optarg);
-      assert(s->rotation == 90 || s->rotation == 180 || s->rotation == 270);
+
+      if (!(s->rotation == 90 || s->rotation == 180 || s->rotation == 270)) {
+        error << "Rotation must be either 90, 180 or 270 degrees";
+        goto exit_error;
+      }
+
       break;
     case 'N': s->nocheck = true; break;
     case 'n': s->night = true; break;
     case 'c': s->cavemode = true; break;
     case 't':
       s->top = atoi(optarg);
-      assert(s->top > s->bottom && s->top < mc::MapY);
+      
+      if (!(s->top > s->bottom && s->top < mc::MapY)) {
+        error << "Top limit must be between `<bottom limit> - " << mc::MapY << "', not " << s->top;
+        goto exit_error;
+      }
+      
       break;
     case 'L':
       parse_limits(optarg, s->limits);
@@ -671,14 +704,15 @@ int main(int argc, char *argv[]){
       break;
     case 'b':
       s->bottom = atoi(optarg);
-      assert(s->bottom < s->top && s->bottom >= 0);
+      
+      if (!(s->bottom < s->top && s->bottom >= 0)) {
+        error << "Bottom limit must be between `0 - <top limit>', not " << s->bottom;
+        goto exit_error;
+      }
+      
       break;
     case 'l':
       return do_colors();
-      break;
-    case 'h':
-      do_help();
-      return 0;
     case 'Q':
       s->require_all = true;
       break;
@@ -692,65 +726,59 @@ int main(int argc, char *argv[]){
     case 'C':
       s->cache_file = optarg;
       break;
-    case 'W': palette_path = optarg; break;
+    case 'W': palette_write_path = optarg; break;
     case 'P': palette_read_path = optarg; break;
-    case 'B': do_base_color_set(optarg); break;
-    case 'S': do_side_color_set(optarg); break;
+    case 'B':
+      if (!do_base_color_set(optarg)) goto exit_error;
+      break;
+    case 'S':
+      if (!do_side_color_set(optarg)) goto exit_error;
+      break;
     case '?':
       if (optopt == 'c')
-        fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        error << "Option -" << optopt << " requires an argument";
       else if (isprint (optopt))
-        fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+        error << "Unknown option `-" << optopt << "'";
       else
-        fprintf (stderr,
-              "Unknown option character `\\x%x'.\n",
-              optopt);
-       return 1;
-     default:
-       abort ();
-     }
+        error << "Unknown option character `\\x" << std::hex << static_cast<int>(optopt) << "'.";
+
+       goto exit_error;
+    default:
+      abort ();
+    }
   }
   
   if (!s->silent) {
-    cout << "type '-h' for help" << endl;
-    cout << endl;
+    cout << "Type `-h' for help" << endl;
   }
   
-  if (!palette_path.empty()) {
-    if (!do_palette(s, palette_path)) {
-      if (s->binary) {
-        cout_error(error.str());
-      }
-      
-      if (!s->silent) cout << error.str() << endl;
-      
-      return 1;
+  if (!palette_write_path.empty()) {
+    if (!do_write_palette(s, palette_write_path)) {
+      goto exit_error;
     }
   }
   
   if (!palette_read_path.empty()) {
     if (!do_read_palette(s, palette_read_path)) {
-      if (s->binary) {
-        cout_error(error.str());
-      }
-      
-      if (!s->silent) cout << error.str() << endl;
-      
-      return 1;
+      goto exit_error;
     }
   }
   
   if (!world_path.empty()) {
     if (!do_world(s, world_path, output_path))  {
-      if (s->binary) {
-        cout_error(error.str());
-      }
-      
-      if (!s->silent) cout << error.str() << endl;
-      
-      return 1;
+      goto exit_error;
     }
   }
   
   return 0;
+
+exit_error:
+  if (s->binary) {
+    cout_error(error.str());
+  }
+  else {
+    if (!s->silent) cout << argv[0] << ": " << error.str() << endl;
+  }
+  
+  return 1;
 }

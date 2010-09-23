@@ -57,6 +57,8 @@ void register_byte_array(void *context, nbt::String name, nbt::ByteArray* byte_a
     level->blocklight = byte_array;
     return;
   }
+  
+  delete byte_array;
 }
 
 void error_handler(void *context, size_t where, const char *why) {

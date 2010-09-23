@@ -153,34 +153,22 @@ public:
   }
 
   World** split(int chunk_size) {
-    int neg_x = -min_x / chunk_size + 1;
-    int neg_z = -min_z / chunk_size + 1;
-    int pos_x = max_x / chunk_size + 1;
-    int pos_z = max_z / chunk_size + 1;
+    int diff_z = (max_z - min_z);
+    int diff_x = (max_x - min_x);
     
-    int wid_z = (neg_z + pos_z);
-    int wid_x = (neg_x + pos_x);
-    
-    int parts = neg_x + neg_z + pos_x + pos_z;
-    
-    World** worlds = new World*[parts + 1];
-    
+    int wid_z = diff_z / chunk_size;
+    int wid_x = diff_x / chunk_size;
+
+    if (diff_z & chunk_size != 0) wid_z += 1;
+    if (diff_x & chunk_size != 0) wid_x += 1;
+
+    World** worlds = new World*[wid_z * wid_x];
+
     for (int z = 0; z < wid_z; z++) {
       for (int x = 0; x < wid_x; x++) {
-        int p = z + wid_x * x;
+        int p = z + (x * wid_z);
         worlds[p] = new World();
-        worlds[p]->min_z = (z-neg_z) * chunk_size;
-        worlds[p]->max_z = (z-neg_z + 1) * chunk_size;
-        worlds[p]->min_x = (x-neg_x) * chunk_size;
-        worlds[p]->max_x = (x-pos_x + 1) * chunk_size;
       }
-    }
-    
-    for (std::list<level>::iterator it = levels.begin(); it != levels.end(); it++) {
-      level l = *it;
-      int xp = (l.xPos - min_x) / chunk_size;
-      int zp = (l.zPos - min_z) / chunk_size;
-      worlds[zp + xp * wid_x]->levels.push_back(l);
     }
     
     worlds[parts] = NULL;

@@ -1,0 +1,21 @@
+ARCH=x86
+OS=windows
+VERSION=SNAPSHOT
+
+SOURCES+=./contrib/boost_thread/src/win32/thread.cpp
+SOURCES+=./contrib/boost_thread/src/win32/tss_pe.cpp
+SOURCES+=./contrib/tss_dummy.cpp
+
+CXX=i686-mingw32-g++
+CXXFLAGS=-DBOOST_THREAD_USE_LIB -I./contrib/include 
+LDFLAGS=-static-libgcc -static -lpng14 -lz -lpthreadGC2
+
+TARGET=c10t.exe
+DIST=c10t
+
+include dist/config.mk
+
+all: ${TARGET}
+
+local-package:
+	zip -r ${PACKAGE}-${VERSION}-${OS}.zip ${PACKAGE}

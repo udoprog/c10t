@@ -375,11 +375,6 @@ void mc::initialize_constants() {
 }
 
 void mc::deinitialize_constants() {
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    delete mc::MaterialColor[i];
-    delete mc::MaterialSideColor[i];
-  }
-
   delete [] mc::MaterialColor;
   delete [] mc::MaterialSideColor;
 }

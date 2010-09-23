@@ -13,52 +13,72 @@ void begin_compound(void *context, nbt::String name) {
 }
 
 void register_int(void *context, nbt::String name, nbt::Int i) {
+  Level *level = ((Level*)context);
+
+  if (!level->islevel) {
+    return;
+  }
+
   if (name.compare("xPos") == 0) {
-    ((Level *)context)->xPos = i;
+    level->xPos = i;
     return;
   }
   
   if (name.compare("zPos") == 0) {
-    ((Level *)context)->zPos = i;
+    level->zPos = i;
     return;
   }
 }
 
-void register_byte_array(void *context, nbt::String name, nbt::ByteArray *byte_array) {
+void register_byte_array(void *context, nbt::String name, nbt::ByteArray* byte_array) {
+  Level *level = ((Level*)context);
+  
+  if (!level->islevel) {
+    delete byte_array;
+    return;
+  }
+  
   if (name.compare("Blocks") == 0) {
-    ((Level *)context)->blocks = byte_array;
+    level->blocks = byte_array;
     return;
   }
 
   if (name.compare("SkyLight") == 0) {
-    ((Level *)context)->skylight = byte_array;
+    level->skylight = byte_array;
     return;
   }
 
   if (name.compare("HeightMap") == 0) {
-    ((Level *)context)->heightmap = byte_array;
+    level->heightmap = byte_array;
     return;
   }
-
+  
   if (name.compare("BlockLight") == 0) {
-    ((Level *)context)->blocklight = byte_array;
+    level->blocklight = byte_array;
     return;
   }
 }
 
 void error_handler(void *context, size_t where, const char *why) {
-  ((Level *)context)->grammar_error = true;
-  ((Level *)context)->grammar_error_where = where;
-  ((Level *)context)->grammar_error_why = why;
+  Level *level = ((Level *)context);
+  level->grammar_error = true;
+  level->grammar_error_where = where;
+  level->grammar_error_why = why;
 }
 
+#include <iostream>
+
 Level::~Level(){
-  if (!ignore_blocks && islevel) {
-    delete blocks;
-    delete skylight;
-    delete heightmap;
-    delete blocklight;
+  if (ignore_blocks) {
+    return;
   }
+
+  std::cout << "Deallocating blocks..." << std::endl;
+  
+  if (blocks != NULL) delete blocks;
+  if (skylight != NULL) delete skylight;
+  if (heightmap != NULL) delete heightmap;
+  if (blocklight != NULL) delete blocklight;
 }
 
 Level::Level(const char *path, bool ignore_blocks)
@@ -118,7 +138,7 @@ nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
   }
 }
 
-void transform_xz(settings_t *s, int &x, int &z) {
+void transform_xz(settings_t& s, int &x, int &z) {
   /*if (s->flip) {
     int t = x;
     x = z; 
@@ -131,9 +151,9 @@ void transform_xz(settings_t *s, int &x, int &z) {
   }*/
 }
 
-inline void apply_shading(settings_t *s, int bl, int sl, int hm, int y, Color &c) {
+inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, Color &c) {
   // if night, darken all colors not emitting light
-  if (s->night) {
+  if (s.night) {
     c.darken((0xd0 * (16 - bl)) / 16);
   }
   
@@ -148,7 +168,7 @@ inline bool cavemode_isopen(int bt) {
   }
 }
 
-inline bool cavemode_ignore_block(settings_t *s, int x, int z, int y, int bt, nbt::ByteArray *blocks, bool &cave_initial) {
+inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, nbt::ByteArray *blocks, bool &cave_initial) {
   if (cave_initial) {
     if (!cavemode_isopen(bt)) {
       cave_initial = false;
@@ -159,7 +179,7 @@ inline bool cavemode_ignore_block(settings_t *s, int x, int z, int y, int bt, nb
   }
   
   if (!cavemode_isopen(bt)) {
-    if (y < s->top && cavemode_isopen(bget(blocks, x, z, y + 1))) {
+    if (y < s.top && cavemode_isopen(bget(blocks, x, z, y + 1))) {
       return false;
     }
   }
@@ -169,11 +189,11 @@ inline bool cavemode_ignore_block(settings_t *s, int x, int z, int y, int bt, nb
 
 class BlockRotation {
 private:
-  settings_t *s;
+  settings_t& s;
   nbt::ByteArray *byte_array;
 
   void transform_xz(int& x, int& z) {
-    switch (s->rotation) {
+    switch (s.rotation) {
       case 270:
         z = mc::MapZ - z - 1;
         x = mc::MapX - x - 1;
@@ -198,7 +218,7 @@ private:
   }
 
 public:
-  BlockRotation(settings_t *s, nbt::ByteArray *byte_array)
+  BlockRotation(settings_t& s, nbt::ByteArray *byte_array)
     : s(s), byte_array(byte_array) {}
   
   uint8_t get8(int x, int z, int y) {
@@ -245,7 +265,7 @@ public:
   }
 };
 
-ImageBuffer *Level::get_image(settings_t *s) {
+ImageBuffer *Level::get_image(settings_t& s) {
   ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ, 1);
   
   if (!islevel) {
@@ -272,14 +292,14 @@ ImageBuffer *Level::get_image(settings_t *s) {
       BlockRotation skylight_r(s, skylight);
       
       // do incremental color fill until color is opaque
-      for (my = s->top; my > s->bottom; my--) {
+      for (my = s.top; my > s.bottom; my--) {
         bt = blocks_r.get8(mx, mz, my);
         
-        if (s->cavemode && cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial)) {
+        if (s.cavemode && cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial)) {
           continue;
         }
         
-        if (s->excludes[bt]) {
+        if (s.excludes[bt]) {
           continue;
         }
         
@@ -308,7 +328,7 @@ ImageBuffer *Level::get_image(settings_t *s) {
   return img;
 }
 
-ImageBuffer *Level::get_oblique_image(settings_t *s)
+ImageBuffer *Level::get_oblique_image(settings_t& s)
 {
   ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ + mc::MapY, mc::MapY + mc::MapZ);
   
@@ -328,10 +348,10 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
   for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
     for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
       bool cave_initial = true;
-      int cavemode_top = s->top;
+      int cavemode_top = s.top;
       
-      if (s->cavemode) {
-        for (int my = s->top; my > 0; my--) {
+      if (s.cavemode) {
+        for (int my = s.top; my > 0; my--) {
           bt = blocks_r.get8(mx, mz, y);
           
           if (!cavemode_isopen(bt)) {
@@ -341,18 +361,18 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
         }
       }
 
-      for (int my = s->bottom; my < s->top; my++) {
+      for (int my = s.bottom; my < s.top; my++) {
         point p(x, my, y);
         
         bt = blocks_r.get8(mx, mz, my);
         
-        if (s->cavemode) {
+        if (s.cavemode) {
           if (cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial) || my >= cavemode_top) {
             continue;
           }
         }
         
-        if (s->excludes[bt]) {
+        if (s.excludes[bt]) {
           continue;
         }
 
@@ -376,7 +396,7 @@ ImageBuffer *Level::get_oblique_image(settings_t *s)
   return img;
 }
 
-ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
+ImageBuffer *Level::get_obliqueangle_image(settings_t& s)
 {
   ImageBuffer *img = new ImageBuffer(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
   
@@ -398,10 +418,10 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
     for (int x = 0; x < c.x; x++) {
       bool cave_initial = true;
 
-      int cavemode_top = s->top;
+      int cavemode_top = s.top;
 
-      if (s->cavemode) {
-        for (int y = s->top; y > 0; y--) {
+      if (s.cavemode) {
+        for (int y = s.top; y > 0; y--) {
           bt = blocks_r.get8(x, z, y);
           
           if (!cavemode_isopen(bt)) {
@@ -413,18 +433,18 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t *s)
 
       int hmval = heightmap_r.get8(x, z);
       
-      for (int y = s->bottom; y < s->top; y++) {
+      for (int y = s.bottom; y < s.top; y++) {
         point p(x, y, z);
         
         bt = blocks_r.get8(x, z, y);
         
-        if (s->cavemode) {
+        if (s.cavemode) {
           if (cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
             continue;
           }
         }
         
-        if (s->excludes[bt]) {
+        if (s.excludes[bt]) {
           continue;
         }
         

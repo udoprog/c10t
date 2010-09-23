@@ -1,6 +1,7 @@
 #ifndef GUARD_H
 #define GUARD_H
 
+#include <boost/thread.hpp>
 #include <string>
 
 #include "blocks.h"
@@ -11,7 +12,7 @@ enum mode {
   ObliqueAngle
 };
 
-typedef struct _settings {
+struct settings_t {
   bool cavemode;
   bool night;
   bool silent;
@@ -30,6 +31,37 @@ typedef struct _settings {
   bool use_limits;
   std::string cache_file;
   size_t memory_limit;
-} settings_t;
+
+  settings_t() {
+    this->excludes = new bool[mc::MaterialCount];
+    
+    for (int i = 0; i < mc::MaterialCount; i++) {
+      this->excludes[i] = false;
+    }
+    
+    this->cavemode = false;
+    this->excludes[mc::Air] = true;
+    this->top = 127;
+    this->bottom = 0;
+    this->mode = Top;
+    this->nocheck = false;
+    this->silent = false;
+    this->rotation = 0;
+    this->threads = boost::thread::hardware_concurrency();
+    this->binary = false;
+    this->night = false;
+    this->debug = false;
+    this->require_all = false;
+    this->use_limits = false;
+    this->cache_file = "cache.dat";
+    this->memory_limit = 1024 * 1024 * 1000;
+    this->limits = new int[4];
+  }
+
+  ~settings_t() {
+    delete [] this->excludes;
+    delete [] this->limits;
+  }
+};
 
 #endif

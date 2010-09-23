@@ -373,3 +373,13 @@ void mc::initialize_constants() {
   mc::MaterialSideColor[mc::Water] = mc::MaterialColor[mc::Water];
   mc::MaterialSideColor[mc::StationaryWater] = mc::MaterialColor[mc::StationaryWater];
 }
+
+void mc::deinitialize_constants() {
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    delete mc::MaterialColor[i];
+    delete mc::MaterialSideColor[i];
+  }
+
+  delete [] mc::MaterialColor;
+  delete [] mc::MaterialSideColor;
+}

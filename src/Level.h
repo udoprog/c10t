@@ -39,9 +39,9 @@ class Level
     Level(const char *path, bool ignore_blocks);
     ~Level();
     
-    ImageBuffer *get_image(settings_t *s);
-    ImageBuffer *get_oblique_image(settings_t *s);
-    ImageBuffer *get_obliqueangle_image(settings_t *s);
+    ImageBuffer *get_image(settings_t& s);
+    ImageBuffer *get_oblique_image(settings_t& s);
+    ImageBuffer *get_obliqueangle_image(settings_t& s);
 };
 
 #endif /* _LEVEL_H_ */

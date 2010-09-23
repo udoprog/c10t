@@ -26,6 +26,8 @@ namespace nbt {
   struct ByteArray {
     Int length;
     Byte *values;
+    ByteArray(Int length, Byte *values) : length(length), values(values) {
+    }
     ~ByteArray() {
       delete [] values;
     }
@@ -82,7 +84,7 @@ namespace nbt {
   typedef void (*register_double_t)(void *context, String name, Double l);
   typedef void (*register_int_t)(void *context, String name, Int l);
   typedef void (*register_byte_t)(void *context, String name, Byte b);
-  typedef void (*register_byte_array_t)(void *context, String name, ByteArray *array);
+  typedef void (*register_byte_array_t)(void *context, String name, ByteArray* array);
   typedef void (*error_handler_t)(void *context, size_t where, const char *why);
   
   void default_begin_compound(void *context, nbt::String name);
@@ -93,10 +95,12 @@ namespace nbt {
   
   bool is_big_endian();
   
+  const nbt::Int BYTE_ARRAY_MAX = 32768;
+  
   class Parser {
     private:
       void *context;
-
+      
       void assert_error(gzFile file, bool a, const char *why) {
         if (!a) {
           size_t where = file == NULL ? 0 : gztell(file);
@@ -284,6 +288,9 @@ namespace nbt {
       {
         this->context = context;
       }
+
+      ~Parser() {
+      }
       
       Byte read_tagType(gzFile file) {
         Byte type = read_byte(file);
@@ -312,14 +319,12 @@ namespace nbt {
       
       void handle_byte_array(String name, gzFile file) {
         Int length = read_int(file);
-        Byte *values = new Byte[length];
+        nbt::Byte* values = new nbt::Byte[length];
         assert_error(file, gzread(file, values, length) == length, "Buffer to short to read ByteArray");
-        ByteArray *array = new ByteArray();
-        array->values = values;
-        array->length = length;
+        ByteArray* array = new ByteArray(length, values);
         register_byte_array(context, name, array);
       }
-
+      
       void handle_compound(String name, gzFile file) {
         begin_compound(context, name);
         

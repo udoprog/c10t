@@ -100,6 +100,7 @@ namespace mc {
   };
 
   void initialize_constants();
+  void deinitialize_constants();
   
   extern int MaterialCount;
   extern int MapY;

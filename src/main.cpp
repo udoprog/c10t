@@ -83,10 +83,9 @@ struct render_job {
 
 class partial_renderer : public threadworker<render_job, partial*> {
 public:
-  settings_t *s;
+  settings_t& s;
   
-  partial_renderer(settings_t *s, int n) : threadworker<render_job, partial*>(n) {
-    this->s = s;
+  partial_renderer(settings_t& s, int n) : threadworker<render_job, partial*>(n), s(s) {
   }
   
   partial *work(render_job job) {
@@ -112,7 +111,7 @@ public:
     p->xPos = job.xPos;
     p->zPos = job.zPos;
     
-    switch (s->mode) {
+    switch (s.mode) {
     case Top:           p->image = level->get_image(s); break;
     case Oblique:       p->image = level->get_oblique_image(s); break;
     case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
@@ -123,10 +122,10 @@ public:
   }
 };
 
-inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &image_width, int &image_height) {
+inline void calc_image_width_height(settings_t& s, int diffx, int diffz, int &image_width, int &image_height) {
   Cube c((diffz + 1) * mc::MapZ, mc::MapY, (diffx + 1) * mc::MapX);
   
-  switch (s->mode) {
+  switch (s.mode) {
   case Top:
     c.get_top_limits(image_width, image_height);
     break;
@@ -141,14 +140,14 @@ inline void calc_image_width_height(settings_t *s, int diffx, int diffz, int &im
   }
 }
 
-inline void calc_image_partial(settings_t *s, partial &p, Image *all, World &world, int image_width, int image_height) {
+inline void calc_image_partial(settings_t& s, partial &p, Image *all, World &world, int image_width, int image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
   
   Cube c(diffx, 16, diffz);
   int xoffset, yoffset;
   
-  switch (s->mode) {
+  switch (s.mode) {
   case Top:
     {
       point topleft(diffz - (p.zPos - world.min_z), 16, (p.xPos - world.min_x));
@@ -179,7 +178,7 @@ inline void calc_image_partial(settings_t *s, partial &p, Image *all, World &wor
   }
 }
 
-bool do_world(settings_t *s, string world_path, string output) {
+bool do_world(settings_t& s, string world_path, string output) {
   if (world_path.empty()) {
     error << "You must specify world using '-w' to generate map";
     return false;
@@ -190,7 +189,7 @@ bool do_world(settings_t *s, string world_path, string output) {
     return false;
   }
   
-  if (!s->nocheck)
+  if (!s.nocheck)
   {
     string level_dat = path_join(world_path, "level.dat");
     
@@ -200,17 +199,17 @@ bool do_world(settings_t *s, string world_path, string output) {
     }
   }
   
-  if (!s->silent) {
+  if (!s.silent) {
     cout << "world:  " << world_path << " " << endl;
     cout << "output: " << output << " " << endl;
     cout << endl;
   }
   
-  if (!s->silent) cout << "Performing broad phase scan of world directory... " << flush;
+  if (!s.silent) cout << "Performing broad phase scan of world directory... " << flush;
   World world(s, world_path);
-  if (!s->silent) cout << "found " << world.levels.size() << " files!" << endl;
+  if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
 
-  if (s->debug) {
+  if (s.debug) {
     cout << "World" << endl;
     cout << "  min_x: " << world.min_x << endl;
     cout << "  max_x: " << world.max_x << endl;
@@ -218,7 +217,7 @@ bool do_world(settings_t *s, string world_path, string output) {
     cout << "  max_z: " << world.max_z << endl;
   }
   
-  if (!s->silent) cout << "Reading and projecting blocks on " << s->threads << " thread(s)... " << endl;
+  if (!s.silent) cout << "Reading and projecting blocks on " << s.threads << " thread(s)... " << endl;
 
   int image_width = 0, image_height = 0;
   
@@ -227,13 +226,13 @@ bool do_world(settings_t *s, string world_path, string output) {
   
   size_t approx_memory = image_width * image_height * 4 * sizeof(uint8_t);
   
-  if (!s->silent) cout << "Image will be " << image_width << "x" << image_height << " and required approx. "
+  if (!s.silent) cout << "Image will be " << image_width << "x" << image_height << " and required approx. "
        << approx_memory << " bytes of memory ... " << endl;
 
   Image *all;
   
-  if (approx_memory > s->memory_limit) {
-    all = new CachedImage(s->cache_file.c_str(), image_width, image_height, s->memory_limit / sizeof(icache));
+  if (approx_memory > s.memory_limit) {
+    all = new CachedImage(s.cache_file.c_str(), image_width, image_height, s.memory_limit / sizeof(icache));
   }
   else {
     all = new MemoryImage(image_width, image_height);
@@ -244,7 +243,7 @@ bool do_world(settings_t *s, string world_path, string output) {
   } else {
   }*/
   
-  partial_renderer renderer(s, s->threads);
+  partial_renderer renderer(s, s.threads);
   renderer.start();
   unsigned int world_size = world.levels.size();
   
@@ -254,12 +253,12 @@ bool do_world(settings_t *s, string world_path, string output) {
   
   for (unsigned int i = 0; i < world_size; i++) {
     if (lvlq == 0) {
-      for (; lvlq < s->threads && lvlit != world.levels.end(); lvlq++) {
+      for (; lvlq < s.threads && lvlit != world.levels.end(); lvlq++) {
         level l = *lvlit;
         
         string path = world.get_level_path(l);
         
-        if (s->debug) {
+        if (s.debug) {
           cout << "using file: " << path << endl;
         }
 
@@ -277,7 +276,7 @@ bool do_world(settings_t *s, string world_path, string output) {
     partial *p = renderer.get();
 
     if (p->grammar_error) {
-      if (s->require_all) {
+      if (s.require_all) {
         error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
           << " - " << p->grammar_error_why;
         
@@ -286,21 +285,24 @@ bool do_world(settings_t *s, string world_path, string output) {
         return false;
       }
 
-      if (!s->silent) {
+      if (!s.silent) {
         cout << "Ignoring unparseable file: " << p->path << " - " << p->grammar_error_why << endl;
         continue;
       }
     }
     
     if (!p->islevel) {
-      if (s->debug) {
+      if (s.debug) {
         cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
       }
 
       continue;
     }
     
-    if (!s->silent) {
+    if (s.binary) {
+      cout_progress(RENDER_BYTE, i, world_size);
+    }
+    else if (!s.silent) {
       if (i % 100 == 0 && i > 0) {
         cout << " " << setw(9) << i << flush;
         
@@ -310,10 +312,6 @@ bool do_world(settings_t *s, string world_path, string output) {
       }
     }
     
-    if (s->binary) {
-      cout_progress(RENDER_BYTE, i, world_size);
-    }
-    
     calc_image_partial(s, *p, all, world, image_width, image_height);
     delete p->image;
     delete p;
@@ -321,17 +319,18 @@ bool do_world(settings_t *s, string world_path, string output) {
   
   renderer.join();
   
-  if (!s->silent) cout << setw(10) << "done!" << endl;
+  if (!s.silent) cout << setw(10) << "done!" << endl;
   
-  if (!s->silent) cout << "Saving image to " << output << "... " << flush;
+  if (!s.silent) cout << "Saving image to " << output << "... " << flush;
   
   if (!all->save_png(output.c_str(), "Map generated by c10t")) {
     error << strerror(errno);
     return false;
   }
   
-  if (!s->silent) cout << "done!" << endl;
+  if (!s.silent) cout << "done!" << endl;
   
+  delete all;
   return true;
 }
 
@@ -416,8 +415,8 @@ int do_version() {
   return 0;
 }
 
-bool do_write_palette(settings_t* s, string& path) {
-  if (!s->silent) cout << "Writing palette to " << path << endl;
+bool do_write_palette(settings_t& s, string& path) {
+  if (!s.silent) cout << "Writing palette to " << path << endl;
   
   MemoryImage palette(16, 32);
   
@@ -441,8 +440,8 @@ bool do_write_palette(settings_t* s, string& path) {
   return true;
 }
 
-bool do_read_palette(settings_t* s, string& path) {
-  if (!s->silent) cout << "Reading palette from " << path << endl;
+bool do_read_palette(settings_t& s, string& path) {
+  if (!s.silent) cout << "Reading palette from " << path << endl;
   
   return true;
 }
@@ -485,35 +484,6 @@ static struct option long_options[] =
    {"binary",           no_argument, 0, 'x'},
    {0, 0, 0, 0}
  };
-
-settings_t *init_settings() {
-  settings_t *s = new settings_t;
-  s->excludes = new bool[mc::MaterialCount];
-  
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    s->excludes[i] = false;
-  }
-  
-  s->cavemode = false;
-  s->excludes[mc::Air] = true;
-  s->top = 127;
-  s->bottom = 0;
-  s->mode = Top;
-  s->nocheck = false;
-  s->silent = false;
-  s->rotation = 0;
-  s->threads = boost::thread::hardware_concurrency();
-  s->binary = false;
-  s->night = false;
-  s->debug = false;
-  s->require_all = false;
-  s->use_limits = false;
-  s->limits = new int[4];
-  s->cache_file = "cache.dat";
-  s->memory_limit = 1024 * 1024 * 1000;
-  
-  return s;
-}
 
 bool get_blockid(const char *blockid_string, int& blockid) {
   for (int i = 0; i < mc::MaterialCount; i++) {
@@ -619,7 +589,7 @@ void parse_limits(const char *limits_str, int*& limits_rect) {
 int main(int argc, char *argv[]){
   mc::initialize_constants();
 
-  settings_t *s = init_settings();
+  settings_t s;
   
   string world_path;
   string output_path("out.png");
@@ -641,72 +611,72 @@ int main(int argc, char *argv[]){
       return do_help();
     case 'e':
       if (!get_blockid(optarg, blockid)) goto exit_error;
-      s->excludes[blockid] = true;
+      s.excludes[blockid] = true;
       break;
     case 'm':
-      s->threads = atoi(optarg);
+      s.threads = atoi(optarg);
       
-      if (s->threads <= 0) {
+      if (s.threads <= 0) {
         error << "Number of worker threads must be more than 0";
         goto exit_error;
       }
       
       break;
     case 'q':
-      s->mode = Oblique;
+      s.mode = Oblique;
       break;
     case 'D':
-      s->debug = true;
+      s.debug = true;
       break;
     case 'y':
-      s->mode = ObliqueAngle;
+      s.mode = ObliqueAngle;
       break;
     case 'a':
       for (int i = 0; i < mc::MaterialCount; i++) {
-        s->excludes[i] = true;
+        s.excludes[i] = true;
       }
       break;
     case 'i':
       if (!get_blockid(optarg, blockid)) goto exit_error;
-      s->excludes[blockid] = false;
+      s.excludes[blockid] = false;
       break;
     case 'w': world_path = optarg; break;
     case 'o': output_path = optarg; break;
-    case 's': s->silent = true; break;
+    case 's': s.silent = true; break;
     case 'x':
-      s->silent = true;
-      s->binary = true;
+      s.silent = true;
+      s.binary = true;
       break;
     case 'r':
-      s->rotation = atoi(optarg);
+      s.rotation = atoi(optarg);
 
-      if (!(s->rotation == 90 || s->rotation == 180 || s->rotation == 270)) {
+      if (!(s.rotation == 90 || s.rotation == 180 || s.rotation == 270)) {
         error << "Rotation must be either 90, 180 or 270 degrees";
         goto exit_error;
       }
 
       break;
-    case 'N': s->nocheck = true; break;
-    case 'n': s->night = true; break;
-    case 'c': s->cavemode = true; break;
+    case 'N': s.nocheck = true; break;
+    case 'n': s.night = true; break;
+    case 'c': s.cavemode = true; break;
     case 't':
-      s->top = atoi(optarg);
+      s.top = atoi(optarg);
       
-      if (!(s->top > s->bottom && s->top < mc::MapY)) {
-        error << "Top limit must be between `<bottom limit> - " << mc::MapY << "', not " << s->top;
+      if (!(s.top > s.bottom && s.top < mc::MapY)) {
+        error << "Top limit must be between `<bottom limit> - " << mc::MapY << "', not " << s.top;
         goto exit_error;
       }
       
       break;
     case 'L':
-      parse_limits(optarg, s->limits);
-      s->use_limits = true;
+      parse_limits(optarg, s.limits);
+      s.use_limits = true;
       break;
     case 'b':
-      s->bottom = atoi(optarg);
+      s.bottom = atoi(optarg);
       
-      if (!(s->bottom < s->top && s->bottom >= 0)) {
-        error << "Bottom limit must be between `0 - <top limit>', not " << s->bottom;
+      if (!(s.bottom < s.top && s.bottom >= 0)) {
+        error << "Bottom limit must be between `0 - <top limit>', not " << s.bottom;
         goto exit_error;
       }
       
@@ -714,17 +684,17 @@ int main(int argc, char *argv[]){
     case 'l':
       return do_colors();
     case 'Q':
-      s->require_all = true;
+      s.require_all = true;
       break;
     case 'M':
       {
         int memory = atoi(optarg);
-        assert(memory > 0);
-        s->memory_limit = memory * 1024 * 1024;
+        assert(memory >= 0);
+        s.memory_limit = memory * 1024 * 1024;
       }
       break;
     case 'C':
-      s->cache_file = optarg;
+      s.cache_file = optarg;
       break;
     case 'W': palette_write_path = optarg; break;
     case 'P': palette_read_path = optarg; break;
@@ -748,7 +718,7 @@ int main(int argc, char *argv[]){
     }
   }
   
-  if (!s->silent) {
+  if (!s.silent) {
     cout << "Type `-h' for help" << endl;
   }
   
@@ -770,15 +740,17 @@ int main(int argc, char *argv[]){
     }
   }
   
+  mc::deinitialize_constants();
   return 0;
 
 exit_error:
-  if (s->binary) {
+  if (s.binary) {
     cout_error(error.str());
   }
   else {
-    if (!s->silent) cout << argv[0] << ": " << error.str() << endl;
+    if (!s.silent) cout << argv[0] << ": " << error.str() << endl;
   }
-  
+
+  mc::deinitialize_constants();
   return 1;
 }

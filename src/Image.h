@@ -162,7 +162,6 @@ public:
         icache ic = buffer[i];
         if (ic.is_set) {
           set_pixel(ic.x, ic.y, ic.c);
-          ic.is_set = false;
         }
       }
       

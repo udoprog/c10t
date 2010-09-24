@@ -178,7 +178,7 @@ inline void calc_image_partial(settings_t& s, partial &p, Image *all, World &wor
   }
 }
 
-bool do_one_world(settings_t &s, World& world, string& world_path, string& output) {
+bool do_one_world(settings_t &s, World& world, string& output) {
   if (s.debug) {
     cout << "World" << endl;
     cout << "  min_x: " << world.min_x << endl;
@@ -336,7 +336,7 @@ bool do_world(settings_t& s, string world_path, string output) {
   if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
 
   if (!s.use_split) {
-    return do_one_world(s, world, world_path, output);
+    return do_one_world(s, world, output);
   }
   
   World** worlds = world.split(s.split);
@@ -345,7 +345,13 @@ bool do_world(settings_t& s, string world_path, string output) {
   
   while (worlds[i] != NULL) {
     World* current = worlds[i++];
-    cout << current->min_x << " " << current->min_z << endl;
+    stringstream ss;
+    ss << output << "." << current->min_x << "." << current->min_z << ".png";
+    string out_part = ss.str();
+    
+    if (!do_one_world(s, *current, out_part)) {
+      return false;
+    }
   }
   
   return true;
@@ -405,6 +411,8 @@ int do_help() {
     << "  -S <set>                  - Specify the side color for a specific block id" << endl
     << "                              this uses the same format as '-s' only the color" << endl
     << "                              is applied to the side of the block" << endl
+    << "  -p, --split <chunks>      - Split the render into chunks, where <output> will" << endl
+    << "                              be used as basename" << endl
     << endl
     << "Other Options:" << endl
     << "  -x, --binary              - Will output progress information in a binary form," << endl
@@ -499,6 +507,7 @@ static struct option long_options[] =
    {"require-all",      no_argument, 0, 'Q'},
    {"night",            no_argument, 0, 'n'},
    {"binary",           no_argument, 0, 'x'},
+   {"split",            required_argument, 0, 'p'},
    {0, 0, 0, 0}
  };
 
@@ -616,7 +625,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "DNvxcnqyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnqyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -638,6 +647,11 @@ int main(int argc, char *argv[]){
         goto exit_error;
       }
       
+      break;
+    case 'p':
+      s.split = atoi(optarg);
+      s.use_split = true;
+      assert(s.split > 1);
       break;
     case 'q':
       s.mode = Oblique;

@@ -41,8 +41,8 @@ struct settings_t {
       this->excludes[i] = false;
     }
     
-    this->use_split = true;
-    this->split = 2;
+    this->use_split = false;
+    this->split = 1;
     this->cavemode = false;
     this->excludes[mc::Air] = true;
     this->top = 127;

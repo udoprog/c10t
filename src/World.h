@@ -153,25 +153,70 @@ public:
   }
 
   World** split(int chunk_size) {
-    int diff_z = (max_z - min_z);
-    int diff_x = (max_x - min_x);
+    int b_min_z = min_z / chunk_size;
+    if (min_z % chunk_size != 0) b_min_z -= 1;
+    int b_min_x = min_x / chunk_size;
+    if (min_x % chunk_size != 0) b_min_x -= 1;
+    int b_max_z = max_z / chunk_size;
+    if (max_z % chunk_size != 0) b_max_z += 1;
+    int b_max_x = max_x / chunk_size;
+    if (max_x % chunk_size != 0) b_max_x += 1;
     
-    int wid_z = diff_z / chunk_size;
-    int wid_x = diff_x / chunk_size;
+    int b_diff_z = b_max_z - b_min_z;
+    int b_diff_x = b_max_x - b_min_x;
+    
+    int world_count = b_diff_z * b_diff_x;
 
-    if (diff_z & chunk_size != 0) wid_z += 1;
-    if (diff_x & chunk_size != 0) wid_x += 1;
-
-    World** worlds = new World*[wid_z * wid_x];
-
-    for (int z = 0; z < wid_z; z++) {
-      for (int x = 0; x < wid_x; x++) {
-        int p = z + (x * wid_z);
-        worlds[p] = new World();
+    World** worlds = new World*[world_count + 1];
+    
+    for (int z = 0; z < b_diff_z; z++) {
+      for (int x = 0; x < b_diff_x; x++) {
+        int p = z + (x * b_diff_z);
+        World *w = worlds[p] = new World();
+        w->min_z = (z + b_min_z) * chunk_size;
+        w->max_z = (z + b_min_z + 1) * chunk_size - 1;
+        w->min_x = (x + b_min_x) * chunk_size;
+        w->max_x = (x + b_min_x + 1) * chunk_size - 1;
+        w->world_path = world_path;
+        //std::cout << w->min_z << " " << w->max_z << " | " << w->min_x << " " << w->max_x << std::endl;
       }
     }
+
+    for (std::list<level>::iterator it = levels.begin(); it != levels.end(); it++) {
+      level l = *it;
+      int l_z, l_x;
+
+      if (l.zPos < 0) {
+        l_z = l.zPos / chunk_size - 1;
+        if (l.zPos % chunk_size == 0) l_z += 1;
+      }
+      else {
+        l_z = l.zPos / chunk_size;
+      }
+      
+      if (l.xPos < 0) {
+        l_x = l.xPos / chunk_size - 1;
+        if (l.xPos % chunk_size == 0) l_x += 1;
+      }
+      else {
+        l_x = l.xPos / chunk_size;
+      }
+
+      int z = l_z - b_min_z;
+      int x = l_x - b_min_x;
+      
+      World* w = worlds[z + (x * b_diff_z)];
+      
+      //std::cout << x << ":" << z << std::endl;
+      //std::cout << l.zPos << ":" << l_z << std::endl;
+      //std::cout << l.xPos << ":" << l_x << std::endl;
+      w->levels.push_back(l);
+      //std::cout << "(" << l_block_z << " " << l_block_x << ")" << std::endl;
+    }
     
-    worlds[parts] = NULL;
+    //std::cout << min_z << " " << max_z << " - " << b_min_z << " " << b_max_z << " (" << b_diff_z << ")" << std::endl;
+    //std::cout << min_x << " " << max_x << " - " << b_min_x << " " << b_max_x << " (" << b_diff_x << ")" << std::endl;
+    worlds[world_count] = NULL;
     
     return worlds;
   }

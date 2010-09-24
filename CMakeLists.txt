@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(c10t)
 
 # attempt to find out which revision we are building from
-set(C10T_VERSION "1.0")
+set(C10T_VERSION "SNAPSHOT")
 set(C10T_SITE "http://github.com/udoprog/c10t")
 set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com> et. al (see README)")
 

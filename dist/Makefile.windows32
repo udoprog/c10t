@@ -18,4 +18,4 @@ include dist/config.mk
 all: ${TARGET}
 
 local-package:
-	zip -r ${PACKAGE}-${VERSION}-${OS}.zip ${PACKAGE}
+	zip -r ${PACKAGE}-${OS}-${ARCH}.zip ${PACKAGE}

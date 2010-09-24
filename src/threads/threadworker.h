@@ -63,7 +63,7 @@ public:
     {
       boost::mutex::scoped_lock lock(start_mutex);
       
-      while (started != 1) {
+      while (!started) {
         start_cond.wait(lock);
       }
     }
@@ -76,12 +76,12 @@ public:
       {
         boost::mutex::scoped_lock lock(in_mutex);
         
-        while (in.empty()) {
+        while (running && in.empty()) {
           in_cond.wait(lock);
-          
-          if (!running) {
-            return;
-          }
+        }
+        
+        if (!running) {
+          return;
         }
         
         i = in.front();

@@ -112,6 +112,7 @@ struct icache {
   Color c;
   int x, y;
   bool is_set;
+  icache() : c(0x00, 0x00, 0x00, 0x00), x(0), y(0), is_set(false) {}
 };
 
 class CachedImage : public Image {
@@ -138,8 +139,6 @@ public:
       total -= r;
     }
     
-    delete nil;
-    
     buffer = new icache[buffer_size];
 
     for (int i = 0; i < buffer_size; i++) {
@@ -152,12 +151,15 @@ public:
       ic.x = 0;
       ic.y = 0;
     }
+    
+    delete [] nil;
   }
   
   ~CachedImage() {
     if (f != NULL) {
       fclose(f);
 
+      // flush the memory cache
       for (int i = 0; i < buffer_size; i++) { 
         icache ic = buffer[i];
         if (ic.is_set) {

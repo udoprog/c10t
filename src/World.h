@@ -26,6 +26,8 @@ public:
   int min_z;
   int max_x;
   int max_z;
+  int chunk_x;
+  int chunk_y;
   
   static bool compare_levels(level first, level second)
   {
@@ -44,7 +46,7 @@ public:
   }
   
   World(settings_t& s, std::string world_path)
-    : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN)
+    : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)
   {
     dirlist broadlisting(world_path);
     
@@ -178,6 +180,8 @@ public:
         w->min_x = (x + b_min_x) * chunk_size;
         w->max_x = (x + b_min_x + 1) * chunk_size - 1;
         w->world_path = world_path;
+        w->chunk_x = b_diff_z - z - 1;
+        w->chunk_y = x;
         //std::cout << w->min_z << " " << w->max_z << " | " << w->min_x << " " << w->max_x << std::endl;
       }
     }

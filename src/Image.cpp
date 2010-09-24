@@ -208,13 +208,15 @@ void CachedImage::blend_pixel(int x, int y, Color &c){
   
   // cache hit
   if (ic.is_set) {
-    // cache hit, but wrong coordinatesflush pizel to file
+    // cache hit, but wrong coordinates - flush pixel to file
     if (ic.x != x || ic.y != y)  {
       set_pixel(ic.x, ic.y, ic.c);
       ic.c = c;
+      ic.is_set = true;
       return;
     }
   }
+  // cache miss
   else {
     ic.c = c;
     ic.is_set = true;

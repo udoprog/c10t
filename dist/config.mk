@@ -10,7 +10,8 @@ EXTRA=README.md
 
 OBJECTS=${SOURCES:.cpp=.o}
 
-PACKAGE=target/${DIST}-${VERSION}
+PACKAGE=${DIST}-${VERSION}
+BUILD=./build/
 
 all: ${TARGET}
 
@@ -28,3 +29,4 @@ ${PACKAGE}:
 	mkdir -p ${PACKAGE}
 	cp ${TARGET} ${PACKAGE}/
 	cp ${EXTRA} ${PACKAGE}/
+	mkdir -p ${BUILD}

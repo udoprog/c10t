@@ -156,6 +156,8 @@ inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, Color &c
   if (s.night) {
     c.darken((0xd0 * (16 - bl)) / 16);
   }
+
+  c.darken(0x02 * sl);
   
   c.darken((mc::MapY - y));
 }
@@ -448,8 +450,8 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t& s)
           continue;
         }
         
-        int bl = skylight_r.get4(x, z, y),
-            sl = blocklight_r.get4(x, z, y);
+        int bl = blocklight_r.get4(x, z, y),
+            sl = skylight_r.get4(x, z, y);
         
         int px, py;
         c.project_obliqueangle(p, px, py);

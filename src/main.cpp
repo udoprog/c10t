@@ -123,7 +123,10 @@ public:
   }
 };
 
-inline void calc_image_width_height(settings_t& s, int diffx, int diffz, int &image_width, int &image_height) {
+inline void calc_image_width_height(settings_t& s, World& world, int &image_width, int &image_height) {
+  int diffx = world.max_x - world.min_x;
+  int diffz = world.max_z - world.min_z;
+  
   Cube c((diffz + 1) * mc::MapZ, mc::MapY, (diffx + 1) * mc::MapX);
   
   switch (s.mode) {
@@ -193,7 +196,7 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
   int i_w = 0, i_h = 0;
   
   // calculate i_w / i_h
-  calc_image_width_height(s, world.max_x - world.min_x, world.max_z - world.min_z, i_w, i_h);
+  calc_image_width_height(s, world, i_w, i_h);
   
   size_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
   float mem;
@@ -366,6 +369,7 @@ bool do_world(settings_t& s, string world_path, string output) {
   World** worlds = world.split(s.split);
 
   int i = 0;
+  int max_x = INT_MIN, max_y = INT_MIN;
   
   while (worlds[i] != NULL) {
     World* current = worlds[i++];
@@ -376,10 +380,14 @@ bool do_world(settings_t& s, string world_path, string output) {
     if (!do_one_world(s, *current, ss.str())) {
       return false;
     }
+
+    if (current->chunk_x > max_x) max_x = current->chunk_x;
+    if (current->chunk_y > max_y) max_y = current->chunk_y;
   }
 
-  delete [] worlds;
+  cout << "World size in chunks is " << s.split * ((max_x + 1) * mc::MapX) << "x" << s.split * (max_y * mc::MapZ) << endl;
   
+  delete [] worlds;
   return true;
 }
 

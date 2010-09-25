@@ -1,9 +1,12 @@
 #include <assert.h>
+#include <stdlib.h>
+#include <boost/algorithm/string.hpp>
 
 #include "global.h"
 
 #include "Level.h"
 #include "blocks.h"
+#include "fileutils.h"
 #include "2d/cube.h"
 
 void begin_compound(void *context, nbt::String name) {
@@ -71,17 +74,11 @@ void error_handler(void *context, size_t where, const char *why) {
 #include <iostream>
 
 Level::~Level(){
-  if (ignore_blocks) {
-    return;
-  }
-
-  if (blocks != NULL) delete blocks;
-  if (skylight != NULL) delete skylight;
-  if (heightmap != NULL) delete heightmap;
-  if (blocklight != NULL) delete blocklight;
+  unload_data();
+  assert(load_count == 0);
 }
 
-Level::Level(const char *path, bool ignore_blocks)
+Level::Level(settings_t& s, const std::string& path)
   : blocks(NULL),
     skylight(NULL),
     heightmap(NULL),
@@ -93,27 +90,12 @@ Level::Level(const char *path, bool ignore_blocks)
     grammar_error_where(0),
     grammar_error_why(""),
     path(path),
-    ignore_blocks(ignore_blocks)
+    load_count(0),
+    load_tried(false)
 {
-  xPos = 0;
-  zPos = 0;
-  islevel = false;
-  grammar_error = false;
-  
-  nbt::Parser parser(this);
-  
-  if (!ignore_blocks) {
-    parser.register_byte_array = register_byte_array;
-  }
-  
-  parser.register_int = register_int;
-  parser.begin_compound = begin_compound;
-  parser.error_handler = error_handler;
-  
-  try {
-    parser.parse_file(path);
-  } catch(nbt::bad_grammar &bg) {
-    grammar_error = true;
+  if (parse_filename_coordinates(path, xPos, zPos)) {
+    transform_world_xz(xPos, zPos, s.rotation);
+    islevel = true;
   }
 }
 
@@ -186,6 +168,42 @@ inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, nb
 
   return true;
 }
+
+
+bool parse_filename_coordinates(const std::string& path, int& x, int& z)
+{
+  // Make sure the path contains X and Z subdirectories and the filename.
+  std::vector<std::string> subpaths = path_split(path);
+  if (subpaths.size() < 3) {
+    return false;
+  }
+
+  // Make sure the filename has the form "c.(X).(Z).dat"
+  std::vector<std::string> parts;
+  boost::split(parts, subpaths.back(), boost::is_any_of("."));
+  if (   parts.size() != 4
+      || !boost::iequals(parts[0], "c")
+      || !boost::iequals(parts[3], "dat")) {
+    return false;
+  }
+
+  // Convert base36 values from the filename and directories.
+  long xFile = strtol(parts[1].c_str(), NULL, 36);
+  long zFile = strtol(parts[2].c_str(), NULL, 36);
+  long xDir = strtol(subpaths[subpaths.size() - 3].c_str(), NULL, 36);
+  long zDir = strtol(subpaths[subpaths.size() - 2].c_str(), NULL, 36);
+
+  // Verify that (directory coordinates) == (file coordinates) mod 64.
+  if (xDir != (xFile & 0x3f) || zDir != (zFile & 0x3f)) {
+    return false;
+  }
+
+  x = xFile;
+  z = zFile;
+
+  return true;
+}
+
 
 void transform_world_xz(int& x, int& z, int rotation)
 {
@@ -281,7 +299,7 @@ public:
 ImageBuffer *Level::get_image(settings_t& s) {
   ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ, 1);
   
-  if (!islevel) {
+  if (!islevel || grammar_error || !load_count) {
     return img;
   }
 
@@ -345,7 +363,7 @@ ImageBuffer *Level::get_oblique_image(settings_t& s)
 {
   ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ + mc::MapY, mc::MapY + mc::MapZ);
   
-  if (!islevel) {
+  if (!islevel || grammar_error || !load_count) {
     return img;
   }
   
@@ -413,7 +431,7 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t& s)
 {
   ImageBuffer *img = new ImageBuffer(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
   
-  if (!islevel) {
+  if (!islevel || grammar_error || !load_count) {
     return img;
   }
   
@@ -495,4 +513,65 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t& s)
   }
   
   return img;
+}
+
+
+void Level::load_data(settings_t& s)
+{
+  boost::mutex::scoped_lock lock(load_mutex);
+
+  if (load_count == 0 && !load_tried) {
+    load_tried = true;
+    islevel = false; // Need to verify that the file is valid, not just filename.
+
+    // Save original values based on filename to verify after loading.
+    int xOld = xPos;
+    int zOld = zPos;
+
+    nbt::Parser parser(this);
+    parser.register_byte_array = register_byte_array;
+    parser.register_int = register_int;
+    parser.begin_compound = begin_compound;
+    parser.error_handler = error_handler;
+
+    try {
+      parser.parse_file(path.c_str());
+    } catch(nbt::bad_grammar &bg) {
+      grammar_error = true;
+    }
+
+    if (islevel && !grammar_error) {
+      transform_world_xz(xPos, zPos, s.rotation);
+      if (xOld != xPos || zOld != zPos) {
+        grammar_error = true;
+        grammar_error_where = 0;
+        grammar_error_why = "level coordinate mismatch";
+      }
+    }
+  }
+
+  ++load_count;
+}
+
+void Level::unload_data()
+{
+  boost::mutex::scoped_lock lock(load_mutex);
+
+  if (load_count == 1) {
+    delete blocks;
+    blocks = NULL;
+
+    delete skylight;
+    skylight = NULL;
+
+    delete heightmap;
+    heightmap = NULL;
+
+    delete blocklight;
+    blocklight = NULL;
+  }
+
+  if (load_count > 0) {
+    --load_count;
+  }
 }

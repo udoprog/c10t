@@ -3,6 +3,7 @@
 
 #include <string>
 #include <queue>
+#include <vector>
 
 #include <dirent.h>
 
@@ -11,6 +12,8 @@ bool is_dir(std::string &path);
 bool is_file(std::string &path);
 
 std::string path_join(std::string a, std::string b);
+
+std::vector<std::string> path_split(std::string path);
 
 class dirlist {
 private:

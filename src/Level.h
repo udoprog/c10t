@@ -13,12 +13,17 @@
 #include <zlib.h>
 #include <time.h>
 
+#include <boost/detail/atomic_count.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
+
 #include "nbt/nbt.h"
 
 #include "Color.h"
 #include "Image.h"
 #include "blocks.h"
 
+bool parse_filename_coordinates(const std::string& path, int& x, int& z);
 void transform_world_xz(int& x, int& z, int rotation);
 
 class Level
@@ -36,14 +41,24 @@ class Level
     size_t grammar_error_where;
     std::string grammar_error_why;
     std::string path;
-    bool ignore_blocks;
 
-    Level(const char *path, bool ignore_blocks);
+    Level(settings_t& s, const std::string& path);
     ~Level();
 
     ImageBuffer *get_image(settings_t& s);
     ImageBuffer *get_oblique_image(settings_t& s);
     ImageBuffer *get_obliqueangle_image(settings_t& s);
+
+    void load_data(settings_t& s);
+    void unload_data();
+
+  private:
+    boost::mutex load_mutex;
+    boost::detail::atomic_count load_count;
+    bool load_tried;
+
+    // Private and not implemented so it can't be used (avoids copies).
+    Level(const Level& other);
 };
 
 #endif /* _LEVEL_H_ */

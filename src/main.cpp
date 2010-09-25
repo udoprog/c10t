@@ -55,59 +55,42 @@ inline void cout_error(const string& message) {
  * This will allow us to composite the entire image later and calculate sizes then.
  */
 struct Partial {
-  int xPos;
-  int zPos;
+  LevelPtr level;
   ImageBuffer *image;
-  bool islevel;
-  bool grammar_error;
-  size_t grammar_error_where;
-  string grammar_error_why;
-  string path;
+
+  Partial(LevelPtr& l)
+  : level(l),
+    image(NULL)
+  {
+  }
+
+  ~Partial() {
+    delete image;
+  }
 };
 
-struct render_job {
-  string path;
-  int xPos, zPos;
-};
-
-
-class PartialRenderer : public threadworker<render_job, Partial*> {
+class PartialRenderer : public threadworker<LevelPtr, Partial*> {
 public:
   settings_t& s;
   
-  PartialRenderer(settings_t& s, int n) : threadworker<render_job, Partial*>(n), s(s) {
+  PartialRenderer(settings_t& s, int n) : threadworker<LevelPtr, Partial*>(n), s(s) {
   }
   
-  Partial *work(render_job job) {
-    Level *level = new Level(job.path.c_str(), false);
-    
-    Partial *p = new Partial;
-    p->islevel = false;
-    p->grammar_error = false;
-    p->path = job.path;
-    
-    if (level->grammar_error) {
-      p->grammar_error = true;
-      p->grammar_error_where = level->grammar_error_where;
-      p->grammar_error_why = level->grammar_error_why;
-      return p;
-    }
-    
-    if (!level->islevel) {
-      return p;
-    }
-    
-    p->islevel = true;
-    p->xPos = job.xPos;
-    p->zPos = job.zPos;
-    
-    switch (s.mode) {
-    case Top:           p->image = level->get_image(s); break;
-    case Oblique:       p->image = level->get_oblique_image(s); break;
-    case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
+  Partial *work(LevelPtr level) {
+    Partial *p = new Partial(level);
+
+    p->level->load_data(s);
+
+    if (p->level->islevel && !p->level->grammar_error) {
+      switch (s.mode) {
+        case Top:           p->image = level->get_image(s); break;
+        case Oblique:       p->image = level->get_oblique_image(s); break;
+        case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
+      }
     }
 
-    delete level;
+    p->level->unload_data();
+
     return p;
   }
 };
@@ -143,7 +126,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, Image *all, World &wor
   switch (s.mode) {
   case Top:
     {
-      point topleft(diffz - (p.zPos - world.min_z), 16, (p.xPos - world.min_x));
+      point topleft(diffz - (p.level->zPos - world.min_z), 16, (p.level->xPos - world.min_x));
       c.project_top(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -152,7 +135,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, Image *all, World &wor
     break;
   case Oblique:
     {
-      point topleft(diffz - (p.zPos - world.min_z), 16, (p.xPos - world.min_x));
+      point topleft(diffz - (p.level->zPos - world.min_z), 16, (p.level->xPos - world.min_x));
       c.project_oblique(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -161,7 +144,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, Image *all, World &wor
     break;
   case ObliqueAngle:
     {
-      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
+      point topleft(p.level->xPos - world.min_x, 16, p.level->zPos - world.min_z);
       c.project_obliqueangle(topleft, xoffset, yoffset);
       xoffset = xoffset * mc::MapX;
       yoffset = yoffset * mc::MapZ;
@@ -222,27 +205,20 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
   renderer.start();
   unsigned int world_size = world.levels.size();
   
-  std::list<level>::iterator lvlit = world.levels.begin();
+  std::list<LevelPtr>::iterator lvlit = world.levels.begin();
   
   unsigned int lvlq = 0;
   
   for (unsigned int i = 0; i < world_size; i++) {
     if (lvlq == 0) {
       for (; lvlq < s.threads && lvlit != world.levels.end(); lvlq++) {
-        level l = *lvlit;
-        
-        string path = world.get_level_path(l);
+        LevelPtr& l = *lvlit;
         
         if (s.debug) {
-          cout << "using file: " << path << endl;
+          cout << "using file: " << l->path << endl;
         }
 
-        render_job job;
-        job.path = path;
-        job.xPos = l.xPos;
-        job.zPos = l.zPos;
-        
-        renderer.give(job);
+        renderer.give(l);
         lvlit++;
       }
     }
@@ -250,10 +226,10 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
     --lvlq;
     Partial *p = renderer.get();
 
-    if (p->grammar_error) {
+    if (p->level->grammar_error) {
       if (s.require_all) {
-        error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
-          << " - " << p->grammar_error_why;
+        error << "Parser Error: " << p->level->path << " at (uncompressed) byte " << p->level->grammar_error_where
+          << " - " << p->level->grammar_error_why;
         
         // effectively join all worker threads and prepare for exit
         renderer.join();
@@ -262,15 +238,15 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
       }
 
       if (!s.silent) {
-        cout << "Ignoring unparseable file: " << p->path << " - " << p->grammar_error_why << endl;
+        cout << "Ignoring unparseable file: " << p->level->path << " - " << p->level->grammar_error_why << endl;
         delete p;
         continue;
       }
     }
     
-    if (!p->islevel) {
+    if (!p->level->islevel) {
       if (s.debug) {
-        cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
+        cout << "Rejecting file since it is not a level chunk: " << p->level->path << endl;
       }
       delete p;
       continue;
@@ -290,7 +266,6 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
     }
     
     calc_image_partial(s, *p, all, world, i_w, i_h);
-    delete p->image;
     delete p;
   }
   

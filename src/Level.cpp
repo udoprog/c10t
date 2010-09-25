@@ -82,7 +82,18 @@ Level::~Level(){
 }
 
 Level::Level(const char *path, bool ignore_blocks)
-  : path(path), ignore_blocks(ignore_blocks)
+  : blocks(NULL),
+    skylight(NULL),
+    heightmap(NULL),
+    blocklight(NULL),
+    xPos(0),
+    zPos(0),
+    islevel(false),
+    grammar_error(false),
+    grammar_error_where(0),
+    grammar_error_why(""),
+    path(path),
+    ignore_blocks(ignore_blocks)
 {
   xPos = 0;
   zPos = 0;
@@ -138,19 +149,6 @@ nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
   }
 }
 
-void transform_xz(settings_t& s, int &x, int &z) {
-  /*if (s->flip) {
-    int t = x;
-    x = z; 
-    z = mc::MapZ - t - 1;
-  }
-  
-  if (s->invert) {
-    z = mc::MapZ - z - 1;
-    x = mc::MapX - x - 1;
-  }*/
-}
-
 inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, Color &c) {
   // if night, darken all colors not emitting light
   if (s.night) {
@@ -189,32 +187,45 @@ inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, nb
   return true;
 }
 
+void transform_world_xz(int& x, int& z, int rotation)
+{
+  int t = x;
+  switch (rotation) {
+    case 270:
+      x = z;
+      z = -t;
+      break;
+    case 180:
+      x = -x;
+      z = -z;
+      break;
+    case 90:
+      x = -z;
+      z = t;
+      break;
+  }
+}
+
+
 class BlockRotation {
 private:
   settings_t& s;
   nbt::ByteArray *byte_array;
 
   void transform_xz(int& x, int& z) {
+    int t = x;
     switch (s.rotation) {
       case 270:
-        z = mc::MapZ - z - 1;
-        x = mc::MapX - x - 1;
-        {
-          int t = x;
-          x = z; 
-          z = mc::MapZ - t - 1;
-        }
+        x = mc::MapX - z - 1;
+        z = t;
         break;
       case 180:
         z = mc::MapZ - z - 1;
         x = mc::MapX - x - 1;
         break;
       case 90:
-        {
-          int t = x;
-          x = z; 
-          z = mc::MapZ - t - 1;
-        }
+        x = z;
+        z = mc::MapZ - t - 1;
         break;
     };
   }

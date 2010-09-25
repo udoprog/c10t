@@ -1,9 +1,8 @@
 #include "blocks.h"
 
-int mc::MaterialCount = 0x56;
-int mc::MapX = 0x10;
-int mc::MapZ = 0x10;
-int mc::MapY = 0x80;
+const int mc::MapX = 0x10;
+const int mc::MapZ = 0x10;
+const int mc::MapY = 0x80;
 
 const char **mc::MaterialName;
 Color **mc::MaterialColor;

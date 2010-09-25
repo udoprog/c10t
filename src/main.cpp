@@ -54,14 +54,14 @@ inline void cout_error(const string& message) {
  *
  * This will allow us to composite the entire image later and calculate sizes then.
  */
-struct partial {
+struct Partial {
   int xPos;
   int zPos;
   ImageBuffer *image;
   bool islevel;
   bool grammar_error;
   size_t grammar_error_where;
-  const char* grammar_error_why;
+  string grammar_error_why;
   string path;
 };
 
@@ -70,30 +70,18 @@ struct render_job {
   int xPos, zPos;
 };
 
-/*static bool compare_partials(partial first, partial second)
-{
-  if (first.zPos < second.zPos) {
-    return true;
-  }
-  
-  if (first.zPos > second.zPos) {
-    return false;
-  }
-  
-  return first.xPos < second.xPos;;
-}*/
 
-class partial_renderer : public threadworker<render_job, partial*> {
+class PartialRenderer : public threadworker<render_job, Partial*> {
 public:
   settings_t& s;
   
-  partial_renderer(settings_t& s, int n) : threadworker<render_job, partial*>(n), s(s) {
+  PartialRenderer(settings_t& s, int n) : threadworker<render_job, Partial*>(n), s(s) {
   }
   
-  partial *work(render_job job) {
+  Partial *work(render_job job) {
     Level *level = new Level(job.path.c_str(), false);
     
-    partial *p = new partial;
+    Partial *p = new Partial;
     p->islevel = false;
     p->grammar_error = false;
     p->path = job.path;
@@ -145,7 +133,7 @@ inline void calc_image_width_height(settings_t& s, World& world, int &image_widt
   }
 }
 
-inline void calc_image_partial(settings_t& s, partial &p, Image *all, World &world, int image_width, int image_height) {
+inline void calc_image_partial(settings_t& s, Partial &p, Image *all, World &world, int image_width, int image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
   
@@ -230,7 +218,7 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
   } else {
   }*/
   
-  partial_renderer renderer(s, s.threads);
+  PartialRenderer renderer(s, s.threads);
   renderer.start();
   unsigned int world_size = world.levels.size();
   
@@ -260,7 +248,7 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
     }
     
     --lvlq;
-    partial *p = renderer.get();
+    Partial *p = renderer.get();
 
     if (p->grammar_error) {
       if (s.require_all) {
@@ -269,11 +257,13 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
         
         // effectively join all worker threads and prepare for exit
         renderer.join();
+        delete p;
         return false;
       }
 
       if (!s.silent) {
         cout << "Ignoring unparseable file: " << p->path << " - " << p->grammar_error_why << endl;
+        delete p;
         continue;
       }
     }
@@ -282,7 +272,7 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
       if (s.debug) {
         cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
       }
-
+      delete p;
       continue;
     }
     
@@ -431,7 +421,7 @@ int do_help() {
     << "Rendering options:" << endl
     << "  -q, --oblique             - oblique rendering" << endl
     << "  -y, --oblique-angle       - oblique angle rendering" << endl
-    << "  -f <degrees>              - flip the rendering 90, 180 or 270 degrees CCW" << endl
+    << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW" << endl
     << endl
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores" << endl
@@ -536,8 +526,8 @@ static struct option long_options[] =
    {"no-check",         no_argument, 0, 'N'},
    {"oblique",          no_argument, 0, 'q'},
    {"oblique-angle",    no_argument, 0, 'y'},
-   {"rotate",           no_argument, 0, 'r'},
-   {"threads",          no_argument, 0, 'm'},
+   {"rotate",           required_argument, 0, 'r'},
+   {"threads",          required_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
    {"require-all",      no_argument, 0, 'Q'},
    {"night",            no_argument, 0, 'n'},
@@ -715,10 +705,12 @@ int main(int argc, char *argv[]){
       s.binary = true;
       break;
     case 'r':
-      s.rotation = atoi(optarg);
-
-      if (!(s.rotation == 90 || s.rotation == 180 || s.rotation == 270)) {
-        error << "Rotation must be either 90, 180 or 270 degrees";
+      s.rotation = atoi(optarg) % 360;
+      if (s.rotation < 0) {
+        s.rotation += 360;
+      }
+      if (s.rotation % 90 != 0) {
+        error << "Rotation must be a multiple of 90 degrees";
         goto exit_error;
       }
 

@@ -19,6 +19,8 @@
 #include "Image.h"
 #include "blocks.h"
 
+void transform_world_xz(int& x, int& z, int rotation);
+
 class Level
 {
   public:
@@ -27,13 +29,13 @@ class Level
     nbt::ByteArray *skylight;
     nbt::ByteArray *heightmap;
     nbt::ByteArray *blocklight;
-    nbt::Int xPos;
-    nbt::Int zPos;
+    int xPos;
+    int zPos;
     bool islevel;
     bool grammar_error;
     size_t grammar_error_where;
-    const char *grammar_error_why;
-    const char *path;
+    std::string grammar_error_why;
+    std::string path;
     bool ignore_blocks;
 
     Level(const char *path, bool ignore_blocks);

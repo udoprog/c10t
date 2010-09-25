@@ -3,6 +3,7 @@
 
 #include <limits.h>
 
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -51,66 +52,38 @@ public:
     dirlist broadlisting(world_path);
     
     // broad phase listing of all the levels to figure out how they are ordered.
-    {
-      while (broadlisting.hasnext()) {
-        Level leveldata(broadlisting.next().c_str(), true);
-        
-        if (!leveldata.islevel || leveldata.grammar_error) {
-          continue;
-        }
+    while (broadlisting.hasnext()) {
+      Level leveldata(broadlisting.next().c_str(), true);
 
-        if (leveldata.xPos < s.min_x ||
-            leveldata.xPos > s.max_z ||
-            leveldata.zPos < s.min_z ||
-            leveldata.zPos > s.max_z) {
-         continue;
-        }
-        
-        level l;
-
-        l.xReal = leveldata.xPos;
-        l.zReal = leveldata.zPos;
-        
-        switch (s.rotation) {
-        case 270:
-          l.xPos = leveldata.zPos;
-          l.zPos = -leveldata.xPos;
-          break;
-        case 180:
-          l.xPos = -leveldata.xPos;
-          l.zPos = -leveldata.zPos;
-          break;
-        case 90:
-          l.xPos = -leveldata.zPos;
-          l.zPos = leveldata.xPos;
-          break;
-        default:
-          l.xPos = leveldata.xPos;
-          l.zPos = leveldata.zPos;
-          break;
-        }
-        
-        if (l.xPos < min_x) {
-          min_x = l.xPos;
-        }
-        
-        if (l.xPos > max_x) {
-          max_x = l.xPos;
-        }
-
-        if (l.zPos < min_z) {
-          min_z = l.zPos;
-        }
-        
-        if (l.zPos > max_z) {
-          max_z = l.zPos;
-        }
-        
-        levels.push_back(l);
+      if (!leveldata.islevel || leveldata.grammar_error) {
+        continue;
       }
-      
-      levels.sort(compare_levels);
+
+      if (leveldata.xPos < s.min_x ||
+          leveldata.xPos > s.max_z ||
+          leveldata.zPos < s.min_z ||
+          leveldata.zPos > s.max_z) {
+       continue;
+      }
+
+      level l;
+
+      l.xReal = leveldata.xPos;
+      l.zReal = leveldata.zPos;
+
+      l.xPos = leveldata.xPos;
+      l.zPos = leveldata.zPos;
+      transform_world_xz(l.xPos, l.zPos, s.rotation);
+
+      min_x = std::min(min_x, l.xPos);
+      max_x = std::max(max_x, l.xPos);
+      min_z = std::min(min_z, l.zPos);
+      max_z = std::max(max_z, l.zPos);
+
+      levels.push_back(l);
     }
+
+    levels.sort(compare_levels);
   }
   
   static std::string base36(int number) {

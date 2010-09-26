@@ -6,15 +6,13 @@
 #include "blocks.h"
 #include "2d/cube.h"
 
-void begin_compound(void *context, nbt::String name) {
+void begin_compound(Level* level, nbt::String name) {
   if (name.compare("Level") == 0) {
-    ((Level*)context)->islevel = true;
+    level->islevel = true;
   }
 }
 
-void register_int(void *context, nbt::String name, nbt::Int i) {
-  Level *level = ((Level*)context);
-
+void register_int(Level* level, nbt::String name, nbt::Int i) {
   if (!level->islevel) {
     return;
   }
@@ -30,9 +28,7 @@ void register_int(void *context, nbt::String name, nbt::Int i) {
   }
 }
 
-void register_byte_array(void *context, nbt::String name, nbt::ByteArray* byte_array) {
-  Level *level = ((Level*)context);
-  
+void register_byte_array(Level* level, nbt::String name, nbt::ByteArray* byte_array) {
   if (!level->islevel) {
     delete byte_array;
     return;
@@ -61,8 +57,7 @@ void register_byte_array(void *context, nbt::String name, nbt::ByteArray* byte_a
   delete byte_array;
 }
 
-void error_handler(void *context, size_t where, const char *why) {
-  Level *level = ((Level *)context);
+void error_handler(Level* level, size_t where, const char *why) {
   level->grammar_error = true;
   level->grammar_error_where = where;
   level->grammar_error_why = why;
@@ -100,7 +95,7 @@ Level::Level(const char *path, bool ignore_blocks)
   islevel = false;
   grammar_error = false;
   
-  nbt::Parser parser(this);
+  nbt::Parser<Level> parser(this);
   
   if (!ignore_blocks) {
     parser.register_byte_array = register_byte_array;

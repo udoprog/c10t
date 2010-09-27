@@ -23,7 +23,7 @@ void end_compound(inspect_context* inspect, nbt::String name) {
 
 void begin_list(inspect_context* inspect, nbt::String name, nbt::Byte type, nbt::Int length) {
   cout << setw(inspect->width) << ""
-       << "BEGIN List(" << name << ", 0x" << hex << (int)type << ", " << length << ")" << endl;
+       << "BEGIN List(" << name << ", " << nbt::tag_string_map[type] << ", " << length << ")" << endl;
   inspect->width += 2;
 }
 
@@ -71,6 +71,7 @@ void register_byte(inspect_context* inspect, nbt::String name, nbt::Byte value) 
 void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteArray* value) {
   cout << setw(inspect->width) << ""
        << "ByteArray(" << name << "): " << "(binary blob)" << endl;
+  delete value;
 }
 
 int main(int argc, char* argv[]) {

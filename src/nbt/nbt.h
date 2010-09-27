@@ -118,7 +118,6 @@ namespace nbt {
         if (!a) {
           size_t where = file == NULL ? 0 : gztell(file);
           error_handler(context, where, why);
-          gzclose(file);
           stop();
         }
       }

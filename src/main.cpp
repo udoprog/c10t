@@ -27,6 +27,7 @@
 #include "blocks.h"
 #include "fileutils.h"
 #include "world.h"
+#include "players.h"
 
 using namespace std;
 
@@ -194,7 +195,62 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
   }
 }
 
-bool do_one_world(settings_t &s, world_info& world, const string& output) {
+inline void overlay_player(settings_t& s, image_base *all, world_info &world, player& p) {
+  int diffx = (world.max_x - world.min_x) * mc::MapX;
+  int diffz = (world.max_z - world.min_z) * mc::MapZ;
+  int min_z = world.min_z * mc::MapZ;
+  int min_x = world.min_x * mc::MapX;
+  
+  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
+  int xoffset, yoffset;
+
+  transform_world_xz(p.xPos, p.zPos, s.rotation);
+  
+  color red(255, 0, 0, 255);
+
+  image_buffer marker(16, 16, 1);
+  
+  for (int x = 0; x < 16; x++) {
+    for (int y = 0; y < 16; y++) {
+      marker.set_pixel(x, y, 0, red);
+      marker.set_pixel_depth(x, y, 1);
+    }
+  }
+  
+  switch (s.mode) {
+  case Top:
+    {
+      point playerpos(diffz - (p.zPos - min_z), p.yPos, (p.xPos - min_x));
+      c.project_top(playerpos, xoffset, yoffset);
+      all->composite(xoffset, yoffset, marker);
+    }
+    break;
+  case Oblique:
+    {
+      point playerpos(diffz - (p.zPos - min_z), p.yPos, (p.xPos - min_x));
+      c.project_oblique(playerpos, xoffset, yoffset);
+      all->composite(xoffset, yoffset, marker);
+    }
+    break;
+  case ObliqueAngle:
+    {
+      point playerpos(p.xPos - min_x, p.yPos, p.zPos - min_z);
+      c.project_obliqueangle(playerpos, xoffset, yoffset);
+      cout << xoffset << " " << yoffset << endl;
+      all->composite(xoffset, yoffset, marker);
+    }
+    break;
+  case Isometric:
+    {
+      point playerpos(p.xPos - min_x, p.yPos, p.zPos - min_z);
+      c.project_isometric(playerpos, xoffset, yoffset);
+      all->composite(xoffset, yoffset, marker);
+    }
+    break;
+  }
+}
+
+bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const string& output) {
   if (s.debug) {
     cout << "world_info" << endl;
     cout << "  min_x: " << world.min_x << endl;
@@ -315,6 +371,12 @@ bool do_one_world(settings_t &s, world_info& world, const string& output) {
   renderer.join();
   
   if (!s.silent) cout << setw(8) << "done!" << endl;
+
+  std::vector<player>::iterator plit = pdb.players.begin();
+  
+  /*for (; plit != pdb.players.end(); plit++) { 
+    overlay_player(s, all, world, *plit);
+  }*/
   
   if (!s.silent) cout << "Saving image..." << endl;
   
@@ -359,6 +421,8 @@ bool do_world(settings_t& s, string world_path, string output) {
     }
   }
   
+  players_db pdb(path_join(world_path, "players"));
+  
   if (!s.silent) cout << "Working on " << s.threads << " thread(s)... " << endl;
   
   if (!s.silent) {
@@ -372,7 +436,7 @@ bool do_world(settings_t& s, string world_path, string output) {
   if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
 
   if (!s.use_split) {
-    return do_one_world(s, world, output);
+    return do_one_world(s, world, pdb, output);
   }
   
   world_info** worlds = world.split(s.split);
@@ -386,7 +450,7 @@ bool do_world(settings_t& s, string world_path, string output) {
     stringstream ss;
     ss << boost::format(output) % current->chunk_x % current->chunk_y;
     
-    if (!do_one_world(s, *current, ss.str())) {
+    if (!do_one_world(s, *current, pdb, ss.str())) {
       return false;
     }
 

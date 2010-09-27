@@ -92,11 +92,7 @@ level_file::level_file(const char *path)
   parser.begin_compound = begin_compound;
   parser.error_handler = error_handler;
   
-  try {
-    parser.parse_file(path);
-  } catch(nbt::bad_grammar &bg) {
-    grammar_error = true;
-  }
+  parser.parse_file(path);
 }
 
 /**
@@ -505,9 +501,5 @@ fast_level_file::fast_level_file(const char *path)
   parser.begin_compound = fast_begin_compound;
   parser.error_handler = fast_error_handler;
   
-  try {
-    parser.parse_file(path);
-  } catch(nbt::bad_grammar &bg) {
-    grammar_error = true;
-  }
+  parser.parse_file(path);
 }

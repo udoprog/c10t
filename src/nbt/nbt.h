@@ -17,8 +17,7 @@
 
 namespace nbt {
   class bad_grammar : std::exception {};
-  #define BUFFER_SIZE 1024
-  #define STACK_SIZE 100
+  #define NBT_STACK_SIZE 100
   
   typedef int8_t Byte;
   typedef int16_t Short;
@@ -120,7 +119,7 @@ namespace nbt {
           size_t where = file == NULL ? 0 : gztell(file);
           error_handler(context, where, why);
           gzclose(file);
-          throw bad_grammar();
+          stop();
         }
       }
 
@@ -353,7 +352,7 @@ namespace nbt {
 
         running = true;
         
-        stack_entry *stack = new stack_entry[STACK_SIZE];
+        stack_entry *stack = new stack_entry[NBT_STACK_SIZE];
         int stack_p = 0;
         
         stack_entry *root = stack + 0;
@@ -365,6 +364,8 @@ namespace nbt {
         begin_compound(context, root->name);
         
         while(running && stack_p >= 0) {
+          assert_error(file, stack_p < NBT_STACK_SIZE, "Stack cannot be larger than NBT_STACK_SIZE");
+          
           stack_entry* top = stack + stack_p;
           
           Byte type;
@@ -396,7 +397,7 @@ namespace nbt {
           
           else {
             assert_error(file, 1, "Unknown stack type");
-            return;
+            continue;
           }
           
           switch(type) {

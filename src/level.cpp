@@ -130,7 +130,7 @@ nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
 inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
   // if night, darken all colors not emitting light
   if (s.night) {
-    c.darken((0xd0 * (16 - bl)) / 16);
+    c.darken((0xb0 * (16 - bl)) / 16);
   }
 
   c.darken(0x02 * sl);

@@ -55,9 +55,9 @@ Building from Source (using cmake)
 
 There are a couple of available targets
 
- * '''c10t-debug''' - debug build with symbols, nice for debugging
- * '''c10t-lib''' - library that contains all c10t functions not in main or nbt_inspect
- * '''nbt-inspect''' - dumps the content of an nbt data file (basically anything in the world directory). Useful for writing tools.
+ * ___c10t-debug___ - debug build with symbols, nice for debugging
+ * ___c10t-lib___ - library that contains all c10t functions not in main or nbt_inspect
+ * ___nbt-inspect___ - dumps the content of an nbt data file (basically anything in the world directory). Useful for writing tools.
 
 Issues
 ------

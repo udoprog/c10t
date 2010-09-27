@@ -455,6 +455,96 @@ image_buffer *level_file::get_obliqueangle_image(settings_t& s)
   return img;
 }
 
+image_buffer *level_file::get_isometric_image(settings_t& s)
+{
+  image_buffer *img = new image_buffer(mc::MapX * 4, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
+  
+  if (!islevel) {
+    return img;
+  }
+  
+  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  
+  // block type
+  int bt;
+      
+  BlockRotation blocks_r(s, blocks);
+  BlockRotation blocklight_r(s, blocklight);
+  BlockRotation skylight_r(s, skylight);
+  BlockRotation heightmap_r(s, heightmap);
+  
+  for (int z = 0; z < c.z; z++) {
+    for (int x = 0; x < c.x; x++) {
+      bool cave_initial = true;
+
+      int cavemode_top = s.top;
+
+      if (s.cavemode) {
+        for (int y = s.top; y > 0; y--) {
+          bt = blocks_r.get8(x, z, y);
+          
+          if (!cavemode_isopen(bt)) {
+            cavemode_top = y;
+            break;
+          }
+        }
+      }
+
+      int hmval = heightmap_r.get8(x, z);
+      
+      for (int y = s.bottom; y < s.top; y++) {
+        point p(x, y, z);
+        
+        bt = blocks_r.get8(x, z, y);
+        
+        if (s.cavemode) {
+          if (cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
+            continue;
+          }
+        }
+        
+        if (s.excludes[bt]) {
+          continue;
+        }
+        
+        int bl = blocklight_r.get4(x, z, y),
+            sl = skylight_r.get4(x, z, y);
+        
+        int px, py;
+        c.project_isometric(p, px, py);
+        
+        color top(mc::MaterialColor[bt]);
+        color side(mc::MaterialSideColor[bt]);
+        
+        apply_shading(s, bl, sl, hmval, y, top);
+        apply_shading(s, bl, sl, hmval, y, side);
+        
+        switch(mc::MaterialModes[bt]) {
+        case mc::Block:
+          img->add_pixel(px, py - 2, top);
+          img->add_pixel(px + 1, py - 2, top);
+          img->add_pixel(px, py - 1, top);
+          img->add_pixel(px + 1, py - 1, top);
+          img->add_pixel(px, py, side);
+          side.darken(0x20);
+          img->add_pixel(px + 1, py, side);
+          break;
+        case mc::HalfBlock:
+          img->add_pixel(px, py, top);
+          img->add_pixel(px + 1, py, top);
+          break;
+        case mc::TopBlock:
+          img->add_pixel(px, py - 1, top);
+          img->add_pixel(px + 1, py - 1, top);
+          break;
+        }
+      }
+    }
+  }
+  
+  return img;
+}
+
 void fast_begin_compound(fast_level_file* level, nbt::String name) {
   if (name.compare("Level") == 0) {
     level->islevel = true;

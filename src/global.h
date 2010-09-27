@@ -9,7 +9,8 @@
 enum mode {
   Top,
   Oblique,
-  ObliqueAngle
+  ObliqueAngle,
+  Isometric
 };
 
 struct settings_t {

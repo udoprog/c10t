@@ -114,6 +114,7 @@ public:
     switch (s.mode) {
     case Top:           p->image = level->get_image(s); break;
     case Oblique:       p->image = level->get_oblique_image(s); break;
+    case Isometric:     p->image = level->get_isometric_image(s); break;
     case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
     }
 
@@ -134,6 +135,9 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
     break;
   case Oblique:
     c.get_oblique_limits(image_width, image_height);
+    break;
+  case Isometric:
+    c.get_isometric_limits(image_width, image_height);
     break;
   case ObliqueAngle:
     // yes, these are meant to be flipped
@@ -173,6 +177,14 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
     {
       point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
       c.project_obliqueangle(topleft, xoffset, yoffset);
+      xoffset = xoffset * mc::MapX;
+      yoffset = yoffset * mc::MapZ;
+      all->composite(xoffset, yoffset, *p.image);
+    }
+  case Isometric:
+    {
+      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
+      c.project_isometric(topleft, xoffset, yoffset);
       xoffset = xoffset * mc::MapX;
       yoffset = yoffset * mc::MapZ;
       all->composite(xoffset, yoffset, *p.image);
@@ -531,6 +543,7 @@ static struct option long_options[] =
    {"no-check",         no_argument, 0, 'N'},
    {"oblique",          no_argument, 0, 'q'},
    {"oblique-angle",    no_argument, 0, 'y'},
+   {"iso",              no_argument, 0, 'z'},
    {"rotate",           required_argument, 0, 'r'},
    {"threads",          required_argument, 0, 'm'},
    {"cave-mode",        no_argument, 0, 'c'},
@@ -656,7 +669,7 @@ int main(int argc, char *argv[]){
 
   int option_index;
   
-  while ((c = getopt_long(argc, argv, "DNvxcnqyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnqzyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -686,6 +699,9 @@ int main(int argc, char *argv[]){
       break;
     case 'q':
       s.mode = Oblique;
+      break;
+    case 'z':
+      s.mode = Isometric;
       break;
     case 'D':
       s.debug = true;

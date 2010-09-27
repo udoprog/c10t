@@ -42,6 +42,7 @@ class level_file
     image_buffer *get_image(settings_t& s);
     image_buffer *get_oblique_image(settings_t& s);
     image_buffer *get_obliqueangle_image(settings_t& s);
+    image_buffer *get_isometric_image(settings_t& s);
 };
 
 class fast_level_file

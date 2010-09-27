@@ -46,6 +46,11 @@ public:
     rx = z + p.x - p.z;
     ry = (y - p.y) + p.z + p.x;
   }
+
+  void project_isometric(point &p, int &rx, int &ry) {
+    project_obliqueangle(p, rx, ry);
+    rx *= 2;
+  }
   
   void get_top_limits(int &rx, int &ry) {
     rx = x;
@@ -60,6 +65,11 @@ public:
   void get_obliqueangle_limits(int &rx, int &ry) {
     rx = z + x;
     ry = y + z + x;
+  }
+  
+  void get_isometric_limits(int &rx, int &ry) {
+    get_obliqueangle_limits(rx, ry);
+    rx *= 2;
   }
 };
 

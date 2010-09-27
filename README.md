@@ -18,11 +18,9 @@ Requirements
 Features
 --------
 
-  * Not using the old corona library, instead purely libpng
   * Pipelined rendering process (using image compositioning) which allows for
     multithreaded rendering.
-  * A lot less memory intensive - the biggest concern is having to keep the
-    entire (sometimes huge!) image in memory at once.
+  * Very memory friendly, you can specify a memory limit and it will switch caching to file.
   * Uses proper command line options.
   * Clean code, for easing further development.
   * Multiplatform - yes, it does compile properly on windows and mac.
@@ -54,6 +52,12 @@ Building from Source (using cmake)
    * If you wish to build any individual one run `make <target>` e.g. `make c10t-test`.
 
   3. The executable (`c10t`) will be in the current directory.
+
+There are a couple of available targets
+
+ * 'c10t-debug' - debug build with symbols, nice for debugging
+ * 'c10t-lib' - library that contains all c10t functions not in main or nbt_inspect
+ * 'nbt-inspect' - dumps the content of an nbt data file (basically anything in the world directory). Useful for writing tools.
 
 Issues
 ------

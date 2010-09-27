@@ -534,8 +534,12 @@ image_buffer *level_file::get_isometric_image(settings_t& s)
           img->add_pixel(px + 1, py + 1, side);
           break;
         case mc::HalfBlock:
+          img->add_pixel(px, py - 1, top);
+          img->add_pixel(px + 1, py - 1, top);
           img->add_pixel(px, py, top);
           img->add_pixel(px + 1, py, top);
+          img->add_pixel(px, py + 1, side);
+          img->add_pixel(px + 1, py + 1, side);
           break;
         case mc::TopBlock:
           img->add_pixel(px, py - 1, top);

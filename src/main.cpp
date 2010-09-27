@@ -201,9 +201,9 @@ inline void overlay_player(settings_t& s, image_base *all, world_info &world, pl
   int min_z = world.min_z * mc::MapZ;
   int min_x = world.min_x * mc::MapX;
   
-  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
+  Cube c(diffx, mc::MapY, diffz);
   int xoffset, yoffset;
-
+  
   transform_world_xz(p.xPos, p.zPos, s.rotation);
   
   color red(255, 0, 0, 255);
@@ -220,29 +220,28 @@ inline void overlay_player(settings_t& s, image_base *all, world_info &world, pl
   switch (s.mode) {
   case Top:
     {
-      point playerpos(diffz - (p.zPos - min_z), p.yPos, (p.xPos - min_x));
+      point playerpos(diffz - (p.zPos - min_z) + mc::MapZ, p.yPos, (p.xPos - min_x));
       c.project_top(playerpos, xoffset, yoffset);
       all->composite(xoffset, yoffset, marker);
     }
     break;
   case Oblique:
     {
-      point playerpos(diffz - (p.zPos - min_z), p.yPos, (p.xPos - min_x));
+      point playerpos(diffz - (p.zPos - min_z) + mc::MapZ, p.yPos, (p.xPos - min_x));
       c.project_oblique(playerpos, xoffset, yoffset);
       all->composite(xoffset, yoffset, marker);
     }
     break;
   case ObliqueAngle:
     {
-      point playerpos(p.xPos - min_x, p.yPos, p.zPos - min_z);
+      point playerpos(p.xPos - min_x + mc::MapX, p.yPos, p.zPos - min_z);
       c.project_obliqueangle(playerpos, xoffset, yoffset);
-      cout << xoffset << " " << yoffset << endl;
       all->composite(xoffset, yoffset, marker);
     }
     break;
   case Isometric:
     {
-      point playerpos(p.xPos - min_x, p.yPos, p.zPos - min_z);
+      point playerpos(p.xPos - min_x + mc::MapX, p.yPos, p.zPos - min_z);
       c.project_isometric(playerpos, xoffset, yoffset);
       all->composite(xoffset, yoffset, marker);
     }
@@ -374,9 +373,18 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
 
   std::vector<player>::iterator plit = pdb.players.begin();
   
-  /*for (; plit != pdb.players.end(); plit++) { 
-    overlay_player(s, all, world, *plit);
-  }*/
+  /* initial code for projecting players
+  for (; plit != pdb.players.end(); plit++) { 
+    player p = *plit;
+
+    if (p.zPos < s.min_z) continue;
+    if (p.zPos > s.max_z) continue;
+    if (p.xPos < s.min_x) continue;
+    if (p.xPos > s.max_x) continue;
+    
+    overlay_player(s, all, world, p);
+  }
+  */
   
   if (!s.silent) cout << "Saving image..." << endl;
   

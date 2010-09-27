@@ -1,14 +1,14 @@
 #ifndef _IMG_H_
 #define _IMG_H_
 
-#include "Color.h"
+#include "color.h"
 
 #include <stdio.h>
 #include <assert.h>
 #include <algorithm>
 #include <string.h>
 
-class ImageBuffer {
+class image_buffer {
 public:
   static const short COLOR_TYPE = 4;
   uint8_t *colors;
@@ -19,7 +19,7 @@ public:
   int d;
   bool reversed;
   
-  ImageBuffer(int w, int h, int d) : w(w), h(h), d(d), reversed(false) {
+  image_buffer(int w, int h, int d) : w(w), h(h), d(d), reversed(false) {
     colors = new uint8_t[COLOR_TYPE * w * h * d];
     heights = new uint8_t[w * h];
     
@@ -31,7 +31,7 @@ public:
     }
   }
 
-  ~ImageBuffer() {
+  ~image_buffer() {
     delete [] colors;
     delete [] heights;
   }
@@ -41,36 +41,36 @@ public:
   int get_depth() { return d; };
   
   void add_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  void add_pixel(int x, int y, Color &c);
+  void add_pixel(int x, int y, color &c);
   void set_pixel_rgba(int x, int y, int z, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  void set_pixel(int x, int y, int z, Color &c);
+  void set_pixel(int x, int y, int z, color &c);
   
   void set_reversed(bool);
   void set_pixel_depth(int x, int y, uint8_t h);
   uint8_t get_pixel_depth(int x, int y);
 
-  void get_pixel(int x, int y, int z, Color &c);
+  void get_pixel(int x, int y, int z, color &c);
 };
 
-class Image {
+class image_base {
 private:
   int w, h;
 public:
   static const short COLOR_TYPE = 4;
   
-  Image(int w, int h) : w(w), h(h) {
+  image_base(int w, int h) : w(w), h(h) {
   }
 
-  virtual ~Image() {
+  virtual ~image_base() {
   }
   
-  void set_pixel(int x, int y, Color &c);
-  void get_pixel(int x, int y, Color &c);
+  void set_pixel(int x, int y, color &c);
+  void get_pixel(int x, int y, color &c);
   
   inline int get_width() { return w; };
   inline int get_height() { return h; };
   
-  void composite(int xoffset, int yoffset, ImageBuffer &img);
+  void composite(int xoffset, int yoffset, image_buffer &img);
   
   inline size_t get_offset(int x, int y) {
     return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);
@@ -78,16 +78,16 @@ public:
 
   bool save_png(const char *filename, const char *title);
   
-  virtual void blend_pixel(int x, int y, Color &c) = 0;
+  virtual void blend_pixel(int x, int y, color &c) = 0;
   virtual void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
   virtual void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) = 0;
 };
 
-class MemoryImage : public Image {
+class memory_image : public image_base {
 private:
   uint8_t *colors;
 public:
-  MemoryImage(int w, int h) : Image(w, h) {
+  memory_image(int w, int h) : image_base(w, h) {
     colors = new uint8_t[COLOR_TYPE * w * h];
     
     for (int x = 0; x < get_width(); x++) {
@@ -97,11 +97,11 @@ public:
     }
   }
 
-  ~MemoryImage() {
+  ~memory_image() {
     delete [] colors;
   }
 
-  void blend_pixel(int x, int y, Color &c);
+  void blend_pixel(int x, int y, color &c);
   void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);
 };
@@ -109,13 +109,13 @@ public:
 #include <iostream>
 
 struct icache {
-  Color c;
+  color c;
   int x, y;
   bool is_set;
   icache() : c(0x00, 0x00, 0x00, 0x00), x(0), y(0), is_set(false) {}
 };
 
-class CachedImage : public Image {
+class cached_image : public image_base {
 private:
   static const size_t WRITE_SIZE = 4096 * 8;
   FILE *f;
@@ -123,7 +123,7 @@ private:
   icache *buffer;
   int buffer_size;
 public:
-  CachedImage(const char *path, int w, int h, int buffer_size) : Image(w, h), path(path), buffer_size(buffer_size) {
+  cached_image(const char *path, int w, int h, int buffer_size) : image_base(w, h), path(path), buffer_size(buffer_size) {
     size_t total = get_width() * get_height() * COLOR_TYPE;
     size_t write_size = WRITE_SIZE;
     uint8_t *nil = new uint8_t[write_size];
@@ -155,7 +155,7 @@ public:
     delete [] nil;
   }
   
-  ~CachedImage() {
+  ~cached_image() {
     if (f != NULL) {
       fclose(f);
 
@@ -171,7 +171,7 @@ public:
     }
   }
   
-  void blend_pixel(int x, int y, Color &c);
+  void blend_pixel(int x, int y, color &c);
   void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
   void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);
 };

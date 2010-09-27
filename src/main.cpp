@@ -22,11 +22,11 @@
 #include "2d/cube.h"
 
 #include "global.h"
-#include "Level.h"
-#include "Image.h"
+#include "level.h"
+#include "image.h"
 #include "blocks.h"
 #include "fileutils.h"
-#include "World.h"
+#include "world.h"
 
 using namespace std;
 
@@ -36,6 +36,16 @@ const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
 const uint8_t IMAGE_BYTE = 0x30;
 const uint8_t PARSE_BYTE = 0x40;
+
+inline void cout_progress_n(int i, int all) {
+  if (i % 50 == 0 && i > 0) {
+    cout << "." << flush;
+    
+    if (i % 1000 == 0) {
+      cout << setw(8) << i << " " << (i * 100) / all << "%" << endl;
+    }
+  }
+}
 
 inline void cout_progress(const uint8_t type, int part, int whole) {
   uint8_t b = ((part * 0xff) / whole);
@@ -57,7 +67,7 @@ inline void cout_error(const string& message) {
 struct Partial {
   int xPos;
   int zPos;
-  ImageBuffer *image;
+  image_buffer *image;
   bool islevel;
   bool grammar_error;
   size_t grammar_error_where;
@@ -79,7 +89,7 @@ public:
   }
   
   Partial *work(render_job job) {
-    Level *level = new Level(job.path.c_str(), false);
+    level_file *level = new level_file(job.path.c_str());
     
     Partial *p = new Partial;
     p->islevel = false;
@@ -112,7 +122,7 @@ public:
   }
 };
 
-inline void calc_image_width_height(settings_t& s, World& world, int &image_width, int &image_height) {
+inline void calc_image_width_height(settings_t& s, world_info& world, int &image_width, int &image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
   
@@ -133,7 +143,7 @@ inline void calc_image_width_height(settings_t& s, World& world, int &image_widt
   }
 }
 
-inline void calc_image_partial(settings_t& s, Partial &p, Image *all, World &world, int image_width, int image_height) {
+inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world_info &world, int image_width, int image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
   
@@ -171,9 +181,9 @@ inline void calc_image_partial(settings_t& s, Partial &p, Image *all, World &wor
   }
 }
 
-bool do_one_world(settings_t &s, World& world, const string& output) {
+bool do_one_world(settings_t &s, world_info& world, const string& output) {
   if (s.debug) {
-    cout << "World" << endl;
+    cout << "world_info" << endl;
     cout << "  min_x: " << world.min_x << endl;
     cout << "  max_x: " << world.max_x << endl;
     cout << "  min_z: " << world.min_z << endl;
@@ -204,17 +214,17 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
          << "~" << mem << " MB... " << endl;
   }
   
-  Image *all;
+  image_base *all;
   
   if (mem_x > s.memory_limit) {
-    all = new CachedImage(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
+    all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
   }
   else {
-    all = new MemoryImage(i_w, i_h);
+    all = new memory_image(i_w, i_h);
   }
   // cached image in the future
   /*if (image_width * i_h > 1000) {
-    all = new CachedImage("cache.dat", image_width, i_h);
+    all = new cached_image("cache.dat", image_width, i_h);
   } else {
   }*/
   
@@ -225,8 +235,9 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
   std::list<level>::iterator lvlit = world.levels.begin();
   
   unsigned int lvlq = 0;
+  unsigned int i;
   
-  for (unsigned int i = 0; i < world_size; i++) {
+  for (i = 0; i < world_size; i++) {
     if (lvlq == 0) {
       for (; lvlq < s.threads && lvlit != world.levels.end(); lvlq++) {
         level l = *lvlit;
@@ -280,13 +291,7 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
       cout_progress(RENDER_BYTE, i, world_size);
     }
     else if (!s.silent) {
-      if (i % 100 == 0 && i > 0) {
-        cout << " " << setw(9) << i << flush;
-        
-        if (i % 1000 == 0) {
-          cout << endl;
-        }
-      }
+      cout_progress_n(i, world_size);
     }
     
     calc_image_partial(s, *p, all, world, i_w, i_h);
@@ -296,7 +301,7 @@ bool do_one_world(settings_t &s, World& world, const string& output) {
   
   renderer.join();
   
-  if (!s.silent) cout << setw(10) << "done!" << endl;
+  if (!s.silent) cout << setw(8) << "done!" << endl;
   
   if (!s.silent) cout << "Saving image..." << endl;
   
@@ -350,20 +355,20 @@ bool do_world(settings_t& s, string world_path, string output) {
   }
   
   if (!s.silent) cout << "Performing broad phase scan of world directory... " << flush;
-  World world(s, world_path);
+  world_info world(s, world_path);
   if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
 
   if (!s.use_split) {
     return do_one_world(s, world, output);
   }
   
-  World** worlds = world.split(s.split);
+  world_info** worlds = world.split(s.split);
 
   int i = 0;
   int max_x = INT_MIN, max_y = INT_MIN;
   
   while (worlds[i] != NULL) {
-    World* current = worlds[i++];
+    world_info* current = worlds[i++];
 
     stringstream ss;
     ss << boost::format(output) % current->chunk_x % current->chunk_y;
@@ -376,7 +381,7 @@ bool do_world(settings_t& s, string world_path, string output) {
     if (current->chunk_y > max_y) max_y = current->chunk_y;
   }
 
-  cout << "World size in chunks is " << s.split * ((max_x + 1) * mc::MapX) << "x" << s.split * (max_y * mc::MapZ) << endl;
+  cout << "world_info size in chunks is " << s.split * ((max_x + 1) * mc::MapX) << "x" << s.split * (max_y * mc::MapZ) << endl;
   
   delete [] worlds;
   return true;
@@ -468,7 +473,7 @@ int do_version() {
 bool do_write_palette(settings_t& s, string& path) {
   if (!s.silent) cout << "Writing palette to " << path << endl;
   
-  MemoryImage palette(16, 32);
+  memory_image palette(16, 32);
   
   for (int x = 0; x < palette.get_width(); x++) {
     for (int y = 0, py = 0; y < palette.get_height(); y++, py += 2) {
@@ -482,7 +487,7 @@ bool do_write_palette(settings_t& s, string& path) {
   }
   
   // errno should be set to something sensible here
-  if (!palette.save_png(path.c_str(), "Color palette for c10t")) {
+  if (!palette.save_png(path.c_str(), "color palette for c10t")) {
     error<< "Failed to save palette " << path << " - " << strerror(errno);
     return false;
   }
@@ -554,7 +559,7 @@ bool get_blockid(const char *blockid_string, int& blockid) {
   return true;
 }
 
-bool parse_set(const char* set_str, int& blockid, Color& c)
+bool parse_set(const char* set_str, int& blockid, color& c)
 {
   istringstream iss(set_str);
   string key, value;
@@ -570,7 +575,7 @@ bool parse_set(const char* set_str, int& blockid, Color& c)
   
   if (!(sscanf(value.c_str(), "%d,%d,%d,%d", &cr, &cg, &cb, &ca) == 4 || 
         sscanf(value.c_str(), "%d,%d,%d", &cr, &cg, &cb) == 3)) {
-    error << "Color sets must be of the form <red>,<green>,<blue>[,<alpha>] but was: " << value;
+    error << "color sets must be of the form <red>,<green>,<blue>[,<alpha>] but was: " << value;
     return false;
   }
   
@@ -579,7 +584,7 @@ bool parse_set(const char* set_str, int& blockid, Color& c)
       cg >= 0 && cg <= 0xff &&
       cb >= 0 && cb <= 0xff &&
       ca >= 0 && ca <= 0xff)) {
-    error << "Color values must be between 0-255";
+    error << "color values must be between 0-255";
     return false;
   }
   
@@ -593,7 +598,7 @@ bool parse_set(const char* set_str, int& blockid, Color& c)
 
 bool do_base_color_set(const char *set_str) {
   int blockid;
-  Color c;
+  color c;
   
   if (!parse_set(set_str, blockid, c)) {
     return false;
@@ -602,15 +607,15 @@ bool do_base_color_set(const char *set_str) {
   delete mc::MaterialColor[blockid];
   delete mc::MaterialSideColor[blockid];
   
-  mc::MaterialColor[blockid] = new Color(c);
-  mc::MaterialSideColor[blockid] = new Color(mc::MaterialColor[blockid]);
+  mc::MaterialColor[blockid] = new color(c);
+  mc::MaterialSideColor[blockid] = new color(mc::MaterialColor[blockid]);
   mc::MaterialSideColor[blockid]->darken(0x20);
   return true;
 }
 
 bool do_side_color_set(const char *set_str) {
   int blockid;
-  Color c;
+  color c;
   
   if (!parse_set(set_str, blockid, c)) {
     return false;
@@ -618,7 +623,7 @@ bool do_side_color_set(const char *set_str) {
 
   delete mc::MaterialSideColor[blockid];
 
-  mc::MaterialSideColor[blockid] = new Color(c);
+  mc::MaterialSideColor[blockid] = new color(c);
   return true;
 }
 

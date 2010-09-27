@@ -15,13 +15,11 @@
 
 #include "nbt/nbt.h"
 
-#include "Color.h"
-#include "Image.h"
+#include "color.h"
+#include "image.h"
 #include "blocks.h"
 
-void transform_world_xz(int& x, int& z, int rotation);
-
-class Level
+class level_file
 {
   public:
     // these must be public for the parser to be able to reach them.
@@ -38,12 +36,28 @@ class Level
     std::string path;
     bool ignore_blocks;
 
-    Level(const char *path, bool ignore_blocks);
-    ~Level();
+    level_file(const char *path);
+    ~level_file();
 
-    ImageBuffer *get_image(settings_t& s);
-    ImageBuffer *get_oblique_image(settings_t& s);
-    ImageBuffer *get_obliqueangle_image(settings_t& s);
+    image_buffer *get_image(settings_t& s);
+    image_buffer *get_oblique_image(settings_t& s);
+    image_buffer *get_obliqueangle_image(settings_t& s);
+};
+
+class fast_level_file
+{
+  public:
+    // these must be public for the parser to be able to reach them.
+    int xPos, zPos;
+    bool has_xPos, has_zPos;
+    bool islevel;
+    bool grammar_error;
+    size_t grammar_error_where;
+    std::string grammar_error_why;
+    std::string path;
+    nbt::Parser<fast_level_file> parser;
+    
+    fast_level_file(const char *path);
 };
 
 #endif /* _LEVEL_H_ */

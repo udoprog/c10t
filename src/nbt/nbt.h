@@ -13,9 +13,12 @@
 #include <stack>
 #include <list>
 
+#include <boost/ptr_container/ptr_vector.hpp>
+
 namespace nbt {
   class bad_grammar : std::exception {};
   #define BUFFER_SIZE 1024
+  #define STACK_SIZE 100
   
   typedef int8_t Byte;
   typedef int16_t Short;
@@ -31,6 +34,13 @@ namespace nbt {
     ~ByteArray() {
       delete [] values;
     }
+  };
+
+  struct stack_entry {
+    Byte type;
+    String name;
+    Int list_count, list_read;
+    Byte list_type;
   };
   
   const Byte TAG_End = 0x0;
@@ -72,14 +82,14 @@ namespace nbt {
   };
   
   bool is_big_endian();
-
+  
   template <class C>
   void default_begin_compound(C* context, nbt::String name) {
     //std::cout << "TAG_Compound('" << name << "') BEGIN" << std::endl;
   }
 
   template <class C>
-  void default_end_compound(C* context) {
+  void default_end_compound(C* context, String name) {
     //std::cout << "TAG_Compound END" << std::endl;
   }
 
@@ -89,7 +99,7 @@ namespace nbt {
   }
 
   template <class C>
-  void default_end_list(C* context) {
+  void default_end_list(C* context, nbt::String name) {
     //std::cout << "TAG_List END" << std::endl;
   }
 
@@ -102,6 +112,7 @@ namespace nbt {
   template <class C>
   class Parser {
     private:
+      bool running;
       C *context;
 
       void assert_error(gzFile file, bool a, const char *why) {
@@ -241,22 +252,22 @@ namespace nbt {
         return d;
       }
     public:
-      typedef void (*begin_compound_t)(C *context, String name);
-      typedef void (*end_compound_t)(C *context);
+      typedef void (*begin_compound_t)(C*, String name);
+      typedef void (*end_compound_t)(C*, String name);
       
-      typedef void (*begin_list_t)(C *context, String name, Byte type, Int length);
-      typedef void (*end_list_t)(C *context);
+      typedef void (*begin_list_t)(C*, String name, Byte type, Int length);
+      typedef void (*end_list_t)(C*, String name);
       
-      typedef void (*register_long_t)(C *context, String name, Long l);
-      typedef void (*register_short_t)(C *context, String name, Short l);
-      typedef void (*register_string_t)(C *context, String name, String l);
-      typedef void (*register_float_t)(C *context, String name, Float l);
-      typedef void (*register_double_t)(C *context, String name, Double l);
-      typedef void (*register_int_t)(C *context, String name, Int l);
-      typedef void (*register_byte_t)(C *context, String name, Byte b);
-      typedef void (*register_byte_array_t)(C *context, String name, ByteArray *array);
-      typedef void (*error_handler_t)(C *context, size_t where, const char *why);
-
+      typedef void (*register_long_t)(C*, String name, Long l);
+      typedef void (*register_short_t)(C*, String name, Short l);
+      typedef void (*register_string_t)(C*, String name, String l);
+      typedef void (*register_float_t)(C*, String name, Float l);
+      typedef void (*register_double_t)(C*, String name, Double l);
+      typedef void (*register_int_t)(C*, String name, Int l);
+      typedef void (*register_byte_t)(C*, String name, Byte b);
+      typedef void (*register_byte_array_t)(C*, String name, ByteArray* array);
+      typedef void (*error_handler_t)(C*, size_t where, const char *why);
+      
       register_long_t register_long;
       register_short_t register_short;
       register_string_t register_string;
@@ -315,19 +326,6 @@ namespace nbt {
         return type;
       }
       
-      void handle_list(String name, gzFile file) {
-        Byte type = read_byte(file);
-        Int length = read_int(file);
-        
-        begin_list(context, name, type, length);
-        
-        for (int i = 0; i < length; i++) {
-          handle_type(type, name, file);
-        }
-
-        end_list(context);
-      }
-
       void flush_byte_array(gzFile file) {
         Int length = read_int(file);
         assert_error(file, gzseek(file, length, SEEK_CUR) != -1,
@@ -344,109 +342,155 @@ namespace nbt {
         register_byte_array(context, name, array);
       }
 
-      void handle_compound(String name, gzFile file) {
-        begin_compound(context, name);
-        
-        do {
-          Byte type = read_tagType(file);
-          
-          if (type == TAG_End) {
-            break;
-          }
-          
-          name = read_string(file);
-          handle_type(type, name, file);
-        } while(1);
-        
-        end_compound(context);
+      void stop() {
+        running = false;
       }
       
-      void handle_type(Byte type, String name, gzFile file)
-      {
-        switch(type) {
-        case TAG_Long:
-          if (register_long == NULL) {
-            assert_error(file, gzseek(file, sizeof(nbt::Long), SEEK_CUR) != -1,
-              "Buffer too short to flush long");
-          } else {
-            register_long(context, name, read_long(file));
-          }
-          break;
-        case TAG_Short:
-          if (register_short == NULL) {
-            assert_error(file, gzseek(file, sizeof(nbt::Short), SEEK_CUR) != -1,
-              "Buffer too short to flush short");
-          } else {
-            register_short(context, name, read_short(file));
-          }
-          break;
-        case TAG_String:
-          if (register_short == NULL) {
-            flush_string(file);
-          } else {
-            register_string(context, name, read_string(file));
-          }
-          break;
-        case TAG_Float:
-          if (register_float == NULL) {
-            assert_error(file, gzseek(file, sizeof(nbt::Float), SEEK_CUR) != -1,
-              "Buffer too short to flush float");
-          } else {
-            register_float(context, name, read_float(file));
-          }
-          break;
-        case TAG_Double:
-          if (register_double == NULL) {
-            assert_error(file, gzseek(file, sizeof(nbt::Double), SEEK_CUR) != -1,
-              "Buffer too short to flush double");
-          } else {
-            register_double(context, name, read_double(file));
-          }
-          break;
-        case TAG_Int:
-          if (register_int == NULL) {
-            assert_error(file, gzseek(file, sizeof(nbt::Int), SEEK_CUR) != -1,
-              "Buffer too short to flush int");
-          } else {
-            register_int(context, name, read_int(file));
-          }
-          break;
-        case TAG_Byte:
-          if (register_byte == NULL) {
-            assert_error(file, gzseek(file, sizeof(nbt::Byte), SEEK_CUR) != -1,
-              "Buffer too short to flush byte");
-          } else {
-            register_byte(context, name, read_byte(file));
-          }
-          break;
-        case TAG_Compound:
-          handle_compound(name, file);
-          break;
-        case TAG_Byte_Array:
-          if (register_byte_array == NULL) {
-            flush_byte_array(file);
-          } else {
-            handle_byte_array(name, file);
-          }
-          break;
-        case TAG_List:
-          handle_list(name, file);
-          break;
-        }
-      }
-
       void parse_file(const char *path)
       {
         gzFile file = gzopen(path, "rb");
         assert_error(file, file != NULL, strerror(errno));
+
+        running = true;
         
-        Byte type = read_tagType(file);
+        stack_entry *stack = new stack_entry[STACK_SIZE];
+        int stack_p = 0;
         
-        switch(type) {
-        case TAG_Compound:
-          String name = read_string(file);
-          handle_type(type, name, file);
-          break;
+        stack_entry *root = stack + 0;
+        
+        root->type = read_tagType(file);
+        assert_error(file, root->type == TAG_Compound, "Expected TAG_Compound at root");
+        root->name = read_string(file);
+        
+        begin_compound(context, root->name);
+        
+        while(running && stack_p >= 0) {
+          stack_entry* top = stack + stack_p;
+          
+          Byte type;
+          String name;
+          
+          if (top->type == TAG_Compound) {
+            type = read_tagType(file);
+            
+            if (type == TAG_End) {
+              end_compound(context, top->name);
+              --stack_p;
+              continue;
+            }
+            
+            name = read_string(file);
+          }
+          
+          else if (top->type == TAG_List) {
+            if (top->list_read >= top->list_count) {
+              end_list(context, top->name);
+              --stack_p;
+              continue;
+            }
+            
+            name = top->name;
+            type = top->list_type;
+            top->list_read++;
+          }
+          
+          else {
+            assert_error(file, 1, "Unknown stack type");
+            return;
+          }
+          
+          switch(type) {
+          case TAG_Long:
+            if (register_long == NULL) {
+              assert_error(file, gzseek(file, sizeof(nbt::Long), SEEK_CUR) != -1,
+                "Buffer too short to flush long");
+            } else {
+              register_long(context, name, read_long(file));
+            }
+            break;
+          case TAG_Short:
+            if (register_short == NULL) {
+              assert_error(file, gzseek(file, sizeof(nbt::Short), SEEK_CUR) != -1,
+                "Buffer too short to flush short");
+            } else {
+              register_short(context, name, read_short(file));
+            }
+            break;
+          case TAG_String:
+            if (register_string == NULL) {
+              flush_string(file);
+            } else {
+              register_string(context, name, read_string(file));
+            }
+            break;
+          case TAG_Float:
+            if (register_float == NULL) {
+              assert_error(file, gzseek(file, sizeof(nbt::Float), SEEK_CUR) != -1,
+                "Buffer too short to flush float");
+            } else {
+              register_float(context, name, read_float(file));
+            }
+            break;
+          case TAG_Double:
+            if (register_double == NULL) {
+              assert_error(file, gzseek(file, sizeof(nbt::Double), SEEK_CUR) != -1,
+                "Buffer too short to flush double");
+            } else {
+              register_double(context, name, read_double(file));
+            }
+            break;
+          case TAG_Int:
+            if (register_int == NULL) {
+              assert_error(file, gzseek(file, sizeof(nbt::Int), SEEK_CUR) != -1,
+                "Buffer too short to flush int");
+            } else {
+              register_int(context, name, read_int(file));
+            }
+            break;
+          case TAG_Byte:
+            if (register_byte == NULL) {
+              assert_error(file, gzseek(file, sizeof(nbt::Byte), SEEK_CUR) != -1,
+                "Buffer too short to flush byte");
+            } else {
+              register_byte(context, name, read_byte(file));
+            }
+            break;
+          case TAG_List:
+            {
+              stack_entry* c = stack + ++stack_p;
+              
+              c->list_read = 0;
+              c->list_type = read_tagType(file);
+              c->list_count = read_int(file);
+              c->name = name;
+              c->type = TAG_List;
+              
+              begin_list(context, name, c->list_type, c->list_count);
+            }
+            break;
+          case TAG_Compound:
+            {
+              begin_compound(context, name);
+              stack_entry* c = stack + ++stack_p;
+              
+              c->list_read = 0;
+              c->list_count = 0;
+              c->list_type = -1;
+              c->name = name;
+              c->type = TAG_Compound;
+            }
+            break;
+          case TAG_Byte_Array:
+            if (register_byte_array == NULL) {
+              flush_byte_array(file);
+            } else {
+              handle_byte_array(name, file);
+            }
+            break;
+          default:
+            assert_error(file, 0, "Encountered unknown type");
+            break;
+          }
         }
         
         gzclose(file);

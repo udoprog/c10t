@@ -1,7 +1,7 @@
 #ifndef _BLOCKS_H_
 #define _BLOCKS_H_
 
-#include "Color.h"
+#include "color.h"
 
 namespace mc {
   enum MaterialMode {
@@ -108,8 +108,8 @@ namespace mc {
   extern const int MapX;
   extern const int MapZ;
   extern const char **MaterialName;
-  extern Color **MaterialColor;
-  extern Color **MaterialSideColor;
+  extern color **MaterialColor;
+  extern color **MaterialSideColor;
   extern enum MaterialMode *MaterialModes;
 }
 

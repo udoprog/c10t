@@ -1,4 +1,4 @@
-#include "Color.h"
+#include "color.h"
 #include <sstream>
 #include <string>
 
@@ -13,21 +13,21 @@ inline uint8_t alpha_over_c(uint8_t ac, uint8_t aa, uint8_t bc, uint8_t ba) {
   return (caa + ((0xff - aa) * cba) / 0xff);
 }
 
-void Color::overlay(const Color &other) {
+void color::overlay(const color &other) {
   r = alpha_over_c(other.r, other.a, r, a);
   g = alpha_over_c(other.g, other.a, g, a);
   b = alpha_over_c(other.b, other.a, b, a);
   a = a + (other.a * (0xff - a)) / 0xff;
 }
 
-void Color::underlay(const Color &other) {
+void color::underlay(const color &other) {
   r = alpha_over_c(r, a, other.r, other.a);
   g = alpha_over_c(g, a, other.g, other.a);
   b = alpha_over_c(b, a, other.b, other.a);
   a = other.a + (a * (0xff - other.a)) / 0xff;
 }
 
-void Color::blend(const Color &other) {
+void color::blend(const color &other) {
   if (other.is_transparent()) return;
   r = alpha_over_c(other.r, other.a, r, a);
   g = alpha_over_c(other.g, other.a, g, a);
@@ -39,7 +39,7 @@ void Color::blend(const Color &other) {
 }
 
 // pull color down towards black
-void Color::darken(uint8_t f) {
+void color::darken(uint8_t f) {
   r -= ((r * f) / 0xff);
   g -= ((g * f) / 0xff);
   b -= ((b * f) / 0xff);

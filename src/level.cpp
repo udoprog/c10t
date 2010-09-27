@@ -2,17 +2,17 @@
 
 #include "global.h"
 
-#include "Level.h"
+#include "level.h"
 #include "blocks.h"
 #include "2d/cube.h"
 
-void begin_compound(Level* level, nbt::String name) {
+void begin_compound(level_file* level, nbt::String name) {
   if (name.compare("Level") == 0) {
     level->islevel = true;
   }
 }
 
-void register_int(Level* level, nbt::String name, nbt::Int i) {
+void register_int(level_file* level, nbt::String name, nbt::Int i) {
   if (!level->islevel) {
     return;
   }
@@ -28,7 +28,7 @@ void register_int(Level* level, nbt::String name, nbt::Int i) {
   }
 }
 
-void register_byte_array(Level* level, nbt::String name, nbt::ByteArray* byte_array) {
+void register_byte_array(level_file* level, nbt::String name, nbt::ByteArray* byte_array) {
   if (!level->islevel) {
     delete byte_array;
     return;
@@ -38,7 +38,7 @@ void register_byte_array(Level* level, nbt::String name, nbt::ByteArray* byte_ar
     level->blocks = byte_array;
     return;
   }
-
+  
   if (name.compare("SkyLight") == 0) {
     level->skylight = byte_array;
     return;
@@ -57,7 +57,7 @@ void register_byte_array(Level* level, nbt::String name, nbt::ByteArray* byte_ar
   delete byte_array;
 }
 
-void error_handler(Level* level, size_t where, const char *why) {
+void error_handler(level_file* level, size_t where, const char *why) {
   level->grammar_error = true;
   level->grammar_error_where = where;
   level->grammar_error_why = why;
@@ -65,18 +65,14 @@ void error_handler(Level* level, size_t where, const char *why) {
 
 #include <iostream>
 
-Level::~Level(){
-  if (ignore_blocks) {
-    return;
-  }
-
-  if (blocks != NULL) delete blocks;
-  if (skylight != NULL) delete skylight;
-  if (heightmap != NULL) delete heightmap;
-  if (blocklight != NULL) delete blocklight;
+level_file::~level_file(){
+  delete blocks;
+  delete skylight;
+  delete heightmap;
+  delete blocklight;
 }
 
-Level::Level(const char *path, bool ignore_blocks)
+level_file::level_file(const char *path)
   : blocks(NULL),
     skylight(NULL),
     heightmap(NULL),
@@ -87,20 +83,11 @@ Level::Level(const char *path, bool ignore_blocks)
     grammar_error(false),
     grammar_error_where(0),
     grammar_error_why(""),
-    path(path),
-    ignore_blocks(ignore_blocks)
+    path(path)
 {
-  xPos = 0;
-  zPos = 0;
-  islevel = false;
-  grammar_error = false;
+  nbt::Parser<level_file> parser(this);
   
-  nbt::Parser<Level> parser(this);
-  
-  if (!ignore_blocks) {
-    parser.register_byte_array = register_byte_array;
-  }
-  
+  parser.register_byte_array = register_byte_array;
   parser.register_int = register_int;
   parser.begin_compound = begin_compound;
   parser.error_handler = error_handler;
@@ -144,7 +131,7 @@ nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
   }
 }
 
-inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, Color &c) {
+inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
   // if night, darken all colors not emitting light
   if (s.night) {
     c.darken((0xd0 * (16 - bl)) / 16);
@@ -181,26 +168,6 @@ inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, nb
 
   return true;
 }
-
-void transform_world_xz(int& x, int& z, int rotation)
-{
-  int t = x;
-  switch (rotation) {
-    case 270:
-      x = z;
-      z = -t;
-      break;
-    case 180:
-      x = -x;
-      z = -z;
-      break;
-    case 90:
-      x = -z;
-      z = t;
-      break;
-  }
-}
-
 
 class BlockRotation {
 private:
@@ -273,8 +240,8 @@ public:
   }
 };
 
-ImageBuffer *Level::get_image(settings_t& s) {
-  ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ, 1);
+image_buffer *level_file::get_image(settings_t& s) {
+  image_buffer *img = new image_buffer(mc::MapX, mc::MapZ, 1);
   
   if (!islevel) {
     return img;
@@ -287,7 +254,7 @@ ImageBuffer *Level::get_image(settings_t& s) {
   
   for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
     for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
-      Color base(255, 255, 255, 0);
+      color base(255, 255, 255, 0);
       
       bt = mc::Air;
       
@@ -311,7 +278,7 @@ ImageBuffer *Level::get_image(settings_t& s) {
           continue;
         }
         
-        Color bc(mc::MaterialColor[bt]);
+        color bc(mc::MaterialColor[bt]);
         
         int bl = blocklight_r.get4(mx, mz, my),
             sl = skylight_r.get4(mx, mz, my);
@@ -336,9 +303,9 @@ ImageBuffer *Level::get_image(settings_t& s) {
   return img;
 }
 
-ImageBuffer *Level::get_oblique_image(settings_t& s)
+image_buffer *level_file::get_oblique_image(settings_t& s)
 {
-  ImageBuffer *img = new ImageBuffer(mc::MapX, mc::MapZ + mc::MapY, mc::MapY + mc::MapZ);
+  image_buffer *img = new image_buffer(mc::MapX, mc::MapZ + mc::MapY, mc::MapY + mc::MapZ);
   
   if (!islevel) {
     return img;
@@ -390,11 +357,11 @@ ImageBuffer *Level::get_oblique_image(settings_t& s)
         int px, py;
         c.project_oblique(p, px, py);
         
-        Color top(mc::MaterialColor[bt]);
+        color top(mc::MaterialColor[bt]);
         apply_shading(s, bl, sl, 0, my, top);
         img->add_pixel(px, py - 1, top);
         
-        Color side(mc::MaterialSideColor[bt]);
+        color side(mc::MaterialSideColor[bt]);
         apply_shading(s, bl, sl, 0, my, side);
         img->add_pixel(px, py, side);
       }
@@ -404,9 +371,9 @@ ImageBuffer *Level::get_oblique_image(settings_t& s)
   return img;
 }
 
-ImageBuffer *Level::get_obliqueangle_image(settings_t& s)
+image_buffer *level_file::get_obliqueangle_image(settings_t& s)
 {
-  ImageBuffer *img = new ImageBuffer(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
+  image_buffer *img = new image_buffer(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
   
   if (!islevel) {
     return img;
@@ -462,8 +429,8 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t& s)
         int px, py;
         c.project_obliqueangle(p, px, py);
         
-        Color top(mc::MaterialColor[bt]);
-        Color side(mc::MaterialSideColor[bt]);
+        color top(mc::MaterialColor[bt]);
+        color side(mc::MaterialSideColor[bt]);
         
         apply_shading(s, bl, sl, hmval, y, top);
         apply_shading(s, bl, sl, hmval, y, side);
@@ -490,4 +457,57 @@ ImageBuffer *Level::get_obliqueangle_image(settings_t& s)
   }
   
   return img;
+}
+
+void fast_begin_compound(fast_level_file* level, nbt::String name) {
+  if (name.compare("Level") == 0) {
+    level->islevel = true;
+  }
+}
+
+void fast_register_int(fast_level_file* level, nbt::String name, nbt::Int i) {
+  if (!level->islevel) {
+    return;
+  }
+
+  if (name.compare("xPos") == 0) {
+    level->has_xPos = true;
+    level->xPos = i;
+  }
+  else if (name.compare("zPos") == 0) {
+    level->has_zPos = true;
+    level->zPos = i;
+  }
+  
+  if (level->has_xPos && level->has_zPos) {
+    level->parser.stop();
+  }
+}
+
+void fast_error_handler(fast_level_file* level, size_t where, const char *why) {
+  level->grammar_error = true;
+  level->grammar_error_where = where;
+  level->grammar_error_why = why;
+}
+
+fast_level_file::fast_level_file(const char *path)
+  :
+    xPos(0), zPos(0),
+    has_xPos(false), has_zPos(false),
+    islevel(false),
+    grammar_error(false),
+    grammar_error_where(0),
+    grammar_error_why(""),
+    path(path),
+    parser(this)
+{
+  parser.register_int = fast_register_int;
+  parser.begin_compound = fast_begin_compound;
+  parser.error_handler = fast_error_handler;
+  
+  try {
+    parser.parse_file(path);
+  } catch(nbt::bad_grammar &bg) {
+    grammar_error = true;
+  }
 }

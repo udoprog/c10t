@@ -9,21 +9,21 @@
 #include <sstream>
 #include <ostream>
 
-struct Color{
+struct color{
   uint8_t r;
   uint8_t g;
   uint8_t b;
   uint8_t a;
   
-  Color(Color *c) : r(c->r), g(c->g), b(c->b), a(c->a) { }
+  color(color *c) : r(c->r), g(c->g), b(c->b), a(c->a) { }
   
-  Color() : r(0xff), g(0xff), b(0xff), a(0x00) { }
+  color() : r(0xff), g(0xff), b(0xff), a(0x00) { }
   
-  Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
+  color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
     r(r), g(g), b(b), a(a) {
   }
   
-  Color(uint32_t rgba) :
+  color(uint32_t rgba) :
     r(r >> 24), g((g >> 16) & 0xff), b((b >> 8) & 0xff), a(a & 0xff) {
   }
   
@@ -35,17 +35,17 @@ struct Color{
     return a == 0x00;
   }
   
-  ~Color(){
+  ~color(){
   }
   
-  void overlay(const Color &other);
-  void underlay(const Color &other);
+  void overlay(const color &other);
+  void underlay(const color &other);
   void darken(uint8_t c);
-  void blend(const Color &other);
+  void blend(const color &other);
     
-  friend std::ostream& operator<<(std::ostream& out, const Color& c) // output
+  friend std::ostream& operator<<(std::ostream& out, const color& c) // output
   {
-      out << "Color(" << (int)c.r << ", " << (int)c.g << ", " << (int)c.b << ", " << (int)c.a << ")";
+      out << "color(" << (int)c.r << ", " << (int)c.g << ", " << (int)c.b << ", " << (int)c.a << ")";
       return out;
   }
 };

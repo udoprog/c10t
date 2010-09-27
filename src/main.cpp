@@ -142,7 +142,7 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
   case ObliqueAngle:
     // yes, these are meant to be flipped
     c.get_obliqueangle_limits(image_width, image_height);
-    image_width += 2;
+    image_width += 200;
     break;
   }
 }
@@ -181,6 +181,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
       yoffset = yoffset * mc::MapZ;
       all->composite(xoffset, yoffset, *p.image);
     }
+    break;
   case Isometric:
     {
       point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);

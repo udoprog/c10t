@@ -48,8 +48,8 @@ public:
   }
 
   void project_isometric(point &p, int &rx, int &ry) {
-    project_obliqueangle(p, rx, ry);
-    rx *= 2;
+    rx = 2 * (z + p.x - p.z);
+    ry = 2 * (y - p.y) + p.z + p.x;
   }
   
   void get_top_limits(int &rx, int &ry) {
@@ -68,8 +68,8 @@ public:
   }
   
   void get_isometric_limits(int &rx, int &ry) {
-    get_obliqueangle_limits(rx, ry);
-    rx *= 2;
+    rx = 2 * (z + x);
+    ry = 2 * y + z + x;
   }
 };
 

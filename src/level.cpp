@@ -457,13 +457,16 @@ image_buffer *level_file::get_obliqueangle_image(settings_t& s)
 
 image_buffer *level_file::get_isometric_image(settings_t& s)
 {
-  image_buffer *img = new image_buffer(mc::MapX * 4, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
+  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+
+  int iw, ih;
+  c.get_isometric_limits(iw, ih);
+  
+  image_buffer *img = new image_buffer(iw, ih, mc::MapY + mc::MapZ * 2);
   
   if (!islevel) {
     return img;
   }
-  
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
   
   // block type
   int bt;
@@ -526,8 +529,9 @@ image_buffer *level_file::get_isometric_image(settings_t& s)
           img->add_pixel(px, py - 1, top);
           img->add_pixel(px + 1, py - 1, top);
           img->add_pixel(px, py, side);
-          side.darken(0x20);
+          img->add_pixel(px, py + 1, side);
           img->add_pixel(px + 1, py, side);
+          img->add_pixel(px + 1, py + 1, side);
           break;
         case mc::HalfBlock:
           img->add_pixel(px, py, top);

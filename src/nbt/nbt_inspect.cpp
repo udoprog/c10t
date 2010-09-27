@@ -60,7 +60,7 @@ void register_double(inspect_context* inspect, nbt::String name, nbt::Double val
 
 void register_int(inspect_context* inspect, nbt::String name, nbt::Int value) {
   cout << setw(inspect->width) << ""
-       << "Int(" << name << "): " << value << endl;
+       << "Int(" << name << "): " << dec << value << endl;
 }
 
 void register_byte(inspect_context* inspect, nbt::String name, nbt::Byte value) {

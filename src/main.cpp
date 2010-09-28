@@ -512,6 +512,7 @@ int do_help() {
     << endl
     << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
     << "  -b, --bottom <int>        - splice from the bottom, must be greater than or" << endl
+    << "                              equal to zero." << endl
     << "  -L, --limits <int-list>   - limit render to certain area. int-list form:" << endl
     << "                              North,South,East,West, e.g." << endl
     << "                              -L 0,100,-10,20 limiting between 0 and 100 in the " << endl

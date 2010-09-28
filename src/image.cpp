@@ -133,7 +133,7 @@ bool image_base::save_png(const char *filename, const char *title, progress_c pr
   int x, y;
   
   for (y=0 ; y < get_height(); y++) {
-    progress_c_cb(y, get_height());
+    if (progress_c_cb != NULL) progress_c_cb(y, get_height());
     
     for (x=0 ; x < get_width(); x++) {
       color c;
@@ -156,7 +156,7 @@ bool image_base::save_png(const char *filename, const char *title, progress_c pr
     png_write_row(png_ptr, row);
   }
   
-  progress_c_cb(get_height(), get_height());
+  if (progress_c_cb != NULL) progress_c_cb(get_height(), get_height());
   
   png_write_end(png_ptr, NULL);
 

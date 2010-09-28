@@ -77,7 +77,7 @@ void image_base::composite(int xoffset, int yoffset, image_buffer &img) {
   }
 }
 
-bool image_base::save_png(const char *filename, const char *title)
+bool image_base::save_png(const char *filename, const char *title, progress_c progress_c_cb)
 {
   bool ret = true;
   
@@ -129,31 +129,35 @@ bool image_base::save_png(const char *filename, const char *title)
   png_write_info(png_ptr, info_ptr);
 
   row = (png_bytep) malloc(4 * get_width() * sizeof(png_byte));
-
+  
   int x, y;
   
   for (y=0 ; y < get_height(); y++) {
-     for (x=0 ; x < get_width(); x++) {
-       color c;
-       get_pixel(x, y, c);
+    progress_c_cb(y, get_height());
+    
+    for (x=0 ; x < get_width(); x++) {
+      color c;
+      get_pixel(x, y, c);
        
-       if (c.a == 0x0) {
-         row[0 + x*4] = 0;
-         row[1 + x*4] = 0;
-         row[2 + x*4] = 0;
-         row[3 + x*4] = 0x00;
-       }
-       else {
-         row[0 + x*4] = c.r;
-         row[1 + x*4] = c.g;
-         row[2 + x*4] = c.b;
-         row[3 + x*4] = 0xff;
-       }
-     }
+      if (c.a == 0x0) {
+        row[0 + x*4] = 0;
+        row[1 + x*4] = 0;
+        row[2 + x*4] = 0;
+        row[3 + x*4] = 0x00;
+      }
+      else {
+        row[0 + x*4] = c.r;
+        row[1 + x*4] = c.g;
+        row[2 + x*4] = c.b;
+        row[3 + x*4] = 0xff;
+      }
+    }
 
-     png_write_row(png_ptr, row);
+    png_write_row(png_ptr, row);
   }
- 
+  
+  progress_c_cb(get_height(), get_height());
+  
   png_write_end(png_ptr, NULL);
 
 finalise:

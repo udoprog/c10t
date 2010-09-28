@@ -584,7 +584,7 @@ void fast_error_handler(fast_level_file* level, size_t where, const char *why) {
   level->grammar_error_why = why;
 }
 
-fast_level_file::fast_level_file(const char *path)
+fast_level_file::fast_level_file(const std::string path)
   :
     xPos(0), zPos(0),
     has_xPos(false), has_zPos(false),
@@ -599,5 +599,5 @@ fast_level_file::fast_level_file(const char *path)
   parser.begin_compound = fast_begin_compound;
   parser.error_handler = fast_error_handler;
   
-  parser.parse_file(path);
+  parser.parse_file(path.c_str());
 }

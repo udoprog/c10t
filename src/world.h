@@ -8,10 +8,14 @@
 #include <sstream>
 #include <vector>
 
+#include <boost/filesystem.hpp>
+
 #include "fileutils.h"
 #include "global.h"
 #include "common.h"
 #include "level.h"
+
+namespace fs = boost::filesystem;
 
 void transform_world_xz(int& x, int& z, int rotation);
 
@@ -22,7 +26,7 @@ struct level {
 
 class world_info {
 public:
-  std::string world_path;
+  fs::path world_path;
   std::list<level> levels;
   
   int min_x;
@@ -48,15 +52,17 @@ public:
   world_info() {
   }
   
-  world_info(settings_t& s, std::string world_path)
+  world_info(settings_t& s, fs::path world_path)
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)
   {
     dirlist broadlisting(world_path);
     
     // broad phase listing of all the levels to figure out how they are ordered.
-    while (broadlisting.hasnext()) {
-      fast_level_file leveldata(broadlisting.next().c_str());
-
+    while (broadlisting.has_next()) {
+      fs::path next = broadlisting.next();
+      
+      fast_level_file leveldata(next.string());
+      
       if (!leveldata.islevel || leveldata.grammar_error) {
         continue;
       }
@@ -89,13 +95,13 @@ public:
     levels.sort(compare_levels);
   }
   
-  std::string get_level_path(level &l) {
+  fs::path get_level_path(level &l) {
     using common::b36encode;
     int modx = l.xReal % 64;
     if (modx < 0) modx += 64;
     int modz = l.zReal % 64;
     if (modz < 0) modz += 64;
-    return path_join(world_path, path_join(path_join(b36encode(modx), b36encode(modz)), "c." + b36encode(l.xReal) + "." + b36encode(l.zReal) + ".dat"));
+    return world_path / b36encode(modx) / b36encode(modz) / ("c." + b36encode(l.xReal) + "." + b36encode(l.zReal) + ".dat");
   }
 
   world_info** split(int chunk_size) {
@@ -123,7 +129,7 @@ public:
         w->max_z = (z + b_min_z + 1) * chunk_size - 1;
         w->min_x = (x + b_min_x) * chunk_size;
         w->max_x = (x + b_min_x + 1) * chunk_size - 1;
-        w->world_path = world_path;
+        w->world_path = fs::path(world_path);
         w->chunk_x = b_diff_z - z - 1;
         w->chunk_y = x;
         //std::cout << w->min_z << " " << w->max_z << " | " << w->min_x << " " << w->max_x << std::endl;

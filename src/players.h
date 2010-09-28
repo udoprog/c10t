@@ -30,9 +30,9 @@ class players_db {
 public:
   std::vector<player> players;
 
-  players_db(const std::string path) {
-    fs::path full_path = fs::system_complete( fs::path( path ) );
-
+  players_db(const fs::path path) {
+    fs::path full_path = fs::system_complete( path );
+    
     if (!fs::is_directory(full_path)) {
       return;
     }

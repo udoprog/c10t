@@ -5,24 +5,22 @@
 #include <queue>
 
 #include <dirent.h>
+#include <boost/filesystem.hpp>
 
-bool is_dir(std::string &path);
-
-bool is_file(std::string &path);
-
-std::string path_join(std::string a, std::string b);
+namespace fs = boost::filesystem;
 
 class dirlist {
 private:
-  std::queue<std::string> directories;
-  std::queue<std::string> files;
+  std::queue<fs::path> directories;
+  std::queue<fs::path> files;
 
 public:
-  dirlist(std::string path) {
-    directories.push(path);
+  dirlist(const fs::path path) {
+    if (fs::is_directory(path))
+      directories.push(path);
   }
   
-  bool hasnext() {
+  bool has_next() {
     if (!files.empty()) {
       return true;
     }
@@ -33,47 +31,32 @@ public:
     
     // work until you find any files
     while (!directories.empty()) {
-      std::string path = directories.front();
+      fs::path dir_path = directories.front();
       directories.pop();
       
-      DIR *dir = opendir(path.c_str()); 
-      
-      if (!dir) {
+      if (!fs::is_directory(dir_path)) {
         return false;
       }
       
-      dirent *ent; 
-      
-      while((ent = readdir(dir)) != NULL)
+      fs::directory_iterator end_itr;
+      for ( fs::directory_iterator itr( dir_path );
+            itr != end_itr;
+            ++itr )
       {
-        std::string temp_str = ent->d_name;
-
-        if (temp_str.compare(".") == 0) {
-          continue;
+        if (fs::is_directory(itr->status())) {
+          directories.push(itr->path());
         }
-        
-        if (temp_str.compare("..") == 0) {
-          continue;
-        }
-        
-        std::string fullpath = path_join(path, temp_str);
-        
-        if (is_dir(fullpath)) {
-          directories.push(fullpath);
-        }
-        else if (is_file(fullpath)) {
-          files.push(fullpath);
+        else if (fs::is_regular_file(itr->status())) {
+          files.push(itr->path());
         }
       }
-      
-      closedir(dir);
     }
     
     return !files.empty();
   }
 
-  std::string next() {
-    std::string next = files.front();
+  fs::path next() {
+    fs::path next = files.front();
     files.pop();
     return next;
   }

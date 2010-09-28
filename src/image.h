@@ -56,6 +56,8 @@ class image_base {
 private:
   int w, h;
 public:
+  typedef void (*progress_c)(int , int);
+  
   static const short COLOR_TYPE = 4;
   
   image_base(int w, int h) : w(w), h(h) {
@@ -75,8 +77,8 @@ public:
   inline size_t get_offset(int x, int y) {
     return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);
   }
-
-  bool save_png(const char *filename, const char *title);
+  
+  bool save_png(const char *filename, const char *title, progress_c);
   
   virtual void blend_pixel(int x, int y, color &c) = 0;
   virtual void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;

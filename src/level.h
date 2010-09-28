@@ -58,7 +58,7 @@ class fast_level_file
     std::string path;
     nbt::Parser<fast_level_file> parser;
     
-    fast_level_file(const char *path);
+    fast_level_file(const std::string path);
 };
 
 #endif /* _LEVEL_H_ */

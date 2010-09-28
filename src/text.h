@@ -1,3 +1,5 @@
+// Distributed under the BSD License, see accompanying LICENSE.txt
+// (C) Copyright 2010 John-John Tedro et al.
 #ifndef _TEXT_H_
 #define _TEXT_H_
 

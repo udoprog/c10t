@@ -5,6 +5,7 @@
 #include <string>
 
 #include "blocks.h"
+#include "color.h"
 
 enum mode {
   Top,
@@ -22,6 +23,8 @@ struct settings_t {
   bool binary;
   bool debug;
   bool use_split;
+  bool show_players;
+  bool require_all;
   int split;
   // top/bottom used for slicing
   int top;
@@ -29,11 +32,13 @@ struct settings_t {
   unsigned int threads;
   enum mode mode;
   unsigned int rotation;
-  bool require_all;
   int min_x, max_x, min_z, max_z; // limits to draw
-  std::string cache_file;
   size_t memory_limit;
-
+  int ttf_size;
+  color ttf_color;
+  std::string ttf_path;
+  std::string cache_file;
+  
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
 
@@ -50,18 +55,22 @@ struct settings_t {
     this->mode = Top;
     this->nocheck = false;
     this->silent = false;
+    this->show_players = false;
+    this->require_all = false;
     this->rotation = 0;
     this->threads = boost::thread::hardware_concurrency();
     this->binary = false;
     this->night = false;
     this->debug = false;
-    this->require_all = false;
     this->cache_file = "cache.dat";
     this->memory_limit = 1024 * 1024 * 1000;
     this->min_x = INT_MIN;
     this->max_x = INT_MAX;
     this->min_z = INT_MIN;
     this->max_z = INT_MAX;
+    this->ttf_path = "player-font.ttf";
+    this->ttf_size = 12;
+    this->ttf_color = color(0, 0, 0, 0xff);
   }
 
   ~settings_t() {

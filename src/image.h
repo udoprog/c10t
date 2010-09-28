@@ -68,11 +68,13 @@ public:
   
   void set_pixel(int x, int y, color &c);
   void get_pixel(int x, int y, color &c);
+  void fill(color& c);
   
   inline int get_width() { return w; };
   inline int get_height() { return h; };
   
   void composite(int xoffset, int yoffset, image_buffer &img);
+  void composite(int xoffset, int yoffset, image_base &img);
   
   inline size_t get_offset(int x, int y) {
     return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);

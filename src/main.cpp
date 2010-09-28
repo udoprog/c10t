@@ -29,6 +29,7 @@
 #include "fileutils.h"
 #include "world.h"
 #include "players.h"
+#include "text.h"
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -209,7 +210,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
   }
 }
 
-inline void overlay_player(settings_t& s, image_base *all, world_info &world, player& p) {
+inline void overlay_player(settings_t& s, image_base *all, text::font_face& font, world_info &world, player& p) {
   int diffx = (world.max_x - world.min_x) * mc::MapX;
   int diffz = (world.max_z - world.min_z) * mc::MapZ;
   int min_z = world.min_z * mc::MapZ;
@@ -217,25 +218,18 @@ inline void overlay_player(settings_t& s, image_base *all, world_info &world, pl
   
   Cube c(diffx, mc::MapY, diffz);
   int xoffset, yoffset;
+
+  memory_image marker(5, 5);
+  marker.fill(s.ttf_color);
   
   transform_world_xz(p.xPos, p.zPos, s.rotation);
-  
-  color red(255, 0, 0, 255);
-
-  image_buffer marker(16, 16, 1);
-  
-  for (int x = 0; x < 16; x++) {
-    for (int y = 0; y < 16; y++) {
-      marker.set_pixel(x, y, 0, red);
-      marker.set_pixel_depth(x, y, 1);
-    }
-  }
   
   switch (s.mode) {
   case Top:
     {
       point playerpos(diffz - (p.zPos - min_z) + mc::MapZ, p.yPos, (p.xPos - min_x));
       c.project_top(playerpos, xoffset, yoffset);
+      font.draw(*all, p.name, xoffset + 5, yoffset);
       all->composite(xoffset, yoffset, marker);
     }
     break;
@@ -243,6 +237,7 @@ inline void overlay_player(settings_t& s, image_base *all, world_info &world, pl
     {
       point playerpos(diffz - (p.zPos - min_z) + mc::MapZ, p.yPos, (p.xPos - min_x));
       c.project_oblique(playerpos, xoffset, yoffset);
+      font.draw(*all, p.name, xoffset + 5, yoffset);
       all->composite(xoffset, yoffset, marker);
     }
     break;
@@ -250,6 +245,7 @@ inline void overlay_player(settings_t& s, image_base *all, world_info &world, pl
     {
       point playerpos(p.xPos - min_x + mc::MapX, p.yPos, p.zPos - min_z);
       c.project_obliqueangle(playerpos, xoffset, yoffset);
+      font.draw(*all, p.name, xoffset + 5, yoffset);
       all->composite(xoffset, yoffset, marker);
     }
     break;
@@ -257,6 +253,7 @@ inline void overlay_player(settings_t& s, image_base *all, world_info &world, pl
     {
       point playerpos(p.xPos - min_x + mc::MapX, p.yPos, p.zPos - min_z);
       c.project_isometric(playerpos, xoffset, yoffset);
+      font.draw(*all, p.name, xoffset + 5, yoffset);
       all->composite(xoffset, yoffset, marker);
     }
     break;
@@ -391,19 +388,29 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   renderer.join();
   
   std::vector<player>::iterator plit = pdb.players.begin();
-  
-  /* initial code for projecting players
-  for (; plit != pdb.players.end(); plit++) { 
-    player p = *plit;
 
-    if (p.zPos < s.min_z) continue;
-    if (p.zPos > s.max_z) continue;
-    if (p.xPos < s.min_x) continue;
-    if (p.xPos > s.max_x) continue;
+  if (s.show_players) {
+    fs::path ttf_path(s.ttf_path);
     
-    overlay_player(s, all, world, p);
+    if (!fs::is_regular_file(ttf_path)) {
+      error << "ttf_path - not a file: " << ttf_path;
+      return false;
+    }
+    
+    text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
+    
+    /* initial code for projecting players */
+    for (; plit != pdb.players.end(); plit++) { 
+      player p = *plit;
+
+      if (p.zPos / mc::MapZ < s.min_z) continue;
+      if (p.zPos / mc::MapZ > s.max_z) continue;
+      if (p.xPos / mc::MapX < s.min_x) continue;
+      if (p.xPos / mc::MapX > s.max_x) continue;
+      
+      overlay_player(s, all, font, world, p);
+    }
   }
-  */
   
   if (!s.silent) cout << "Saving image..." << endl;
   
@@ -550,11 +557,21 @@ int do_help() {
     << "                              good for integration with third party tools" << endl
     << "  --require-all             - Will force c10t to require all chunks or fail" << endl
     << "                              not ignoring bad chunks" << endl
+    << "  --show-players            - Will draw out player position and names from the" << endl
+    << "                              players database in <world>/players" << endl
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
     << "                              file when necessary" << endl
     << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached" << endl
     << "  -P <file>                 - use <file> as palette" << endl
     << "  -W <file>                 - write <file> with the default colour palette" << endl
+    << endl
+    << "Font Options:" << endl
+    << "  --ttf-path <font>         - Use the following ttf file whenever writing text." << endl
+    << "                              defaults to `font.ttf'" << endl
+    << "  --ttf-size <size>         - Use the specified font size whenever drawing text." << endl
+    << "                              defaults to `12'" << endl
+    << "  --ttf-color <color>       - Use the specified color when drawing text." << endl
+    << "                              defaults to `0,0,0,255' (black)" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
@@ -612,37 +629,6 @@ int do_colors() {
   return 0;
 }
 
-static struct option long_options[] =
- {
-   {"world",            required_argument, 0, 'w'},
-   {"output",           required_argument, 0, 'o'},
-   {"help",             no_argument, 0, 'h'},
-   {"silent",           no_argument, 0, 's'},
-   {"version",          no_argument, 0, 'v'},
-   {"debug",            no_argument, 0, 'D'},
-   {"list-colors",      no_argument, 0, 'l'},
-   {"top",              required_argument, 0, 't'},
-   {"bottom",           required_argument, 0, 'b'},
-   {"limits",           required_argument, 0, 'L'},
-   {"memory-limit",     required_argument, 0, 'M'},
-   {"cache-file",       required_argument, 0, 'C'},
-   {"exclude",          required_argument, 0, 'e'},
-   {"include",          required_argument, 0, 'i'},
-   {"hide-all",         no_argument, 0, 'a'},
-   {"no-check",         no_argument, 0, 'N'},
-   {"oblique",          no_argument, 0, 'q'},
-   {"oblique-angle",    no_argument, 0, 'y'},
-   {"iso",              no_argument, 0, 'z'},
-   {"rotate",           required_argument, 0, 'r'},
-   {"threads",          required_argument, 0, 'm'},
-   {"cave-mode",        no_argument, 0, 'c'},
-   {"require-all",      no_argument, 0, 'Q'},
-   {"night",            no_argument, 0, 'n'},
-   {"binary",           no_argument, 0, 'x'},
-   {"split",            required_argument, 0, 'p'},
-   {0, 0, 0, 0}
- };
-
 bool get_blockid(const char *blockid_string, int& blockid) {
   for (int i = 0; i < mc::MaterialCount; i++) {
     if (strcmp(mc::MaterialName[i], blockid_string) == 0) {
@@ -661,18 +647,7 @@ bool get_blockid(const char *blockid_string, int& blockid) {
   return true;
 }
 
-bool parse_set(const char* set_str, int& blockid, color& c)
-{
-  istringstream iss(set_str);
-  string key, value;
-  
-  assert(getline(iss, key, '='));
-  assert(getline(iss, value));
-  
-  if (!get_blockid(key.c_str(), blockid)) {
-    return false;
-  }
-
+bool parse_color(const string value, color& c) {
   int cr, cg, cb, ca=0xff;
   
   if (!(sscanf(value.c_str(), "%d,%d,%d,%d", &cr, &cg, &cb, &ca) == 4 || 
@@ -694,7 +669,25 @@ bool parse_set(const char* set_str, int& blockid, color& c)
   c.g = cg;
   c.b = cb;
   c.a = ca;
+  return true;
+}
 
+bool parse_set(const char* set_str, int& blockid, color& c)
+{
+  istringstream iss(set_str);
+  string key, value;
+  
+  assert(getline(iss, key, '='));
+  assert(getline(iss, value));
+  
+  if (!get_blockid(key.c_str(), blockid)) {
+    return false;
+  }
+
+  if (!parse_color(value, c)) {
+    return false;
+  }
+  
   return true;
 }
 
@@ -757,10 +750,77 @@ int main(int argc, char *argv[]){
   int c, blockid;
 
   int option_index;
+
+  int flag;
+
+  struct option long_options[] =
+   {
+     {"world",            required_argument, 0, 'w'},
+     {"output",           required_argument, 0, 'o'},
+     {"top",              required_argument, 0, 't'},
+     {"bottom",           required_argument, 0, 'b'},
+     {"limits",           required_argument, 0, 'L'},
+     {"memory-limit",     required_argument, 0, 'M'},
+     {"cache-file",       required_argument, 0, 'C'},
+     {"exclude",          required_argument, 0, 'e'},
+     {"include",          required_argument, 0, 'i'},
+     {"rotate",           required_argument, 0, 'r'},
+     {"threads",          required_argument, 0, 'm'},
+     {"split",            required_argument, 0, 'p'},
+     {"help",             no_argument, 0, 'h'},
+     {"silent",           no_argument, 0, 's'},
+     {"version",          no_argument, 0, 'v'},
+     {"debug",            no_argument, 0, 'D'},
+     {"list-colors",      no_argument, 0, 'l'},
+     {"hide-all",         no_argument, 0, 'a'},
+     {"no-check",         no_argument, 0, 'N'},
+     {"oblique",          no_argument, 0, 'q'},
+     {"oblique-angle",    no_argument, 0, 'y'},
+     {"iso",              no_argument, 0, 'z'},
+     {"cave-mode",        no_argument, 0, 'c'},
+     {"night",            no_argument, 0, 'n'},
+     {"binary",           no_argument, 0, 'x'},
+     {"require-all",      no_argument, &flag, 0},
+     {"show-players",     no_argument, &flag, 1},
+     {"ttf-path",         required_argument, &flag, 2},
+     {"ttf-size",         required_argument, &flag, 3},
+     {"ttf-color",        required_argument, &flag, 4},
+     {0, 0, 0, 0}
+  };
   
   while ((c = getopt_long(argc, argv, "DNvxcnqzyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
+
+    if (c == 0) {
+      switch (flag) {
+      case 0:
+        s.require_all = true;
+        break;
+      case 1:
+        s.show_players = true;
+        break;
+      case 2:
+        s.ttf_path = optarg;
+        break;
+      case 3:
+        s.ttf_size = atoi(optarg);
+        
+        if (s.ttf_size <= 0) {
+          error << "ttf-size must be greater than 0";
+          goto exit_error;
+        }
+        
+        break;
+      case 4:
+        if (!parse_color(optarg, s.ttf_color)) {
+          goto exit_error;
+        }
+        break;
+      }
+      
+      continue;
+    }
     
     switch (c)
     {
@@ -851,9 +911,6 @@ int main(int argc, char *argv[]){
       break;
     case 'l':
       return do_colors();
-    case 'Q':
-      s.require_all = true;
-      break;
     case 'M':
       {
         int memory = atoi(optarg);

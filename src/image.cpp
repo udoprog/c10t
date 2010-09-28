@@ -46,6 +46,14 @@ void image_base::set_pixel(int x, int y, color &q){
   set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
 }
 
+void image_base::fill(color &q){
+  for (int x = 0; x < get_width(); x++) {
+    for (int y = 0; y < get_height(); y++) {
+      set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
+    }
+  }
+}
+
 void image_base::composite(int xoffset, int yoffset, image_buffer &img) {
   assert(xoffset >= 0);
   assert(xoffset + img.get_width() <= w);
@@ -72,6 +80,25 @@ void image_base::composite(int xoffset, int yoffset, image_buffer &img) {
         }
       }
       
+      set_pixel(xoffset + x, yoffset + y, base);
+    }
+  }
+}
+
+void image_base::composite(int xoffset, int yoffset, image_base &img) {
+  assert(xoffset >= 0);
+  assert(xoffset + img.get_width() <= w);
+  assert(yoffset >= 0);
+  assert(yoffset + img.get_height() <= h);
+  
+  color hp;
+  color base;
+  
+  for (int x = 0; x < img.get_width(); x++) {
+    for (int y = 0; y < img.get_height(); y++) {
+      get_pixel(xoffset + x, yoffset + y, base);
+      img.get_pixel(x, y, hp);
+      base.blend(hp);
       set_pixel(xoffset + x, yoffset + y, base);
     }
   }
@@ -139,18 +166,10 @@ bool image_base::save_png(const char *filename, const char *title, progress_c pr
       color c;
       get_pixel(x, y, c);
        
-      if (c.a == 0x0) {
-        row[0 + x*4] = 0;
-        row[1 + x*4] = 0;
-        row[2 + x*4] = 0;
-        row[3 + x*4] = 0x00;
-      }
-      else {
-        row[0 + x*4] = c.r;
-        row[1 + x*4] = c.g;
-        row[2 + x*4] = c.b;
-        row[3 + x*4] = 0xff;
-      }
+      row[0 + x*4] = c.r;
+      row[1 + x*4] = c.g;
+      row[2 + x*4] = c.b;
+      row[3 + x*4] = c.a;
     }
 
     png_write_row(png_ptr, row);

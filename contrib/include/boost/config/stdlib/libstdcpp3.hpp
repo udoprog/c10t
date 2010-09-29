@@ -39,12 +39,14 @@
       //
 #     define BOOST_HAS_THREADS
 #  else
+#error "THIS IS SHIT"
 #     define BOOST_DISABLE_THREADS
 #  endif
 #elif defined(__GLIBCPP__) \
         && !defined(_GLIBCPP_HAVE_GTHR_DEFAULT) \
         && !defined(_GLIBCPP__PTHREADS)
    // disable thread support if the std lib was built single threaded:
+#error "THIS IS SHIT"
 #  define BOOST_DISABLE_THREADS
 #endif
 

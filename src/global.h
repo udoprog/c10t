@@ -3,6 +3,7 @@
 #ifndef GUARD_H
 #define GUARD_H
 
+#define BOOST_HAS_PTHREADS
 #include <boost/thread.hpp>
 #include <string>
 

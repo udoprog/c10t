@@ -2,7 +2,8 @@ ARCH=x86
 OS=linux
 VERSION=SNAPSHOT
 
-LDFLAGS=-static -lz -lpng -lboost_thread -lpthread 
+USR=/usr/i686-pc-linux-gnu/usr
+LDFLAGS=-static -lz -lpng -lboost_system -lboost_filesystem -lboost_thread -lpthread -lfreetype
 DIST=c10t
 TARGET=c10t
 

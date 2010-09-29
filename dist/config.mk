@@ -1,14 +1,19 @@
-SOURCES+=src/Level.cpp
-SOURCES+=src/Color.cpp
+SOURCES+=src/level.cpp
+SOURCES+=src/color.cpp
 SOURCES+=src/blocks.cpp
+SOURCES+=src/world.cpp
+SOURCES+=src/text.cpp
+SOURCES+=src/players.cpp
 SOURCES+=src/fileutils.cpp
-SOURCES+=src/Image.cpp
+SOURCES+=src/image.cpp
+SOURCES+=src/common.cpp
 SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
 
 EXTRA=README.md
 
 OBJECTS=${SOURCES:.cpp=.o}
+CXXFLAGS+=-I${USR}/include/freetype2
 
 PACKAGE=${DIST}-${VERSION}
 BUILD=./build/

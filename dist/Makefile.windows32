@@ -6,9 +6,10 @@ SOURCES+=./contrib/boost_thread/src/win32/thread.cpp
 SOURCES+=./contrib/boost_thread/src/win32/tss_pe.cpp
 SOURCES+=./contrib/tss_dummy.cpp
 
+USR=/usr/i686-mingw32/usr
 CXX=i686-mingw32-g++
-CXXFLAGS=-DBOOST_THREAD_USE_LIB -I./contrib/include 
-LDFLAGS=-static-libgcc -static -lpng14 -lz -lpthreadGC2
+CXXFLAGS=-DBOOST_THREAD_USE_LIB -I./contrib/include
+LDFLAGS=-static-libgcc -static -lpng -lz -lpthread -lboost_filesystem -lboost_thread -lboost_system -lfreetype
 
 TARGET=c10t.exe
 DIST=c10t

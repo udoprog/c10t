@@ -17,7 +17,7 @@ find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
 find_package(FreeType REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost COMPONENTS thread filesystem REQUIRED)
+find_package(Boost COMPONENTS thread filesystem system REQUIRED)
 
 include_directories(${ZLIB_INCLUDE_DIR})
 include_directories(${PNG_INCLUDE_DIR})

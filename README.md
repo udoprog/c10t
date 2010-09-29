@@ -11,9 +11,8 @@ Requirements
 
   * libz (?)
   * libpng (=> 1.2)
-  * libboost_thread (>= 1.40)
-  * libboost_test
-  * pthread (through boost)
+  * libboost (thread, filesystem, system and test) (>= 1.40)
+  * libpthread (if required through libboost_thread - windows only)
 
 Features
 --------
@@ -37,8 +36,7 @@ Building from Source (using cmake)
 
   1. Install dependencies:
 
-    $ sudo apt-get install cmake libpng12-dev zlib1g-dev libboost-thread1.40-dev libboost-thread1.40.0 \
-    libboost-test1.40-dev libboost-test1.40.0
+    $ sudo apt-get install cmake libpng-dev zlib1g-dev libboost-all-dev libboost-all
 
   2. Run:
 

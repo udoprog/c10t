@@ -6,6 +6,7 @@ USR=/usr/i686-pc-linux-gnu/usr
 LDFLAGS=-static -lz -lpng -lboost_system -lboost_filesystem -lboost_thread -lpthread -lfreetype
 DIST=c10t
 TARGET=c10t
+TARGET_DEBUG=c10t-debug
 
 CXX=i686-pc-linux-gnu-g++
 

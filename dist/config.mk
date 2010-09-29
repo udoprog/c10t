@@ -13,15 +13,18 @@ SOURCES+=src/main.cpp
 EXTRA=README.md
 
 OBJECTS=${SOURCES:.cpp=.o}
-CXXFLAGS+=-I${USR}/include/freetype2
+CXXFLAGS+=-I${USR}/include/freetype2 -Wall
 
 PACKAGE=${DIST}-${VERSION}
 BUILD=./build/
 
-all: ${TARGET}
+all: ${TARGET} ${TARGET_DEBUG}
 
 ${TARGET}: ${OBJECTS}
-	${CXX} ${CXXFLAGS} ${OBJECTS} ${LDFLAGS} -o ${TARGET}
+	${CXX} ${CXXFLAGS} -O3 ${OBJECTS} ${LDFLAGS} -o ${TARGET}
+
+${TARGET_DEBUG}: ${OBJECTS_DEBUG}
+	${CXX} ${CXXFLAGS} -g ${OBJECTS_DEBUG} ${LDFLAGS} -o ${TARGET}
 
 clean:
 	${RM} ${OBJECTS}
@@ -33,5 +36,6 @@ package: ${TARGET} ${PACKAGE} local-package
 ${PACKAGE}:
 	mkdir -p ${PACKAGE}
 	cp ${TARGET} ${PACKAGE}/
+	cp ${TARGET_DEBUG} ${PACKAGE}/
 	cp ${EXTRA} ${PACKAGE}/
 	mkdir -p ${BUILD}

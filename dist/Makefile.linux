@@ -6,6 +6,7 @@ USR=/usr
 LDFLAGS=-static -lz -lpng -lboost_thread-mt -lboost_system-mt -lboost_filesystem-mt -lpthread -lfreetype
 DIST=c10t
 TARGET=c10t
+TARGET_DEBUG=c10t-debug
 
 include dist/config.mk
 

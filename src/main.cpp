@@ -601,8 +601,8 @@ bool do_write_palette(settings_t& s, string& path) {
       int p = x + palette.get_width() * y;
       
       if (p < mc::MaterialCount) {
-        palette.set_pixel(x, py, *mc::MaterialColor[p]);
-        palette.set_pixel(x, py + 1, *mc::MaterialSideColor[p]);
+        palette.set_pixel(x, py, mc::MaterialColor[p]);
+        palette.set_pixel(x, py + 1, mc::MaterialSideColor[p]);
       }
     }
   }
@@ -626,7 +626,7 @@ int do_colors() {
   cout << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
-    cout << i << ": " << mc::MaterialName[i] << " = " << *mc::MaterialColor[i] << endl;
+    cout << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i] << endl;
   }
   
   return 0;
@@ -701,13 +701,10 @@ bool do_base_color_set(const char *set_str) {
   if (!parse_set(set_str, blockid, c)) {
     return false;
   }
-  
-  delete mc::MaterialColor[blockid];
-  delete mc::MaterialSideColor[blockid];
-  
-  mc::MaterialColor[blockid] = new color(c);
-  mc::MaterialSideColor[blockid] = new color(mc::MaterialColor[blockid]);
-  mc::MaterialSideColor[blockid]->darken(0x20);
+
+  mc::MaterialColor[blockid] = c;
+  mc::MaterialSideColor[blockid] = mc::MaterialColor[blockid];
+  mc::MaterialSideColor[blockid].darken(0x20);
   return true;
 }
 
@@ -719,9 +716,7 @@ bool do_side_color_set(const char *set_str) {
     return false;
   }
 
-  delete mc::MaterialSideColor[blockid];
-
-  mc::MaterialSideColor[blockid] = new color(c);
+  mc::MaterialSideColor[blockid] = color(c);
   return true;
 }
 

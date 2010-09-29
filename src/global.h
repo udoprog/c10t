@@ -71,7 +71,7 @@ struct settings_t {
     this->max_x = INT_MAX;
     this->min_z = INT_MIN;
     this->max_z = INT_MAX;
-    this->ttf_path = "player-font.ttf";
+    this->ttf_path = "font.ttf";
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);
   }

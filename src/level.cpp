@@ -276,7 +276,7 @@ image_buffer *level_file::get_image(settings_t& s) {
           continue;
         }
         
-        color bc(mc::MaterialColor[bt]);
+        color bc = mc::MaterialColor[bt];
         
         int bl = blocklight_r.get4(mx, mz, my),
             sl = skylight_r.get4(mx, mz, my);
@@ -355,11 +355,11 @@ image_buffer *level_file::get_oblique_image(settings_t& s)
         int px, py;
         c.project_oblique(p, px, py);
         
-        color top(mc::MaterialColor[bt]);
+        color top = mc::MaterialColor[bt];
         apply_shading(s, bl, sl, 0, my, top);
         img->add_pixel(px, py - 1, top);
         
-        color side(mc::MaterialSideColor[bt]);
+        color side = mc::MaterialSideColor[bt];
         apply_shading(s, bl, sl, 0, my, side);
         img->add_pixel(px, py, side);
       }
@@ -427,8 +427,8 @@ image_buffer *level_file::get_obliqueangle_image(settings_t& s)
         int px, py;
         c.project_obliqueangle(p, px, py);
         
-        color top(mc::MaterialColor[bt]);
-        color side(mc::MaterialSideColor[bt]);
+        color top = mc::MaterialColor[bt];
+        color side = mc::MaterialSideColor[bt];
         
         apply_shading(s, bl, sl, hmval, y, top);
         apply_shading(s, bl, sl, hmval, y, side);
@@ -518,8 +518,8 @@ image_buffer *level_file::get_isometric_image(settings_t& s)
         int px, py;
         c.project_isometric(p, px, py);
         
-        color top(mc::MaterialColor[bt]);
-        color side(mc::MaterialSideColor[bt]);
+        color top = mc::MaterialColor[bt];
+        color side = mc::MaterialSideColor[bt];
         
         apply_shading(s, bl, sl, hmval, y, top);
         apply_shading(s, bl, sl, hmval, y, side);

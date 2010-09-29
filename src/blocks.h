@@ -110,8 +110,8 @@ namespace mc {
   extern const int MapX;
   extern const int MapZ;
   extern const char **MaterialName;
-  extern color **MaterialColor;
-  extern color **MaterialSideColor;
+  extern color* MaterialColor;
+  extern color* MaterialSideColor;
   extern enum MaterialMode *MaterialModes;
 }
 

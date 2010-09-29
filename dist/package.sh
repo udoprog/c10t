@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 make -f dist/Makefile.linux clean package
 make -f dist/Makefile.linux32 clean package
 make -f dist/Makefile.windows clean package

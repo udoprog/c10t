@@ -15,9 +15,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
-#include <boost/thread.hpp>
-#include <boost/format.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 #include "config.h"
 
@@ -500,6 +499,10 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
 int do_help() {
   cout << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
   cout << "Written by Udoprog et al." << endl;
+# if defined(C10T_DISABLE_THREADS)
+  cout << endl;
+  cout << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
+# endif
   cout << endl;
   cout << "Usage: c10t [options]" << endl;
   cout << "Options:" << endl
@@ -585,6 +588,11 @@ int do_help() {
 
 int do_version() {
   cout << "c10t - a cartography tool for minecraft" << endl;
+# if defined(C10T_DISABLE_THREADS)
+  cout << endl;
+  cout << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
+  cout << endl;
+# endif
   cout << "version " << C10T_VERSION << endl;
   cout << "by: " << C10T_CONTACT << endl;
   cout << "site: " << C10T_SITE << endl;

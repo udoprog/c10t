@@ -3,8 +3,10 @@
 #ifndef GUARD_H
 #define GUARD_H
 
-#define BOOST_HAS_PTHREADS
-#include <boost/thread.hpp>
+#if !defined(C10T_DISABLE_THREADS)
+#  include <boost/thread.hpp>
+#endif
+
 #include <string>
 
 #include "blocks.h"
@@ -49,6 +51,12 @@ struct settings_t {
       this->excludes[i] = false;
     }
 
+#   if !defined(C10T_DISABLE_THREADS)
+      this->threads = boost::thread::hardware_concurrency();
+#   else
+      this->threads = 1;
+#   endif
+
     this->use_split = false;
     this->split = 1;
     this->cavemode = false;
@@ -61,7 +69,6 @@ struct settings_t {
     this->show_players = false;
     this->require_all = false;
     this->rotation = 0;
-    this->threads = boost::thread::hardware_concurrency();
     this->binary = false;
     this->night = false;
     this->debug = false;

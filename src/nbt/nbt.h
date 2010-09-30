@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <zlib.h>
+#include <setjmp.h>
 
 #include <iostream>
 #include <string.h>
@@ -22,6 +23,25 @@ namespace nbt {
   #define NBT_STACK_SIZE 100
 
   #define DO_IF(stmt, exec) if (stmt) { exec; }
+  
+  #define assert_error(zfile, cond, why)                \
+  do {                                                  \
+  if (!(cond)) {                                           \
+    size_t where = file == NULL ? 0 : gztell(file);     \
+    error_handler(context, where, why);                 \
+    longjmp(exc_env, 1);                                \
+  }                                                     \
+  } while(0)
+  
+  #define assert_error_c(zfile, cond, why, cleanup)     \
+  do {                                                  \
+  if (!(cond)) {                                           \
+    size_t where = file == NULL ? 0 : gztell(file);     \
+    error_handler(context, where, why);                 \
+    cleanup;                                            \
+    longjmp(exc_env, 1);                                \
+  }                                                     \
+  } while(0)
   
   typedef int8_t Byte;
   typedef int16_t Short;
@@ -115,40 +135,27 @@ namespace nbt {
   template <class C>
   class Parser {
     private:
+      jmp_buf exc_env;
       bool running;
       C *context;
-
-      /*
-       * If this returns true, the calling context should bail out as soon as possible
-       */
-      inline bool assert_error(gzFile file, bool a, const char *why) {
-        if (!a && running) {
-          size_t where = file == NULL ? 0 : gztell(file);
-          error_handler(context, where, why);
-          stop();
-          return true;
-        }
-        
-        return !running;
-      }
-
-      Byte read_byte(gzFile file) {
+      
+      inline Byte read_byte(gzFile file) {
         Byte b;
-        DO_IF(assert_error(file, gzread(file, &b, sizeof(Byte)) == sizeof(Byte), "Buffer too short to read Byte"), return -1);
+        assert_error(file, gzread(file, &b, sizeof(Byte)) == sizeof(Byte), "Buffer too short to read Byte");
         return b;
       }
       
-      Short read_short(gzFile file) {
+      inline Short read_short(gzFile file) {
         uint8_t b[2];
-        DO_IF(assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Short"), return -1);
+        assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Short");
         Short s = (b[0] << 8) + b[1];
         return s;
       }
 
-      Int read_int(gzFile file) {
+      inline Int read_int(gzFile file) {
         Int i;
         Byte b[sizeof(i)];
-        DO_IF(assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Int"), return -1);
+        assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Int");
         Int *ip = &i;
         
         if (is_big_endian()) {
@@ -166,22 +173,22 @@ namespace nbt {
         return i;
       }
       
-      String read_string(gzFile file) {
+      inline String read_string(gzFile file) {
         Short s = read_short(file);
-        DO_IF(assert_error(file, s >= 0, "String specified with invalid length < 0"), return String(""));
+        assert_error(file, s >= 0, "String specified with invalid length < 0");
         uint8_t *str = new uint8_t[s + 1];
-        DO_IF(assert_error(file, gzread(file, str, s) == s, "Buffer to short to read String"), return String(""));
+        assert_error_c(file, gzread(file, str, s) == s, "Buffer to short to read String", delete str);
         String so((const char*)str, s);
         delete [] str;
         return so;
       }
       
-      void flush_string(gzFile file) {
+      inline void flush_string(gzFile file) {
         Short s = read_short(file);
         assert_error(file, gzseek(file, s, SEEK_CUR) != -1, "Buffer to short to flush String");
       }
       
-      Float read_float(gzFile file)
+      inline Float read_float(gzFile file)
       {
         Float f;
         Byte b[sizeof(f)];
@@ -203,7 +210,7 @@ namespace nbt {
         return f;
       }
       
-      Long read_long(gzFile file) {
+      inline Long read_long(gzFile file) {
         Long l;
         Byte b[sizeof(l)];
         assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Long");
@@ -232,7 +239,7 @@ namespace nbt {
         return l;
       }
       
-      Double read_double(gzFile file) {
+      inline Double read_double(gzFile file) {
         Double d;
         Byte b[sizeof(d)];
         assert_error(file, gzread(file, b, sizeof(d)) == sizeof(d), "Buffer to short to read Double");
@@ -259,6 +266,28 @@ namespace nbt {
         }
         
         return d;
+      }
+      
+      inline Byte read_tagType(gzFile file) {
+        Byte type = read_byte(file);
+        assert_error(file, type >= 0 && type <= TAG_Compound, "Not a valid tag type");
+        return type;
+      }
+      
+      inline void flush_byte_array(gzFile file) {
+        Int length = read_int(file);
+        assert_error(file, gzseek(file, length, SEEK_CUR) != -1,
+          "Buffer to short to flush ByteArray");
+      }
+      
+      inline void handle_byte_array(String name, gzFile file) {
+        Int length = read_int(file);
+        Byte *values = new Byte[length];
+        assert_error(file, gzread(file, values, length) == length, "Buffer to short to read ByteArray");
+        ByteArray *array = new ByteArray();
+        array->values = values;
+        array->length = length;
+        register_byte_array(context, name, array);
       }
     public:
       typedef void (*begin_compound_t)(C*, String name);
@@ -329,34 +358,14 @@ namespace nbt {
         this->context = context;
       }
       
-      Byte read_tagType(gzFile file) {
-        Byte type = read_byte(file);
-        assert_error(file, type >= 0 && type <= TAG_Compound, "Not a valid tag type");
-        return type;
-      }
-      
-      void flush_byte_array(gzFile file) {
-        Int length = read_int(file);
-        assert_error(file, gzseek(file, length, SEEK_CUR) != -1,
-          "Buffer to short to flush ByteArray");
-      }
-      
-      void handle_byte_array(String name, gzFile file) {
-        Int length = read_int(file);
-        Byte *values = new Byte[length];
-        DO_IF(assert_error(file, gzread(file, values, length) == length, "Buffer to short to read ByteArray"), return);
-        ByteArray *array = new ByteArray();
-        array->values = values;
-        array->length = length;
-        register_byte_array(context, name, array);
-      }
-
       void stop() {
         running = false;
       }
       
       void parse_file(const char *path)
       {
+        if (setjmp(exc_env) == 1) return;
+        
         gzFile file = gzopen(path, "rb");
         assert_error(file, file != NULL, strerror(errno));
 
@@ -368,10 +377,14 @@ namespace nbt {
         stack_entry *root = stack + 0;
         
         root->type = read_tagType(file);
-        assert_error(file, root->type == TAG_Compound, "Expected TAG_Compound at root");
+        assert_error_c(file, root->type == TAG_Compound, "Expected TAG_Compound at root", gzclose(file));
         root->name = read_string(file);
         
         begin_compound(context, root->name);
+        
+        if (setjmp(exc_env) == 1) {
+          goto exit_error;
+        }
         
         while(running && stack_p >= 0) {
           assert_error(file, stack_p < NBT_STACK_SIZE, "Stack cannot be larger than NBT_STACK_SIZE");
@@ -379,8 +392,9 @@ namespace nbt {
           stack_entry* top = stack + stack_p;
           
           Byte type;
-          String name;
+          String name("");
           
+          // if top is of Compound type, we must read the item name first
           if (top->type == TAG_Compound) {
             type = read_tagType(file);
             
@@ -393,6 +407,7 @@ namespace nbt {
             name = read_string(file);
           }
           
+          // if top of stack is of type list, the type must be inferred, name is assumed to be "" (empty string)
           else if (top->type == TAG_List) {
             if (top->list_read >= top->list_count) {
               end_list(context, top->name);
@@ -400,7 +415,6 @@ namespace nbt {
               continue;
             }
             
-            name = top->name;
             type = top->list_type;
             top->list_read++;
           }
@@ -504,6 +518,7 @@ namespace nbt {
           }
         }
         
+exit_error:
         gzclose(file);
       }
   };

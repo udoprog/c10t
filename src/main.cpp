@@ -58,10 +58,43 @@ void cout_progress_n(int i, int all) {
   } 
 }
 
+void cout_progress_ionly_n(int i, int all) {
+  if (all == 1) {
+    cout << setw(6) << "done!" << endl;
+  }
+  else {
+    if (i % 50 == 0 && i > 0) {
+      cout << "." << flush;
+      
+      if (i % 1000 == 0) {
+        cout << setw(8) << i << " ?%" << endl;
+      }
+    }
+  } 
+}
+
+inline void cout_progress_ionly_b(const uint8_t type, int part, int whole) {
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
+
+  if (whole == 1) {
+    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(2) << flush;
+  }
+  else if (part % 1000 == 0) {
+    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(1) << flush;
+  }
+  else {
+    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(0) << flush;
+  }
+}
+
 inline void cout_progress_b(const uint8_t type, int part, int whole) {
   uint8_t b = ((part * 0xff) / whole);
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type)
        << hex << std::setw(2) << setfill('0') << static_cast<int>(b) << flush;
+}
+
+void cout_progress_b_parse(int i, int all) {
+  cout_progress_ionly_b(PARSE_BYTE, i, all);
 }
 
 void cout_progress_b_render(int i, int all) {
@@ -477,8 +510,17 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
     cout << endl;
   }
   
-  if (!s.silent) cout << "Performing broad phase scan of world directory... " << flush;
-  world_info world(s, world_path);
+  void (*progress_c)(int part, int all) = NULL;
+
+  if (s.binary) {
+    progress_c = cout_progress_b_parse;
+  }
+  else if (!s.silent) {
+    progress_c = cout_progress_ionly_n;
+  }
+  
+  if (!s.silent) cout << "Performing broad phase scan of world directory... " << endl;
+  world_info world(s, world_path, progress_c);
   if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
 
   if (!s.use_split) {

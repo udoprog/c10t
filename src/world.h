@@ -54,13 +54,16 @@ public:
   world_info() {
   }
   
-  world_info(settings_t& s, fs::path world_path)
+  world_info(settings_t& s, fs::path world_path, void (*c_progress)(int, int))
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)
   {
     dirlist broadlisting(world_path);
+
+    int i = 1;
     
     // broad phase listing of all the levels to figure out how they are ordered.
     while (broadlisting.has_next()) {
+      c_progress(i++, 0);
       fs::path next = broadlisting.next();
       
       fast_level_file leveldata(next.string());
@@ -95,6 +98,8 @@ public:
     }
 
     levels.sort(compare_levels);
+    
+    c_progress(i++, 1);
   }
   
   fs::path get_level_path(level &l) {

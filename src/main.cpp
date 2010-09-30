@@ -304,12 +304,6 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
 }
 
 bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const string& output) {
-  fs::path ttf_path(s.ttf_path);
-  
-  if (!fs::is_regular_file(ttf_path)) {
-    error << "ttf_path - not a file: " << ttf_path;
-    return false;
-  }
   
   if (s.debug) {
     cout << "world_info" << endl;
@@ -440,10 +434,17 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   std::vector<player>::iterator plit = pdb.players.begin();
 
   boost::ptr_vector<marker> markers;
-
-  text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
   
   if (s.show_players) {
+    fs::path ttf_path(s.ttf_path);
+    
+    if (!fs::is_regular_file(ttf_path)) {
+      error << "ttf_path - not a file: " << ttf_path;
+      return false;
+    }
+    
+    text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
+    
     /* initial code for projecting players */
     for (; plit != pdb.players.end(); plit++) { 
       player p = *plit;

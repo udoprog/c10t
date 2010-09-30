@@ -20,6 +20,8 @@
 namespace nbt {
   class bad_grammar : std::exception {};
   #define NBT_STACK_SIZE 100
+
+  #define DO_IF(stmt, exec) if (stmt) { exec; }
   
   typedef int8_t Byte;
   typedef int16_t Short;
@@ -116,23 +118,29 @@ namespace nbt {
       bool running;
       C *context;
 
-      void assert_error(gzFile file, bool a, const char *why) {
-        if (!a) {
+      /*
+       * If this returns true, the calling context should bail out as soon as possible
+       */
+      inline bool assert_error(gzFile file, bool a, const char *why) {
+        if (!a && running) {
           size_t where = file == NULL ? 0 : gztell(file);
           error_handler(context, where, why);
           stop();
+          return true;
         }
+        
+        return !running;
       }
 
       Byte read_byte(gzFile file) {
         Byte b;
-        assert_error(file, gzread(file, &b, sizeof(Byte)) == sizeof(Byte), "Buffer too short to read Byte");
+        DO_IF(assert_error(file, gzread(file, &b, sizeof(Byte)) == sizeof(Byte), "Buffer too short to read Byte"), return -1);
         return b;
       }
       
       Short read_short(gzFile file) {
         uint8_t b[2];
-        assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Short");
+        DO_IF(assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Short"), return -1);
         Short s = (b[0] << 8) + b[1];
         return s;
       }
@@ -140,7 +148,7 @@ namespace nbt {
       Int read_int(gzFile file) {
         Int i;
         Byte b[sizeof(i)];
-        assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Int");
+        DO_IF(assert_error(file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Int"), return -1);
         Int *ip = &i;
         
         if (is_big_endian()) {
@@ -160,8 +168,9 @@ namespace nbt {
       
       String read_string(gzFile file) {
         Short s = read_short(file);
+        DO_IF(assert_error(file, s >= 0, "String specified with invalid length < 0"), return String(""));
         uint8_t *str = new uint8_t[s + 1];
-        assert_error(file, gzread(file, str, s) == s, "Buffer to short to read String");
+        DO_IF(assert_error(file, gzread(file, str, s) == s, "Buffer to short to read String"), return String(""));
         String so((const char*)str, s);
         delete [] str;
         return so;
@@ -335,7 +344,7 @@ namespace nbt {
       void handle_byte_array(String name, gzFile file) {
         Int length = read_int(file);
         Byte *values = new Byte[length];
-        assert_error(file, gzread(file, values, length) == length, "Buffer to short to read ByteArray");
+        DO_IF(assert_error(file, gzread(file, values, length) == length, "Buffer to short to read ByteArray"), return);
         ByteArray *array = new ByteArray();
         array->values = values;
         array->length = length;

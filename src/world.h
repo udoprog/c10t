@@ -63,7 +63,8 @@ public:
     
     // broad phase listing of all the levels to figure out how they are ordered.
     while (broadlisting.has_next()) {
-      c_progress(i++, 0);
+      if (c_progress != NULL) c_progress(i++, 0);
+      
       fs::path next = broadlisting.next();
       
       fast_level_file leveldata(next.string());
@@ -99,7 +100,7 @@ public:
 
     levels.sort(compare_levels);
     
-    c_progress(i++, 1);
+    if (c_progress != NULL) c_progress(i++, 1);
   }
   
   fs::path get_level_path(level &l) {

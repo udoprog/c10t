@@ -62,13 +62,11 @@ void cout_progress_ionly_n(int i, int all) {
   if (all == 1) {
     cout << setw(6) << "done!" << endl;
   }
-  else {
-    if (i % 50 == 0 && i > 0) {
-      cout << "." << flush;
-      
-      if (i % 1000 == 0) {
-        cout << setw(8) << i << " ?%" << endl;
-      }
+  else if (i % 50 == 0 && i > 0) {
+    cout << "." << flush;
+    
+    if (i % 1000 == 0) {
+      cout << setw(8) << i << " ?%" << endl;
     }
   } 
 }
@@ -81,9 +79,6 @@ inline void cout_progress_ionly_b(const uint8_t type, int part, int whole) {
   }
   else if (part % 1000 == 0) {
     cout << hex << std::setw(2) << setfill('0') << static_cast<int>(1) << flush;
-  }
-  else {
-    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(0) << flush;
   }
 }
 

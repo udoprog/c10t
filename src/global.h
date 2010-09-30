@@ -29,6 +29,7 @@ struct settings_t {
   bool debug;
   bool use_split;
   bool show_players;
+  bool show_coordinates;
   bool require_all;
   int split;
   // top/bottom used for slicing
@@ -67,6 +68,7 @@ struct settings_t {
     this->nocheck = false;
     this->silent = false;
     this->show_players = false;
+    this->show_coordinates = false;
     this->require_all = false;
     this->rotation = 0;
     this->binary = false;

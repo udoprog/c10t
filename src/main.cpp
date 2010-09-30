@@ -31,6 +31,7 @@
 #include "world.h"
 #include "players.h"
 #include "text.h"
+#include "marker.h"
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -211,7 +212,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
   }
 }
 
-inline void overlay_player(settings_t& s, image_base *all, text::font_face& font, world_info &world, player& p) {
+inline void overlay_markers(settings_t& s, image_base *all, world_info &world, boost::ptr_vector<marker>& markers) {
   int diffx = (world.max_x - world.min_x) * mc::MapX;
   int diffz = (world.max_z - world.min_z) * mc::MapZ;
   int min_z = world.min_z * mc::MapZ;
@@ -220,48 +221,63 @@ inline void overlay_player(settings_t& s, image_base *all, text::font_face& font
   Cube c(diffx, mc::MapY, diffz);
   int xoffset, yoffset;
 
-  memory_image marker(5, 5);
-  marker.fill(s.ttf_color);
+  memory_image positionmark(5, 5);
+  positionmark.fill(s.ttf_color);
   
-  transform_world_xz(p.xPos, p.zPos, s.rotation);
+  boost::ptr_vector<marker>::iterator it;
   
-  switch (s.mode) {
-  case Top:
-    {
-      point playerpos(diffz - (p.zPos - min_z) + mc::MapZ, p.yPos, (p.xPos - min_x));
-      c.project_top(playerpos, xoffset, yoffset);
-      font.draw(*all, p.name, xoffset + 5, yoffset);
-      all->composite(xoffset, yoffset, marker);
+  for (it = markers.begin(); it != markers.end(); it++) {
+    marker m = *it;
+
+    int p_x = m.x, p_y = m.y, p_z = m.z;
+    
+    transform_world_xz(p_x, p_z, s.rotation);
+    
+    switch (s.mode) {
+    case Top:
+      {
+        point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
+        c.project_top(playerpos, xoffset, yoffset);
+        m.font.draw(*all, m.text, xoffset + 5, yoffset);
+        all->composite(xoffset, yoffset, positionmark);
+      }
+      break;
+    case Oblique:
+      {
+        point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
+        c.project_oblique(playerpos, xoffset, yoffset);
+        m.font.draw(*all, m.text, xoffset + 5, yoffset);
+        all->composite(xoffset, yoffset, positionmark);
+      }
+      break;
+    case ObliqueAngle:
+      {
+        point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
+        c.project_obliqueangle(playerpos, xoffset, yoffset);
+        m.font.draw(*all, m.text, xoffset + 5, yoffset);
+        all->composite(xoffset, yoffset, positionmark);
+      }
+      break;
+    case Isometric:
+      {
+        point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
+        c.project_isometric(playerpos, xoffset, yoffset);
+        m.font.draw(*all, m.text, xoffset + 5, yoffset);
+        all->composite(xoffset, yoffset, positionmark);
+      }
+      break;
     }
-    break;
-  case Oblique:
-    {
-      point playerpos(diffz - (p.zPos - min_z) + mc::MapZ, p.yPos, (p.xPos - min_x));
-      c.project_oblique(playerpos, xoffset, yoffset);
-      font.draw(*all, p.name, xoffset + 5, yoffset);
-      all->composite(xoffset, yoffset, marker);
-    }
-    break;
-  case ObliqueAngle:
-    {
-      point playerpos(p.xPos - min_x + mc::MapX, p.yPos, p.zPos - min_z);
-      c.project_obliqueangle(playerpos, xoffset, yoffset);
-      font.draw(*all, p.name, xoffset + 5, yoffset);
-      all->composite(xoffset, yoffset, marker);
-    }
-    break;
-  case Isometric:
-    {
-      point playerpos(p.xPos - min_x + mc::MapX, p.yPos, p.zPos - min_z);
-      c.project_isometric(playerpos, xoffset, yoffset);
-      font.draw(*all, p.name, xoffset + 5, yoffset);
-      all->composite(xoffset, yoffset, marker);
-    }
-    break;
   }
 }
 
 bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const string& output) {
+  fs::path ttf_path(s.ttf_path);
+  
+  if (!fs::is_regular_file(ttf_path)) {
+    error << "ttf_path - not a file: " << ttf_path;
+    return false;
+  }
+  
   if (s.debug) {
     cout << "world_info" << endl;
     cout << "  min_x: " << world.min_x << endl;
@@ -390,16 +406,11 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   
   std::vector<player>::iterator plit = pdb.players.begin();
 
+  boost::ptr_vector<marker> markers;
+
+  text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
+  
   if (s.show_players) {
-    fs::path ttf_path(s.ttf_path);
-    
-    if (!fs::is_regular_file(ttf_path)) {
-      error << "ttf_path - not a file: " << ttf_path;
-      return false;
-    }
-    
-    text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
-    
     /* initial code for projecting players */
     for (; plit != pdb.players.end(); plit++) { 
       player p = *plit;
@@ -409,9 +420,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
       if (p.xPos / mc::MapX < s.min_x) continue;
       if (p.xPos / mc::MapX > s.max_x) continue;
       
-      overlay_player(s, all, font, world, p);
+      marker *m = new marker(p.name, font, p.xPos, p.yPos, p.zPos);
+      markers.push_back(m);
     }
   }
+  
+  overlay_markers(s, all, world, markers);
   
   if (!s.silent) cout << "Saving image..." << endl;
   
@@ -565,6 +579,7 @@ int do_help() {
     << "                              not ignoring bad chunks" << endl
     << "  --show-players            - Will draw out player position and names from the" << endl
     << "                              players database in <world>/players" << endl
+    << "  --show-coordinates        - Will draw out each chunks expected coordinates" << endl
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
     << "                              file when necessary" << endl
     << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached" << endl
@@ -791,6 +806,7 @@ int main(int argc, char *argv[]){
      {"ttf-path",         required_argument, &flag, 2},
      {"ttf-size",         required_argument, &flag, 3},
      {"ttf-color",        required_argument, &flag, 4},
+     {"show-coordinates",     no_argument, &flag, 5},
      {0, 0, 0, 0}
   };
   
@@ -822,6 +838,9 @@ int main(int argc, char *argv[]){
         if (!parse_color(optarg, s.ttf_color)) {
           goto exit_error;
         }
+        break;
+      case 5:
+        s.show_coordinates = true;
         break;
       }
       

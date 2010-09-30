@@ -38,7 +38,7 @@ namespace text {
     FT_Library library;
     FT_Face face;
     int size;
-    const color base;
+    color base;
   public:
     font_face(const fs::path font_path, int size, color base) throw(text_error) : font_path(font_path), base(base) {
       int error;
@@ -69,7 +69,7 @@ namespace text {
       this->size = size;
     }
     
-    void draw_bitmap(image_base& target, FT_Bitmap* bitmap, int pen_x, int pen_y) {
+    void draw_bitmap(image_base& target, FT_Bitmap* bitmap, int pen_x, int pen_y) const {
       assert(bitmap->pixel_mode == FT_PIXEL_MODE_GRAY);
       
       uint8_t* buffer = bitmap->buffer;
@@ -83,7 +83,7 @@ namespace text {
       }
     }
     
-    void draw(image_base& image, const std::string text, int x, int y) {
+    void draw(image_base& image, const std::string text, int x, int y) const {
       FT_GlyphSlot slot = face->glyph;
 
       int error;

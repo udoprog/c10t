@@ -368,23 +368,21 @@ namespace nbt {
         
         gzFile file = gzopen(path, "rb");
         assert_error(file, file != NULL, strerror(errno));
-
-        running = true;
         
+        running = true;
         stack_entry *stack = new stack_entry[NBT_STACK_SIZE];
         int stack_p = 0;
-        
         stack_entry *root = stack + 0;
-        
-        root->type = read_tagType(file);
-        assert_error_c(file, root->type == TAG_Compound, "Expected TAG_Compound at root", gzclose(file));
-        root->name = read_string(file);
-        
-        begin_compound(context, root->name);
         
         if (setjmp(exc_env) == 1) {
           goto exit_error;
         }
+        
+        root->type = read_tagType(file);
+        assert_error(file, root->type == TAG_Compound, "Expected TAG_Compound at root");
+        root->name = read_string(file);
+        
+        begin_compound(context, root->name);
         
         while(running && stack_p >= 0) {
           assert_error(file, stack_p < NBT_STACK_SIZE, "Stack cannot be larger than NBT_STACK_SIZE");
@@ -520,6 +518,7 @@ namespace nbt {
         
 exit_error:
         gzclose(file);
+        delete [] stack;
       }
   };
 }

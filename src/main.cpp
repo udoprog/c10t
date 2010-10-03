@@ -847,6 +847,15 @@ int main(int argc, char *argv[]){
      {"show-coordinates",     no_argument, &flag, 5},
      {0, 0, 0, 0}
   };
+
+  bool exclude_all = false;
+  bool excludes[mc::MaterialCount];
+  bool includes[mc::MaterialCount];
+  
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    excludes[i] = false;
+    includes[i] = false;
+  }
   
   while ((c = getopt_long(argc, argv, "DNvxcnqzyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
@@ -893,7 +902,7 @@ int main(int argc, char *argv[]){
       return do_help();
     case 'e':
       if (!get_blockid(optarg, blockid)) goto exit_error;
-      s.excludes[blockid] = true;
+      excludes[blockid] = true;
       break;
     case 'm':
       s.threads = atoi(optarg);
@@ -922,13 +931,11 @@ int main(int argc, char *argv[]){
       s.mode = ObliqueAngle;
       break;
     case 'a':
-      for (int i = 0; i < mc::MaterialCount; i++) {
-        s.excludes[i] = true;
-      }
+      exclude_all = true;
       break;
     case 'i':
       if (!get_blockid(optarg, blockid)) goto exit_error;
-      s.excludes[blockid] = false;
+      includes[blockid] = true;
       break;
     case 'w': world_path = optarg; break;
     case 'o': output_path = optarg; break;
@@ -1003,6 +1010,22 @@ int main(int argc, char *argv[]){
        goto exit_error;
     default:
       abort ();
+    }
+  }
+
+  if (exclude_all) {
+    for (int i = 0; i < mc::MaterialCount; i++) {
+      s.excludes[i] = true;
+    }
+  }
+
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    if (excludes[i]) {
+      s.excludes[i] = true;
+    }
+    
+    if (includes[i]) {
+      s.excludes[i] = false;
     }
   }
 

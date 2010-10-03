@@ -699,7 +699,8 @@ int do_help() {
     << "                              defaults to <ttf-color>" << endl
     << "  --player-color <color>    - Use the specified color when drawing player names." << endl
     << "                              defaults to <ttf-color>" << endl
-    << "  --coord-color <color>     - Use the specified color when drawing coordinates." << endl
+    << "  --coordinate-color <color>" << endl
+    << "                            - Use the specified color when drawing coordinates." << endl
     << "                              defaults to <ttf-color>" << endl
     << endl;
   cout << endl;

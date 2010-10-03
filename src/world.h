@@ -74,7 +74,7 @@ public:
       }
 
       if (leveldata.xPos < s.min_x ||
-          leveldata.xPos > s.max_z ||
+          leveldata.xPos > s.max_x ||
           leveldata.zPos < s.min_z ||
           leveldata.zPos > s.max_z) {
        continue;

@@ -280,7 +280,7 @@ public:
     assert(x >= 0 && x < mc::MapX);
     assert(z >= 0 && z < mc::MapZ);
     assert(y >= 0 && y < mc::MapY);
-    int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
+    int p = y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
   }
@@ -414,7 +414,7 @@ image_buffer *level_file::get_oblique_image(settings_t& s)
         }
       }
 
-      for (int my = s.bottom; my < s.top; my++) {
+      for (int my = s.bottom; my <= s.top; my++) {
         point p(x, my, y);
         
         bt = blocks_r.get8(mx, mz, my);
@@ -432,7 +432,7 @@ image_buffer *level_file::get_oblique_image(settings_t& s)
         int bl = blocklight_r.get4(mx, mz, my),
             sl = skylight_r.get4(mx, mz, my);
         
-        if (my + 1 < s.top && mx + 1 < mc::MapX) {
+        if (my + 1 <= s.top && mx + 1 < mc::MapX) {
           int checkblock = blocks_r.get8(mx + 1, mz, my + 1);
           if (checkblock != mc::Air && mc::MaterialColor[checkblock].is_opaque()) {
             continue;
@@ -493,7 +493,7 @@ image_buffer *level_file::get_obliqueangle_image(settings_t& s)
 
       int hmval = heightmap_r.get8(x, z);
       
-      for (int y = s.bottom; y < s.top; y++) {
+      for (int y = s.bottom; y <= s.top; y++) {
         point p(x, y, z);
         
         bt = blocks_r.get8(x, z, y);
@@ -584,7 +584,7 @@ image_buffer *level_file::get_isometric_image(settings_t& s)
 
       int hmval = heightmap_r.get8(x, z);
       
-      for (int y = s.bottom; y < s.top; y++) {
+      for (int y = s.bottom; y <= s.top; y++) {
         point p(x, y, z);
         
         bt = blocks_r.get8(x, z, y);

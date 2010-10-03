@@ -32,6 +32,7 @@ struct settings_t {
   bool show_coordinates;
   bool require_all;
   bool pedantic_broad_phase;
+  bool show_signs;
   int split;
   // top/bottom used for slicing
   int top;
@@ -85,6 +86,7 @@ struct settings_t {
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);
     this->pedantic_broad_phase = false;
+    this->show_signs = false;
   }
 
   ~settings_t() {

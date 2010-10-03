@@ -14,12 +14,14 @@
 #include <math.h>
 #include <zlib.h>
 #include <time.h>
+#include <vector>
 
 #include "nbt/nbt.h"
 
 #include "color.h"
 #include "image.h"
 #include "blocks.h"
+#include "marker.h"
 
 #include <boost/filesystem.hpp>
 
@@ -41,7 +43,11 @@ class level_file
     std::string grammar_error_why;
     std::string path;
     bool ignore_blocks;
-
+    bool in_te, in_sign;
+    nbt::Int sign_x, sign_y, sign_z;
+    std::string sign_text;
+    std::vector<light_marker> markers;
+    
     level_file(const char *path);
     ~level_file();
 

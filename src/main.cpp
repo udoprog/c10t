@@ -119,6 +119,7 @@ struct Partial {
   size_t grammar_error_where;
   string grammar_error_why;
   string path;
+  std::vector<light_marker> markers;
 };
 
 struct render_job {
@@ -163,7 +164,11 @@ public:
     case Isometric:     p->image = level->get_isometric_image(s); break;
     case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
     }
-
+    
+    if (level->markers.size() > 0) {
+      p->markers = level->markers;
+    }
+    
     delete level;
     return p;
   }
@@ -282,6 +287,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
       {
         point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
         c.project_obliqueangle(playerpos, xoffset, yoffset);
+        yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->composite(xoffset, yoffset, positionmark);
       }
@@ -361,6 +367,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   unsigned int lvlq = 0;
   unsigned int i;
 
+  std::vector<light_marker> light_markers;
+  
   if (s.binary) {
     progress_c = cout_progress_b_render;
   }
@@ -416,6 +424,11 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     }
     
     if (progress_c != NULL) progress_c(i, world_size);
+
+    if (p->markers.size() > 0) {
+      if (s.debug) { cout << "Found " << p->markers.size() << " signs"; };
+      light_markers.insert(light_markers.end(), p->markers.begin(), p->markers.end());
+    }
     
     calc_image_partial(s, *p, all, world, i_w, i_h);
     delete p->image;
@@ -425,12 +438,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   if (progress_c != NULL) progress_c(world_size, world_size);
   
   renderer.join();
-  
-  std::vector<player>::iterator plit = pdb.players.begin();
 
   boost::ptr_vector<marker> markers;
+
+  bool show_markers = s.show_players || s.show_signs;
   
-  if (s.show_players) {
+  if (show_markers) {
     fs::path ttf_path(s.ttf_path);
     
     if (!fs::is_regular_file(ttf_path)) {
@@ -440,17 +453,30 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     
     text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
     
-    /* initial code for projecting players */
-    for (; plit != pdb.players.end(); plit++) { 
-      player p = *plit;
-
-      if (p.zPos / mc::MapZ < s.min_z) continue;
-      if (p.zPos / mc::MapZ > s.max_z) continue;
-      if (p.xPos / mc::MapX < s.min_x) continue;
-      if (p.xPos / mc::MapX > s.max_x) continue;
+    if (s.show_players) {
+      std::vector<player>::iterator plit = pdb.players.begin();
       
-      marker *m = new marker(p.name, font, p.xPos, p.yPos, p.zPos);
-      markers.push_back(m);
+      /* initial code for projecting players */
+      for (; plit != pdb.players.end(); plit++) { 
+        player p = *plit;
+        
+        if (p.zPos / mc::MapZ < s.min_z) continue;
+        if (p.zPos / mc::MapZ > s.max_z) continue;
+        if (p.xPos / mc::MapX < s.min_x) continue;
+        if (p.xPos / mc::MapX > s.max_x) continue;
+        
+        marker *m = new marker(p.name, font, p.xPos, p.yPos, p.zPos);
+        markers.push_back(m);
+      }
+    }
+    
+    if (light_markers.size() > 0) {
+      std::vector<light_marker>::iterator lmit = light_markers.begin();
+      for (; lmit != light_markers.end(); lmit++) {
+        light_marker lm = *lmit;
+        marker *m = new marker(lm.text, font, lm.x, lm.y, lm.z);
+        markers.push_back(m);
+      }
     }
   }
   
@@ -617,12 +643,16 @@ int do_help() {
     << "                              not ignoring bad chunks" << endl
     << "  --show-players            - Will draw out player position and names from the" << endl
     << "                              players database in <world>/players" << endl
+    << "  --show-signs              - Will draw out signs from all chunks" << endl
     << "  --show-coordinates        - Will draw out each chunks expected coordinates" << endl
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
     << "                              file when necessary" << endl
     << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached" << endl
     << "  -P <file>                 - use <file> as palette" << endl
     << "  -W <file>                 - write <file> with the default colour palette" << endl
+    << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable" << endl
+    << "                              during broad phase by getting x/y/z positions" << endl
+    << "                              from a quick parsing" << endl
     << endl
     << "Font Options:" << endl
     << "  --ttf-path <font>         - Use the following ttf file whenever writing text." << endl
@@ -846,6 +876,7 @@ int main(int argc, char *argv[]){
      {"ttf-color",        required_argument, &flag, 4},
      {"show-coordinates",     no_argument, &flag, 5},
      {"pedantic-broad-phase", no_argument, &flag, 6},
+     {"show-signs",       no_argument, &flag, 7},
      {0, 0, 0, 0}
   };
 
@@ -892,6 +923,9 @@ int main(int argc, char *argv[]){
         break;
       case 6:
         s.pedantic_broad_phase = true;
+        break;
+      case 7:
+        s.show_signs = true;
         break;
       }
       

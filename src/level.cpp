@@ -15,10 +15,52 @@
 void begin_compound(level_file* level, nbt::String name) {
   if (name.compare("Level") == 0) {
     level->islevel = true;
+    return;
+  }
+}
+
+void register_string(level_file* level, nbt::String name, nbt::String value) {
+  if (!level->in_te) {
+    return;
+  }
+
+  if (level->in_sign) {
+    if (value.size() == 0) {
+      return;
+    }
+    
+    if (level->sign_text.size() == 0) {
+      level->sign_text = value;
+    }
+    else {
+      level->sign_text += " " + value;
+    }
+    
+    return;
+  }
+  
+  if (name.compare("id") == 0 && value.compare("Sign") == 0) {
+    level->in_sign = true;
   }
 }
 
 void register_int(level_file* level, nbt::String name, nbt::Int i) {
+  if (level->in_te) {
+    if (level->in_sign) {
+      if (name.compare("x") == 0) {
+        level->sign_x = i;
+      }
+      else if (name.compare("y") == 0) {
+        level->sign_y = i;
+      }
+      else if (name.compare("z") == 0) {
+        level->sign_z = i;
+      }
+    }
+    
+    return;
+  }
+  
   if (!level->islevel) {
     return;
   }
@@ -63,6 +105,32 @@ void register_byte_array(level_file* level, nbt::String name, nbt::ByteArray* by
   delete byte_array;
 }
 
+void begin_list(level_file* level, nbt::String name, nbt::Byte type, nbt::Int count) {
+  if (name.compare("TileEntities") == 0) {
+    level->in_te = true;
+  }
+}
+
+void end_list(level_file* level, nbt::String name) {
+  if (name.compare("TileEntities") == 0) {
+    level->in_te = false;
+  }
+}
+
+void end_compound(level_file* level, nbt::String name) {
+  if (level->in_te) {
+    if (level->in_sign) {
+      level->in_sign = false;
+      light_marker m(level->sign_text, level->sign_x, level->sign_y, level->sign_z);
+      level->markers.push_back(m);
+      level->sign_text = "";
+      level->sign_x = 0;
+      level->sign_y = 0;
+      level->sign_z = 0;
+    }
+  }
+}
+
 void error_handler(level_file* level, size_t where, const char *why) {
   level->grammar_error = true;
   level->grammar_error_where = where;
@@ -89,13 +157,21 @@ level_file::level_file(const char *path)
     grammar_error(false),
     grammar_error_where(0),
     grammar_error_why(""),
-    path(path)
+    path(path),
+    in_te(false), in_sign(false),
+    sign_x(0), sign_y(0), sign_z(0),
+    sign_text("")
 {
   nbt::Parser<level_file> parser(this);
   
   parser.register_byte_array = register_byte_array;
   parser.register_int = register_int;
+  parser.register_string = register_string;
   parser.begin_compound = begin_compound;
+  parser.begin_list = begin_list;
+  parser.end_list = end_list;
+  parser.begin_compound = begin_compound;
+  parser.end_compound = end_compound;
   parser.error_handler = error_handler;
   
   parser.parse_file(path);

@@ -17,4 +17,15 @@ public:
   }
 };
 
+struct light_marker {
+public:
+  std::string text;
+  int x, y, z;
+  
+  light_marker(std::string text, int x, int y, int z) :
+      text(text), x(x), y(y), z(z)
+  {
+  }
+};
+
 #endif

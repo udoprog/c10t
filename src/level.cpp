@@ -356,6 +356,13 @@ image_buffer *level_file::get_oblique_image(settings_t& s)
         int bl = blocklight_r.get4(mx, mz, my),
             sl = skylight_r.get4(mx, mz, my);
         
+        if (my + 1 < s.top && mx + 1 < mc::MapX) {
+          int checkblock = blocks_r.get8(mx + 1, mz, my + 1);
+          if (checkblock != mc::Air && mc::MaterialColor[checkblock].is_opaque()) {
+            continue;
+          }
+        }
+        
         int px, py;
         c.project_oblique(p, px, py);
         

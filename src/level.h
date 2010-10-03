@@ -21,6 +21,10 @@
 #include "image.h"
 #include "blocks.h"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 class level_file
 {
   public:
@@ -57,10 +61,10 @@ class fast_level_file
     bool grammar_error;
     size_t grammar_error_where;
     std::string grammar_error_why;
-    std::string path;
+    const fs::path path;
     nbt::Parser<fast_level_file> parser;
     
-    fast_level_file(const std::string path);
+    fast_level_file(const fs::path path, bool filename);
 };
 
 #endif /* _LEVEL_H_ */

@@ -67,7 +67,7 @@ public:
       
       fs::path next = broadlisting.next();
       
-      fast_level_file leveldata(next.string());
+      fast_level_file leveldata(next, !s.pedantic_broad_phase);
       
       if (!leveldata.islevel || leveldata.grammar_error) {
         continue;

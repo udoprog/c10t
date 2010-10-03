@@ -845,6 +845,7 @@ int main(int argc, char *argv[]){
      {"ttf-size",         required_argument, &flag, 3},
      {"ttf-color",        required_argument, &flag, 4},
      {"show-coordinates",     no_argument, &flag, 5},
+     {"pedantic-broad-phase", no_argument, &flag, 6},
      {0, 0, 0, 0}
   };
 
@@ -888,6 +889,9 @@ int main(int argc, char *argv[]){
         break;
       case 5:
         s.show_coordinates = true;
+        break;
+      case 6:
+        s.pedantic_broad_phase = true;
         break;
       }
       

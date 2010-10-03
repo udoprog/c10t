@@ -7,6 +7,10 @@
 #include "level.h"
 #include "blocks.h"
 #include "2d/cube.h"
+#include "common.h"
+
+#include <boost/algorithm/string.hpp>
+#include <vector>
 
 void begin_compound(level_file* level, nbt::String name) {
   if (name.compare("Level") == 0) {
@@ -586,7 +590,7 @@ void fast_error_handler(fast_level_file* level, size_t where, const char *why) {
   level->grammar_error_why = why;
 }
 
-fast_level_file::fast_level_file(const std::string path)
+fast_level_file::fast_level_file(const fs::path path, bool filename)
   :
     xPos(0), zPos(0),
     has_xPos(false), has_zPos(false),
@@ -597,9 +601,37 @@ fast_level_file::fast_level_file(const std::string path)
     path(path),
     parser(this)
 {
-  parser.register_int = fast_register_int;
-  parser.begin_compound = fast_begin_compound;
-  parser.error_handler = fast_error_handler;
+  std::string extension = fs::extension(path);
   
-  parser.parse_file(path.c_str());
+  if (filename) {
+    std::vector<std::string> parts;
+    std::string basename = fs::basename(path);
+    boost::split(parts, basename, boost::is_any_of("."));
+    
+    if (parts.size() != 3 || extension.compare(".dat") != 0) {
+      grammar_error = true;
+      grammar_error_why = "Filename does not match c.<x>.<z>.dat";
+      return;
+    }
+
+    std::string x = parts.at(1);
+    std::string z = parts.at(2);
+
+    xPos = common::b36decode(x);
+    zPos = common::b36decode(z);
+    islevel = true;
+  }
+  else {
+    if (extension.compare(".dat") != 0) {
+      grammar_error = true;
+      grammar_error_why = "File extension is not .dat";
+      return;
+    }
+
+    parser.register_int = fast_register_int;
+    parser.begin_compound = fast_begin_compound;
+    parser.error_handler = fast_error_handler;
+    
+    parser.parse_file(path.string().c_str());
+  }
 }

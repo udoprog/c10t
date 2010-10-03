@@ -31,6 +31,7 @@ struct settings_t {
   bool show_players;
   bool show_coordinates;
   bool require_all;
+  bool pedantic_broad_phase;
   int split;
   // top/bottom used for slicing
   int top;
@@ -83,6 +84,7 @@ struct settings_t {
     this->ttf_path = "font.ttf";
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);
+    this->pedantic_broad_phase = false;
   }
 
   ~settings_t() {

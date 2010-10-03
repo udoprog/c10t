@@ -92,10 +92,10 @@ void image_base::composite(int xoffset, int yoffset, image_base &img) {
   assert(xoffset + img.get_width() <= w);
   assert(yoffset >= 0);
   assert(yoffset + img.get_height() <= h);
-  
+
   color hp;
   color base;
-  
+
   for (int x = 0; x < img.get_width(); x++) {
     for (int y = 0; y < img.get_height(); y++) {
       get_pixel(xoffset + x, yoffset + y, base);
@@ -104,6 +104,20 @@ void image_base::composite(int xoffset, int yoffset, image_base &img) {
       set_pixel(xoffset + x, yoffset + y, base);
     }
   }
+}
+
+void image_base::safe_composite(int xoffset, int yoffset, image_base &img) {
+  if (xoffset < 0) return;
+  if (xoffset + img.get_width() > w) return;
+  if (yoffset < 0) return;
+  if (yoffset + img.get_height() > h) return;
+  composite(xoffset, yoffset, img);
+}
+
+void image_base::safe_blend_pixel(int x, int y, color &c) {
+  if (x < 0 || x >= w) return;
+  if (y < 0 ||y >= h) return;
+  blend_pixel(x, y, c);
 }
 
 bool image_base::save_png(const char *filename, const char *title, progress_c progress_c_cb)

@@ -75,8 +75,9 @@ public:
   inline int get_width() { return w; };
   inline int get_height() { return h; };
   
-  void composite(int xoffset, int yoffset, image_buffer &img);
-  void composite(int xoffset, int yoffset, image_base &img);
+  void composite(int xoffset, int yoffset, image_buffer& img);
+  void composite(int xoffset, int yoffset, image_base& img);
+  void safe_composite(int xoffset, int yoffset, image_base& img);
   
   inline size_t get_offset(int x, int y) {
     return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);
@@ -84,6 +85,7 @@ public:
   
   bool save_png(const char *filename, const char *title, progress_c);
   
+  void safe_blend_pixel(int x, int y, color &c);
   virtual void blend_pixel(int x, int y, color &c) = 0;
   virtual void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
   virtual void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) = 0;

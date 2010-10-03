@@ -33,6 +33,9 @@ struct settings_t {
   bool require_all;
   bool pedantic_broad_phase;
   bool show_signs;
+  bool has_sign_color;
+  bool has_player_color;
+  bool has_coordinate_color;
   int split;
   // top/bottom used for slicing
   int top;
@@ -44,6 +47,9 @@ struct settings_t {
   size_t memory_limit;
   int ttf_size;
   color ttf_color;
+  color sign_color;
+  color player_color;
+  color coordinate_color;
   std::string ttf_path;
   std::string cache_file;
   
@@ -85,6 +91,12 @@ struct settings_t {
     this->ttf_path = "font.ttf";
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);
+    this->sign_color = color(0, 0, 0, 0xff);
+    this->has_sign_color = false;
+    this->player_color = color(0, 0, 0, 0xff);
+    this->has_player_color = false;
+    this->coordinate_color = color(0, 0, 0, 0xff);
+    this->has_coordinate_color = false;
     this->pedantic_broad_phase = false;
     this->show_signs = false;
   }

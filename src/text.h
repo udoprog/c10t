@@ -78,7 +78,7 @@ namespace text {
         for (int x = 0; x < bitmap->width && x < target.get_width() + pen_x; x++) {
           color c(base);
           c.a = buffer[x + y * bitmap->width];
-          target.blend_pixel(pen_x + x, pen_y + y, c);
+          target.safe_blend_pixel(pen_x + x, pen_y + y, c);
         }
       }
     }
@@ -99,6 +99,10 @@ namespace text {
         /* increment pen position */
         pen_x += slot->bitmap.width + 2;
       }
+    }
+
+    void set_color(color& c) {
+      base = c;
     }
   };
 }

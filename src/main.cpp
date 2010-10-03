@@ -272,7 +272,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
         point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
         c.project_top(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset, yoffset, positionmark);
       }
       break;
     case Oblique:
@@ -280,7 +280,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
         point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
         c.project_oblique(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset, yoffset, positionmark);
       }
       break;
     case ObliqueAngle:
@@ -289,7 +289,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
         c.project_obliqueangle(playerpos, xoffset, yoffset);
         yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset, yoffset, positionmark);
       }
       break;
     case Isometric:
@@ -297,7 +297,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
         point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
         c.project_isometric(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset, yoffset, positionmark);
       }
       break;
     }
@@ -441,7 +441,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
 
   boost::ptr_vector<marker> markers;
 
-  bool show_markers = s.show_players || s.show_signs;
+  bool show_markers = s.show_players || s.show_signs || s.show_coordinates;
   
   if (show_markers) {
     fs::path ttf_path(s.ttf_path);
@@ -454,6 +454,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
     
     if (s.show_players) {
+      text::font_face player_font = font;
+      
+      if (s.has_player_color) {
+        player_font.set_color(s.player_color);
+      }
+      
       std::vector<player>::iterator plit = pdb.players.begin();
       
       /* initial code for projecting players */
@@ -465,16 +471,44 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         if (p.xPos / mc::MapX < s.min_x) continue;
         if (p.xPos / mc::MapX > s.max_x) continue;
         
-        marker *m = new marker(p.name, font, p.xPos, p.yPos, p.zPos);
+        marker *m = new marker(p.name, player_font, p.xPos, p.yPos, p.zPos);
         markers.push_back(m);
       }
     }
     
-    if (light_markers.size() > 0) {
+    if (s.show_signs && light_markers.size() > 0) {
+      text::font_face sign_font = font;
+      
+      if (s.has_sign_color) {
+        sign_font.set_color(s.sign_color);
+      }
+      
       std::vector<light_marker>::iterator lmit = light_markers.begin();
       for (; lmit != light_markers.end(); lmit++) {
         light_marker lm = *lmit;
-        marker *m = new marker(lm.text, font, lm.x, lm.y, lm.z);
+        marker *m = new marker(lm.text, sign_font, lm.x, lm.y, lm.z);
+        markers.push_back(m);
+      }
+    }
+    
+    if (s.show_coordinates) {
+      text::font_face coordinate_font = font;
+      
+      if (s.has_coordinate_color) {
+        coordinate_font.set_color(s.coordinate_color);
+      }
+      
+      for (lvlit = world.levels.begin(); lvlit != world.levels.end(); lvlit++) {
+        level l = *lvlit;
+        if (l.zPos - 4 < world.min_z) continue;
+        if (l.zPos + 4 > world.max_z) continue;
+        if (l.xPos - 4 < world.min_x) continue;
+        if (l.xPos + 4 > world.max_x) continue;
+        if (l.zPos % 10 != 0) continue;
+        if (l.xPos % 10 != 0) continue;
+        std::stringstream ss;
+        ss << "(" << l.xPos * mc::MapX << ", " << l.zPos * mc::MapZ << ")";
+        marker *m = new marker(ss.str(), coordinate_font, l.xPos * mc::MapX, 0, l.zPos * mc::MapZ);
         markers.push_back(m);
       }
     }
@@ -661,6 +695,12 @@ int do_help() {
     << "                              defaults to `12'" << endl
     << "  --ttf-color <color>       - Use the specified color when drawing text." << endl
     << "                              defaults to `0,0,0,255' (black)" << endl
+    << "  --sign-color <color>      - Use the specified color when drawing signs." << endl
+    << "                              defaults to <ttf-color>" << endl
+    << "  --player-color <color>    - Use the specified color when drawing player names." << endl
+    << "                              defaults to <ttf-color>" << endl
+    << "  --coord-color <color>     - Use the specified color when drawing coordinates." << endl
+    << "                              defaults to <ttf-color>" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
@@ -877,6 +917,9 @@ int main(int argc, char *argv[]){
      {"show-coordinates",     no_argument, &flag, 5},
      {"pedantic-broad-phase", no_argument, &flag, 6},
      {"show-signs",       no_argument, &flag, 7},
+     {"sign-color",        required_argument, &flag, 8},
+     {"player-color",        required_argument, &flag, 9},
+     {"coordinate-color",        required_argument, &flag, 10},
      {0, 0, 0, 0}
   };
 
@@ -926,6 +969,27 @@ int main(int argc, char *argv[]){
         break;
       case 7:
         s.show_signs = true;
+        break;
+      case 8:
+        if (!parse_color(optarg, s.sign_color)) {
+          goto exit_error;
+        }
+        
+        s.has_sign_color = true;
+        break;
+      case 9:
+        if (!parse_color(optarg, s.player_color)) {
+          goto exit_error;
+        }
+        
+        s.has_player_color = true;
+        break;
+      case 10:
+        if (!parse_color(optarg, s.coordinate_color)) {
+          goto exit_error;
+        }
+        
+        s.has_coordinate_color = true;
         break;
       }
       

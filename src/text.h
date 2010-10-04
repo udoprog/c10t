@@ -13,6 +13,7 @@
 namespace fs = boost::filesystem;
 
 #include "image.h"
+#include "utf8.h"
 #include <assert.h>
 
 #include <iostream>
@@ -83,15 +84,17 @@ namespace text {
       }
     }
     
-    void draw(image_base& image, const std::string text, int x, int y) const {
+    void draw(image_base& image, const std::string rawtext, int x, int y) const {
       FT_GlyphSlot slot = face->glyph;
 
       int error;
 
       int pen_x = x, pen_y = y;
       
-      for ( unsigned int n = 0; n < text.size(); n++ ) {
-        error = FT_Load_Char( face, text.at(n), FT_LOAD_RENDER ); 
+      std::vector<uint32_t> text = utf8_decode(rawtext);
+      
+      for (std::vector<uint32_t>::iterator it = text.begin(); it != text.end(); it++ ) {
+        error = FT_Load_Char( face, *it, FT_LOAD_RENDER ); 
         if ( error ) continue;
         
         draw_bitmap(image, &slot->bitmap, pen_x + slot->bitmap_left, pen_y - slot->bitmap_top);

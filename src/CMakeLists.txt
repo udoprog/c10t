@@ -6,6 +6,7 @@ set(c10t_SOURCES ${c10t_SOURCES} common.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} players.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} world.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} fileutils.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} utf8.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} nbt/nbt.cpp)
 
 add_library(c10t-lib EXCLUDE_FROM_ALL ${c10t_SOURCES})

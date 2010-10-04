@@ -120,7 +120,7 @@ void image_base::safe_blend_pixel(int x, int y, color &c) {
   blend_pixel(x, y, c);
 }
 
-bool image_base::save_png(const char *filename, const char *title, progress_c progress_c_cb)
+bool image_base::save_png(const std::string path, const char *title, progress_c progress_c_cb)
 {
   bool ret = true;
   
@@ -129,11 +129,15 @@ bool image_base::save_png(const char *filename, const char *title, progress_c pr
   png_infop info_ptr = NULL;
   png_bytep row = NULL;
   
-  fp = fopen(filename, "wb");
-
-  if (fp == NULL) {
-     ret = false;
-     goto finalise;
+  if (path.compare("-") == 0) {
+    fp = stdout;
+  } else {
+    fp = fopen(path.c_str(), "wb");
+    
+    if (fp == NULL) {
+       ret = false;
+       goto finalise;
+    }
   }
   
   png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);

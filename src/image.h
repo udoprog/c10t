@@ -83,7 +83,7 @@ public:
     return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);
   }
   
-  bool save_png(const char *filename, const char *title, progress_c);
+  bool save_png(const std::string filename, const char *title, progress_c);
   
   void safe_blend_pixel(int x, int y, color &c);
   virtual void blend_pixel(int x, int y, color &c) = 0;

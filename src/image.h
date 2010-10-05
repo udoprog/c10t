@@ -18,6 +18,10 @@ struct image_operation {
 
 class image_operations {
 public:
+  bool reversed;
+  
+  image_operations() : reversed(false) {};
+  
   std::vector<image_operation> operations;
   void add_pixel(int x, int y, color &c);
 };

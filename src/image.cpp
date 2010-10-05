@@ -70,14 +70,26 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
   
   color hp;
 
-  for (std::vector<image_operation>::iterator it = img.operations.begin();
-      it != img.operations.end(); it++) {
-      image_operation op = *it;
+  if (img.reversed) {
+    for (std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
+        it != img.operations.rend(); it++) {
+        image_operation op = *it;
+        
+        color base;
+        get_pixel(xoffset + op.x, yoffset + op.y, base);
+        base.blend(op.c);
+        set_pixel(xoffset + op.x, yoffset + op.y, base);
+    }
+  } else {
+    for (std::vector<image_operation>::iterator it = img.operations.begin();
+        it != img.operations.end(); it++) {
+        image_operation op = *it;
 
-      color base;
-      get_pixel(xoffset + op.x, yoffset + op.y, base);
-      base.blend(op.c);
-      set_pixel(xoffset + op.x, yoffset + op.y, base);
+        color base;
+        get_pixel(xoffset + op.x, yoffset + op.y, base);
+        base.blend(op.c);
+        set_pixel(xoffset + op.x, yoffset + op.y, base);
+    }
   }
 }
 

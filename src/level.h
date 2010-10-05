@@ -50,11 +50,11 @@ class level_file
     
     level_file(const char *path);
     ~level_file();
-
-    image_buffer *get_image(settings_t& s);
-    image_buffer *get_oblique_image(settings_t& s);
-    image_buffer *get_obliqueangle_image(settings_t& s);
-    image_buffer *get_isometric_image(settings_t& s);
+    
+    image_operations* get_image(settings_t& s);
+    image_operations* get_oblique_image(settings_t& s);
+    image_operations* get_obliqueangle_image(settings_t& s);
+    image_operations* get_isometric_image(settings_t& s);
 };
 
 class fast_level_file

@@ -110,10 +110,10 @@ inline void cout_error(const string& message) {
  *
  * This will allow us to composite the entire image later and calculate sizes then.
  */
-struct Partial {
+struct render_result {
   int xPos;
   int zPos;
-  image_buffer *image;
+  image_operations *operations;
   bool islevel;
   bool grammar_error;
   size_t grammar_error_where;
@@ -128,17 +128,18 @@ struct render_job {
 };
 
 
-class PartialRenderer : public threadworker<render_job, Partial*> {
+class render_resultRenderer : public threadworker<render_job, render_result*> {
 public:
   settings_t& s;
   
-  PartialRenderer(settings_t& s, int n) : threadworker<render_job, Partial*>(n), s(s) {
+  render_resultRenderer(settings_t& s, int n) : threadworker<render_job, render_result*>(n), s(s) {
   }
   
-  Partial *work(render_job job) {
+  render_result *work(render_job job) {
     level_file *level = new level_file(job.path.c_str());
     
-    Partial *p = new Partial;
+    render_result *p = new render_result;
+    p->operations = NULL;
     p->islevel = false;
     p->grammar_error = false;
     p->path = job.path;
@@ -159,10 +160,10 @@ public:
     p->zPos = job.zPos;
     
     switch (s.mode) {
-    case Top:           p->image = level->get_image(s); break;
-    case Oblique:       p->image = level->get_oblique_image(s); break;
-    case Isometric:     p->image = level->get_isometric_image(s); break;
-    case ObliqueAngle:  p->image = level->get_obliqueangle_image(s); break;
+    case Top:           p->operations = level->get_image(s); break;
+    case Oblique:       p->operations = level->get_oblique_image(s); break;
+    case Isometric:     p->operations = level->get_isometric_image(s); break;
+    case ObliqueAngle:  p->operations = level->get_obliqueangle_image(s); break;
     }
     
     if (level->markers.size() > 0) {
@@ -198,7 +199,7 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
   }
 }
 
-inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world_info &world, int image_width, int image_height) {
+inline void calc_image_partial(settings_t& s, render_result &p, image_base *all, world_info &world, int image_width, int image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
   
@@ -212,7 +213,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
       c.project_top(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
-      all->composite(xoffset, yoffset, *p.image);
+      all->composite(xoffset, yoffset, *p.operations);
     }
     break;
   case Oblique:
@@ -221,7 +222,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
       c.project_oblique(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
-      all->composite(xoffset, yoffset, *p.image);
+      all->composite(xoffset, yoffset, *p.operations);
     }
     break;
   case ObliqueAngle:
@@ -230,7 +231,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
       c.project_obliqueangle(topleft, xoffset, yoffset);
       xoffset = xoffset * mc::MapX;
       yoffset = yoffset * mc::MapZ;
-      all->composite(xoffset, yoffset, *p.image);
+      all->composite(xoffset, yoffset, *p.operations);
     }
     break;
   case Isometric:
@@ -239,7 +240,7 @@ inline void calc_image_partial(settings_t& s, Partial &p, image_base *all, world
       c.project_isometric(topleft, xoffset, yoffset);
       xoffset = xoffset * mc::MapX;
       yoffset = yoffset * mc::MapZ;
-      all->composite(xoffset, yoffset, *p.image);
+      all->composite(xoffset, yoffset, *p.operations);
     }
     break;
   }
@@ -358,7 +359,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   } else {
   }*/
   
-  PartialRenderer renderer(s, s.threads);
+  render_resultRenderer renderer(s, s.threads);
   renderer.start();
   unsigned int world_size = world.levels.size();
   
@@ -395,7 +396,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     }
     
     --lvlq;
-    Partial *p = renderer.get();
+    render_result *p = renderer.get();
 
     if (p->grammar_error) {
       if (s.require_all) {
@@ -431,7 +432,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     }
     
     calc_image_partial(s, *p, all, world, i_w, i_h);
-    delete p->image;
+    delete p->operations;
     delete p;
   }
   

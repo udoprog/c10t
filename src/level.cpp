@@ -318,15 +318,13 @@ public:
   }
 };
 
-image_buffer *level_file::get_image(settings_t& s) {
-  image_buffer *img = new image_buffer(mc::MapX, mc::MapZ, 1);
+image_operations* level_file::get_image(settings_t& s) {
+  image_operations* operations = new image_operations;
   
   if (!islevel) {
-    return img;
+    return operations;
   }
 
-  img->set_reversed(true);
-  
   // block type
   int bt;
   
@@ -374,19 +372,19 @@ image_buffer *level_file::get_image(settings_t& s) {
         continue;
       }
       
-      img->set_pixel(x, y, 0, base);
+      operations->add_pixel(x, y, base);
     }
   }
   
-  return img;
+  return operations;
 }
 
-image_buffer *level_file::get_oblique_image(settings_t& s)
+image_operations* level_file::get_oblique_image(settings_t& s)
 {
-  image_buffer *img = new image_buffer(mc::MapX, mc::MapZ + mc::MapY, mc::MapY + mc::MapZ);
+  image_operations *operations = new image_operations;
   
   if (!islevel) {
-    return img;
+    return operations;
   }
   
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
@@ -444,24 +442,24 @@ image_buffer *level_file::get_oblique_image(settings_t& s)
         
         color top = mc::MaterialColor[bt];
         apply_shading(s, bl, sl, 0, my, top);
-        img->add_pixel(px, py - 1, top);
+        operations->add_pixel(px, py - 1, top);
         
         color side = mc::MaterialSideColor[bt];
         apply_shading(s, bl, sl, 0, my, side);
-        img->add_pixel(px, py, side);
+        operations->add_pixel(px, py, side);
       }
     }
   }
   
-  return img;
+  return operations;
 }
 
-image_buffer *level_file::get_obliqueangle_image(settings_t& s)
+image_operations* level_file::get_obliqueangle_image(settings_t& s)
 {
-  image_buffer *img = new image_buffer(mc::MapX * 2 + 1, mc::MapX + mc::MapY + mc::MapZ, mc::MapY + mc::MapZ * 2);
+  image_operations* oper = new image_operations;
   
   if (!islevel) {
-    return img;
+    return oper;
   }
   
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
@@ -522,39 +520,39 @@ image_buffer *level_file::get_obliqueangle_image(settings_t& s)
         
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
-          img->add_pixel(px, py - 1, top);
-          img->add_pixel(px + 1, py - 1, top);
-          img->add_pixel(px, py, side);
+          oper->add_pixel(px, py - 1, top);
+          oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py, side);
           side.darken(0x20);
-          img->add_pixel(px + 1, py, side);
+          oper->add_pixel(px + 1, py, side);
           break;
         case mc::HalfBlock:
-          img->add_pixel(px, py, top);
-          img->add_pixel(px + 1, py, top);
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
           break;
         case mc::TopBlock:
-          img->add_pixel(px, py - 1, top);
-          img->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py - 1, top);
+          oper->add_pixel(px + 1, py - 1, top);
           break;
         }
       }
     }
   }
   
-  return img;
+  return oper;
 }
 
-image_buffer *level_file::get_isometric_image(settings_t& s)
+image_operations* level_file::get_isometric_image(settings_t& s)
 {
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
 
   int iw, ih;
   c.get_isometric_limits(iw, ih);
   
-  image_buffer *img = new image_buffer(iw, ih, mc::MapY + mc::MapZ * 2);
+  image_operations* oper = new image_operations;
   
   if (!islevel) {
-    return img;
+    return oper;
   }
   
   // block type
@@ -613,33 +611,33 @@ image_buffer *level_file::get_isometric_image(settings_t& s)
         
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
-          img->add_pixel(px, py - 2, top);
-          img->add_pixel(px + 1, py - 2, top);
-          img->add_pixel(px, py - 1, top);
-          img->add_pixel(px + 1, py - 1, top);
-          img->add_pixel(px, py, side);
-          img->add_pixel(px, py + 1, side);
-          img->add_pixel(px + 1, py, side);
-          img->add_pixel(px + 1, py + 1, side);
+          oper->add_pixel(px, py - 2, top);
+          oper->add_pixel(px + 1, py - 2, top);
+          oper->add_pixel(px, py - 1, top);
+          oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py, side);
+          oper->add_pixel(px, py + 1, side);
+          oper->add_pixel(px + 1, py, side);
+          oper->add_pixel(px + 1, py + 1, side);
           break;
         case mc::HalfBlock:
-          img->add_pixel(px, py - 1, top);
-          img->add_pixel(px + 1, py - 1, top);
-          img->add_pixel(px, py, top);
-          img->add_pixel(px + 1, py, top);
-          img->add_pixel(px, py + 1, side);
-          img->add_pixel(px + 1, py + 1, side);
+          oper->add_pixel(px, py - 1, top);
+          oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
+          oper->add_pixel(px, py + 1, side);
+          oper->add_pixel(px + 1, py + 1, side);
           break;
         case mc::TopBlock:
-          img->add_pixel(px, py - 1, top);
-          img->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py - 1, top);
+          oper->add_pixel(px + 1, py - 1, top);
           break;
         }
       }
     }
   }
   
-  return img;
+  return oper;
 }
 
 void fast_begin_compound(fast_level_file* level, nbt::String name) {

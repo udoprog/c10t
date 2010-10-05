@@ -9,49 +9,17 @@
 #include <assert.h>
 #include <algorithm>
 #include <string.h>
+#include <vector>
 
-class image_buffer {
+struct image_operation {
+  color c;
+  int x, y;
+};
+
+class image_operations {
 public:
-  static const short COLOR_TYPE = 4;
-  uint8_t *colors;
-  uint8_t *heights;
-  
-  int w;
-  int h;
-  int d;
-  bool reversed;
-  
-  image_buffer(int w, int h, int d) : w(w), h(h), d(d), reversed(false) {
-    colors = new uint8_t[COLOR_TYPE * w * h * d];
-    heights = new uint8_t[w * h];
-    
-    for (int x = 0; x < w; x++) {
-      for (int y = 0; y < h; y++) {
-        set_pixel_rgba(x, y, 0, 0xff, 0xff, 0xff, 0x00);
-        set_pixel_depth(x, y, 0);
-      }
-    }
-  }
-
-  ~image_buffer() {
-    delete [] colors;
-    delete [] heights;
-  }
-
-  int get_width() { return w; };
-  int get_height() { return h; };
-  int get_depth() { return d; };
-  
-  void add_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+  std::vector<image_operation> operations;
   void add_pixel(int x, int y, color &c);
-  void set_pixel_rgba(int x, int y, int z, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  void set_pixel(int x, int y, int z, color &c);
-  
-  void set_reversed(bool);
-  void set_pixel_depth(int x, int y, uint8_t h);
-  uint8_t get_pixel_depth(int x, int y);
-
-  void get_pixel(int x, int y, int z, color &c);
 };
 
 class image_base {
@@ -75,7 +43,7 @@ public:
   inline int get_width() { return w; };
   inline int get_height() { return h; };
   
-  void composite(int xoffset, int yoffset, image_buffer& img);
+  void composite(int xoffset, int yoffset, image_operations& oper);
   void composite(int xoffset, int yoffset, image_base& img);
   void safe_composite(int xoffset, int yoffset, image_base& img);
   

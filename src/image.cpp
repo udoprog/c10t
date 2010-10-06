@@ -3,16 +3,61 @@
 #include "image.h"
 #include "global.h"
 
+#include <algorithm>
 #include <assert.h>
+#include <stdint.h>
+#include <limits>
 
 #include <png.h>
 
 void image_operations::add_pixel(int x, int y, color &c) {
-  image_operation oper;
-  oper.x = x;
-  oper.y = y;
-  oper.c = c;
-  operations.push_back(oper);
+  assert(x >= 0);
+  assert(y >= 0);
+  assert(x < std::numeric_limits<uint16_t>::max());
+  assert(y < std::numeric_limits<uint16_t>::max());
+  
+  if (c.is_invisible()) {
+    return;
+  }
+  
+  if (c.is_transparent()) {
+    image_operation oper;
+    
+    oper.x = (uint16_t)x;
+    oper.y = (uint16_t)y;
+    oper.order = order++;
+    oper.c = c;
+    
+    operations.push_back(oper);
+    return;
+  }
+  
+  maxx = std::max(maxx, x);
+  maxy = std::max(maxy, y);
+  
+  image_op_key k(x, y);
+  
+  if (operation_map.find(k) != operation_map.end()) {
+    cache_hit_count++;
+    size_t pos = operation_map[k];
+    image_operation cached = operations[pos];
+    cached.c = c;
+    cached.order = order++;
+    operations[pos] = cached;
+  }
+  else {
+    cache_miss_count++;
+    image_operation oper;
+    operation_map[k] = operations.size();
+    
+    image_operation new_oper;
+    
+    new_oper.x = x;
+    new_oper.y = y;
+    new_oper.order = order++;
+    new_oper.c = c;
+    operations.push_back(new_oper);
+  }
 }
 
 void memory_image::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
@@ -39,7 +84,7 @@ void memory_image::blend_pixel(int x, int y, color &c){
   color o;
   get_pixel(x, y, o);
 
-  if (o.is_transparent()) {
+  if (o.is_invisible()) {
     set_pixel(x, y, c);
     return;
   }
@@ -73,22 +118,22 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
   if (img.reversed) {
     for (std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
         it != img.operations.rend(); it++) {
-        image_operation op = *it;
-        
-        color base;
-        get_pixel(xoffset + op.x, yoffset + op.y, base);
-        base.blend(op.c);
-        set_pixel(xoffset + op.x, yoffset + op.y, base);
+      image_operation op = *it;
+      
+      color base;
+      get_pixel(xoffset + op.x, yoffset + op.y, base);
+      base.blend(op.c);
+      set_pixel(xoffset + op.x, yoffset + op.y, base);
     }
   } else {
     for (std::vector<image_operation>::iterator it = img.operations.begin();
         it != img.operations.end(); it++) {
-        image_operation op = *it;
+      image_operation op = *it;
 
-        color base;
-        get_pixel(xoffset + op.x, yoffset + op.y, base);
-        base.blend(op.c);
-        set_pixel(xoffset + op.x, yoffset + op.y, base);
+      color base;
+      get_pixel(xoffset + op.x, yoffset + op.y, base);
+      base.blend(op.c);
+      set_pixel(xoffset + op.x, yoffset + op.y, base);
     }
   }
 }
@@ -271,7 +316,7 @@ void cached_image::blend_pixel(int x, int y, color &c){
     ic.is_set = true;
   }
   
-  if (ic.c.is_transparent()) {
+  if (ic.c.is_invisible()) {
     return;
   }
   

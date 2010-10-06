@@ -7,10 +7,14 @@
 #  include <boost/thread.hpp>
 #endif
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 
 #include "blocks.h"
 #include "color.h"
+
+namespace fs = boost::filesystem;
 
 enum mode {
   Top,
@@ -52,6 +56,10 @@ struct settings_t {
   color coordinate_color;
   std::string ttf_path;
   std::string cache_file;
+  std::string cache_key;
+  fs::path cache_dir;
+  bool cache_compress;
+  bool cache_use;
   
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
@@ -99,8 +107,12 @@ struct settings_t {
     this->has_coordinate_color = false;
     this->pedantic_broad_phase = false;
     this->show_signs = false;
+    this->cache_use = false;
+    this->cache_key = "";
+    this->cache_dir = "cache";
+    this->cache_compress = false;
   }
-
+  
   ~settings_t() {
     delete [] this->excludes;
   }

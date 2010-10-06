@@ -118,12 +118,12 @@ struct render_result {
   bool grammar_error;
   size_t grammar_error_where;
   string grammar_error_why;
-  string path;
+  fs::path path;
   std::vector<light_marker> markers;
 };
 
 struct render_job {
-  string path;
+  fs::path path;
   int xPos, zPos;
 };
 
@@ -136,7 +136,7 @@ public:
   }
   
   render_result *work(render_job job) {
-    level_file *level = new level_file(job.path.c_str());
+    level_file *level = new level_file(s, job.path);
     
     render_result *p = new render_result;
     p->operations = NULL;
@@ -386,7 +386,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         }
 
         render_job job;
-        job.path = path.string();
+        job.path = path;
         job.xPos = l.xPos;
         job.zPos = l.zPos;
         
@@ -400,7 +400,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
 
     if (p->grammar_error) {
       if (s.require_all) {
-        error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
+        error << "Parser Error: " << p->path.string() << " at (uncompressed) byte " << p->grammar_error_where
           << " - " << p->grammar_error_why;
         
         // effectively join all worker threads and prepare for exit
@@ -433,6 +433,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     
     calc_image_partial(s, *p, all, world, i_w, i_h);
     delete p->operations;
+    /*int wait;
+    std::cin >> wait;*/
     delete p;
   }
   
@@ -611,7 +613,19 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
 
 int do_help() {
   cout << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
+  cout << "" << endl;
   cout << "Written by Udoprog et al." << endl;
+  cout << "" << endl;
+  cout << "The following libraries are in use for this program:" << endl
+       << "  zlib (compression)"                  << endl
+       << "    http://www.zlib.net"               << endl
+       << "  boost (thread, filesystem)"          << endl
+       << "    http://www.boost.org"              << endl
+       << "  libpng (portable network graphics)"  << endl
+       << "    http://www.libpng.org"             << endl
+       << "  libfreetype (font loading)"          << endl
+       << "    http://www.freetype.org"           << endl
+       << "" << endl;
 # if defined(C10T_DISABLE_THREADS)
   cout << endl;
   cout << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
@@ -619,94 +633,114 @@ int do_help() {
   cout << endl;
   cout << "Usage: c10t [options]" << endl;
   cout << "Options:" << endl
-    << "  -w, --world <world>       - use this world directory as input" << endl
-    << "  -o, --output <output>     - use this file as output file for generated png" << endl
+       /********************************************************************************/
+    << "  -w, --world <world>       - use this world directory as input                 " << endl
+    << "  -o, --output <output>     - use this file as output file for generated png    " << endl
     << endl
-    << "  -s, --silent              - execute silently, printing nothing except errors" << endl
-    << "  -h, --help                - display this help text" << endl
-    << "  -v, --version             - display version information" << endl
-    << "  -D, --debug               - display debug information while executing" << endl
-    << "  -l, --list-colors         - list all available colors and block types" << endl
+    << "  -s, --silent              - execute silently, printing nothing except errors  " << endl
+    << "  -h, --help                - display this help text                            " << endl
+    << "  -v, --version             - display version information                       " << endl
+    << "  -D, --debug               - display debug information while executing         " << endl
+    << "  -l, --list-colors         - list all available colors and block types         " << endl
     << endl
-    << "  -t, --top <int>           - splice from the top, must be less than 128" << endl
-    << "  -b, --bottom <int>        - splice from the bottom, must be greater than or" << endl
-    << "                              equal to zero." << endl
-    << "  -L, --limits <int-list>   - limit render to certain area. int-list form:" << endl
-    << "                              North,South,East,West, e.g." << endl
+    << "  -t, --top <int>           - splice from the top, must be less than 128        " << endl
+    << "  -b, --bottom <int>        - splice from the bottom, must be greater than or   " << endl
+    << "                              equal to zero.                                    " << endl
+    << "  -L, --limits <int-list>   - limit render to certain area. int-list form:      " << endl
+    << "                              North,South,East,West, e.g.                       " << endl
     << "                              -L 0,100,-10,20 limiting between 0 and 100 in the " << endl
-    << "                              north-south direction and between -10 and 20 in " << endl
-    << "                              the east-west direction. " << endl
-    << "                              Note: South and West are the positive directions." << endl
+    << "                              north-south direction and between -10 and 20 in   " << endl
+    << "                              the east-west direction.                          " << endl
+    << "                              Note: South and West are the positive directions. " << endl
     << endl
     << "Filtering options:" << endl
-    << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences" << endl
-    << "                              is possible)" << endl
-    << "  -i, --include <blockid>   - include only this block-id in render (multiple" << endl
-    << "                              occurences is possible)" << endl
-    << "  -a, --hide-all            - show no blocks except those specified with '-i'" << endl
-    << "  -c, --cave-mode           - Cave mode - top down until solid block found," << endl
-    << "                              then render bottom outlines only" << endl
-    << "  -n, --night               - Night-time rendering mode" << endl
+    << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences " << endl
+    << "                              is possible)                                      " << endl
+    << "  -i, --include <blockid>   - include only this block-id in render (multiple    " << endl
+    << "                              occurences is possible)                           " << endl
+    << "  -a, --hide-all            - show no blocks except those specified with '-i'   " << endl
+    << "  -c, --cave-mode           - cave mode - top down until solid block found,     " << endl
+    << "                              then render bottom outlines only                  " << endl
+    << "  -n, --night               - night-time rendering mode                         " << endl
     << endl
-    << "  -N, --no-check            - do not check for <world>/level.dat" << endl
+    << "  -N, --no-check            - ignore missing <world>/level.dat                  " << endl
     << endl
     << "Rendering options:" << endl
-    << "  -q, --oblique             - oblique rendering" << endl
-    << "  -y, --oblique-angle       - oblique angle rendering" << endl
-    << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW" << endl
+    << "  -q, --oblique             - oblique rendering                                 " << endl
+    << "  -y, --oblique-angle       - oblique angle rendering                           " << endl
+    << "  -z, --isometric           - Isometric rendering                               " << endl
+    << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW    " << endl
     << endl
-    << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
-    << "                              efficency, this should match the amount of cores" << endl
-    << "                              on your machine" << endl
-    << "  -B <set>                  - Specify the base color for a specific block id" << endl
-    << "                              <set> has the format <blockid>=<8 digit hex>" << endl
-    << "                              <8 digit hex> specifies the RGBA values as" << endl
-    << "                              'RRGGBBAA'. This automatically sets the side color" << endl
-    << "                              to a darkened variant of the base" << endl
-    << "                              example: -s Grass=ff0000ff" << endl
-    << "  -S <set>                  - Specify the side color for a specific block id" << endl
-    << "                              this uses the same format as '-s' only the color" << endl
-    << "                              is applied to the side of the block" << endl
-    << "  -p, --split <chunks>      - Split the render into chunks, <output> must be a" << endl
-    << "                              name containing two number format specifiers `%d'" << endl
-    << "                              for `x' and `y' coordinates of the chunks" << endl
+    << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum " << endl
+    << "                              efficency, this should match the amount of cores  " << endl
+    << "                              on your machine                                   " << endl
+    << "  -B <set>                  - Specify the base color for a specific block id    " << endl
+    << "                              <set> has the format <blockid>=<color>            " << endl
+    << "                              <8 digit hex> specifies the RGBA values as        " << endl
+    << "                              `<int>,<int>,<int>[,<int>]'. The side color will  " << endl
+    << "                              be a darkened variant of the base                 " << endl
+    << "                              example: `-s Grass=0,255,0,120'                   " << endl
+    << "  -S <set>                  - Specify the side color for a specific block id    " << endl
+    << "                              this uses the same format as '-s' only the color  " << endl
+    << "                              is applied to the side of the block               " << endl
+    << "  -p, --split <chunks>      - Split the render into chunks, <output> must be a  " << endl
+    << "                              name containing two number format specifiers `%d' " << endl
+    << "                              for `x' and `y' coordinates of the chunks         " << endl
     << endl
     << "Other Options:" << endl
     << "  -x, --binary              - Will output progress information in a binary form," << endl
-    << "                              good for integration with third party tools" << endl
-    << "  --require-all             - Will force c10t to require all chunks or fail" << endl
-    << "                              not ignoring bad chunks" << endl
-    << "  --show-players            - Will draw out player position and names from the" << endl
-    << "                              players database in <world>/players" << endl
-    << "  --show-signs              - Will draw out signs from all chunks" << endl
-    << "  --show-coordinates        - Will draw out each chunks expected coordinates" << endl
-    << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
-    << "                              file when necessary" << endl
-    << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached" << endl
-    << "  -P <file>                 - use <file> as palette" << endl
-    << "  -W <file>                 - write <file> with the default colour palette" << endl
-    << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable" << endl
-    << "                              during broad phase by getting x/y/z positions" << endl
-    << "                              from a quick parsing" << endl
+    << "                              good for integration with third party tools       " << endl
+    << "  --require-all             - Will force c10t to require all chunks or fail     " << endl
+    << "                              not ignoring bad chunks                           " << endl
+    << "  --show-players            - Will draw out player position and names from the  " << endl
+    << "                              players database in <world>/players               " << endl
+    << "  --show-signs              - Will draw out signs from all chunks               " << endl
+    << "  --show-coordinates        - Will draw out each chunks expected coordinates    " << endl
+    << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to " << endl
+    << "                              file when necessary                               " << endl
+    << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached    " << endl
+    << "  -P <file>                 - use <file> as palette                             " << endl
+    << "  -W <file>                 - write <file> with the default colour palette      " << endl
+    << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable   " << endl
+    << "                              during broad phase by getting x/y/z positions     " << endl
+    << "                              from a quick parsing                              " << endl
     << endl
     << "Font Options:" << endl
-    << "  --ttf-path <font>         - Use the following ttf file whenever writing text." << endl
-    << "                              defaults to `font.ttf'" << endl
+    << "  --ttf-path <font>         - Use the following ttf file whenever writing text. " << endl
+    << "                              defaults to `font.ttf'                            " << endl
     << "  --ttf-size <size>         - Use the specified font size whenever drawing text." << endl
-    << "                              defaults to `12'" << endl
-    << "  --ttf-color <color>       - Use the specified color when drawing text." << endl
-    << "                              defaults to `0,0,0,255' (black)" << endl
-    << "  --sign-color <color>      - Use the specified color when drawing signs." << endl
-    << "                              defaults to <ttf-color>" << endl
+    << "                              defaults to `12'                                  " << endl
+    << "  --ttf-color <color>       - Use the specified color when drawing text.        " << endl
+    << "                              defaults to `0,0,0,255' (black)                   " << endl
+    << "  --sign-color <color>      - Use the specified color when drawing signs.       " << endl
+    << "                              defaults to <ttf-color>                           " << endl
     << "  --player-color <color>    - Use the specified color when drawing player names." << endl
-    << "                              defaults to <ttf-color>" << endl
-    << "  --coordinate-color <color>" << endl
-    << "                            - Use the specified color when drawing coordinates." << endl
-    << "                              defaults to <ttf-color>" << endl
+    << "                              defaults to <ttf-color>                           " << endl
+    << "  --coordinate-color <color>                                                    " << endl
+    << "                            - Use the specified color when drawing coordinates. " << endl
+    << "                              defaults to <ttf-color>                           " << endl
+    << "  --cache-key <key>         - Indicates that c10t should cache operations using " << endl
+    << "                              the unique cache key <key>, this should represent " << endl
+    << "                              an unique combination of options. The cache files " << endl
+    << "                              will be put in                                    " << endl
+    << "                              <cache-dir>/<cache-key>/c.<coord>.cmap            " << endl
+    << "  --cache-dir <dir>         - Use the following directory as cache directory    " << endl
+    << "                              defaults to 'cache' if not specified              " << endl
+    << "  --cache-compress          - Compress the cache files using zlib compression   " << endl
+       /********************************************************************************/
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
-  cout << "   c10t -w /path/to/world -o /path/to/png.png" << endl;
+  cout << "    c10t -w /path/to/world -o /path/to/png.png" << endl;
+  cout << endl;
+  cout << "  Utilize render cache and apply a 256 MB memory restriction (rest will be written to image.dat):" << endl;
+  cout << "    c10t -w /path/to/world -o /path/to/png.png --cache-key='compressed' --cache-compress -M 256 -C image.dat" << endl;
+  cout << endl;
+  cout << "  Print out player positions using the font `example.ttf'" << endl;
+  cout << "    c10t -w /path/to/world -o /path/to/png.png --show-players --ttf-font example.ttf" << endl;
+  cout << endl;
+  cout << "  Split the result into multiple files, using 10 chunks across in each file, the two number formatters will be replaced with the x/z positions of the chunks" << endl;
+  cout << "    c10t -w /path/to/world -o /path/to/png.%d.%d.png --split 10" << endl;
   cout << endl;
   return 0;
 }
@@ -924,6 +958,9 @@ int main(int argc, char *argv[]){
      {"sign-color",        required_argument, &flag, 8},
      {"player-color",        required_argument, &flag, 9},
      {"coordinate-color",        required_argument, &flag, 10},
+     {"cache-key",       required_argument, &flag, 11},
+     {"cache-dir",       required_argument, &flag, 12},
+     {"cache-compress",       no_argument, &flag, 13},
      {0, 0, 0, 0}
   };
 
@@ -994,6 +1031,16 @@ int main(int argc, char *argv[]){
         }
         
         s.has_coordinate_color = true;
+        break;
+      case 11:
+        s.cache_use = true;
+        s.cache_key = optarg;
+        break;
+      case 12:
+        s.cache_dir = optarg;
+        break;
+      case 13:
+        s.cache_compress = true;
         break;
       }
       
@@ -1121,6 +1168,15 @@ int main(int argc, char *argv[]){
     }
   }
 
+  if (!s.cache_key.empty()) {
+    if (!fs::is_directory(s.cache_dir)) {
+      error << "Directory required for caching: " << s.cache_dir.string();
+      goto exit_error;
+    }
+
+    s.cache_dir = s.cache_dir / s.cache_key;
+  }
+
   if (exclude_all) {
     for (int i = 0; i < mc::MaterialCount; i++) {
       s.excludes[i] = true;
@@ -1136,13 +1192,27 @@ int main(int argc, char *argv[]){
       s.excludes[i] = false;
     }
   }
-
+  
   if (output_path.compare("-") == 0) {
     s.silent = true;
   }
   
   if (!s.silent) {
     cout << "Type `-h' for help" << endl;
+  }
+  
+  if (s.cache_use) {
+    if (!fs::is_directory(s.cache_dir)) {
+      if (!s.silent) cout << "Creating directory for caching: " << s.cache_dir.string() << endl;
+      fs::create_directory(s.cache_dir);
+    }
+    
+    if (s.cache_compress) {
+      if (!s.silent) cout << "Cache compression is ON" << std::endl;
+    }
+    else {
+      if (!s.silent) cout << "Cache compression is OFF" << std::endl;
+    }
   }
   
   if (!palette_write_path.empty()) {

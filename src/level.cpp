@@ -165,16 +165,13 @@ level_file::level_file(settings_t& s, const fs::path path)
     sign_x(0), sign_y(0), sign_z(0),
     sign_text("")
 {
-  fs::path cache_dir = path.parent_path();
-  assert(fs::is_directory(cache_dir));
-
-  
   cache_hit = false;
   cache_operations = NULL;
   cache_fs = NULL;
   
   if (!s.cache_key.empty()) {
-    cache_path = cache_dir / ( fs::basename(path) + "." + s.cache_key + ".cmap" );
+    cache_path = s.cache_dir / ( fs::basename(path) + "." + s.cache_key + ".cmap" );
+    
     check_cache();
     
     if (cache_hit) {

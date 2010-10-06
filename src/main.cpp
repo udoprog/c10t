@@ -705,6 +705,11 @@ int do_help() {
     << "  --coordinate-color <color>" << endl
     << "                            - Use the specified color when drawing coordinates." << endl
     << "                              defaults to <ttf-color>" << endl
+    << "  --cache-key <key>         - Indicates that c10t should cache operations using the" << endl
+    << "                              unique cache key <key>, this should represent an unique" << endl
+    << "                              combination of options" << endl
+    << "  --cache-dir <dir>         - Use the following directory as cache directory" << endl
+    << "                              defaults to 'cache' if not specified" << endl
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;
@@ -927,6 +932,7 @@ int main(int argc, char *argv[]){
      {"player-color",        required_argument, &flag, 9},
      {"coordinate-color",        required_argument, &flag, 10},
      {"cache-key",       required_argument, &flag, 11},
+     {"cache-dir",       required_argument, &flag, 12},
      {0, 0, 0, 0}
   };
 
@@ -1000,6 +1006,9 @@ int main(int argc, char *argv[]){
         break;
       case 11:
         s.cache_key = optarg;
+        break;
+      case 12:
+        s.cache_dir = optarg;
         break;
       }
       
@@ -1127,6 +1136,11 @@ int main(int argc, char *argv[]){
     }
   }
 
+  if (!s.cache_key.empty() && !fs::is_directory(s.cache_dir)) {
+    error << "Directory required for caching: " << s.cache_dir.string();
+    goto exit_error;
+  }
+  
   if (exclude_all) {
     for (int i = 0; i < mc::MaterialCount; i++) {
       s.excludes[i] = true;

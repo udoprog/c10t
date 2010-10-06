@@ -59,6 +59,7 @@ struct settings_t {
   std::string cache_key;
   fs::path cache_dir;
   bool cache_compress;
+  bool cache_use;
   
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
@@ -106,6 +107,7 @@ struct settings_t {
     this->has_coordinate_color = false;
     this->pedantic_broad_phase = false;
     this->show_signs = false;
+    this->cache_use = false;
     this->cache_key = "";
     this->cache_dir = "cache";
     this->cache_compress = false;

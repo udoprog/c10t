@@ -163,10 +163,11 @@ level_file::level_file(settings_t& s, const fs::path path)
     path(path),
     in_te(false), in_sign(false),
     sign_x(0), sign_y(0), sign_z(0),
-    sign_text("")
+    sign_text(""),
+    cache(s),
+    cache_use(s.cache_use)
 {
   cache_hit = false;
-  cache_use = !s.cache_key.empty();
   oper = new image_operations;
   
   if (cache_use) {

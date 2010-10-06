@@ -18,6 +18,7 @@
 
 #include "nbt/nbt.h"
 
+#include "global.h"
 #include "color.h"
 #include "image.h"
 #include "blocks.h"
@@ -39,17 +40,24 @@ class level_file
     int zPos;
     bool islevel;
     bool grammar_error;
+    bool from_cache;
     size_t grammar_error_where;
     std::string grammar_error_why;
-    std::string path;
+    const fs::path path;
+    fs::path cache_path;
+    bool cache_hit;
+    image_operations* cache_operations;
+    std::ofstream* cache_fs;
     bool ignore_blocks;
     bool in_te, in_sign;
     nbt::Int sign_x, sign_y, sign_z;
     std::string sign_text;
     std::vector<light_marker> markers;
     
-    level_file(const char *path);
+    level_file(settings_t& s, const fs::path path);
     ~level_file();
+
+    void check_cache();
     
     image_operations* get_image(settings_t& s);
     image_operations* get_oblique_image(settings_t& s);

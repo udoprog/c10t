@@ -11,6 +11,9 @@
 
 #include <boost/algorithm/string.hpp>
 #include <vector>
+#include <fstream>
+
+#include <ctime>
 
 void begin_compound(level_file* level, nbt::String name) {
   if (name.compare("Level") == 0) {
@@ -146,7 +149,7 @@ level_file::~level_file(){
   delete blocklight;
 }
 
-level_file::level_file(const char *path)
+level_file::level_file(settings_t& s, const fs::path path)
   : blocks(NULL),
     skylight(NULL),
     heightmap(NULL),
@@ -162,6 +165,24 @@ level_file::level_file(const char *path)
     sign_x(0), sign_y(0), sign_z(0),
     sign_text("")
 {
+  fs::path cache_dir = path.parent_path();
+  assert(fs::is_directory(cache_dir));
+
+  
+  cache_hit = false;
+  cache_operations = NULL;
+  cache_fs = NULL;
+  
+  if (!s.cache_key.empty()) {
+    cache_path = cache_dir / ( fs::basename(path) + "." + s.cache_key + ".cmap" );
+    check_cache();
+    
+    if (cache_hit) {
+      islevel = true;
+      return;
+    }
+  }
+  
   nbt::Parser<level_file> parser(this);
   
   parser.register_byte_array = register_byte_array;
@@ -174,7 +195,32 @@ level_file::level_file(const char *path)
   parser.end_compound = end_compound;
   parser.error_handler = error_handler;
   
-  parser.parse_file(path);
+  parser.parse_file(path.string().c_str());
+}
+
+void level_file::check_cache() {
+  std::time_t t = fs::last_write_time(path);
+  
+  if (fs::exists(cache_path)) {
+    std::ifstream input(cache_path.string().c_str(), std::ios::binary);
+    std::time_t ref;
+    input.read(reinterpret_cast<char *>(&ref), sizeof(std::time_t));
+    
+    if (input.fail()) {
+      cache_hit = false;
+    }
+    else if (t == ref) {
+      cache_hit = true;
+      cache_operations = new image_operations;
+      cache_operations->read(input);
+    }
+  }
+  
+  if (!cache_hit) {
+    cache_fs = new std::ofstream(cache_path.string().c_str(), std::ios::binary);
+    cache_fs->write(reinterpret_cast<char *>(&t), sizeof(std::time_t));
+    assert(!cache_fs->fail());
+  }
 }
 
 /**
@@ -319,12 +365,14 @@ public:
 };
 
 image_operations* level_file::get_image(settings_t& s) {
-  image_operations* operations = new image_operations;
+  if (cache_hit) return cache_operations;
+  
+  image_operations* oper = new image_operations;
   
   if (!islevel) {
-    return operations;
+    return oper;
   }
-
+  
   // block type
   int bt;
   
@@ -367,24 +415,31 @@ image_operations* level_file::get_image(settings_t& s) {
           break;
         }
       }
-
-      if (base.is_transparent()) {
+      
+      if (base.is_invisible()) {
         continue;
       }
       
-      operations->add_pixel(x, y, base);
+      oper->add_pixel(x, y, base);
     }
   }
   
-  return operations;
+  if (cache_fs != NULL) {
+    oper->write(*cache_fs);
+    delete cache_fs;
+  }
+  
+  return oper;
 }
 
 image_operations* level_file::get_oblique_image(settings_t& s)
 {
-  image_operations *operations = new image_operations;
+  if (cache_hit) return cache_operations;
+  
+  image_operations *oper = new image_operations;
   
   if (!islevel) {
-    return operations;
+    return oper;
   }
   
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
@@ -442,20 +497,27 @@ image_operations* level_file::get_oblique_image(settings_t& s)
         
         color top = mc::MaterialColor[bt];
         apply_shading(s, bl, sl, 0, my, top);
-        operations->add_pixel(px, py - 1, top);
+        oper->add_pixel(px, py - 1, top);
         
         color side = mc::MaterialSideColor[bt];
         apply_shading(s, bl, sl, 0, my, side);
-        operations->add_pixel(px, py, side);
+        oper->add_pixel(px, py, side);
       }
     }
   }
   
-  return operations;
+  if (cache_fs != NULL) {
+    oper->write(*cache_fs);
+    delete cache_fs;
+  }
+  
+  return oper;
 }
 
 image_operations* level_file::get_obliqueangle_image(settings_t& s)
 {
+  if (cache_hit) return cache_operations;
+  
   image_operations* oper = new image_operations;
   
   if (!islevel) {
@@ -539,11 +601,18 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
     }
   }
   
+  if (cache_fs != NULL) {
+    oper->write(*cache_fs);
+    delete cache_fs;
+  }
+  
   return oper;
 }
 
 image_operations* level_file::get_isometric_image(settings_t& s)
 {
+  if (cache_hit) return cache_operations;
+
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
 
   int iw, ih;
@@ -635,6 +704,11 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         }
       }
     }
+  }
+  
+  if (cache_fs != NULL) {
+    oper->write(*cache_fs);
+    delete cache_fs;
   }
   
   return oper;

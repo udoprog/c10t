@@ -34,6 +34,10 @@ struct color{
   }
   
   bool is_transparent() const {
+    return a != 0xff;
+  }
+  
+  bool is_invisible() const {
     return a == 0x00;
   }
   

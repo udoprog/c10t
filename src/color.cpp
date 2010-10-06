@@ -30,7 +30,7 @@ void color::underlay(const color &other) {
 }
 
 void color::blend(const color &other) {
-  if (other.is_transparent()) return;
+  if (other.is_invisible()) return;
   r = alpha_over_c(other.r, other.a, r, a);
   g = alpha_over_c(other.g, other.a, g, a);
   b = alpha_over_c(other.b, other.a, b, a);

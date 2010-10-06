@@ -5,25 +5,73 @@
 
 #include "color.h"
 
+#include <limits.h>
+#include <iostream>
 #include <stdio.h>
 #include <assert.h>
 #include <algorithm>
 #include <string.h>
 #include <vector>
+#include <list>
+#include <map>
+#include <set>
+
+#include <fstream>
 
 struct image_operation {
   color c;
+  int depth;
   int x, y;
+  int order;
 };
+
+struct image_op_key {
+  int x, y;
+
+  image_op_key(int x, int y) : x(x), y(y) {
+  }
+  
+  bool operator<(const image_op_key& rhs) const {
+    if (y < rhs.y) return true;
+    if (y == rhs.y && x < rhs.x) return true;
+    return false;
+  }
+};
+
+//bool compare_image_operation(image_operation& lhs, image_operation& rhs);
+/*{
+}*/
 
 class image_operations {
 public:
   bool reversed;
-  
-  image_operations() : reversed(false) {};
+  int order;
+
+  int cache_hit_count, cache_miss_count;
   
   std::vector<image_operation> operations;
+  std::map<image_op_key, size_t> operation_map;
   void add_pixel(int x, int y, color &c);
+  void read(std::ifstream&);
+  void write(std::ofstream&);
+  
+  int maxx, maxy;
+  
+  image_operations() : reversed(false), order(0),
+    cache_hit_count(0), cache_miss_count(0),
+    operations(), operation_map(),
+    maxx(0), maxy(0)
+  {};
+  
+  ~image_operations() {
+    /*std::cout << "Being destructed..." << std::endl;
+    std::cout << "operation_map: " << operation_map.size()<< std::endl;
+    std::cout << "x: " << maxx << std::endl;
+    std::cout << "y: " << maxy << std::endl;
+    std::cout << "cache_hit_count: " << cache_hit_count << std::endl;
+    std::cout << "cache_miss_count: " << cache_miss_count << std::endl;*/
+    operation_map.clear();
+  }
 };
 
 class image_base {

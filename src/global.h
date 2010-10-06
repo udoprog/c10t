@@ -52,6 +52,7 @@ struct settings_t {
   color coordinate_color;
   std::string ttf_path;
   std::string cache_file;
+  std::string cache_key;
   
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
@@ -99,6 +100,7 @@ struct settings_t {
     this->has_coordinate_color = false;
     this->pedantic_broad_phase = false;
     this->show_signs = false;
+    this->cache_key = "";
   }
 
   ~settings_t() {

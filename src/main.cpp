@@ -118,12 +118,12 @@ struct render_result {
   bool grammar_error;
   size_t grammar_error_where;
   string grammar_error_why;
-  string path;
+  fs::path path;
   std::vector<light_marker> markers;
 };
 
 struct render_job {
-  string path;
+  fs::path path;
   int xPos, zPos;
 };
 
@@ -136,7 +136,7 @@ public:
   }
   
   render_result *work(render_job job) {
-    level_file *level = new level_file(job.path.c_str());
+    level_file *level = new level_file(s, job.path);
     
     render_result *p = new render_result;
     p->operations = NULL;
@@ -386,7 +386,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         }
 
         render_job job;
-        job.path = path.string();
+        job.path = path;
         job.xPos = l.xPos;
         job.zPos = l.zPos;
         
@@ -400,7 +400,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
 
     if (p->grammar_error) {
       if (s.require_all) {
-        error << "Parser Error: " << p->path << " at (uncompressed) byte " << p->grammar_error_where
+        error << "Parser Error: " << p->path.string() << " at (uncompressed) byte " << p->grammar_error_where
           << " - " << p->grammar_error_why;
         
         // effectively join all worker threads and prepare for exit
@@ -433,6 +433,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     
     calc_image_partial(s, *p, all, world, i_w, i_h);
     delete p->operations;
+    /*int wait;
+    std::cin >> wait;*/
     delete p;
   }
   
@@ -924,6 +926,7 @@ int main(int argc, char *argv[]){
      {"sign-color",        required_argument, &flag, 8},
      {"player-color",        required_argument, &flag, 9},
      {"coordinate-color",        required_argument, &flag, 10},
+     {"cache-key",       required_argument, &flag, 11},
      {0, 0, 0, 0}
   };
 
@@ -994,6 +997,9 @@ int main(int argc, char *argv[]){
         }
         
         s.has_coordinate_color = true;
+        break;
+      case 11:
+        s.cache_key = optarg;
         break;
       }
       

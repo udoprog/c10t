@@ -707,7 +707,8 @@ int do_help() {
     << "                              defaults to <ttf-color>" << endl
     << "  --cache-key <key>         - Indicates that c10t should cache operations using the" << endl
     << "                              unique cache key <key>, this should represent an unique" << endl
-    << "                              combination of options" << endl
+    << "                              combination of options. The cache files will be put in" << endl
+    << "                              <cache-dir>/<cache-key>/c.<coord>.cmap" << endl
     << "  --cache-dir <dir>         - Use the following directory as cache directory" << endl
     << "                              defaults to 'cache' if not specified" << endl
     << endl;

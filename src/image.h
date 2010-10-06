@@ -52,8 +52,8 @@ public:
   std::vector<image_operation> operations;
   std::map<image_op_key, size_t> operation_map;
   void add_pixel(int x, int y, color &c);
-  void read(std::ifstream&);
-  void write(std::ofstream&);
+  bool read(std::ifstream&);
+  bool write(std::ofstream&);
   
   int maxx, maxy;
   

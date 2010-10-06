@@ -1136,11 +1136,15 @@ int main(int argc, char *argv[]){
     }
   }
 
-  if (!s.cache_key.empty() && !fs::is_directory(s.cache_dir)) {
-    error << "Directory required for caching: " << s.cache_dir.string();
-    goto exit_error;
+  if (!s.cache_key.empty()) {
+    if (!fs::is_directory(s.cache_dir)) {
+      error << "Directory required for caching: " << s.cache_dir.string();
+      goto exit_error;
+    }
+
+    s.cache_dir = s.cache_dir / s.cache_key;
   }
-  
+
   if (exclude_all) {
     for (int i = 0; i < mc::MaterialCount; i++) {
       s.excludes[i] = true;
@@ -1163,6 +1167,11 @@ int main(int argc, char *argv[]){
   
   if (!s.silent) {
     cout << "Type `-h' for help" << endl;
+  }
+  
+  if (!fs::is_directory(s.cache_dir)) {
+    if (!s.silent) cout << "Creating directory for caching: " << s.cache_dir.string() << endl;
+    fs::create_directory(s.cache_dir);
   }
   
   if (!palette_write_path.empty()) {

@@ -46,7 +46,7 @@ class level_file
     const fs::path path;
     fs::path cache_path;
     bool cache_hit;
-    image_operations* cache_operations;
+    image_operations* oper;
     std::ofstream* cache_fs;
     bool ignore_blocks;
     bool in_te, in_sign;

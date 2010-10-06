@@ -166,11 +166,11 @@ level_file::level_file(settings_t& s, const fs::path path)
     sign_text("")
 {
   cache_hit = false;
-  cache_operations = NULL;
+  oper = new image_operations;
   cache_fs = NULL;
   
   if (!s.cache_key.empty()) {
-    cache_path = s.cache_dir / ( fs::basename(path) + "." + s.cache_key + ".cmap" );
+    cache_path = s.cache_dir / ( fs::basename(path) + ".cmap" );
     
     check_cache();
     
@@ -207,16 +207,23 @@ void level_file::check_cache() {
       cache_hit = false;
     }
     else if (t == ref) {
-      cache_hit = true;
-      cache_operations = new image_operations;
-      cache_operations->read(input);
+      if (oper->read(input)) {
+        cache_hit = true;
+      }
+      else {
+        fs::remove(cache_path);
+      }
     }
   }
   
   if (!cache_hit) {
     cache_fs = new std::ofstream(cache_path.string().c_str(), std::ios::binary);
     cache_fs->write(reinterpret_cast<char *>(&t), sizeof(std::time_t));
-    assert(!cache_fs->fail());
+    
+    if (cache_fs->fail()) {
+      delete cache_fs;
+      fs::remove(cache_path);
+    }
   }
 }
 
@@ -362,9 +369,7 @@ public:
 };
 
 image_operations* level_file::get_image(settings_t& s) {
-  if (cache_hit) return cache_operations;
-  
-  image_operations* oper = new image_operations;
+  if (cache_hit) return oper;
   
   if (!islevel) {
     return oper;
@@ -422,7 +427,11 @@ image_operations* level_file::get_image(settings_t& s) {
   }
   
   if (cache_fs != NULL) {
-    oper->write(*cache_fs);
+    if (!oper->write(*cache_fs)) {
+      cache_fs->close();
+      fs::remove(cache_path);
+    }
+    
     delete cache_fs;
   }
   
@@ -431,9 +440,7 @@ image_operations* level_file::get_image(settings_t& s) {
 
 image_operations* level_file::get_oblique_image(settings_t& s)
 {
-  if (cache_hit) return cache_operations;
-  
-  image_operations *oper = new image_operations;
+  if (cache_hit) return oper;
   
   if (!islevel) {
     return oper;
@@ -504,7 +511,10 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   }
   
   if (cache_fs != NULL) {
-    oper->write(*cache_fs);
+    if (!oper->write(*cache_fs)) {
+      cache_fs->close();
+      fs::remove(cache_path);
+    }
     delete cache_fs;
   }
   
@@ -513,9 +523,7 @@ image_operations* level_file::get_oblique_image(settings_t& s)
 
 image_operations* level_file::get_obliqueangle_image(settings_t& s)
 {
-  if (cache_hit) return cache_operations;
-  
-  image_operations* oper = new image_operations;
+  if (cache_hit) return oper;
   
   if (!islevel) {
     return oper;
@@ -599,7 +607,10 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   }
   
   if (cache_fs != NULL) {
-    oper->write(*cache_fs);
+    if (!oper->write(*cache_fs)) {
+      cache_fs->close();
+      fs::remove(cache_path);
+    }
     delete cache_fs;
   }
   
@@ -608,14 +619,12 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
 
 image_operations* level_file::get_isometric_image(settings_t& s)
 {
-  if (cache_hit) return cache_operations;
-
+  if (cache_hit) return oper;
+  
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
 
   int iw, ih;
   c.get_isometric_limits(iw, ih);
-  
-  image_operations* oper = new image_operations;
   
   if (!islevel) {
     return oper;
@@ -704,7 +713,10 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   }
   
   if (cache_fs != NULL) {
-    oper->write(*cache_fs);
+    if (!oper->write(*cache_fs)) {
+      cache_fs->close();
+      fs::remove(cache_path);
+    }
     delete cache_fs;
   }
   

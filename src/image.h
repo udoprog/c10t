@@ -52,8 +52,6 @@ public:
   std::vector<image_operation> operations;
   std::map<image_op_key, size_t> operation_map;
   void add_pixel(int x, int y, color &c);
-  bool read(std::ifstream&);
-  bool write(std::ofstream&);
   
   int maxx, maxy;
   
@@ -71,6 +69,34 @@ public:
     std::cout << "cache_hit_count: " << cache_hit_count << std::endl;
     std::cout << "cache_miss_count: " << cache_miss_count << std::endl;*/
     operation_map.clear();
+  }
+
+  static bool compare_image_operation_by_order(const image_operation& lhs, const image_operation& rhs) {
+    return lhs.order < rhs.order;
+  }
+
+  void optimize() {
+    std::sort(operations.begin(), operations.end(),
+        compare_image_operation_by_order);
+    
+    std::map<image_op_key, color> opaque_map;
+    
+    for (std::vector<image_operation>::reverse_iterator it = operations.rbegin();
+      it != operations.rend(); it++) {
+      image_operation oper = *it;
+      image_op_key key(oper.x, oper.y);
+
+      if (opaque_map.find(key) != opaque_map.end()) {
+        if (opaque_map[key].is_opaque()) {
+          operations.erase(it.base());
+        }
+        
+        opaque_map[key].blend(oper.c);
+      }
+      else {
+        opaque_map[key] = oper.c;
+      }
+    }
   }
 };
 

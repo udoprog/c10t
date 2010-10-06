@@ -166,11 +166,11 @@ level_file::level_file(settings_t& s, const fs::path path)
     sign_text("")
 {
   cache_hit = false;
+  cache_use = !s.cache_key.empty();
   oper = new image_operations;
-  cache_fs = NULL;
   
-  if (!s.cache_key.empty()) {
-    cache_path = s.cache_dir / ( fs::basename(path) + ".cmap" );
+  if (cache_use) {
+    cache.set_path(cache_path = s.cache_dir / ( fs::basename(path) + ".cmap" ));
     
     check_cache();
     
@@ -199,31 +199,16 @@ void level_file::check_cache() {
   std::time_t t = fs::last_write_time(path);
   
   if (fs::exists(cache_path)) {
-    std::ifstream input(cache_path.string().c_str(), std::ios::binary);
-    std::time_t ref;
-    input.read(reinterpret_cast<char *>(&ref), sizeof(std::time_t));
-    
-    if (input.fail()) {
-      cache_hit = false;
+    if (!cache.read(oper, t)) {
+      fs::remove(cache.get_path());
     }
-    else if (t == ref) {
-      if (oper->read(input)) {
-        cache_hit = true;
-      }
-      else {
-        fs::remove(cache_path);
-      }
+    else {
+      cache_hit = true;
     }
   }
   
   if (!cache_hit) {
-    cache_fs = new std::ofstream(cache_path.string().c_str(), std::ios::binary);
-    cache_fs->write(reinterpret_cast<char *>(&t), sizeof(std::time_t));
-    
-    if (cache_fs->fail()) {
-      delete cache_fs;
-      fs::remove(cache_path);
-    }
+    cache.set_modification_time(t);
   }
 }
 
@@ -426,13 +411,11 @@ image_operations* level_file::get_image(settings_t& s) {
     }
   }
   
-  if (cache_fs != NULL) {
-    if (!oper->write(*cache_fs)) {
-      cache_fs->close();
+  if (cache_use) {
+    std::cout << "Writing cache: " << cache.get_path() << std::endl;
+    if (!cache.write(oper)) {
       fs::remove(cache_path);
     }
-    
-    delete cache_fs;
   }
   
   return oper;
@@ -510,12 +493,10 @@ image_operations* level_file::get_oblique_image(settings_t& s)
     }
   }
   
-  if (cache_fs != NULL) {
-    if (!oper->write(*cache_fs)) {
-      cache_fs->close();
-      fs::remove(cache_path);
+  if (cache_use) {
+    if (!cache.write(oper)) {
+      fs::remove(cache.get_path());
     }
-    delete cache_fs;
   }
   
   return oper;
@@ -606,12 +587,10 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
     }
   }
   
-  if (cache_fs != NULL) {
-    if (!oper->write(*cache_fs)) {
-      cache_fs->close();
+  if (cache_use) {
+    if (!cache.write(oper)) {
       fs::remove(cache_path);
     }
-    delete cache_fs;
   }
   
   return oper;
@@ -712,12 +691,10 @@ image_operations* level_file::get_isometric_image(settings_t& s)
     }
   }
   
-  if (cache_fs != NULL) {
-    if (!oper->write(*cache_fs)) {
-      cache_fs->close();
+  if (cache_use) {
+    if (!cache.write(oper)) {
       fs::remove(cache_path);
     }
-    delete cache_fs;
   }
   
   return oper;

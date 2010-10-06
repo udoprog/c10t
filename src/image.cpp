@@ -56,60 +56,6 @@ void image_operations::add_pixel(int x, int y, color &c) {
   }
 }
 
-typedef std::vector<image_operation>::size_type v_size_type;
-
-bool image_operations::read(std::ifstream& fs) {
-  v_size_type size;
-  fs.read(reinterpret_cast<char*>(&size), sizeof(v_size_type));
-  if (fs.fail()) return false;
-  
-  image_operation* oper = new image_operation[size];
-  fs.read(reinterpret_cast<char*>(oper), sizeof(image_operation) * size);
-  if (fs.fail()) return false;
-  
-  for (v_size_type i = 0; i < size; i++) {
-    /*image_operation oper;
-    oper.x = soper[i].x;
-    oper.y = soper[i].y;
-    oper.c.r = soper[i].r;
-    oper.c.g = soper[i].g;
-    oper.c.b = soper[i].b;
-    oper.c.a = soper[i].a;*/
-    operations.push_back(oper[i]);
-  }
-  
-  delete [] oper;
-  return true;
-}
-
-bool compare_image_operation_by_order(const image_operation& lhs, const image_operation& rhs) {
-  return lhs.order < rhs.order;
-}
-
-bool image_operations::write(std::ofstream& fs) {
-  std::sort(operations.begin(), operations.end(), compare_image_operation_by_order);
-  
-  v_size_type size = operations.size();
-  fs.write(reinterpret_cast<char *>(&size), sizeof(v_size_type));
-  if (fs.fail()) return false;
-  
-  for (std::vector<image_operation>::iterator it = operations.begin();
-    it != operations.end(); it++) {
-    image_operation oper = *it;
-    /*saved_image_operation soper;
-    soper.x = oper.x;
-    soper.y = oper.y;
-    soper.r = oper.c.r;
-    soper.g = oper.c.g;
-    soper.b = oper.c.b;
-    soper.a = oper.c.a;*/
-    fs.write(reinterpret_cast<char*>(&oper), sizeof(image_operation));
-    if (fs.fail()) return false;
-  }
-  
-  return true;
-}
-
 void memory_image::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());

@@ -45,7 +45,6 @@ class level_file
     size_t grammar_error_where;
     std::string grammar_error_why;
     const fs::path path;
-    fs::path cache_path;
     bool cache_hit;
     image_operations* oper;
     bool ignore_blocks;
@@ -59,8 +58,6 @@ class level_file
     level_file(settings_t& s, const fs::path path);
     ~level_file();
 
-    void check_cache();
-    
     image_operations* get_image(settings_t& s);
     image_operations* get_oblique_image(settings_t& s);
     image_operations* get_obliqueangle_image(settings_t& s);

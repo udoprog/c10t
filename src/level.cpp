@@ -170,14 +170,26 @@ level_file::level_file(settings_t& s, const fs::path path)
   oper = new image_operations;
   
   if (cache_use) {
-    cache.set_path(cache_path = s.cache_dir / ( fs::basename(path) + ".cmap" ));
+    cache.set_path(s.cache_dir / ( fs::basename(path) + ".cmap" ));
     
-    check_cache();
+    std::time_t level_mod = fs::last_write_time(path);
+  
+    if (fs::exists(cache.get_path())) {
+      if (!cache.read(oper, level_mod)) {
+        fs::remove(cache.get_path());
+      }
+      else {
+        cache_hit = true;
+      }
+    }
     
     if (cache_hit) {
       islevel = true;
       return;
     }
+    
+    // in case of future writes, save the modification time
+    cache.set_modification_time(level_mod);
   }
   
   nbt::Parser<level_file> parser(this);
@@ -193,23 +205,6 @@ level_file::level_file(settings_t& s, const fs::path path)
   parser.error_handler = error_handler;
   
   parser.parse_file(path.string().c_str());
-}
-
-void level_file::check_cache() {
-  std::time_t t = fs::last_write_time(path);
-  
-  if (fs::exists(cache_path)) {
-    if (!cache.read(oper, t)) {
-      fs::remove(cache.get_path());
-    }
-    else {
-      cache_hit = true;
-    }
-  }
-  
-  if (!cache_hit) {
-    cache.set_modification_time(t);
-  }
 }
 
 /**
@@ -412,9 +407,8 @@ image_operations* level_file::get_image(settings_t& s) {
   }
   
   if (cache_use) {
-    std::cout << "Writing cache: " << cache.get_path() << std::endl;
     if (!cache.write(oper)) {
-      fs::remove(cache_path);
+      fs::remove(cache.get_path());
     }
   }
   
@@ -589,7 +583,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   
   if (cache_use) {
     if (!cache.write(oper)) {
-      fs::remove(cache_path);
+      fs::remove(cache.get_path());
     }
   }
   
@@ -693,7 +687,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   
   if (cache_use) {
     if (!cache.write(oper)) {
-      fs::remove(cache_path);
+      fs::remove(cache.get_path());
     }
   }
   

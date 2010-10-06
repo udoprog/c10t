@@ -303,7 +303,7 @@ class FontFrame(LabelFrame):
 
         self.ttfsize_label = Label(self, text=u"Font size", anchor=W, justify=LEFT)
         self.ttfsize_label.grid(column=0, row=0, columnspan=2, sticky=EW)
-        self.ttfsize_spinbox = XSpinbox(self, name="fontsize", from_=1, to=999, width=3)
+        self.ttfsize_spinbox = XSpinbox(self, name="ttfsize", from_=1, to=999, width=3)
         self.ttfsize_spinbox.set(12)
         self.ttfsize_spinbox.grid(column=2, row=0, sticky=EW)
         add_tooltip(u"Use the specified font size when drawing text", (
@@ -397,10 +397,14 @@ class RunFrame(Frame):
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
-        # TODO: Assign a name to the button?
         self.run_button = Button(self, text=u"Run!")
-        # TODO: Assign the run_button["command"]
         self.run_button.pack(side=LEFT)
+
+        self.update_button = Button(self, text=u"Update")
+        self.update_button.pack(side=LEFT)
+        add_tooltip(u"Update the command-line, without running the command. Easy for copy-and-paste into scripts.", (
+            self.update_button,
+        ))
 
         self.command_entry = XEntry(self, name="command", state="readonly")
         self.command_entry.pack(side=LEFT, fill=X, expand=1)
@@ -537,8 +541,32 @@ class MainWindow(Tk):
 
         self.ui = UiShortcuts(self)
 
-        self.bind_all("<Control-q>", self.quitHandler)
-        self.protocol("WM_DELETE_WINDOW", self.quitHandler)
+        self.bind_all("<Control-q>", self.quit_handler)
+        self.protocol("WM_DELETE_WINDOW", self.quit_handler)
 
-    def quitHandler(self, event=None):
+        #self.on_change_callback = None
+        #self.app.configuration_frame.bind("")
+
+        # Adding an "update" button, just because I don't know how to bind
+        # to "on change"-like events in Tkinter.
+        # http://stackoverflow.com/questions/3876229/how-to-run-a-code-whenever-a-tkinter-widget-value-changes
+        self.update_button_callback = None
+        self.app.run_frame.update_button["command"] = self.update_button_handler
+
+        self.run_button_callback = None
+        self.app.run_frame.run_button["command"] = self.run_button_handler
+
+    def quit_handler(self, event=None):
         self.destroy()
+
+    #def on_change_handler(self, event=None):
+    #    if self.on_change_callback:
+    #        self.on_change_callback()
+
+    def update_button_handler(self, event=None):
+        if self.update_button_callback:
+            self.update_button_callback()
+
+    def run_button_handler(self, event=None):
+        if self.run_button_callback:
+            self.run_button_callback()

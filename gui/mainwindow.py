@@ -116,18 +116,18 @@ class FilesFrame(LabelFrame):
         )
 
         self.exepath_label = Label(self, text=u"c10t path", anchor=W, justify=LEFT)
-        self.exepath_label.grid(column=0, row=0, sticky=EW)
+        self.exepath_label.grid(column=0, row=0, columnspan=2, sticky=EW)
         self.exepath_entry = XEntry(self, name="exepath")
-        self.exepath_entry.grid(column=1, row=0, sticky=EW)
+        self.exepath_entry.grid(column=2, row=0, sticky=EW)
         add_tooltip(u"Path to the c10t executable", (
             self.exepath_label,
             self.exepath_entry,
         ))
 
         self.world_label = Label(self, text=u"Input world", anchor=W, justify=LEFT)
-        self.world_label.grid(column=0, row=1, sticky=EW)
+        self.world_label.grid(column=0, row=1, columnspan=2, sticky=EW)
         self.world_entry = XEntry(self, name="world")
-        self.world_entry.grid(column=1, row=1, sticky=EW)
+        self.world_entry.grid(column=2, row=1, sticky=EW)
         add_tooltip(u"Path to the World directory (the one that contains level.dat)", (
             self.world_label,
             self.world_entry,
@@ -135,15 +135,20 @@ class FilesFrame(LabelFrame):
 
         self.output_label = Label(self, text=u"Output image", anchor=W, justify=LEFT)
         self.output_label.grid(column=0, row=2, sticky=EW)
+        self.load_button = Button(self, padx=0, pady=0, text=u"Load")
+        self.load_button.grid(column=1, row=2)
         self.output_entry = XEntry(self, name="output")
-        self.output_entry.grid(column=1, row=2, sticky=EW)
+        self.output_entry.grid(column=2, row=2, sticky=EW)
         add_tooltip(u"Destination file for the generated PNG", (
             self.output_label,
             self.output_entry,
         ))
+        add_tooltip(u"(re)Loads this image.", (
+            self.load_button,
+        ))
 
         # Setting columns and rows to auto-expand
-        for i in xrange(2):
+        for i in (0,2):
             self.columnconfigure(i, weight=1)
         for i in xrange(3):
             self.rowconfigure(i, weight=1)
@@ -590,6 +595,7 @@ class MainWindow(Tk):
         self.photoimage = None
         self.canvasimage = None
 
+        # Global quit handlers
         self.bind_all("<Control-q>", self.quit_handler)
         self.protocol("WM_DELETE_WINDOW", self.quit_handler)
 
@@ -605,6 +611,8 @@ class MainWindow(Tk):
         self.run_button_callback = None
         self.app.run_frame.run_button["command"] = self.run_button_handler
 
+        self.app.configuration_frame.files_frame.load_button["command"] = self.reload_image
+
     def quit_handler(self, event=None):
         self.destroy()
 
@@ -619,6 +627,9 @@ class MainWindow(Tk):
     def run_button_handler(self, event=None):
         if self.run_button_callback:
             self.run_button_callback()
+
+    def reload_image(self):
+        self.load_image(self.ui.output)
 
     def load_image(self, imagepath):
         if PIL_NOT_AVAILABLE:

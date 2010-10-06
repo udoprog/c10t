@@ -21,8 +21,8 @@
 struct image_operation {
   color c;
   int depth;
-  int x, y;
-  int order;
+  uint16_t x, y;
+  uint32_t order;
 };
 
 struct image_op_key {

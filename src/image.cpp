@@ -5,12 +5,16 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <stdint.h>
+#include <limits>
 
 #include <png.h>
 
 void image_operations::add_pixel(int x, int y, color &c) {
   assert(x >= 0);
   assert(y >= 0);
+  assert(x < std::numeric_limits<uint16_t>::max());
+  assert(y < std::numeric_limits<uint16_t>::max());
   
   if (c.is_invisible()) {
     return;
@@ -19,8 +23,8 @@ void image_operations::add_pixel(int x, int y, color &c) {
   if (c.is_transparent()) {
     image_operation oper;
     
-    oper.x = x;
-    oper.y = y;
+    oper.x = (uint16_t)x;
+    oper.y = (uint16_t)y;
     oper.order = order++;
     oper.c = c;
     

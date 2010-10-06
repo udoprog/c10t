@@ -9,6 +9,11 @@
 
 namespace fs = boost::filesystem;
 
+struct imop_file {
+  uint16_t x, y;
+  color c;
+};
+
 class cache_file {
 private:
     fs::path path;
@@ -17,7 +22,7 @@ private:
 public:
     cache_file() {
     }
-
+    
     fs::path get_path() {
       return path;
     }
@@ -44,12 +49,18 @@ public:
       fs.read(reinterpret_cast<char*>(&size), sizeof(v_size_type));
       if (fs.fail()) return false;
       
-      image_operation* oper = new image_operation[size];
-      fs.read(reinterpret_cast<char*>(oper), sizeof(image_operation) * size);
+      imop_file* oper = new imop_file[size];
+      fs.read(reinterpret_cast<char*>(oper), sizeof(imop_file) * size);
       if (fs.fail()) goto exit_error;
       
       for (v_size_type i = 0; i < size; i++) {
-        operations->operations.push_back(oper[i]);
+        imop_file iof = oper[i];
+        image_operation operation;
+        operation.x = iof.x;
+        operation.y = iof.y;
+        operation.c = iof.c;
+        operation.order = i;
+        operations->operations.push_back(operation);
       }
       
       delete [] oper;
@@ -72,8 +83,11 @@ exit_error:
         std::vector<image_operation>::iterator it = operations->operations.begin();
         it != operations->operations.end(); it++) {
         image_operation oper = *it;
-        
-        fs.write(reinterpret_cast<char*>(&oper), sizeof(image_operation));
+        imop_file iof;
+        iof.x = oper.x;
+        iof.y = oper.y;
+        iof.c = oper.c;
+        fs.write(reinterpret_cast<char*>(&iof), sizeof(imop_file));
         if (fs.fail()) return false;
       }
       

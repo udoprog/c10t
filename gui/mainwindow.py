@@ -17,6 +17,21 @@ def add_tooltip(text, widgets):
         w.tooltip = ToolTip(w, text=text)
 
 
+class XCheckbutton(Checkbutton):
+    # Tkinter requires a variable for Checkbutton.
+    # This class adds get/set methods to access that var.
+
+    def __init__(self, *args, **kwargs):
+        self.var = IntVar()
+        Checkbutton.__init__(self, variable=self.var, *args, **kwargs)
+
+    def get(self):
+        return self.var.get()
+
+    def set(self, value):
+        self.var.set(value)
+
+
 class XEntry(Entry):
     def set(self, value):
         # When the state is disabled or readonly,
@@ -79,7 +94,7 @@ class FilesFrame(LabelFrame):
     def create_widgets(self, master=None):
         self.exepath_label = Label(master, text=u"c10t path", anchor=W, justify=LEFT)
         self.exepath_label.grid(column=0, row=0, sticky=EW)
-        self.exepath_entry = XEntry(master)
+        self.exepath_entry = XEntry(master, name="exepath")
         self.exepath_entry.grid(column=1, row=0, sticky=EW)
         add_tooltip(u"Path to the c10t executable", (
             self.exepath_label,
@@ -88,7 +103,7 @@ class FilesFrame(LabelFrame):
 
         self.world_label = Label(master, text=u"Input world", anchor=W, justify=LEFT)
         self.world_label.grid(column=0, row=1, sticky=EW)
-        self.world_entry = XEntry(master)
+        self.world_entry = XEntry(master, name="world")
         self.world_entry.grid(column=1, row=1, sticky=EW)
         add_tooltip(u"Path to the World directory (the one that contains level.dat)", (
             self.world_label,
@@ -97,7 +112,7 @@ class FilesFrame(LabelFrame):
 
         self.output_label = Label(master, text=u"Output image", anchor=W, justify=LEFT)
         self.output_label.grid(column=0, row=2, sticky=EW)
-        self.output_entry = XEntry(master)
+        self.output_entry = XEntry(master, name="output")
         self.output_entry.grid(column=1, row=2, sticky=EW)
         add_tooltip(u"Destination file for the generated PNG", (
             self.output_label,
@@ -122,9 +137,9 @@ class FilteringFrame(LabelFrame):
         self.create_widgets(self)
 
     def create_widgets(self, master=None):
-        self.top_checkbutton = Checkbutton(master, text=u"Top", anchor=W, justify=LEFT)
+        self.top_checkbutton = XCheckbutton(master, name="topcheck", text=u"Top", anchor=W, justify=LEFT)
         self.top_checkbutton.grid(column=0, row=0, sticky=EW)
-        self.top_spinbox = XSpinbox(master, from_=0, to=127, width=3)
+        self.top_spinbox = XSpinbox(master, name="top", from_=0, to=127, width=3)
         self.top_spinbox.set(127)
         self.top_spinbox.grid(column=1, row=0, sticky=EW)
         add_tooltip(u"Splice from the top, must be <= 127", (
@@ -132,9 +147,9 @@ class FilteringFrame(LabelFrame):
             self.top_spinbox,
         ))
 
-        self.bottom_checkbutton = Checkbutton(master, text=u"Bottom", anchor=W, justify=LEFT)
+        self.bottom_checkbutton = XCheckbutton(master, name="bottomcheck", text=u"Bottom", anchor=W, justify=LEFT)
         self.bottom_checkbutton.grid(column=0, row=1, sticky=EW)
-        self.bottom_spinbox = XSpinbox(master, from_=0, to=127, width=3)
+        self.bottom_spinbox = XSpinbox(master, name="bottom", from_=0, to=127, width=3)
         self.bottom_spinbox.set(0)
         self.bottom_spinbox.grid(column=1, row=1, sticky=EW)
         add_tooltip(u"Splice from the bottom, must be >= 0", (
@@ -143,7 +158,7 @@ class FilteringFrame(LabelFrame):
         ))
 
         # Begin "Limits" row...
-        self.limits_checkbutton = Checkbutton(master, text=u"Limits", anchor=W, justify=LEFT)
+        self.limits_checkbutton = XCheckbutton(master, name="limitscheck", text=u"Limits", anchor=W, justify=LEFT)
         self.limits_checkbutton.grid(column=0, row=2, sticky=EW)
         add_tooltip(u"Limit render to certain area (North, South, East, West)", (
             self.limits_checkbutton,
@@ -153,42 +168,42 @@ class FilteringFrame(LabelFrame):
         self.limits_frame.grid(column=1, row=2, sticky=EW)
 
         # This loop sets the following vars:
-        # self.limits_north
-        # self.limits_south
-        # self.limits_east
-        # self.limits_west
+        # self.limitsnorth_spinbox
+        # self.limitssouth_spinbox
+        # self.limitseast_spinbox
+        # self.limitswest_spinbox
         for index, dir in enumerate(("north", "south", "east", "west")):
-            widget = XSpinbox(self.limits_frame, from_=-999, to=999, width=4)
+            name="limits"+dir
+            widget = XSpinbox(self.limits_frame, name=name, from_=-999, to=999, width=4)
             widget.set(0)
             widget.grid(column=index, row=0, sticky=EW)
             self.limits_frame.columnconfigure(index, weight=1)
 
-            name = "limits_"+dir
-            setattr(self, name, widget)
+            setattr(self, name+"_spinbox", widget)
 
             signal = u"negative" if index % 2 == 0 else u"positive"
             tooltip = u"%s limit (%s)" % (dir.capitalize(), signal)
             add_tooltip(tooltip, (widget,))
         # End "Limits" row...
 
-        self.cavemode_checkbutton = Checkbutton(master, text=u"Cave mode", anchor=W, justify=LEFT)
+        self.cavemode_checkbutton = XCheckbutton(master, name="cavemodecheck", text=u"Cave mode", anchor=W, justify=LEFT)
         self.cavemode_checkbutton.grid(column=0, row=3, sticky=EW)
         add_tooltip(u"Cave mode - top down until solid block found, then render bottom outlines only", (
             self.cavemode_checkbutton,
         ))
 
-        self.exclude_checkbutton = Checkbutton(master, text=u"Exclude", anchor=W, justify=LEFT)
+        self.exclude_checkbutton = XCheckbutton(master, name="excludecheck", text=u"Exclude", anchor=W, justify=LEFT)
         self.exclude_checkbutton.grid(column=0, row=4, sticky=EW)
-        self.exclude_entry = XEntry(master)
+        self.exclude_entry = XEntry(master, name="exclude")
         self.exclude_entry.grid(column=1, row=4, sticky=EW)
         add_tooltip(u"Exclude block-ids from render", (
             self.exclude_checkbutton,
             self.exclude_entry,
         ))
 
-        self.include_checkbutton = Checkbutton(master, text=u"Include", anchor=W, justify=LEFT)
+        self.include_checkbutton = XCheckbutton(master, name="includecheck", text=u"Include", anchor=W, justify=LEFT)
         self.include_checkbutton.grid(column=0, row=5, sticky=EW)
-        self.include_entry = XEntry(master)
+        self.include_entry = XEntry(master, name="include")
         self.include_entry.grid(column=1, row=5, sticky=EW)
         add_tooltip(u"Include block-ids in render", (
             self.include_checkbutton,
@@ -213,24 +228,25 @@ class RenderingFrame(LabelFrame):
         self.create_widgets(self)
 
     def create_widgets(self, master=None):
-        self.oblique_checkbutton = Checkbutton(master, text=u"Oblique", anchor=W, justify=LEFT)
+        self.oblique_checkbutton = XCheckbutton(master, name="obliquecheck", text=u"Oblique", anchor=W, justify=LEFT)
         self.oblique_checkbutton.grid(column=0, row=0, sticky=EW)
         add_tooltip(u"Oblique rendering", (
             self.oblique_checkbutton,
         ))
 
-        self.obliqueangle_checkbutton = Checkbutton(master, text=u"Oblique angle", anchor=W, justify=LEFT)
+        self.obliqueangle_checkbutton = XCheckbutton(master, name="obliqueanglecheck", text=u"Oblique angle", anchor=W, justify=LEFT)
         self.obliqueangle_checkbutton.grid(column=0, row=1, sticky=EW)
         add_tooltip(u"Oblique angle rendering", (
             self.obliqueangle_checkbutton,
         ))
 
-        self.night_checkbutton = Checkbutton(master, text=u"Night", anchor=W, justify=LEFT)
+        self.night_checkbutton = XCheckbutton(master, name="nightcheck", text=u"Night", anchor=W, justify=LEFT)
         self.night_checkbutton.grid(column=0, row=2, sticky=EW)
         add_tooltip(u"Night-time rendering", (
             self.night_checkbutton,
         ))
 
+        # TODO: Add a name to the radioboxes!
         self.rotate_label = Label(master, text=u"Rotate", anchor=W, justify=LEFT)
         self.rotate_label.grid(column=0, row=3, sticky=EW)
         add_tooltip(u"Rotate the rendering clockwise", (
@@ -238,22 +254,24 @@ class RenderingFrame(LabelFrame):
         ))
         self.rotate_frame = Frame(master)
         self.rotate_frame.grid(column=1, row=3, sticky=EW)
-        self.rotate_var = IntVar()
+        self.rotate_var = IntVar(name="rotate")
         # This loop sets the following vars:
-        # self.rotate_0
-        # self.rotate_90
-        # self.rotate_180
-        # self.rotate_270
+        # self.rotate0_radiobutton
+        # self.rotate90_radiobutton
+        # self.rotate180_radiobutton
+        # self.rotate270_radiobutton
         for index, angle in enumerate(("0", "90", "180", "270")):
+            name = "rotate"+angle
             widget = Radiobutton(self.rotate_frame, text=angle, variable=self.rotate_var, value=int(angle))
+            widget.var = self.rotate_var
             widget.grid(column=index, row=0, sticky=EW)
             self.rotate_frame.columnconfigure(index, weight=1)
-            name = "rotate_"+angle
-            setattr(self, name, widget)
+            setattr(self, name+"_radiobutton", widget)
+        self.rotate_var.set(0)
 
         self.threads_label = Label(master, text=u"Threads", anchor=W, justify=LEFT)
         self.threads_label.grid(column=0, row=4, sticky=EW)
-        self.threads_spinbox = XSpinbox(master, from_=1, to=999, width=3)
+        self.threads_spinbox = XSpinbox(master, name="threads", from_=1, to=999, width=3)
         self.threads_spinbox.set(1)
         self.threads_spinbox.grid(column=1, row=4, sticky=EW)
         add_tooltip(u"Specify the amount of threads to use, for maximum efficency, this should match the amount of cores on your machine", (
@@ -281,7 +299,7 @@ class FontFrame(LabelFrame):
     def create_widgets(self, master=None):
         self.ttfsize_label = Label(master, text=u"Font size", anchor=W, justify=LEFT)
         self.ttfsize_label.grid(column=0, row=0, columnspan=2, sticky=EW)
-        self.ttfsize_spinbox = XSpinbox(master, from_=1, to=999, width=3)
+        self.ttfsize_spinbox = XSpinbox(master, name="fontsize", from_=1, to=999, width=3)
         self.ttfsize_spinbox.set(12)
         self.ttfsize_spinbox.grid(column=2, row=0, sticky=EW)
         add_tooltip(u"Use the specified font size when drawing text", (
@@ -294,49 +312,49 @@ class FontFrame(LabelFrame):
         add_tooltip(u"Use the specified color when drawing text", (
             self.ttfcolor_label,
         ))
-        self.ttfcolor_entry = XEntry(master, width=15)
+        self.ttfcolor_entry = XEntry(master, name="ttfcolor", width=15)
         self.ttfcolor_entry.set(u"0,0,0,255")
         self.ttfcolor_entry.grid(column=2, row=1, sticky=EW)
 
-        self.showplayers_checkbutton = Checkbutton(master, text=u"Show players", anchor=W, justify=LEFT)
+        self.showplayers_checkbutton = XCheckbutton(master, name="showplayerscheck", text=u"Show players", anchor=W, justify=LEFT)
         self.showplayers_checkbutton.grid(column=0, row=2, sticky=EW)
         add_tooltip(u"Will draw out player position and names from the players database in <world>/players", (
             self.showplayers_checkbutton,
         ))
-        self.playercolor_checkbutton = Checkbutton(master, text=u"Color:", anchor=W, justify=LEFT)
+        self.playercolor_checkbutton = XCheckbutton(master, name="playercolorcheck", text=u"Color:", anchor=W, justify=LEFT)
         self.playercolor_checkbutton.grid(column=1, row=2, sticky=EW)
         add_tooltip(u"Use a custom color for players", (
             self.playercolor_checkbutton,
         ))
-        self.playercolor_entry = XEntry(master, width=15)
+        self.playercolor_entry = XEntry(master, name="playercolor", width=15)
         self.playercolor_entry.set(u"0,0,0,255")
         self.playercolor_entry.grid(column=2, row=2, sticky=EW)
 
-        self.showsigns_checkbutton = Checkbutton(master, text=u"Show signs", anchor=W, justify=LEFT)
+        self.showsigns_checkbutton = XCheckbutton(master, name="showsignscheck", text=u"Show signs", anchor=W, justify=LEFT)
         self.showsigns_checkbutton.grid(column=0, row=3, sticky=EW)
         add_tooltip(u"Will draw out signs from all chunks", (
             self.showsigns_checkbutton,
         ))
-        self.signcolor_checkbutton = Checkbutton(master, text=u"Color:", anchor=W, justify=LEFT)
+        self.signcolor_checkbutton = XCheckbutton(master, name="signcolorcheck", text=u"Color:", anchor=W, justify=LEFT)
         self.signcolor_checkbutton.grid(column=1, row=3, sticky=EW)
         add_tooltip(u"Use a custom color for signs", (
             self.signcolor_checkbutton,
         ))
-        self.signcolor_entry = XEntry(master, width=15)
+        self.signcolor_entry = XEntry(master, name="signcolor", width=15)
         self.signcolor_entry.set(u"0,0,0,255")
         self.signcolor_entry.grid(column=2, row=3, sticky=EW)
 
-        self.showcoords_checkbutton = Checkbutton(master, text=u"Show coordinates", anchor=W, justify=LEFT)
+        self.showcoords_checkbutton = XCheckbutton(master, name="showcoordscheck", text=u"Show coordinates", anchor=W, justify=LEFT)
         self.showcoords_checkbutton.grid(column=0, row=4, sticky=EW)
         add_tooltip(u"Will draw out each chunks expected coordinates", (
             self.showcoords_checkbutton,
         ))
-        self.coordcolor_checkbutton = Checkbutton(master, text=u"Color:", anchor=W, justify=LEFT)
+        self.coordcolor_checkbutton = XCheckbutton(master, name="coordcolorcheck", text=u"Color:", anchor=W, justify=LEFT)
         self.coordcolor_checkbutton.grid(column=1, row=4, sticky=EW)
         add_tooltip(u"Use a custom color for coordinates", (
             self.coordcolor_checkbutton,
         ))
-        self.coordcolor_entry = XEntry(master, width=15)
+        self.coordcolor_entry = XEntry(master, name="coordcolor", width=15)
         self.coordcolor_entry.set(u"0,0,0,255")
         self.coordcolor_entry.grid(column=2, row=4, sticky=EW)
 
@@ -379,11 +397,12 @@ class RunFrame(Frame):
         self.create_widgets(self)
 
     def create_widgets(self, master=None):
+        # TODO: Assign a name to the button?
         self.run_button = Button(master, text=u"Run!")
         # TODO: Assign the run_button["command"]
         self.run_button.pack(side=LEFT)
 
-        self.command_entry = XEntry(master, state="readonly")
+        self.command_entry = XEntry(master, name="command", state="readonly")
         self.command_entry.set("AAAA")
         self.command_entry.pack(side=LEFT, fill=X, expand=1)
         add_tooltip(u"The full command-line that will be invoked", (
@@ -402,6 +421,7 @@ class ImageFrame(Frame):
         self.horizontal_scrollbar = Scrollbar(master, orient=HORIZONTAL)
         self.horizontal_scrollbar.pack(side=BOTTOM, fill=X)
 
+        # TODO: Assign a name to the canvas?
         self.canvas = Canvas(master)
         # TODO: Set the size with self.canvas["width"] and height
         # And set self.canvas["scrollregion"] = (0,0,width,height)
@@ -432,6 +452,57 @@ class ApplicationFrame(Frame):
         self.rowconfigure(1, weight=1)
 
 
+def find_named_widgets(widget):
+    """Starting at the 'widget', scans down recursively and returns a dict
+    with {'name': widget_instance}, but only if the name is not numeric."""
+
+    d = {}
+    for name, w in widget.children.iteritems():
+        # If the user has set a name for this widget, and it is a valid name.
+        # Unnamed widgets get numbers in their name.
+        if name[0].isalpha() or name[0] == "_":
+            d[name] = w
+
+        # Special case for Radiobutton, if the user has stored the variable
+        # at w.var attribute and has set the "name" of the variable.
+        if (
+            isinstance(w, Radiobutton) and
+            hasattr(w, "var") and
+            not w.var._name.startswith("PY_VAR")
+        ):
+            d[w.var._name] = w.var
+
+        # Recursive call
+        d.update(find_named_widgets(w))
+    return d
+
+
+class UiShortcuts(object):
+    """This object is a quick and handy way of accessing widget values.
+    See this small example to get an idea of how it works:
+
+    ui = UiShortcuts(root_window)
+
+    # This will call .set("bar") on a widget named "foo"
+    ui.foo = "bar"
+    # This will call .get() on a widget named "foo"
+    print ui.foo
+    """
+
+    def __init__(self, root):
+        object.__setattr__(self, "widgets", find_named_widgets(root))
+
+    def __dir__(self):
+        # Simple method to support tab-completion
+        return self.__dict__.keys() + self.widgets.keys()
+
+    def __getattr__(self, name):
+        return self.widgets[name].get()
+
+    def __setattr__(self, name, value):
+        self.widgets[name].set(value)
+
+
 class MainWindow(Tk):
     def __init__(self):
         Tk.__init__(self)
@@ -447,6 +518,7 @@ class MainWindow(Tk):
         self.bind_all("<Control-q>", self.quitHandler)
 
         self.protocol("WM_DELETE_WINDOW", self.quitHandler)
+        self.ui = UiShortcuts(self)
 
     def quitHandler(self, event=None):
         self.destroy()

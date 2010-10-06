@@ -17,3 +17,4 @@ Possible improvements:
 * Some kind of interface to select blocks
 * Some kind of interface to select files/directories
 * Auto-detect the correct minecraft save path on other systems
+* Implement image zooming (like Google Maps) [tip: PIL.Image.resize]

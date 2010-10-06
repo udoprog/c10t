@@ -12,6 +12,14 @@
 from Tkinter import *
 from tooltip import ToolTip
 
+try:
+    import PIL.Image
+    import PIL.ImageTk
+    PIL_NOT_AVAILABLE = False
+except ImportError as e:
+    PIL_NOT_AVAILABLE = True
+    PIL_NOT_AVAILABLE_MESSAGE = repr(e)
+
 
 def add_tooltip(text, widgets):
     """Adds a tooltip to multiple elements at once. Useful for setting the
@@ -65,10 +73,10 @@ class XSpinbox(Spinbox):
         Spinbox.__init__(self, *args, **kwargs)
 
         # Windows
-        self.bind("<MouseWheel>", self.mouse_wheel)
+        self.bind("<MouseWheel>", self.mouse_wheel_handler)
         # Linux
-        self.bind("<Button-4>", self.mouse_wheel)
-        self.bind("<Button-5>", self.mouse_wheel)
+        self.bind("<Button-4>", self.mouse_wheel_handler)
+        self.bind("<Button-5>", self.mouse_wheel_handler)
         # How about Mac... ???
         # I have no idea! Can someone test it please?
 
@@ -79,7 +87,7 @@ class XSpinbox(Spinbox):
         self.delete(0, END)
         self.insert(0, value)
 
-    def mouse_wheel(self, event):
+    def mouse_wheel_handler(self, event):
         # Mouse wheel in spinboxes...
         # http://www.daniweb.com/forums/post1158775.html#post1158775
         if event.num == 5:
@@ -88,6 +96,8 @@ class XSpinbox(Spinbox):
             dir = 1
         elif abs(event.delta) >= 120:
             dir = event.delta // 120
+        else:
+            return
 
         while dir > 0:
             self.invoke("buttonup")
@@ -253,7 +263,6 @@ class RenderingFrame(LabelFrame):
             self.night_checkbutton,
         ))
 
-        # TODO: Add a name to the radioboxes!
         self.rotate_label = Label(self, text=u"Rotate", anchor=W, justify=LEFT)
         self.rotate_label.grid(column=0, row=3, sticky=EW)
         add_tooltip(u"Rotate the rendering clockwise", (
@@ -414,7 +423,7 @@ class RunFrame(Frame):
 
 
 class ImageFrame(Frame):
-    """TODO: make this work and document this!"""
+    """This is just a Frame containing one Canvas and two scrollbars."""
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
@@ -424,16 +433,49 @@ class ImageFrame(Frame):
         self.horizontal_scrollbar = Scrollbar(self, orient=HORIZONTAL)
         self.horizontal_scrollbar.pack(side=BOTTOM, fill=X)
 
-        # TODO: Assign a name to the canvas?
         self.canvas = Canvas(self)
-        # TODO: Set the size with self.canvas["width"] and height
-        # And set self.canvas["scrollregion"] = (0,0,width,height)
         self.canvas.pack(side=LEFT, expand=YES, fill=BOTH)
 
-        self.vertical_scrollbar["command"] = self.canvas.yview
+        self.horizontal_scrollbar["command"] = self.canvas.xview
         self.vertical_scrollbar["command"] = self.canvas.yview
         self.canvas["xscrollcommand"] = self.horizontal_scrollbar.set
         self.canvas["yscrollcommand"] = self.vertical_scrollbar.set
+
+        self.canvas.bind("<Button-1>", self.button_press_1_handler)
+        self.canvas.bind("<B1-Motion>", self.button_motion_1_handler)
+        self.canvas.bind("<ButtonRelease-1>", self.button_release_1_handler)
+
+        self.canvas.bind("<MouseWheel>", self.mouse_wheel_handler)
+        self.canvas.bind("<Button-4>", self.mouse_wheel_handler)
+        self.canvas.bind("<Button-5>", self.mouse_wheel_handler)
+
+        if PIL_NOT_AVAILABLE:
+            self.canvas.create_text(10, 10, anchor=NW, text=u"Python Image Library (PIL) could not be loaded.\n\nNo image will be displayed here, but\nthey will still be rendered to the disk.\n\n%s" % (PIL_NOT_AVAILABLE_MESSAGE,))
+
+    def button_press_1_handler(self, event):
+        self.canvas.scan_mark(event.x, event.y)
+        self.canvas["cursor"] = "fleur"
+
+    def button_motion_1_handler(self, event):
+        self.canvas.scan_dragto(event.x, event.y, gain=1)
+
+    def button_release_1_handler(self, event):
+        self.canvas["cursor"] = ""
+
+    def mouse_wheel_handler(self, event):
+        # Linux maps scrolling to mouse buttons 4 and 5
+        if event.num == 5:
+            dir = 1
+        elif event.num == 4:
+            dir = -1
+        # Windows has a MouseWheel event, with delta in multiples of 120
+        elif event.delta:
+            dir = -event.delta / 120
+        else:
+            return
+
+        self.canvas.yview_scroll(dir, UNITS)
+
 
 
 class ApplicationFrame(Frame):
@@ -541,6 +583,13 @@ class MainWindow(Tk):
 
         self.ui = UiShortcuts(self)
 
+        # Simple shortcut to the canvas object
+        self.canvas = self.app.image_frame.canvas
+        # And all image-related objects
+        self.pilimage = None
+        self.photoimage = None
+        self.canvasimage = None
+
         self.bind_all("<Control-q>", self.quit_handler)
         self.protocol("WM_DELETE_WINDOW", self.quit_handler)
 
@@ -570,3 +619,24 @@ class MainWindow(Tk):
     def run_button_handler(self, event=None):
         if self.run_button_callback:
             self.run_button_callback()
+
+    def load_image(self, imagepath):
+        if PIL_NOT_AVAILABLE:
+            return
+
+        # The image must be kept in a Python variable to prevent it from
+        # being garbage-collected.
+        # http://effbot.org/tkinterbook/photoimage.htm
+        self.pilimage = PIL.Image.open(imagepath)
+        self.photoimage = PIL.ImageTk.PhotoImage(self.pilimage)
+
+        # Creating the image inside the canvas...
+        if self.canvasimage is None:
+            self.canvasimage = self.canvas.create_image(0, 0, anchor=NW)
+
+        # Updating to the latest image...
+        self.canvas.itemconfigure(self.canvasimage, image=self.photoimage)
+
+        # http://www.swharden.com/blog/2010-03-03-viewing-large-images-with-scrollbars-using-python-tk-and-pil/
+        width, height = self.pilimage.size
+        self.canvas["scrollregion"] = (0, 0, width, height)

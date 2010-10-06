@@ -1,0 +1,19 @@
+This is a simple GUI using Python and Tkinter.
+
+I know Tkinter is ugly and it sucks... But it is available on the standard Python library, so this GUI works out-of-the-box on Linux and Windows and Mac (but I don't have a Mac to test).
+
+This is what it does:
+* Graphical interface to select the most common c10t options
+* Runs c10t with such options
+* Shows the final command-line, so it's easy to copy-paste that onto scripts
+* Previews the rendered image
+
+What it still doesn't do:
+* It don't show any output from c10t
+* There is no error checking when c10t runs
+* There is no progress bar (the program just hangs whie c10t is running)
+
+Possible improvements:
+* Some kind of interface to select blocks
+* Some kind of interface to select files/directories
+* Auto-detect the correct minecraft save path on other systems

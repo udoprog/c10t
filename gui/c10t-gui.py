@@ -57,7 +57,11 @@ class Program(object):
         self.update_ui_commandline()
         proc = subprocess.Popen(self.args, shell=False)
         # TODO: Add a progress window/progress bar
-        # TODO: Show the image inside the main window
+        # Meanwhile... let's just block this program until c10t finishes...
+        # Ugly, but better than nothing.
+        proc.communicate() # TODO: Check process returncode
+
+        self.win.load_image(self.win.ui.output)
 
     def update_ui_commandline(self):
         self.build_commandline()

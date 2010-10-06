@@ -5,6 +5,9 @@
 # It's so... crude... and ugly...
 # But the *only* reason I'm using it is that
 # it is available on the standard Python library.
+#
+# Also, be aware that most of this code is ugly because all it does is
+# setting up the widgets at the window.
 
 from Tkinter import *
 from tooltip import ToolTip
@@ -96,8 +99,7 @@ class XSpinbox(Spinbox):
 
 class FilesFrame(LabelFrame):
     def __init__(self, master=None):
-        LabelFrame.__init__(self, master)
-        self.config(
+        LabelFrame.__init__(self, master,
             text = u"Files",
             padx = 5,
             pady = 5
@@ -139,8 +141,7 @@ class FilesFrame(LabelFrame):
 
 class FilteringFrame(LabelFrame):
     def __init__(self, master=None):
-        LabelFrame.__init__(self, master)
-        self.config(
+        LabelFrame.__init__(self, master,
             text = u"Filtering",
             padx = 5,
             pady = 5
@@ -228,8 +229,7 @@ class FilteringFrame(LabelFrame):
 
 class RenderingFrame(LabelFrame):
     def __init__(self, master=None):
-        LabelFrame.__init__(self, master)
-        self.config(
+        LabelFrame.__init__(self, master,
             text = u"Rendering",
             padx = 5,
             pady = 5
@@ -295,8 +295,7 @@ class RenderingFrame(LabelFrame):
 
 class FontFrame(LabelFrame):
     def __init__(self, master=None):
-        LabelFrame.__init__(self, master)
-        self.config(
+        LabelFrame.__init__(self, master,
             text = u"Text and fonts",
             padx = 5,
             pady = 5
@@ -404,7 +403,6 @@ class RunFrame(Frame):
         self.run_button.pack(side=LEFT)
 
         self.command_entry = XEntry(self, name="command", state="readonly")
-        self.command_entry.set("AAAA")
         self.command_entry.pack(side=LEFT, fill=X, expand=1)
         add_tooltip(u"The full command-line that will be invoked", (
             self.command_entry,
@@ -412,6 +410,8 @@ class RunFrame(Frame):
 
 
 class ImageFrame(Frame):
+    """TODO: make this work and document this!"""
+
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
@@ -433,8 +433,24 @@ class ImageFrame(Frame):
 
 
 class ApplicationFrame(Frame):
+    """The main application frame is divided like this:
+
+    +--------------+--------------------+
+    |Configuration | Run Frame here     |
+    |Frame here,   +--------------------+
+    |which contains|                   ^|
+    |sub-frames for| Image Frame here   |
+    |each section. |                    |
+    |              |                    |
+    |              |<                 >v|
+    +--------------+--------------------+
+    """
+
     def __init__(self, master=None):
-        Frame.__init__(self, master)
+        Frame.__init__(self, master,
+            padx=5,
+            pady=5
+        )
 
         self.configuration_frame = ConfigurationFrame(self)
         self.configuration_frame.grid(column=0, row=0, rowspan=2, sticky=NSEW)
@@ -505,21 +521,24 @@ class UiShortcuts(object):
 
 
 class MainWindow(Tk):
+    """Root window. Contains one ApplicationFrame at self.app, and has
+    shortcuts to all important widgets in self.ui.
+    
+    If you want to interact with the interface, using self.ui should be
+    enough, and it hides all the messy toolkit-related code."""
+
     def __init__(self):
         Tk.__init__(self)
 
         self.title("c10t GUI")
+
         self.app = ApplicationFrame(self)
-        self.app.config(padx=5, pady=5)
-        self.app.quitHandler = self.quitHandler
-        self.app.grid(sticky="NSEW")
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
+        self.app.pack(fill=BOTH, expand=1)
+
+        self.ui = UiShortcuts(self)
 
         self.bind_all("<Control-q>", self.quitHandler)
-
         self.protocol("WM_DELETE_WINDOW", self.quitHandler)
-        self.ui = UiShortcuts(self)
 
     def quitHandler(self, event=None):
         self.destroy()

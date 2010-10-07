@@ -26,6 +26,7 @@ enum mode {
 struct settings_t {
   bool cavemode;
   bool night;
+  bool heightmap;
   bool silent;
   bool nocheck;
   bool *excludes;
@@ -89,6 +90,7 @@ struct settings_t {
     this->rotation = 0;
     this->binary = false;
     this->night = false;
+    this->heightmap = false;
     this->debug = false;
     this->cache_file = "cache.dat";
     this->memory_limit = 1024 * 1024 * 1000;

@@ -662,6 +662,7 @@ int do_help() {
     << "  -c, --cave-mode           - cave mode - top down until solid block found,     " << endl
     << "                              then render bottom outlines only                  " << endl
     << "  -n, --night               - night-time rendering mode                         " << endl
+    << "  -H, --heightmap           - heightmap rendering mode                          " << endl
     << endl
     << "  -N, --no-check            - ignore missing <world>/level.dat                  " << endl
     << endl
@@ -946,6 +947,7 @@ int main(int argc, char *argv[]){
      {"iso",              no_argument, 0, 'z'},
      {"cave-mode",        no_argument, 0, 'c'},
      {"night",            no_argument, 0, 'n'},
+     {"heightmap",        no_argument, 0, 'H'},
      {"binary",           no_argument, 0, 'x'},
      {"require-all",      no_argument, &flag, 0},
      {"show-players",     no_argument, &flag, 1},
@@ -973,7 +975,7 @@ int main(int argc, char *argv[]){
     includes[i] = false;
   }
   
-  while ((c = getopt_long(argc, argv, "DNvxcnqzyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
 
@@ -1110,6 +1112,7 @@ int main(int argc, char *argv[]){
       break;
     case 'N': s.nocheck = true; break;
     case 'n': s.night = true; break;
+    case 'H': s.heightmap = true; break;
     case 'c': s.cavemode = true; break;
     case 't':
       s.top = atoi(optarg);

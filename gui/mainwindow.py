@@ -611,7 +611,8 @@ class MainWindow(Tk):
         self.run_button_callback = None
         self.app.run_frame.run_button["command"] = self.run_button_handler
 
-        self.app.configuration_frame.files_frame.load_button["command"] = self.reload_image
+        self.load_button_callback = None
+        self.app.configuration_frame.files_frame.load_button["command"] = self.load_button_handler
 
     def quit_handler(self, event=None):
         self.destroy()
@@ -628,10 +629,11 @@ class MainWindow(Tk):
         if self.run_button_callback:
             self.run_button_callback()
 
-    def reload_image(self):
-        self.load_image(self.ui.output)
+    def load_button_handler(self):
+        if self.load_button_callback:
+            self.load_button_callback()
 
-    def load_image(self, imagepath):
+    def load_image_from_file(self, imagepath):
         if PIL_NOT_AVAILABLE:
             return
 

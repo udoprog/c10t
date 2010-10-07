@@ -52,6 +52,7 @@ class Program(object):
 
         self.win.update_button_callback = self.update_ui_commandline
         self.win.run_button_callback = self.run_command
+        self.win.load_button_callback = self.load_image
 
     def run_command(self):
         self.update_ui_commandline()
@@ -60,8 +61,10 @@ class Program(object):
         # Meanwhile... let's just block this program until c10t finishes...
         # Ugly, but better than nothing.
         proc.communicate() # TODO: Check process returncode
+        self.load_image()
 
-        self.win.load_image(self.win.ui.output)
+    def load_image(self):
+        self.win.load_image_from_file(os.path.expanduser(self.win.ui.output))
 
     def update_ui_commandline(self):
         self.build_commandline()

@@ -680,9 +680,9 @@ int do_help() {
     << "                              <8 digit hex> specifies the RGBA values as        " << endl
     << "                              `<int>,<int>,<int>[,<int>]'. The side color will  " << endl
     << "                              be a darkened variant of the base                 " << endl
-    << "                              example: `-s Grass=0,255,0,120'                   " << endl
+    << "                              example: `-B Grass=0,255,0,120'                   " << endl
     << "  -S <set>                  - Specify the side color for a specific block id    " << endl
-    << "                              this uses the same format as '-s' only the color  " << endl
+    << "                              this uses the same format as '-B' only the color  " << endl
     << "                              is applied to the side of the block               " << endl
     << "  -p, --split <chunks>      - Split the render into chunks, <output> must be a  " << endl
     << "                              name containing two number format specifiers `%d' " << endl

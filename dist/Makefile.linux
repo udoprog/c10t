@@ -1,17 +1,16 @@
-VERSION=1.0
-TARGET=c10t-${VERSION}
 ARCH=x86_64
-CC=g++
+OS=linux
+VERSION=SNAPSHOT
 
-SOURCES=src/*.cpp src/nbt/*.cpp 
+USR=/usr
+LDFLAGS=-static -lz -lpng -lboost_thread-mt -lboost_system-mt -lboost_filesystem-mt -lpthread -lfreetype
+DIST=c10t
+TARGET=c10t
+TARGET_DEBUG=c10t-debug
 
-dist:
-	mkdir -p ${TARGET}
-	$(CC) ${SOURCES} -static -lz -lpng -lboost_thread-mt -lpthread -o ${TARGET}/c10t
-	cp README.md ${TARGET}/README
-	tar -cvf ${TARGET}.tar ${TARGET}
-	gzip ${TARGET}.tar
-	mv ${TARGET}.tar.gz ${TARGET}-${ARCH}.tar.gz
-	rm -f ${TARGET}/README
-	rm -f ${TARGET}/c10t
-	rmdir ${TARGET}
+include dist/config.mk
+
+local-package:
+	tar -cvf ${PACKAGE}-${OS}-${ARCH}.tar ${PACKAGE}
+	gzip -f ${PACKAGE}-${OS}-${ARCH}.tar
+	mv ${PACKAGE}-${OS}-${ARCH}.tar.gz ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz

@@ -1,3 +1,5 @@
+// Distributed under the BSD License, see accompanying LICENSE.txt
+// (C) Copyright 2010 John-John Tedro et al.
 #ifndef _THREADWORKER_H_
 #define _THREADWORKER_H_
 #include <assert.h>
@@ -5,13 +7,14 @@
 #include <queue>
 #include <list>
 
+#include <iostream>
+
+#if !defined(C10T_DISABLE_THREADS)
 #include <boost/detail/atomic_count.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-
-#include <iostream>
 
 template <class I, class O>
 class threadworker
@@ -63,7 +66,7 @@ public:
     {
       boost::mutex::scoped_lock lock(start_mutex);
       
-      while (started != 1) {
+      while (!started) {
         start_cond.wait(lock);
       }
     }
@@ -76,12 +79,12 @@ public:
       {
         boost::mutex::scoped_lock lock(in_mutex);
         
-        while (in.empty()) {
+        while (running && in.empty()) {
           in_cond.wait(lock);
-          
-          if (!running) {
-            return;
-          }
+        }
+        
+        if (!running) {
+          return;
         }
         
         i = in.front();
@@ -137,4 +140,43 @@ public:
     }
   }
 };
+#else
+template <class I, class O>
+class threadworker
+{
+private:
+  std::queue<I> in;
+  
+  const int thread_count;
+public:
+  threadworker(int c) : thread_count(c) {
+  }
+  
+  virtual ~threadworker() {
+  }
+  
+  void give(I t) {
+    in.push(t);
+  }
+  
+  void start() {
+  }
+  
+  void run(int id) {
+  }
+
+  virtual O work(I) = 0;
+  
+  O get() {
+    I i = in.front();
+    in.pop();
+    return work(i);
+  }
+  
+  void join() {
+  }
+};
+
+#endif
+
 #endif /* _THREADWORKER_H_ */

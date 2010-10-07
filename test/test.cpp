@@ -1,5 +1,5 @@
-#include "Color.h"
-#include "Image.h"
+#include "color.h"
+#include "image.h"
 #include "2d/cube.h"
 
 #define BOOST_TEST_DYN_LINK
@@ -8,7 +8,7 @@
 
 BOOST_AUTO_TEST_CASE( test_imagebuffer_base )
 {
-  ImageBuffer cb(10, 10, 10);
+  image_buffer cb(10, 10, 10);
   
   BOOST_REQUIRE(cb.get_width() == 10);
   BOOST_REQUIRE(cb.get_height() == 10);
@@ -25,9 +25,9 @@ BOOST_AUTO_TEST_CASE( test_imagebuffer_base )
 // test non-accumulating height when adding opaque pixels
 BOOST_AUTO_TEST_CASE( test_imagebuffer_opaque_acc ) 
 {
-  ImageBuffer cb(10, 10, 10);
+  image_buffer cb(10, 10, 10);
   
-  Color c(0x80, 0x80, 0x80, 0xff);
+  color c(0x80, 0x80, 0x80, 0xff);
   BOOST_REQUIRE(cb.get_pixel_depth(0, 0) == 0);
   cb.add_pixel(0, 0, c);
   BOOST_REQUIRE(cb.get_pixel_depth(0, 0) == 1);
@@ -39,10 +39,10 @@ BOOST_AUTO_TEST_CASE( test_imagebuffer_opaque_acc )
 // test accumulating height when adding transparent pixels
 BOOST_AUTO_TEST_CASE( test_imagebuffer_transparent_acc )
 {
-  ImageBuffer cb(10, 10, 10);
+  image_buffer cb(10, 10, 10);
   
-  Color c(0x80, 0x80, 0x80, 0xfe);
-  Color co(0x80, 0x80, 0x80, 0xff);
+  color c(0x80, 0x80, 0x80, 0xfe);
+  color co(0x80, 0x80, 0x80, 0xff);
   BOOST_REQUIRE(cb.get_pixel_depth(0, 0) == 0);
   cb.add_pixel(0, 0, c);
   BOOST_REQUIRE(cb.get_pixel_depth(0, 0) == 1);
@@ -57,11 +57,11 @@ BOOST_AUTO_TEST_CASE( test_imagebuffer_transparent_acc )
 // test proper setting and reading
 BOOST_AUTO_TEST_CASE( test_imagebuffer_all )
 {
-  ImageBuffer cb(10, 10, 10);
+  image_buffer cb(10, 10, 10);
   
-  Color c(0x80, 0x80, 0x80, 0xfe);
-  Color c2(0x80, 0x80, 0x80, 0xa0);
-  Color co(0x80, 0x80, 0x80, 0xff);
+  color c(0x80, 0x80, 0x80, 0xfe);
+  color c2(0x80, 0x80, 0x80, 0xa0);
+  color co(0x80, 0x80, 0x80, 0xff);
   
   cb.add_pixel(0, 0, c);
   cb.add_pixel(0, 1, c);
@@ -74,13 +74,13 @@ BOOST_AUTO_TEST_CASE( test_imagebuffer_all )
   BOOST_REQUIRE(cb.get_pixel_depth(9, 9) == 1);
 
   {
-    Color r;
+    color r;
     cb.get_pixel(0, 0, 0, r);
     BOOST_REQUIRE(r.a == c.a);
   }
 
   {
-    Color r;
+    color r;
     cb.get_pixel(0, 1, 0, r);
     BOOST_REQUIRE(r.a == c.a);
     cb.get_pixel(0, 1, 1, r);
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE( test_imagebuffer_all )
 
 BOOST_AUTO_TEST_CASE( test_imagebuffer_size )
 {
-  ImageBuffer cb(10, 10, 10);
-  Color c(0x80, 0x80, 0x80, 0xfe);
+  image_buffer cb(10, 10, 10);
+  color c(0x80, 0x80, 0x80, 0xfe);
   cb.set_pixel(9, 9, 9, c);
 }
 

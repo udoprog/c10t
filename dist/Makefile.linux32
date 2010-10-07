@@ -1,0 +1,18 @@
+ARCH=x86
+OS=linux
+VERSION=SNAPSHOT
+
+USR=/usr/i686-pc-linux-gnu/usr
+LDFLAGS=-static -lz -lpng -lboost_system -lboost_filesystem -lboost_thread -lpthread -lfreetype
+DIST=c10t
+TARGET=c10t
+TARGET_DEBUG=c10t-debug
+
+CXX=i686-pc-linux-gnu-g++
+
+include dist/config.mk
+
+local-package:
+	tar -cvf ${PACKAGE}-${OS}-${ARCH}.tar ${PACKAGE}
+	gzip -f ${PACKAGE}-${OS}-${ARCH}.tar
+	mv ${PACKAGE}-${OS}-${ARCH}.tar.gz ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz

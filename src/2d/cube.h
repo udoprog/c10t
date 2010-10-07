@@ -1,3 +1,5 @@
+// Distributed under the BSD License, see accompanying LICENSE.txt
+// (C) Copyright 2010 John-John Tedro et al.
 #ifndef _CUBE_H_
 #define _CUBE_H_
 
@@ -46,6 +48,11 @@ public:
     rx = z + p.x - p.z;
     ry = (y - p.y) + p.z + p.x;
   }
+
+  void project_isometric(point &p, int &rx, int &ry) {
+    rx = 2 * (z + p.x - p.z);
+    ry = 2 * (y - p.y) + p.z + p.x;
+  }
   
   void get_top_limits(int &rx, int &ry) {
     rx = x;
@@ -60,6 +67,11 @@ public:
   void get_obliqueangle_limits(int &rx, int &ry) {
     rx = z + x;
     ry = y + z + x;
+  }
+  
+  void get_isometric_limits(int &rx, int &ry) {
+    rx = 2 * (z + x);
+    ry = 2 * y + z + x;
   }
 };
 

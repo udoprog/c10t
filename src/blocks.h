@@ -1,12 +1,15 @@
+// Distributed under the BSD License, see accompanying LICENSE.txt
+// (C) Copyright 2010 John-John Tedro et al.
 #ifndef _BLOCKS_H_
 #define _BLOCKS_H_
 
-#include "Color.h"
+#include "color.h"
 
 namespace mc {
   enum MaterialMode {
     Block,
-    HalfBlock
+    HalfBlock,
+    TopBlock
   };
   
   enum {
@@ -95,18 +98,20 @@ namespace mc {
     Clay = 0x52,
     Reed = 0x53,
     Jukebox = 0x54,
-    Fence = 0x55
+    Fence = 0x55,
+
+    MaterialCount = 0x56
   };
 
   void initialize_constants();
+  void deinitialize_constants();
   
-  extern int MaterialCount;
-  extern int MapY;
-  extern int MapX;
-  extern int MapZ;
+  extern const int MapY;
+  extern const int MapX;
+  extern const int MapZ;
   extern const char **MaterialName;
-  extern Color **MaterialColor;
-  extern Color **MaterialSideColor;
+  extern color* MaterialColor;
+  extern color* MaterialSideColor;
   extern enum MaterialMode *MaterialModes;
 }
 

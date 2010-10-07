@@ -10,22 +10,20 @@ Requirements
 ------------
 
   * libz (?)
-  * libpng (=> 1.2)
-  * libboost_thread (>= 1.40)
-  * pthread (through boost)
+  * libpng (>= 1.2)
+  * libfreetype (>= 2)
+  * libboost (thread, filesystem, system and test) (>= 1.40)
+  * libpthread (if required through libboost_thread - windows only)
 
 Features
 --------
 
-  * Not using the old corona library, instead purely libpng
   * Pipelined rendering process (using image compositioning) which allows for
     multithreaded rendering.
-  * A lot less memory intensive - the biggest concern is having to keep the
-    entire (sometimes huge!) image in memory at once.
+  * Very memory friendly, you can specify a memory limit and it will switch caching to file.
   * Uses proper command line options.
   * Clean code, for easing further development.
-  * Multiplatform - yes, it does compile properly on windows and probably also
-    on mac.
+  * Multiplatform - yes, it does compile properly on windows and mac.
   * A gui wrapper, see: http://github.com/udoprog/c10t-swt (native gui with java bindings)
 
 I would not have done this were it not for the excellent inspiration by
@@ -39,16 +37,26 @@ Building from Source (using cmake)
 
   1. Install dependencies:
 
-    $ sudo apt-get install cmake libpng12-dev zlib1g-dev libboost-thread1.40-dev libboost-thread1.40.0
+    $ sudo apt-get install cmake libpng-dev zlib1g-dev libboost-all-dev libboost-all
 
   2. Run:
 
     $ cmake .
-    $ make
+    $ make c10t
 
-  note: CMake should generate a file called src/config.h from the input file src/config.h.cmake
+ * CMake should generate a file called src/config.h from the input file src/config.h.cmake
+  
+ * There are several targets you can make.  c10t, c10t-lib, c10t-debug, and c10t-test.
+   * If you wish to build all of these simply run `make` which defaults to target `all`.
+   * If you wish to build any individual one run `make <target>` e.g. `make c10t-test`.
 
   3. The executable (`c10t`) will be in the current directory.
+
+There are a couple of available targets
+
+ * ___c10t-debug___ - debug build with symbols, nice for debugging
+ * ___c10t-lib___ - library that contains all c10t functions not in main or nbt_inspect
+ * ___nbt-inspect___ - dumps the content of an nbt data file (basically anything in the world directory). Useful for writing tools.
 
 Issues
 ------
@@ -68,3 +76,4 @@ Contributions
     jnnnnn - for limit options which are helpful when debugging (and quite cool)
     mudaltsov - for mapping out the Mac OS X building process and creating a splendid package!
     frozencow - for fixing boost_thread configuration for cmake
+    reportingjsr - for pointing out build issues

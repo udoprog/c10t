@@ -249,6 +249,14 @@ inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c
   c.darken(0x02 * sl);
   
   c.darken((mc::MapY - y));
+
+  // in heightmap mode, brightness = height
+  if (s.heightmap) {
+    c.b = y*2;
+    c.g = y*2;
+    c.r = y*2;
+    c.a = 0xff;
+  }
 }
 
 inline bool cavemode_isopen(int bt) {

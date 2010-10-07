@@ -2,6 +2,11 @@ This is a simple GUI using Python and Tkinter.
 
 I know Tkinter is ugly and it sucks... But it is available on the standard Python library, so this GUI works out-of-the-box on Linux and Windows and Mac (but I don't have a Mac to test).
 
+How to run:
+* cd to the project root dir (the one which will contain the c10t executable)
+* run ./gui/c10t-gui.py
+Notice: in fact, you can run the GUI from whatever directory you want, but the suggestion above will make everything work by default.
+
 This is what it does:
 * Graphical interface to select the most common c10t options
 * Runs c10t with such options
@@ -18,3 +23,6 @@ Possible improvements:
 * Some kind of interface to select files/directories
 * Auto-detect the correct minecraft save path on other systems
 * Implement image zooming (like Google Maps) [tip: PIL.Image.resize]
+* Use a checkbutton for threads (when off, use the built-in auto-detection) instead of the quick-and-dirty hack of selecting zero threads
+* Use radiobuttons (intead of checkbuttons) for selecting the rendering mode
+* Improve the packaging?

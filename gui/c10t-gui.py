@@ -9,7 +9,7 @@ from mainwindow import MainWindow
 
 
 def default_c10t_executable():
-    return "../c10t"
+    return "./c10t"
 
 def default_minecraft_world():
     return "~/.minecraft/saves/World1"
@@ -100,6 +100,7 @@ class Program(object):
         # Rendering
         if ui.obliquecheck     : args.append("--oblique")
         if ui.obliqueanglecheck: args.append("--oblique-angle")
+        if ui.isometriccheck   : args.append("--isometric")
         if ui.nightcheck       : args.append("--night")
         if ui.rotate           : args.extend(["-r", str(ui.rotate)])
         if int(ui.threads) != 0: args.extend(["--threads", str(ui.threads)])

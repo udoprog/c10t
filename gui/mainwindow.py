@@ -262,19 +262,25 @@ class RenderingFrame(LabelFrame):
             self.obliqueangle_checkbutton,
         ))
 
+        self.isometric_checkbutton = XCheckbutton(self, name="isometriccheck", text=u"Isometric rendering", anchor=W, justify=LEFT)
+        self.isometric_checkbutton.grid(column=0, row=2, sticky=EW)
+        add_tooltip(u"Isometric rendering", (
+            self.isometric_checkbutton,
+        ))
+
         self.night_checkbutton = XCheckbutton(self, name="nightcheck", text=u"Night", anchor=W, justify=LEFT)
-        self.night_checkbutton.grid(column=0, row=2, sticky=EW)
+        self.night_checkbutton.grid(column=0, row=3, sticky=EW)
         add_tooltip(u"Night-time rendering", (
             self.night_checkbutton,
         ))
 
         self.rotate_label = Label(self, text=u"Rotate", anchor=W, justify=LEFT)
-        self.rotate_label.grid(column=0, row=3, sticky=EW)
+        self.rotate_label.grid(column=0, row=4, sticky=EW)
         add_tooltip(u"Rotate the rendering clockwise", (
             self.rotate_label,
         ))
         self.rotate_frame = Frame(self)
-        self.rotate_frame.grid(column=1, row=3, sticky=EW)
+        self.rotate_frame.grid(column=1, row=4, sticky=EW)
         self.rotate_var = IntVar(name="rotate")
         # This loop sets the following vars:
         # self.rotate0_radiobutton
@@ -291,10 +297,10 @@ class RenderingFrame(LabelFrame):
         self.rotate_var.set(0)
 
         self.threads_label = Label(self, text=u"Threads", anchor=W, justify=LEFT)
-        self.threads_label.grid(column=0, row=4, sticky=EW)
+        self.threads_label.grid(column=0, row=5, sticky=EW)
         self.threads_spinbox = XSpinbox(self, name="threads", from_=0, to=999, width=3)
         self.threads_spinbox.set(0)
-        self.threads_spinbox.grid(column=1, row=4, sticky=EW)
+        self.threads_spinbox.grid(column=1, row=5, sticky=EW)
         add_tooltip(u"Specify the amount of threads to use, for maximum efficency, this should match the amount of cores on your machine. Use zero to auto-detect the number of cores.", (
             self.threads_label,
             self.threads_spinbox,
@@ -303,7 +309,7 @@ class RenderingFrame(LabelFrame):
         # Setting columns to auto-expand
         for i in xrange(2):
             self.columnconfigure(i, weight=1)
-        for i in xrange(4):
+        for i in xrange(6):
             self.rowconfigure(i, weight=1)
 
 

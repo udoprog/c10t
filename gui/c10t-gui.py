@@ -98,8 +98,8 @@ class Program(object):
         if ui.obliquecheck     : args.append("--oblique")
         if ui.obliqueanglecheck: args.append("--oblique-angle")
         if ui.nightcheck       : args.append("--night")
-        if ui.rotate: args.extend(["-r", str(ui.rotate)])
-        args.extend(["--threads", str(ui.threads)])
+        if ui.rotate           : args.extend(["-r", str(ui.rotate)])
+        if int(ui.threads) != 0: args.extend(["--threads", str(ui.threads)])
 
         # Text and fonts
         args.extend(["--ttf-size" , str(ui.ttfsize)])

@@ -292,10 +292,10 @@ class RenderingFrame(LabelFrame):
 
         self.threads_label = Label(self, text=u"Threads", anchor=W, justify=LEFT)
         self.threads_label.grid(column=0, row=4, sticky=EW)
-        self.threads_spinbox = XSpinbox(self, name="threads", from_=1, to=999, width=3)
-        self.threads_spinbox.set(1)
+        self.threads_spinbox = XSpinbox(self, name="threads", from_=0, to=999, width=3)
+        self.threads_spinbox.set(0)
         self.threads_spinbox.grid(column=1, row=4, sticky=EW)
-        add_tooltip(u"Specify the amount of threads to use, for maximum efficency, this should match the amount of cores on your machine", (
+        add_tooltip(u"Specify the amount of threads to use, for maximum efficency, this should match the amount of cores on your machine. Use zero to auto-detect the number of cores.", (
             self.threads_label,
             self.threads_spinbox,
         ))

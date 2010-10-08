@@ -581,18 +581,17 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
         
         int bp = bx + bmx * by;
         
-        if (blocked[bp]) {
-          continue;
-        }
-
-        blocked[bp] = top.is_opaque();
-        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
+          if (blocked[bp]) {
+            continue;
+          }
+
+          blocked[bp] = top.is_opaque();
+          
           oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px + 1, py - 1, top);
           oper->add_pixel(px, py, side);
-          side.darken(0x20);
           oper->add_pixel(px + 1, py, side);
           break;
         case mc::HalfBlock:
@@ -698,14 +697,14 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         
         int bp = bx + bmx * by;
         
-        if (blocked[bp]) {
-          continue;
-        }
-        
-        blocked[bp] = top.is_opaque();
-        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
+          if (blocked[bp]) {
+            continue;
+          }
+          
+          blocked[bp] = top.is_opaque();
+          
           oper->add_pixel(px, py - 2, top);
           oper->add_pixel(px + 1, py - 2, top);
           oper->add_pixel(px, py - 1, top);
@@ -716,16 +715,16 @@ image_operations* level_file::get_isometric_image(settings_t& s)
           oper->add_pixel(px + 1, py + 1, side);
           break;
         case mc::HalfBlock:
-          oper->add_pixel(px, py - 1, top);
-          oper->add_pixel(px + 1, py - 1, top);
           oper->add_pixel(px, py, top);
           oper->add_pixel(px + 1, py, top);
-          oper->add_pixel(px, py + 1, side);
-          oper->add_pixel(px + 1, py + 1, side);
+          oper->add_pixel(px, py + 1, top);
+          oper->add_pixel(px + 1, py + 1, top);
           break;
         case mc::TopBlock:
           oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
           break;
         }
       }

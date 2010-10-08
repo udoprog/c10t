@@ -58,8 +58,6 @@ private:
       return false;
     }
     
-    operations->optimize();
-    
     v_size_type size = operations->operations.size();
     if (!gzwriteall(fp, reinterpret_cast<char *>(&size), sizeof(v_size_type))) {
       gzclose(fp);
@@ -185,8 +183,6 @@ exit_error:
     std::ofstream fs(path.string().c_str());
     fs.write(reinterpret_cast<char *>(&modification_time), sizeof(std::time_t));
     if (fs.fail()) return false;
-
-    operations->optimize();
     
     v_size_type size = operations->operations.size();
     fs.write(reinterpret_cast<char *>(&size), sizeof(v_size_type));

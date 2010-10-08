@@ -20,44 +20,17 @@ void image_operations::add_pixel(int x, int y, color &c) {
     return;
   }
   
-  if (c.is_transparent()) {
-    image_operation oper;
-    
-    oper.x = (uint16_t)x;
-    oper.y = (uint16_t)y;
-    oper.order = order++;
-    oper.c = c;
-    
-    operations.push_back(oper);
-    return;
-  }
+  image_operation oper;
   
   maxx = std::max(maxx, x);
   maxy = std::max(maxy, y);
   
-  image_op_key k(x, y);
+  oper.x = (uint16_t)x;
+  oper.y = (uint16_t)y;
+  oper.order = ++order;
+  oper.c = c;
   
-  if (operation_map.find(k) != operation_map.end()) {
-    cache_hit_count++;
-    size_t pos = operation_map[k];
-    image_operation cached = operations[pos];
-    cached.c = c;
-    cached.order = order++;
-    operations[pos] = cached;
-  }
-  else {
-    cache_miss_count++;
-    image_operation oper;
-    operation_map[k] = operations.size();
-    
-    image_operation new_oper;
-    
-    new_oper.x = x;
-    new_oper.y = y;
-    new_oper.order = order++;
-    new_oper.c = c;
-    operations.push_back(new_oper);
-  }
+  operations.push_back(oper);
 }
 
 void memory_image::set_pixel(int x, int y, color &c) {
@@ -103,27 +76,15 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
   assert(yoffset >= 0);
   
   color hp;
+  
+  for (std::vector<image_operation>::iterator it = img.operations.begin();
+      it != img.operations.end(); it++) {
+    image_operation op = *it;
 
-  if (img.reversed) {
-    for (std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
-        it != img.operations.rend(); it++) {
-      image_operation op = *it;
-      
-      color base;
-      get_pixel(xoffset + op.x, yoffset + op.y, base);
-      base.blend(op.c);
-      set_pixel(xoffset + op.x, yoffset + op.y, base);
-    }
-  } else {
-    for (std::vector<image_operation>::iterator it = img.operations.begin();
-        it != img.operations.end(); it++) {
-      image_operation op = *it;
-
-      color base;
-      get_pixel(xoffset + op.x, yoffset + op.y, base);
-      base.blend(op.c);
-      set_pixel(xoffset + op.x, yoffset + op.y, base);
-    }
+    color base;
+    get_pixel(xoffset + op.x, yoffset + op.y, base);
+    base.blend(op.c);
+    set_pixel(xoffset + op.x, yoffset + op.y, base);
   }
 }
 

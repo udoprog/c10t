@@ -522,11 +522,18 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   BlockRotation blocklight_r(s, blocklight);
   BlockRotation skylight_r(s, skylight);
   BlockRotation heightmap_r(s, heightmap);
-  
-  for (int z = 0; z < c.z; z++) {
-    for (int x = 0; x < c.x; x++) {
-      bool cave_initial = true;
 
+  int bmx, bmy, bmt;
+  c.get_obliqueangle_limits(bmx, bmy);
+  bmt = bmx * bmy;
+  bool blocked[bmt];
+  
+  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  
+  for (int z = c.z - 1; z >= 0; z--) {
+    for (int x = c.x - 1; x >= 0; x--) {
+      bool cave_initial = true;
+      
       int cavemode_top = s.top;
 
       if (s.cavemode) {
@@ -569,6 +576,17 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
         apply_shading(s, bl, sl, hmval, y, top);
         apply_shading(s, bl, sl, hmval, y, side);
         
+        int bx, by;
+        c.project_obliqueangle(p, bx, by);
+        
+        int bp = bx + bmx * by;
+        
+        if (blocked[bp]) {
+          continue;
+        }
+
+        blocked[bp] = top.is_opaque();
+        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
           oper->add_pixel(px, py - 1, top);
@@ -589,6 +607,8 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
       }
     }
   }
+
+  oper->optimize();
   
   if (cache_use) {
     if (!cache.write(oper)) {
@@ -620,8 +640,15 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   BlockRotation skylight_r(s, skylight);
   BlockRotation heightmap_r(s, heightmap);
   
-  for (int z = 0; z < c.z; z++) {
-    for (int x = 0; x < c.x; x++) {
+  int bmx, bmy, bmt;
+  c.get_obliqueangle_limits(bmx, bmy);
+  bmt = bmx * bmy;
+  bool blocked[bmt];
+  
+  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  
+  for (int z = c.z - 1; z >= 0; z--) {
+    for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
 
       int cavemode_top = s.top;
@@ -666,6 +693,17 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         apply_shading(s, bl, sl, hmval, y, top);
         apply_shading(s, bl, sl, hmval, y, side);
         
+        int bx, by;
+        c.project_obliqueangle(p, bx, by);
+        
+        int bp = bx + bmx * by;
+        
+        if (blocked[bp]) {
+          continue;
+        }
+        
+        blocked[bp] = top.is_opaque();
+        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
           oper->add_pixel(px, py - 2, top);
@@ -693,6 +731,8 @@ image_operations* level_file::get_isometric_image(settings_t& s)
       }
     }
   }
+  
+  oper->optimize();
   
   if (cache_use) {
     if (!cache.write(oper)) {

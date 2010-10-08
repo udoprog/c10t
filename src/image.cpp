@@ -221,19 +221,9 @@ bool image_base::save_png(const std::string path, const char *title, progress_c 
   
   for (y=0 ; y < get_height(); y++) {
     if (progress_c_cb != NULL) progress_c_cb(y, get_height());
-
+    
     get_line(y, reinterpret_cast<color*>(row));
     
-    /*for (x=0 ; x < get_width(); x++) {
-      color c;
-      get_pixel(x, y, c);
-       
-      row[0 + x*4] = c.r;
-      row[1 + x*4] = c.g;
-      row[2 + x*4] = c.b;
-      row[3 + x*4] = c.a;
-    }*/
-
     png_write_row(png_ptr, row);
   }
   
@@ -290,24 +280,26 @@ void cached_image::blend_pixel(int x, int y, color &c){
   
   size_t s = (x + y * get_width()) % buffer_size;
   
-  icache ic = buffer[s];
+  icache* ic = &buffer[s];
   
   // cache hit
-  if (ic.is_set) {
+  if (ic->isset()) {
     // cache hit, but wrong coordinates - flush pixel to file
-    if (ic.x != x || ic.y != y)  {
-      set_pixel(ic.x, ic.y, ic.c);
-      ic.c = c;
-      ic.is_set = true;
+    if (ic->x != x || ic->y != y)  {
+      set_pixel(ic->x, ic->y, ic->c);
+      ic->c = c;
+      ic->x = x;
+      ic->y = y;
       return;
     }
     
-    ic.c.blend(c);
+    ic->c.blend(c);
   }
   // cache miss - just set the cache
   else {
-    ic.c = c;
-    ic.is_set = true;
+    ic->c = c;
+    ic->x = x;
+    ic->y = y;
   }
 }
 

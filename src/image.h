@@ -167,8 +167,17 @@ public:
 struct icache {
   color c;
   int x, y;
-  bool is_set;
-  icache() : c(0x00, 0x00, 0x00, 0x00), x(0), y(0), is_set(false) {
+  
+  icache() : c(0x00, 0x00, 0x00, 0x00), x(-1), y(-1) {
+  }
+  
+  inline bool isset() {
+    return x >= 0 && y >= 0;
+  }
+
+  inline void unset() {
+    x = -1;
+    y = -1;
   }
 };
 
@@ -214,9 +223,9 @@ public:
   ~cached_image() {
     // flush the memory cache
     for (int i = 0; i < buffer_size; i++) { 
-      icache ic = buffer[i];
-      if (ic.is_set) {
-        set_pixel(ic.x, ic.y, ic.c);
+      icache* ic = &buffer[i];
+      if (ic->isset()) {
+        set_pixel(ic->x, ic->y, ic->c);
       }
     }
     

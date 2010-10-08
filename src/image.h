@@ -172,25 +172,28 @@ struct icache {
 class cached_image : public image_base {
 private:
   static const size_t WRITE_SIZE = 4096 * 8;
-  FILE *f;
   const char *path;
   icache *buffer;
   int buffer_size;
+  std::fstream fs;
 public:
-  cached_image(const char *path, int w, int h, int buffer_size) : image_base(w, h), path(path), buffer_size(buffer_size) {
-    size_t total = get_width() * get_height() * COLOR_TYPE;
-    size_t write_size = WRITE_SIZE;
+  cached_image(const char *path, int w, int h, int buffer_size) :
+    image_base(w, h),
+    path(path),
+    buffer_size(buffer_size),
+    fs(path, std::ios::in | std::ios::out)
+  {
+    fs.exceptions(std::fstream::eofbit | std::fstream::failbit | std::fstream::badbit);
+    std::streamsize total = get_width() * get_height() * COLOR_TYPE;
+    std::streamsize write_size = WRITE_SIZE;
+    
     uint8_t *nil = new uint8_t[write_size];
     memset(nil, 0x0, WRITE_SIZE);
     
-    f = fopen(path, "w+b");
-    assert(f != NULL);
-    
     while (total > 0) {
-      size_t write = std::min(total, write_size);
-      int r;
-      assert((r = fwrite(nil, 1, write, f)) > 0);
-      total -= r;
+      std::streamsize  write = std::min(total, write_size);
+      fs.write(reinterpret_cast<char*>(nil), write);
+      total -= write_size;
     }
     
     buffer = new icache[buffer_size];
@@ -210,19 +213,16 @@ public:
   }
   
   ~cached_image() {
-    if (f != NULL) {
-      fclose(f);
-
-      // flush the memory cache
-      for (int i = 0; i < buffer_size; i++) { 
-        icache ic = buffer[i];
-        if (ic.is_set) {
-          set_pixel(ic.x, ic.y, ic.c);
-        }
+    // flush the memory cache
+    for (int i = 0; i < buffer_size; i++) { 
+      icache ic = buffer[i];
+      if (ic.is_set) {
+        set_pixel(ic.x, ic.y, ic.c);
       }
-      
-      delete [] buffer;
     }
+    
+    delete [] buffer;
+    fs.close();
   }
   
   void blend_pixel(int x, int y, color &c);

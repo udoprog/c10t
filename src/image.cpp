@@ -274,21 +274,19 @@ finalise:
 void cached_image::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());
-  assert(f != NULL);
   size_t p = get_offset(x, y);
   uint8_t cb[] = {r, g, b, a};
-  fseek(f, p, SEEK_SET);
-  assert(fwrite(cb, sizeof(cb), 1, f) == 1);
+  fs.seekp(p, std::ios::beg);
+  fs.write(reinterpret_cast<char*>(cb), sizeof(cb));
 }
 
 void cached_image::get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) {
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());
-  assert(f != NULL);
   size_t p = get_offset(x, y);
   uint8_t cb[] = {0x00, 0x00, 0x00, 0x00};
-  fseek(f, p, SEEK_SET);
-  assert(fread(cb, sizeof(cb), 1, f) == 1);
+  fs.seekg(p, std::ios::beg);
+  fs.read(reinterpret_cast<char*>(cb), sizeof(cb));
   r = cb[0];
   g = cb[1];
   b = cb[2];

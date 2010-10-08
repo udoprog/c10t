@@ -60,24 +60,16 @@ void image_operations::add_pixel(int x, int y, color &c) {
   }
 }
 
-void memory_image::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+void memory_image::set_pixel(int x, int y, color &c) {
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());
-  size_t p = get_offset(x, y);
-  colors[p] = r;
-  colors[p+1] = g;
-  colors[p+2] = b;
-  colors[p+3] = a;
+  c.write(this->colors + get_offset(x, y));
 }
 
-void memory_image::get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a){
+void memory_image::get_pixel(int x, int y, color &c){
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());
-  size_t p = get_offset(x, y);
-  r = this->colors[p];
-  g = this->colors[p+1];
-  b = this->colors[p+2];
-  a = this->colors[p+3];
+  c.read(this->colors + get_offset(x, y));
 }
 
 void memory_image::blend_pixel(int x, int y, color &c){
@@ -93,18 +85,10 @@ void memory_image::blend_pixel(int x, int y, color &c){
   set_pixel(x, y, o);
 }
 
-void image_base::get_pixel(int x, int y, color &c){
-  get_pixel_rgba(x, y, c.r, c.g, c.b, c.a);
-}
-
-void image_base::set_pixel(int x, int y, color &q){
-  set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
-}
-
 void image_base::fill(color &q){
   for (int x = 0; x < get_width(); x++) {
     for (int y = 0; y < get_height(); y++) {
-      set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
+      set_pixel(x, y, q);
     }
   }
 }
@@ -271,29 +255,26 @@ finalise:
 }
 
 
-void cached_image::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+void cached_image::set_pixel(int x, int y, color& c) {
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());
-  size_t p = get_offset(x, y);
-  uint8_t cb[] = {r, g, b, a};
-  fs.seekp(p, std::ios::beg);
-  fs.write(reinterpret_cast<char*>(cb), sizeof(cb));
+  fs.seekp(get_offset(x, y), std::ios::beg);
+  fs.write(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) {
+void cached_image::get_pixel(int x, int y, color& c) {
   assert(x >= 0 && x < get_width());
   assert(y >= 0 && y < get_height());
-  size_t p = get_offset(x, y);
-  uint8_t cb[] = {0x00, 0x00, 0x00, 0x00};
-  fs.seekg(p, std::ios::beg);
-  fs.read(reinterpret_cast<char*>(cb), sizeof(cb));
-  r = cb[0];
-  g = cb[1];
-  b = cb[2];
-  a = cb[3];
+  fs.seekg(get_offset(x, y), std::ios::beg);
+  fs.read(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
 void cached_image::blend_pixel(int x, int y, color &c){
+  // do nothing if color is invisible
+  if (c.is_invisible()) {
+    return;
+  }
+  
   size_t s = (x + y * get_width()) % buffer_size;
   
   icache ic = buffer[s];
@@ -307,16 +288,24 @@ void cached_image::blend_pixel(int x, int y, color &c){
       ic.is_set = true;
       return;
     }
+    
+    ic.c.blend(c);
   }
-  // cache miss
+  // cache miss - just set the cache
   else {
     ic.c = c;
     ic.is_set = true;
   }
-  
-  if (ic.c.is_invisible()) {
-    return;
-  }
-  
-  ic.c.blend(c);
 }
+
+/* align the memory cache with the actual image */
+/*void cached_image::align(int xp, int yp, int xw, int yw)
+{
+  for (int y = yp; y < yp + yw; y++) {
+    for (int x = xp; x < xp + xw; x++) {
+      size_t s = (x + y * get_width()) % buffer_size;
+      icache ic = buffer[s];
+    }
+  }
+}
+*/

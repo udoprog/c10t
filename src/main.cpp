@@ -348,8 +348,14 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   image_base *all;
   
   if (mem_x > s.memory_limit) {
+    try {
     all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
+    } catch(std::exception& e) {
+      error << e.what();
+      return false;
+    }
   }
+
   else {
     all = new memory_image(i_w, i_h);
   }

@@ -11,10 +11,10 @@
 #include <png.h>
 
 void image_operations::add_pixel(int x, int y, color &c) {
-  assert(x >= 0);
-  assert(y >= 0);
-  assert(x < std::numeric_limits<uint16_t>::max());
-  assert(y < std::numeric_limits<uint16_t>::max());
+  if (!(x >= 0)) { return; }
+  if (!(y >= 0)) { return; }
+  if (!(x < std::numeric_limits<uint16_t>::max())) { return; }
+  if (!(y < std::numeric_limits<uint16_t>::max())) { return; }
   
   if (c.is_invisible()) {
     return;
@@ -34,19 +34,19 @@ void image_operations::add_pixel(int x, int y, color &c) {
 }
 
 void memory_image::set_pixel(int x, int y, color &c) {
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
   c.write(this->colors + get_offset(x, y));
 }
 
 void memory_image::get_pixel(int x, int y, color &c){
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
   c.read(this->colors + get_offset(x, y));
 }
 
 void memory_image::get_line(int y, color *c){
-  assert(y >= 0 && y < get_height());
+  if (!(y >= 0 && y < get_height())) { return; }
   memcpy(c, this->colors + get_offset(0, y), get_width() * sizeof(color));
 }
 
@@ -72,8 +72,8 @@ void image_base::fill(color &q){
 }
 
 void image_base::composite(int xoffset, int yoffset, image_operations &img) {
-  assert(xoffset >= 0);
-  assert(yoffset >= 0);
+  if (!(xoffset >= 0)) { return; }
+  if (!(yoffset >= 0)) { return; }
   
   color hp;
   
@@ -89,10 +89,10 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
 }
 
 void image_base::composite(int xoffset, int yoffset, image_base &img) {
-  assert(xoffset >= 0);
-  assert(xoffset + img.get_width() <= w);
-  assert(yoffset >= 0);
-  assert(yoffset + img.get_height() <= h);
+  if (!(xoffset >= 0)) { return; }
+  if (!(xoffset + img.get_width() <= w)) { return; }
+  if (!(yoffset >= 0)) { return; }
+  if (!(yoffset + img.get_height() <= h)) { return; }
 
   color hp;
   color base;
@@ -214,21 +214,21 @@ finalise:
 
 
 void cached_image::set_pixel(int x, int y, color& c) {
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
   fs.seekp(get_offset(x, y), std::ios::beg);
   fs.write(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
 void cached_image::get_pixel(int x, int y, color& c) {
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
   fs.seekg(get_offset(x, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
 void cached_image::get_line(int y, color *c){
-  assert(y >= 0 && y < get_height());
+  if (!(y >= 0 && y < get_height())) { return; }
   fs.seekg(get_offset(0, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(c), sizeof(color) * get_width());
 }

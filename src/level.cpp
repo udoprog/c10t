@@ -586,13 +586,15 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
           if (blocked[bp]) {
             continue;
           }
-
-          blocked[bp] = top.is_opaque();
+          
+          if (!(y > 0 && blocks_r.get8(x, z, y - 1) == mc::Air)) {
+            blocked[bp] = top.is_opaque();
+          }
           
           oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px - 1, py - 1, top);
           oper->add_pixel(px, py, side);
-          oper->add_pixel(px + 1, py, side);
           break;
         case mc::HalfBlock:
           oper->add_pixel(px, py, top);
@@ -665,7 +667,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
 
       int hmval = heightmap_r.get8(x, z);
       
-      for (int y = s.bottom; y <= s.top; y++) {
+      for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
         bt = blocks_r.get8(x, z, y);
@@ -705,14 +707,30 @@ image_operations* level_file::get_isometric_image(settings_t& s)
           
           blocked[bp] = top.is_opaque();
           
-          oper->add_pixel(px, py - 2, top);
-          oper->add_pixel(px + 1, py - 2, top);
-          oper->add_pixel(px, py - 1, top);
-          oper->add_pixel(px + 1, py - 1, top);
-          oper->add_pixel(px, py, side);
+          oper->add_pixel(px - 2, py, top);
+          oper->add_pixel(px - 1, py, top);
+          
+          oper->add_pixel(px - 2, py + 1, side);
+          oper->add_pixel(px - 1, py + 1, side);
+          
+          oper->add_pixel(px - 2, py + 2, side);
+          oper->add_pixel(px - 1, py + 2, side);
+
+          oper->add_pixel(px - 1, py + 2, side);
+          
+          top.lighten(0x20);
+          side.lighten(0x20);
+          
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
+          
           oper->add_pixel(px, py + 1, side);
-          oper->add_pixel(px + 1, py, side);
           oper->add_pixel(px + 1, py + 1, side);
+
+          oper->add_pixel(px, py + 2, side);
+          oper->add_pixel(px + 1, py + 2, side);
+          
+          oper->add_pixel(px, py + 2, side);
           break;
         case mc::HalfBlock:
           oper->add_pixel(px, py, top);

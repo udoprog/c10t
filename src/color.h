@@ -47,6 +47,7 @@ struct color{
   void overlay(const color &other);
   void underlay(const color &other);
   void darken(uint8_t c);
+  void lighten(uint8_t c);
   void blend(const color &other);
 
   inline void read(uint8_t *buf) {

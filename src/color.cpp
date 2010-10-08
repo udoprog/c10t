@@ -46,3 +46,9 @@ void color::darken(uint8_t f) {
   g -= ((g * f) / 0xff);
   b -= ((b * f) / 0xff);
 }
+
+void color::lighten(uint8_t f) {
+  r += ((r * f) / 0xff);
+  g += ((g * f) / 0xff);
+  b += ((b * f) / 0xff);
+}

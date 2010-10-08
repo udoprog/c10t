@@ -944,7 +944,7 @@ int main(int argc, char *argv[]){
      {"no-check",         no_argument, 0, 'N'},
      {"oblique",          no_argument, 0, 'q'},
      {"oblique-angle",    no_argument, 0, 'y'},
-     {"iso",              no_argument, 0, 'z'},
+     {"isometric",        no_argument, 0, 'z'},
      {"cave-mode",        no_argument, 0, 'c'},
      {"night",            no_argument, 0, 'n'},
      {"heightmap",        no_argument, 0, 'H'},

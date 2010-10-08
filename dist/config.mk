@@ -9,6 +9,7 @@ SOURCES+=src/image.cpp
 SOURCES+=src/common.cpp
 SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
+SOURCES+=src/utf8.cpp
 
 EXTRA=README.md
 

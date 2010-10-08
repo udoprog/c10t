@@ -72,6 +72,11 @@ void memory_image::get_pixel(int x, int y, color &c){
   c.read(this->colors + get_offset(x, y));
 }
 
+void memory_image::get_line(int y, color *c){
+  assert(y >= 0 && y < get_height());
+  memcpy(c, this->colors + get_offset(0, y), get_width());
+}
+
 void memory_image::blend_pixel(int x, int y, color &c){
   color o;
   get_pixel(x, y, o);
@@ -212,12 +217,14 @@ bool image_base::save_png(const std::string path, const char *title, progress_c 
 
   row = (png_bytep) malloc(4 * get_width() * sizeof(png_byte));
   
-  int x, y;
+  int y;
   
   for (y=0 ; y < get_height(); y++) {
     if (progress_c_cb != NULL) progress_c_cb(y, get_height());
+
+    get_line(y, reinterpret_cast<color*>(row));
     
-    for (x=0 ; x < get_width(); x++) {
+    /*for (x=0 ; x < get_width(); x++) {
       color c;
       get_pixel(x, y, c);
        
@@ -225,7 +232,7 @@ bool image_base::save_png(const std::string path, const char *title, progress_c 
       row[1 + x*4] = c.g;
       row[2 + x*4] = c.b;
       row[3 + x*4] = c.a;
-    }
+    }*/
 
     png_write_row(png_ptr, row);
   }
@@ -267,6 +274,12 @@ void cached_image::get_pixel(int x, int y, color& c) {
   assert(y >= 0 && y < get_height());
   fs.seekg(get_offset(x, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(&c), sizeof(color));
+}
+
+void cached_image::get_line(int y, color *c){
+  assert(y >= 0 && y < get_height());
+  fs.seekg(get_offset(0, y), std::ios::beg);
+  fs.read(reinterpret_cast<char*>(c), sizeof(color) * get_width());
 }
 
 void cached_image::blend_pixel(int x, int y, color &c){

@@ -113,7 +113,6 @@ public:
 
   virtual ~image_base() {
   }
-  //void get_line(int y, color*);
   
   void fill(color& c);
   
@@ -134,7 +133,7 @@ public:
   virtual void blend_pixel(int x, int y, color &c) = 0;
   virtual void set_pixel(int x, int y, color& c) = 0;
   virtual void get_pixel(int x, int y, color& c) = 0;
-  //virtual void get_line_rgba(int y, uint8_t*) = 0;
+  virtual void get_line(int y, color*) = 0;
 };
 
 class memory_image : public image_base {
@@ -160,6 +159,7 @@ public:
   void blend_pixel(int x, int y, color &c);
   void set_pixel(int x, int y, color&);
   void get_pixel(int x, int y, color&);
+  void get_line(int y, color*);
 };
 
 #include <iostream>
@@ -227,6 +227,7 @@ public:
   void blend_pixel(int x, int y, color &c);
   void set_pixel(int x, int y, color&);
   void get_pixel(int x, int y, color&);
+  void get_line(int y, color*);
 };
 
 #endif /* _IMG_H_ */

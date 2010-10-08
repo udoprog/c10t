@@ -74,7 +74,7 @@ void memory_image::get_pixel(int x, int y, color &c){
 
 void memory_image::get_line(int y, color *c){
   assert(y >= 0 && y < get_height());
-  memcpy(c, this->colors + get_offset(0, y), get_width());
+  memcpy(c, this->colors + get_offset(0, y), get_width() * sizeof(color));
 }
 
 void memory_image::blend_pixel(int x, int y, color &c){

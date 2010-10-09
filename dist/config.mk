@@ -14,7 +14,7 @@ SOURCES+=src/utf8.cpp
 EXTRA=README.md
 
 OBJECTS=${SOURCES:.cpp=.o}
-CXXFLAGS+=-I${USR}/include/freetype2 -Wall
+CXXFLAGS+=-I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O3
 
 PACKAGE=${DIST}-${VERSION}
 BUILD=./build/
@@ -22,7 +22,7 @@ BUILD=./build/
 all: ${TARGET}
 
 ${TARGET}: ${OBJECTS}
-	${CXX} ${CXXFLAGS} -O3 ${OBJECTS} ${LDFLAGS} -o ${TARGET}
+	${CXX} ${CXXFLAGS} ${OBJECTS} ${LDFLAGS} -o ${TARGET}
 
 clean:
 	${RM} ${OBJECTS}

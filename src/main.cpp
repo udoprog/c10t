@@ -891,7 +891,7 @@ bool parse_limits(const string& limits_str, settings_t& s) {
 bool do_write_palette(settings_t& s, string& path) {
   std::ofstream pal(path.c_str());
 
-  pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base-color>" << " " << setw(16) << "<side-color>" << '\n';
+  pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base R,G,B,A>" << " " << setw(16) << "<side R,G,B,A>" << '\n';
   
   for (int i = 0; i < mc::MaterialCount; i++) {
     color mc = mc::MaterialColor[i];

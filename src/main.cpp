@@ -913,7 +913,7 @@ bool do_write_palette(settings_t& s, string& path) {
 
 bool do_read_palette(settings_t& s, string& path) {
   std::ifstream pal(path.c_str());
-  boost::char_separator<char> sep(" ");
+  boost::char_separator<char> sep(" \t\n\r");
   
   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   
@@ -946,6 +946,8 @@ bool do_read_palette(settings_t& s, string& path) {
           }
           
           mc::MaterialColor[blockid] = c;
+          c.darken(0x20);
+          mc::MaterialSideColor[blockid] = c;
           break;
         case 2:
           if (!parse_color(token, c)) {
@@ -954,7 +956,8 @@ bool do_read_palette(settings_t& s, string& path) {
           
           mc::MaterialSideColor[blockid] = c;
           break;
-        default: break;
+        default:
+          break;
       }
     }
   }

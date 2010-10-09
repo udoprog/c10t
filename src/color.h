@@ -67,8 +67,10 @@ struct color{
   
   friend std::ostream& operator<<(std::ostream& out, const color& c) // output
   {
-      out << "color(" << (int)c.r << ", " << (int)c.g << ", " << (int)c.b << ", " << (int)c.a << ")";
-      return out;
+    std::stringstream ss;
+    ss << (int)c.r << "," << (int)c.g << "," << (int)c.b << "," << (int)c.a;
+    out << ss.str();
+    return out;
   }
 };
 

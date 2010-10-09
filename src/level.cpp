@@ -212,18 +212,18 @@ level_file::level_file(settings_t& s, const fs::path path)
  * Blocks[ z + ( y * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
  */
 nbt::Byte bget(nbt::ByteArray *blocks, int x, int z, int y) {
-  assert(x >= 0 && x < mc::MapX);
-  assert(z >= 0 && z < mc::MapZ);
-  assert(y >= 0 && y < mc::MapY);
+  
+  
+  
   int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
   assert (p >= 0 && p < blocks->length);
   return blocks->values[p];
 }
 
 nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
-  assert(x >= 0 && x < mc::MapX);
-  assert(z >= 0 && z < mc::MapZ);
-  assert(y >= 0 && y < mc::MapY);
+  
+  
+  
   int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
   int ap = p / 2;
 
@@ -316,9 +316,9 @@ public:
   uint8_t get8(int x, int z, int y) {
     transform_xz(x, z);
     
-    assert(x >= 0 && x < mc::MapX);
-    assert(z >= 0 && z < mc::MapZ);
-    assert(y >= 0 && y < mc::MapY);
+    
+    
+    
     int p = y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
@@ -327,8 +327,8 @@ public:
   uint8_t get8(int x, int z) {
     transform_xz(x, z);
     
-    assert(x >= 0 && x < mc::MapX);
-    assert(z >= 0 && z < mc::MapZ);
+    
+    
     int p = x + (z * mc::MapX);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
@@ -337,9 +337,9 @@ public:
   uint8_t get4(int x, int z, int y) {
     transform_xz(x, z);
     
-    assert(x >= 0 && x < mc::MapX);
-    assert(z >= 0 && z < mc::MapZ);
-    assert(y >= 0 && y < mc::MapY);
+    
+    
+    
     int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
     int ap = p / 2;
 

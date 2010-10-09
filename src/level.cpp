@@ -581,10 +581,12 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
           }
           
           blocked[bp] = top.is_opaque();
-          
-          oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px + 1, py - 1, top);
-          oper->add_pixel(px - 1, py - 1, top);
+          oper->add_pixel(px + 1, py, side);
+          
+          top.darken(0x20);
+          side.darken(0x20);
+          oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px, py, side);
           break;
         case mc::HalfBlock:

@@ -708,8 +708,10 @@ int do_help() {
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to " << endl
     << "                              file when necessary                               " << endl
     << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached    " << endl
-    << "  -P <file>                 - use <file> as palette                             " << endl
-    << "  -W <file>                 - write <file> with the default colour palette      " << endl
+    << "  -P <file>                 - use <file> as palette, each line should take the  " << endl
+    << "                              form: <block-id> ' ' <color> ' ' <color>          " << endl
+    << "  -W <file>                 - write <file> with the default colour palette, this" << endl
+    << "                              is useful for figuring out how to write your own  " << endl
     << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable   " << endl
     << "                              during broad phase by getting x/y/z positions     " << endl
     << "                              from a quick parsing                              " << endl

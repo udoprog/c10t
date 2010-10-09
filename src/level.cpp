@@ -36,7 +36,7 @@ void register_string(level_file* level, nbt::String name, nbt::String value) {
       level->sign_text = value;
     }
     else {
-      level->sign_text += " " + value;
+      level->sign_text += "\n" + value;
     }
     
     return;
@@ -337,9 +337,6 @@ public:
   uint8_t get4(int x, int z, int y) {
     transform_xz(x, z);
     
-    
-    
-    
     int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
     int ap = p / 2;
 
@@ -360,32 +357,26 @@ public:
 image_operations* level_file::get_image(settings_t& s) {
   if (cache_hit) return oper;
   
+  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  
   if (!islevel) {
     return oper;
   }
   
   // block type
-  int bt;
+  BlockRotation blocks_r(s, blocks);
+  BlockRotation blocklight_r(s, blocklight);
+  BlockRotation skylight_r(s, skylight);
   
-  for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
-    for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
-      color base(255, 255, 255, 0);
-      
-      bt = mc::Air;
-      
+  for (int z = mc::MapZ - 1; z >= 0; z--) {
+    for (int x = 0; x < mc::MapX; x++) {
       bool cave_initial = true;
-
-      int my;
-      
-      BlockRotation blocks_r(s, blocks);
-      BlockRotation blocklight_r(s, blocklight);
-      BlockRotation skylight_r(s, skylight);
       
       // do incremental color fill until color is opaque
-      for (my = s.top; my > s.bottom; my--) {
-        bt = blocks_r.get8(mx, mz, my);
+      for (int y = s.top; y > s.bottom; y--) {
+        int bt = blocks_r.get8(x, z, y);
         
-        if (s.cavemode && cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial)) {
+        if (s.cavemode && cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial)) {
           continue;
         }
         
@@ -395,25 +386,27 @@ image_operations* level_file::get_image(settings_t& s) {
         
         color bc = mc::MaterialColor[bt];
         
-        int bl = blocklight_r.get4(mx, mz, my),
-            sl = skylight_r.get4(mx, mz, my);
+        int bl = blocklight_r.get4(x, z, y),
+            sl = skylight_r.get4(x, z, y);
         
-        apply_shading(s, bl, sl, 0, my, bc);
+        apply_shading(s, bl, sl, 0, y, bc);
         
-        base.underlay(bc);
+        point p(mc::MapZ - z - 1, y, x);
+
+        int px, py;
+
+        c.project_top(p, px, py);
         
-        if (base.is_opaque()) {
+        oper->add_pixel(px, py, bc);
+        
+        if (bc.is_opaque()) {
           break;
         }
       }
-      
-      if (base.is_invisible()) {
-        continue;
-      }
-      
-      oper->add_pixel(x, y, base);
     }
   }
+
+  oper->optimize();
   
   if (cache_use) {
     if (!cache.write(oper)) {
@@ -587,9 +580,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
             continue;
           }
           
-          if (!(y > 0 && blocks_r.get8(x, z, y - 1) == mc::Air)) {
-            blocked[bp] = top.is_opaque();
-          }
+          blocked[bp] = top.is_opaque();
           
           oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px + 1, py - 1, top);

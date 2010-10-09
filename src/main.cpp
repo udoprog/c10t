@@ -275,7 +275,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
         point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
         c.project_top(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }
       break;
     case Oblique:
@@ -283,7 +283,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
         point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
         c.project_oblique(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }
       break;
     case ObliqueAngle:
@@ -292,15 +292,16 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
         c.project_obliqueangle(playerpos, xoffset, yoffset);
         yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }
       break;
     case Isometric:
       {
         point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
         c.project_isometric(playerpos, xoffset, yoffset);
+        yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset, yoffset, positionmark);
+        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }
       break;
     }
@@ -351,9 +352,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   
   if (mem_x > s.memory_limit) {
     try {
-    all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
-    } catch(std::exception& e) {
-      error << e.what();
+      all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
+    } catch(std::ios::failure& e) {
+      error << strerror(errno) << ": " << s.cache_file;
       return false;
     }
   }
@@ -439,7 +440,15 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
       light_markers.insert(light_markers.end(), p->markers.begin(), p->markers.end());
     }
     
-    calc_image_partial(s, *p, all, world, i_w, i_h);
+    try {
+      calc_image_partial(s, *p, all, world, i_w, i_h);
+    } catch(std::ios::failure& e) {
+      error << strerror(errno) << ": " << s.cache_file;
+      renderer.join();
+      delete p->operations;
+      delete p;
+    }
+
     delete p->operations;
     /*int wait;
     std::cin >> wait;*/
@@ -495,8 +504,14 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
       }
       
       std::vector<light_marker>::iterator lmit = light_markers.begin();
+      
       for (; lmit != light_markers.end(); lmit++) {
         light_marker lm = *lmit;
+        
+        if (!s.show_signs_filter.empty() && lm.text.find(s.show_signs_filter) == string::npos) {
+          continue;
+        }
+        
         marker *m = new marker(lm.text, sign_font, lm.x, lm.y, lm.z);
         markers.push_back(m);
       }
@@ -567,7 +582,7 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
     }
   }
   
-  players_db pdb(world_path / "players");
+  players_db pdb(s, world_path / "players");
   
   if (!s.silent) cout << "Working on " << s.threads << " thread(s)... " << endl;
   
@@ -701,9 +716,13 @@ int do_help() {
     << "                              good for integration with third party tools       " << endl
     << "  --require-all             - Will force c10t to require all chunks or fail     " << endl
     << "                              not ignoring bad chunks                           " << endl
-    << "  --show-players            - Will draw out player position and names from the  " << endl
+    << "  --show-players[=NICKLIST] - Will draw out player position and names from the  " << endl
     << "                              players database in <world>/players               " << endl
-    << "  --show-signs              - Will draw out signs from all chunks               " << endl
+    << "                              it is possible to define which nicks to show by   " << endl
+    << "                              specifying a comma separated list of nicks        " << endl
+    << "  --show-signs[=PREFIX]     - Will draw out signs from all chunks, if PREFIX    " << endl
+    << "                              is specified, only signs matching the prefix will " << endl
+    << "                              be drawn                                          " << endl
     << "  --show-coordinates        - Will draw out each chunks expected coordinates    " << endl
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to " << endl
     << "                              file when necessary                               " << endl
@@ -890,6 +909,23 @@ bool parse_limits(const string& limits_str, settings_t& s) {
   return true;
 }
 
+bool parse_list(std::set<string>& set, const string s) {
+  boost::char_separator<char> sep(" \t\n\r,:");
+  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+  tokenizer tokens(s, sep);
+  
+  for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter) {
+    set.insert(*tok_iter);
+  }
+
+  if (set.size() == 0) {
+    error << "List must specify items separated by comma `,'";
+    return false;
+  }
+  
+  return true;
+}
+
 bool do_write_palette(settings_t& s, string& path) {
   std::ofstream pal(path.c_str());
 
@@ -1010,13 +1046,13 @@ int main(int argc, char *argv[]){
      {"heightmap",        no_argument, 0, 'H'},
      {"binary",           no_argument, 0, 'x'},
      {"require-all",      no_argument, &flag, 0},
-     {"show-players",     no_argument, &flag, 1},
+     {"show-players",     optional_argument, &flag, 1},
      {"ttf-path",         required_argument, &flag, 2},
      {"ttf-size",         required_argument, &flag, 3},
      {"ttf-color",        required_argument, &flag, 4},
      {"show-coordinates",     no_argument, &flag, 5},
      {"pedantic-broad-phase", no_argument, &flag, 6},
-     {"show-signs",       no_argument, &flag, 7},
+     {"show-signs",       optional_argument, &flag, 7},
      {"sign-color",        required_argument, &flag, 8},
      {"player-color",        required_argument, &flag, 9},
      {"coordinate-color",        required_argument, &flag, 10},
@@ -1038,7 +1074,7 @@ int main(int argc, char *argv[]){
   while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
-
+    
     if (c == 0) {
       switch (flag) {
       case 0:
@@ -1046,6 +1082,11 @@ int main(int argc, char *argv[]){
         break;
       case 1:
         s.show_players = true;
+        if (optarg != NULL) {
+          if (!parse_list(s.show_players_set, optarg)) {
+            goto exit_error;
+          }
+        }
         break;
       case 2:
         s.ttf_path = optarg;
@@ -1072,6 +1113,16 @@ int main(int argc, char *argv[]){
         break;
       case 7:
         s.show_signs = true;
+
+        if (optarg) {
+          s.show_signs_filter = optarg;
+          
+          if (s.show_signs_filter.empty()) {
+            error << "Sign filter must not be empty string";
+            goto exit_error;
+          }
+        }
+        
         break;
       case 8:
         if (!parse_color(optarg, s.sign_color)) {

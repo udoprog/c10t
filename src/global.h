@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 
 #include <string>
+#include <set>
 
 #include "blocks.h"
 #include "color.h"
@@ -34,10 +35,12 @@ struct settings_t {
   bool debug;
   bool use_split;
   bool show_players;
+  std::set<std::string> show_players_set;
   bool show_coordinates;
   bool require_all;
   bool pedantic_broad_phase;
   bool show_signs;
+  std::string show_signs_filter;
   bool has_sign_color;
   bool has_player_color;
   bool has_coordinate_color;

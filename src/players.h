@@ -11,6 +11,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem.hpp>
 
+#include "global.h"
 #include "nbt/nbt.h"
 
 namespace fs = boost::filesystem;
@@ -32,7 +33,7 @@ class players_db {
 public:
   std::vector<player> players;
 
-  players_db(const fs::path path) {
+  players_db(settings_t& s, const fs::path path) {
     fs::path full_path = fs::system_complete( path );
     
     if (!fs::is_directory(full_path)) {
@@ -49,6 +50,12 @@ public:
       
       if (p.grammar_error) {
         continue;
+      }
+
+      if (s.show_players_set.size() > 0) {
+        if (s.show_players_set.find(p.name) == s.show_players_set.end()) {
+          continue;
+        }
       }
       
       players.push_back(p);

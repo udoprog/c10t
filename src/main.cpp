@@ -351,9 +351,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   
   if (mem_x > s.memory_limit) {
     try {
-    all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
-    } catch(std::exception& e) {
-      error << e.what();
+      all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
+    } catch(std::ios::failure& e) {
+      error << strerror(errno) << ": " << s.cache_file;
       return false;
     }
   }
@@ -439,7 +439,15 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
       light_markers.insert(light_markers.end(), p->markers.begin(), p->markers.end());
     }
     
-    calc_image_partial(s, *p, all, world, i_w, i_h);
+    try {
+      calc_image_partial(s, *p, all, world, i_w, i_h);
+    } catch(std::ios::failure& e) {
+      error << strerror(errno) << ": " << s.cache_file;
+      renderer.join();
+      delete p->operations;
+      delete p;
+    }
+
     delete p->operations;
     /*int wait;
     std::cin >> wait;*/

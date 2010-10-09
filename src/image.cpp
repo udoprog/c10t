@@ -11,73 +11,43 @@
 #include <png.h>
 
 void image_operations::add_pixel(int x, int y, color &c) {
-  assert(x >= 0);
-  assert(y >= 0);
-  assert(x < std::numeric_limits<uint16_t>::max());
-  assert(y < std::numeric_limits<uint16_t>::max());
+  if (!(x >= 0)) { return; }
+  if (!(y >= 0)) { return; }
+  if (!(x < std::numeric_limits<uint16_t>::max())) { return; }
+  if (!(y < std::numeric_limits<uint16_t>::max())) { return; }
   
   if (c.is_invisible()) {
     return;
   }
   
-  if (c.is_transparent()) {
-    image_operation oper;
-    
-    oper.x = (uint16_t)x;
-    oper.y = (uint16_t)y;
-    oper.order = order++;
-    oper.c = c;
-    
-    operations.push_back(oper);
-    return;
-  }
+  image_operation oper;
   
   maxx = std::max(maxx, x);
   maxy = std::max(maxy, y);
   
-  image_op_key k(x, y);
+  oper.x = (uint16_t)x;
+  oper.y = (uint16_t)y;
+  oper.order = ++order;
+  oper.c = c;
   
-  if (operation_map.find(k) != operation_map.end()) {
-    cache_hit_count++;
-    size_t pos = operation_map[k];
-    image_operation cached = operations[pos];
-    cached.c = c;
-    cached.order = order++;
-    operations[pos] = cached;
-  }
-  else {
-    cache_miss_count++;
-    image_operation oper;
-    operation_map[k] = operations.size();
-    
-    image_operation new_oper;
-    
-    new_oper.x = x;
-    new_oper.y = y;
-    new_oper.order = order++;
-    new_oper.c = c;
-    operations.push_back(new_oper);
-  }
+  operations.push_back(oper);
 }
 
-void memory_image::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
-  size_t p = get_offset(x, y);
-  colors[p] = r;
-  colors[p+1] = g;
-  colors[p+2] = b;
-  colors[p+3] = a;
+void memory_image::set_pixel(int x, int y, color &c) {
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
+  c.write(this->colors + get_offset(x, y));
 }
 
-void memory_image::get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a){
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
-  size_t p = get_offset(x, y);
-  r = this->colors[p];
-  g = this->colors[p+1];
-  b = this->colors[p+2];
-  a = this->colors[p+3];
+void memory_image::get_pixel(int x, int y, color &c){
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
+  c.read(this->colors + get_offset(x, y));
+}
+
+void memory_image::get_line(int y, color *c){
+  if (!(y >= 0 && y < get_height())) { return; }
+  memcpy(c, this->colors + get_offset(0, y), get_width() * sizeof(color));
 }
 
 void memory_image::blend_pixel(int x, int y, color &c){
@@ -93,56 +63,36 @@ void memory_image::blend_pixel(int x, int y, color &c){
   set_pixel(x, y, o);
 }
 
-void image_base::get_pixel(int x, int y, color &c){
-  get_pixel_rgba(x, y, c.r, c.g, c.b, c.a);
-}
-
-void image_base::set_pixel(int x, int y, color &q){
-  set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
-}
-
 void image_base::fill(color &q){
   for (int x = 0; x < get_width(); x++) {
     for (int y = 0; y < get_height(); y++) {
-      set_pixel_rgba(x, y, q.r, q.g, q.b, q.a);
+      set_pixel(x, y, q);
     }
   }
 }
 
 void image_base::composite(int xoffset, int yoffset, image_operations &img) {
-  assert(xoffset >= 0);
-  assert(yoffset >= 0);
+  if (!(xoffset >= 0)) { return; }
+  if (!(yoffset >= 0)) { return; }
   
   color hp;
+  
+  for (std::vector<image_operation>::iterator it = img.operations.begin();
+      it != img.operations.end(); it++) {
+    image_operation op = *it;
 
-  if (img.reversed) {
-    for (std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
-        it != img.operations.rend(); it++) {
-      image_operation op = *it;
-      
-      color base;
-      get_pixel(xoffset + op.x, yoffset + op.y, base);
-      base.blend(op.c);
-      set_pixel(xoffset + op.x, yoffset + op.y, base);
-    }
-  } else {
-    for (std::vector<image_operation>::iterator it = img.operations.begin();
-        it != img.operations.end(); it++) {
-      image_operation op = *it;
-
-      color base;
-      get_pixel(xoffset + op.x, yoffset + op.y, base);
-      base.blend(op.c);
-      set_pixel(xoffset + op.x, yoffset + op.y, base);
-    }
+    color base;
+    get_pixel(xoffset + op.x, yoffset + op.y, base);
+    base.blend(op.c);
+    set_pixel(xoffset + op.x, yoffset + op.y, base);
   }
 }
 
 void image_base::composite(int xoffset, int yoffset, image_base &img) {
-  assert(xoffset >= 0);
-  assert(xoffset + img.get_width() <= w);
-  assert(yoffset >= 0);
-  assert(yoffset + img.get_height() <= h);
+  if (!(xoffset >= 0)) { return; }
+  if (!(xoffset + img.get_width() <= w)) { return; }
+  if (!(yoffset >= 0)) { return; }
+  if (!(yoffset + img.get_height() <= h)) { return; }
 
   color hp;
   color base;
@@ -228,21 +178,13 @@ bool image_base::save_png(const std::string path, const char *title, progress_c 
 
   row = (png_bytep) malloc(4 * get_width() * sizeof(png_byte));
   
-  int x, y;
+  int y;
   
   for (y=0 ; y < get_height(); y++) {
     if (progress_c_cb != NULL) progress_c_cb(y, get_height());
     
-    for (x=0 ; x < get_width(); x++) {
-      color c;
-      get_pixel(x, y, c);
-       
-      row[0 + x*4] = c.r;
-      row[1 + x*4] = c.g;
-      row[2 + x*4] = c.b;
-      row[3 + x*4] = c.a;
-    }
-
+    get_line(y, reinterpret_cast<color*>(row));
+    
     png_write_row(png_ptr, row);
   }
   
@@ -271,54 +213,65 @@ finalise:
 }
 
 
-void cached_image::set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
-  assert(f != NULL);
-  size_t p = get_offset(x, y);
-  uint8_t cb[] = {r, g, b, a};
-  fseek(f, p, SEEK_SET);
-  assert(fwrite(cb, sizeof(cb), 1, f) == 1);
+void cached_image::set_pixel(int x, int y, color& c) {
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
+  fs.seekp(get_offset(x, y), std::ios::beg);
+  fs.write(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) {
-  assert(x >= 0 && x < get_width());
-  assert(y >= 0 && y < get_height());
-  assert(f != NULL);
-  size_t p = get_offset(x, y);
-  uint8_t cb[] = {0x00, 0x00, 0x00, 0x00};
-  fseek(f, p, SEEK_SET);
-  assert(fread(cb, sizeof(cb), 1, f) == 1);
-  r = cb[0];
-  g = cb[1];
-  b = cb[2];
-  a = cb[3];
+void cached_image::get_pixel(int x, int y, color& c) {
+  if (!(x >= 0 && x < get_width())) { return; }
+  if (!(y >= 0 && y < get_height())) { return; }
+  fs.seekg(get_offset(x, y), std::ios::beg);
+  fs.read(reinterpret_cast<char*>(&c), sizeof(color));
+}
+
+void cached_image::get_line(int y, color *c){
+  if (!(y >= 0 && y < get_height())) { return; }
+  fs.seekg(get_offset(0, y), std::ios::beg);
+  fs.read(reinterpret_cast<char*>(c), sizeof(color) * get_width());
 }
 
 void cached_image::blend_pixel(int x, int y, color &c){
-  size_t s = (x + y * get_width()) % buffer_size;
-  
-  icache ic = buffer[s];
-  
-  // cache hit
-  if (ic.is_set) {
-    // cache hit, but wrong coordinates - flush pixel to file
-    if (ic.x != x || ic.y != y)  {
-      set_pixel(ic.x, ic.y, ic.c);
-      ic.c = c;
-      ic.is_set = true;
-      return;
-    }
-  }
-  // cache miss
-  else {
-    ic.c = c;
-    ic.is_set = true;
-  }
-  
-  if (ic.c.is_invisible()) {
+  // do nothing if color is invisible
+  if (c.is_invisible()) {
     return;
   }
   
-  ic.c.blend(c);
+  size_t s = (x + y * get_width()) % buffer_size;
+  
+  icache* ic = &buffer[s];
+  
+  // cache hit
+  if (ic->isset()) {
+    // cache hit, but wrong coordinates - flush pixel to file
+    if (ic->x != x || ic->y != y)  {
+      set_pixel(ic->x, ic->y, ic->c);
+      ic->c = c;
+      ic->x = x;
+      ic->y = y;
+      return;
+    }
+    
+    ic->c.blend(c);
+  }
+  // cache miss - just set the cache
+  else {
+    ic->c = c;
+    ic->x = x;
+    ic->y = y;
+  }
 }
+
+/* align the memory cache with the actual image */
+/*void cached_image::align(int xp, int yp, int xw, int yw)
+{
+  for (int y = yp; y < yp + yw; y++) {
+    for (int x = xp; x < xp + xw; x++) {
+      size_t s = (x + y * get_width()) % buffer_size;
+      icache ic = buffer[s];
+    }
+  }
+}
+*/

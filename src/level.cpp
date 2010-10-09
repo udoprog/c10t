@@ -212,18 +212,18 @@ level_file::level_file(settings_t& s, const fs::path path)
  * Blocks[ z + ( y * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
  */
 nbt::Byte bget(nbt::ByteArray *blocks, int x, int z, int y) {
-  assert(x >= 0 && x < mc::MapX);
-  assert(z >= 0 && z < mc::MapZ);
-  assert(y >= 0 && y < mc::MapY);
+  
+  
+  
   int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
   assert (p >= 0 && p < blocks->length);
   return blocks->values[p];
 }
 
 nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
-  assert(x >= 0 && x < mc::MapX);
-  assert(z >= 0 && z < mc::MapZ);
-  assert(y >= 0 && y < mc::MapY);
+  
+  
+  
   int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
   int ap = p / 2;
 
@@ -316,9 +316,9 @@ public:
   uint8_t get8(int x, int z, int y) {
     transform_xz(x, z);
     
-    assert(x >= 0 && x < mc::MapX);
-    assert(z >= 0 && z < mc::MapZ);
-    assert(y >= 0 && y < mc::MapY);
+    
+    
+    
     int p = y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
@@ -327,8 +327,8 @@ public:
   uint8_t get8(int x, int z) {
     transform_xz(x, z);
     
-    assert(x >= 0 && x < mc::MapX);
-    assert(z >= 0 && z < mc::MapZ);
+    
+    
     int p = x + (z * mc::MapX);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
@@ -337,9 +337,9 @@ public:
   uint8_t get4(int x, int z, int y) {
     transform_xz(x, z);
     
-    assert(x >= 0 && x < mc::MapX);
-    assert(z >= 0 && z < mc::MapZ);
-    assert(y >= 0 && y < mc::MapY);
+    
+    
+    
     int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
     int ap = p / 2;
 
@@ -522,11 +522,18 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   BlockRotation blocklight_r(s, blocklight);
   BlockRotation skylight_r(s, skylight);
   BlockRotation heightmap_r(s, heightmap);
-  
-  for (int z = 0; z < c.z; z++) {
-    for (int x = 0; x < c.x; x++) {
-      bool cave_initial = true;
 
+  int bmx, bmy, bmt;
+  c.get_obliqueangle_limits(bmx, bmy);
+  bmt = bmx * bmy;
+  bool blocked[bmt];
+  
+  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  
+  for (int z = c.z - 1; z >= 0; z--) {
+    for (int x = c.x - 1; x >= 0; x--) {
+      bool cave_initial = true;
+      
       int cavemode_top = s.top;
 
       if (s.cavemode) {
@@ -569,13 +576,25 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
         apply_shading(s, bl, sl, hmval, y, top);
         apply_shading(s, bl, sl, hmval, y, side);
         
+        int bx, by;
+        c.project_obliqueangle(p, bx, by);
+        
+        int bp = bx + bmx * by;
+        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
+          if (blocked[bp]) {
+            continue;
+          }
+          
+          if (!(y > 0 && blocks_r.get8(x, z, y - 1) == mc::Air)) {
+            blocked[bp] = top.is_opaque();
+          }
+          
           oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px - 1, py - 1, top);
           oper->add_pixel(px, py, side);
-          side.darken(0x20);
-          oper->add_pixel(px + 1, py, side);
           break;
         case mc::HalfBlock:
           oper->add_pixel(px, py, top);
@@ -589,6 +608,8 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
       }
     }
   }
+
+  oper->optimize();
   
   if (cache_use) {
     if (!cache.write(oper)) {
@@ -620,8 +641,15 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   BlockRotation skylight_r(s, skylight);
   BlockRotation heightmap_r(s, heightmap);
   
-  for (int z = 0; z < c.z; z++) {
-    for (int x = 0; x < c.x; x++) {
+  int bmx, bmy, bmt;
+  c.get_obliqueangle_limits(bmx, bmy);
+  bmt = bmx * bmy;
+  bool blocked[bmt];
+  
+  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  
+  for (int z = c.z - 1; z >= 0; z--) {
+    for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
 
       int cavemode_top = s.top;
@@ -639,7 +667,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
 
       int hmval = heightmap_r.get8(x, z);
       
-      for (int y = s.bottom; y <= s.top; y++) {
+      for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
         bt = blocks_r.get8(x, z, y);
@@ -666,33 +694,62 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         apply_shading(s, bl, sl, hmval, y, top);
         apply_shading(s, bl, sl, hmval, y, side);
         
+        int bx, by;
+        c.project_obliqueangle(p, bx, by);
+        
+        int bp = bx + bmx * by;
+        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
-          oper->add_pixel(px, py - 2, top);
-          oper->add_pixel(px + 1, py - 2, top);
-          oper->add_pixel(px, py - 1, top);
-          oper->add_pixel(px + 1, py - 1, top);
-          oper->add_pixel(px, py, side);
-          oper->add_pixel(px, py + 1, side);
-          oper->add_pixel(px + 1, py, side);
-          oper->add_pixel(px + 1, py + 1, side);
-          break;
-        case mc::HalfBlock:
-          oper->add_pixel(px, py - 1, top);
-          oper->add_pixel(px + 1, py - 1, top);
+          if (blocked[bp]) {
+            continue;
+          }
+          
+          blocked[bp] = top.is_opaque();
+          
+          oper->add_pixel(px - 2, py, top);
+          oper->add_pixel(px - 1, py, top);
+          
+          oper->add_pixel(px - 2, py + 1, side);
+          oper->add_pixel(px - 1, py + 1, side);
+          
+          oper->add_pixel(px - 2, py + 2, side);
+          oper->add_pixel(px - 1, py + 2, side);
+
+          oper->add_pixel(px - 1, py + 2, side);
+          
+          top.lighten(0x20);
+          side.lighten(0x20);
+          
           oper->add_pixel(px, py, top);
           oper->add_pixel(px + 1, py, top);
+          
           oper->add_pixel(px, py + 1, side);
           oper->add_pixel(px + 1, py + 1, side);
+
+          oper->add_pixel(px, py + 2, side);
+          oper->add_pixel(px + 1, py + 2, side);
+          
+          oper->add_pixel(px, py + 2, side);
+          break;
+        case mc::HalfBlock:
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
+          oper->add_pixel(px, py + 1, top);
+          oper->add_pixel(px + 1, py + 1, top);
           break;
         case mc::TopBlock:
           oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
           break;
         }
       }
     }
   }
+  
+  oper->optimize();
   
   if (cache_use) {
     if (!cache.write(oper)) {

@@ -46,7 +46,7 @@ class image_operations {
 public:
   bool reversed;
   int order;
-
+  
   int cache_hit_count, cache_miss_count;
   
   std::vector<image_operation> operations;
@@ -70,16 +70,16 @@ public:
     std::cout << "cache_miss_count: " << cache_miss_count << std::endl;*/
     operation_map.clear();
   }
-
+  
   static bool compare_image_operation_by_order(const image_operation& lhs, const image_operation& rhs) {
-    return lhs.order < rhs.order;
+    return lhs.order > rhs.order;
   }
-
+  
   void optimize() {
     std::sort(operations.begin(), operations.end(),
         compare_image_operation_by_order);
     
-    std::map<image_op_key, color> opaque_map;
+    /*std::map<image_op_key, color> opaque_map;
     
     for (std::vector<image_operation>::reverse_iterator it = operations.rbegin();
       it != operations.rend(); it++) {
@@ -96,7 +96,7 @@ public:
       else {
         opaque_map[key] = oper.c;
       }
-    }
+    }*/
   }
 };
 
@@ -114,8 +114,6 @@ public:
   virtual ~image_base() {
   }
   
-  void set_pixel(int x, int y, color &c);
-  void get_pixel(int x, int y, color &c);
   void fill(color& c);
   
   inline int get_width() { return w; };
@@ -126,15 +124,16 @@ public:
   void safe_composite(int xoffset, int yoffset, image_base& img);
   
   inline size_t get_offset(int x, int y) {
-    return (x * COLOR_TYPE) + (y * get_width() * COLOR_TYPE);
+    return (x * sizeof(color)) + (y * get_width() * sizeof(color));
   }
   
   bool save_png(const std::string filename, const char *title, progress_c);
   
   void safe_blend_pixel(int x, int y, color &c);
   virtual void blend_pixel(int x, int y, color &c) = 0;
-  virtual void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) = 0;
-  virtual void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) = 0;
+  virtual void set_pixel(int x, int y, color& c) = 0;
+  virtual void get_pixel(int x, int y, color& c) = 0;
+  virtual void get_line(int y, color*) = 0;
 };
 
 class memory_image : public image_base {
@@ -143,10 +142,12 @@ private:
 public:
   memory_image(int w, int h) : image_base(w, h) {
     colors = new uint8_t[COLOR_TYPE * w * h];
+
+    color blank;
     
     for (int x = 0; x < get_width(); x++) {
       for (int y = 0; y < get_height(); y++) {
-        set_pixel_rgba(x, y, 0xff, 0xff, 0xff, 0x00);
+        set_pixel(x, y, blank);
       }
     }
   }
@@ -156,8 +157,9 @@ public:
   }
 
   void blend_pixel(int x, int y, color &c);
-  void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);
+  void set_pixel(int x, int y, color&);
+  void get_pixel(int x, int y, color&);
+  void get_line(int y, color*);
 };
 
 #include <iostream>
@@ -165,69 +167,76 @@ public:
 struct icache {
   color c;
   int x, y;
-  bool is_set;
-  icache() : c(0x00, 0x00, 0x00, 0x00), x(0), y(0), is_set(false) {}
+  
+  icache() : c(0x00, 0x00, 0x00, 0x00), x(-1), y(-1) {
+  }
+  
+  inline bool isset() {
+    return x >= 0 && y >= 0;
+  }
+
+  inline void unset() {
+    x = -1;
+    y = -1;
+  }
 };
 
 class cached_image : public image_base {
 private:
   static const size_t WRITE_SIZE = 4096 * 8;
-  FILE *f;
   const char *path;
   icache *buffer;
   int buffer_size;
+  std::fstream fs;
 public:
-  cached_image(const char *path, int w, int h, int buffer_size) : image_base(w, h), path(path), buffer_size(buffer_size) {
-    size_t total = get_width() * get_height() * COLOR_TYPE;
-    size_t write_size = WRITE_SIZE;
+  cached_image(const char *path, int w, int h, int buffer_size) :
+    image_base(w, h),
+    path(path),
+    buffer_size(buffer_size)
+  {
+    using namespace std;
+    
+    fs.exceptions(ios::failbit | ios::badbit);
+    fs.open(path, ios::in | ios::out | ios::binary | ios::trunc);
+    
+    streamsize total = get_width() * get_height() * COLOR_TYPE;
+    streamsize write_size = WRITE_SIZE;
+    
     uint8_t *nil = new uint8_t[write_size];
     memset(nil, 0x0, WRITE_SIZE);
     
-    f = fopen(path, "w+b");
-    assert(f != NULL);
-    
     while (total > 0) {
-      size_t write = std::min(total, write_size);
-      int r;
-      assert((r = fwrite(nil, 1, write, f)) > 0);
-      total -= r;
+      streamsize  write = min(total, write_size);
+      fs.write(reinterpret_cast<char*>(nil), write);
+      total -= write_size;
     }
     
     buffer = new icache[buffer_size];
-
+    
     for (int i = 0; i < buffer_size; i++) {
       icache ic = buffer[i];
-      ic.c.r = 0x0;
-      ic.c.g = 0x0;
-      ic.c.b = 0x0;
-      ic.c.a = 0x0;
-      ic.is_set = false;
-      ic.x = 0;
-      ic.y = 0;
     }
     
     delete [] nil;
   }
   
   ~cached_image() {
-    if (f != NULL) {
-      fclose(f);
-
-      // flush the memory cache
-      for (int i = 0; i < buffer_size; i++) { 
-        icache ic = buffer[i];
-        if (ic.is_set) {
-          set_pixel(ic.x, ic.y, ic.c);
-        }
+    // flush the memory cache
+    for (int i = 0; i < buffer_size; i++) { 
+      icache* ic = &buffer[i];
+      if (ic->isset()) {
+        set_pixel(ic->x, ic->y, ic->c);
       }
-      
-      delete [] buffer;
     }
+    
+    delete [] buffer;
+    fs.close();
   }
   
   void blend_pixel(int x, int y, color &c);
-  void set_pixel_rgba(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-  void get_pixel_rgba(int x, int y, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);
+  void set_pixel(int x, int y, color&);
+  void get_pixel(int x, int y, color&);
+  void get_line(int y, color*);
 };
 
 #endif /* _IMG_H_ */

@@ -17,6 +17,8 @@
 #include <boost/ptr_container/ptr_list.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "config.h"
 
@@ -348,8 +350,14 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   image_base *all;
   
   if (mem_x > s.memory_limit) {
+    try {
     all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
+    } catch(std::exception& e) {
+      error << e.what();
+      return false;
+    }
   }
+
   else {
     all = new memory_image(i_w, i_h);
   }
@@ -700,8 +708,10 @@ int do_help() {
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to " << endl
     << "                              file when necessary                               " << endl
     << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached    " << endl
-    << "  -P <file>                 - use <file> as palette                             " << endl
-    << "  -W <file>                 - write <file> with the default colour palette      " << endl
+    << "  -P <file>                 - use <file> as palette, each line should take the  " << endl
+    << "                              form: <block-id> ' ' <color> ' ' <color>          " << endl
+    << "  -W <file>                 - write <file> with the default colour palette, this" << endl
+    << "                              is useful for figuring out how to write your own  " << endl
     << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable   " << endl
     << "                              during broad phase by getting x/y/z positions     " << endl
     << "                              from a quick parsing                              " << endl
@@ -759,37 +769,6 @@ int do_version() {
   return 0;
 }
 
-bool do_write_palette(settings_t& s, string& path) {
-  if (!s.silent) cout << "Writing palette to " << path << endl;
-  
-  memory_image palette(16, 32);
-  
-  for (int x = 0; x < palette.get_width(); x++) {
-    for (int y = 0, py = 0; y < palette.get_height(); y++, py += 2) {
-      int p = x + palette.get_width() * y;
-      
-      if (p < mc::MaterialCount) {
-        palette.set_pixel(x, py, mc::MaterialColor[p]);
-        palette.set_pixel(x, py + 1, mc::MaterialSideColor[p]);
-      }
-    }
-  }
-  
-  // errno should be set to something sensible here
-  if (!palette.save_png(path.c_str(), "color palette for c10t", NULL)) {
-    error<< "Failed to save palette " << path << " - " << strerror(errno);
-    return false;
-  }
-  
-  return true;
-}
-
-bool do_read_palette(settings_t& s, string& path) {
-  if (!s.silent) cout << "Reading palette from " << path << endl;
-  
-  return true;
-}
-
 int do_colors() {
   cout << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
@@ -800,15 +779,20 @@ int do_colors() {
   return 0;
 }
 
-bool get_blockid(const char *blockid_string, int& blockid) {
+bool get_blockid(const string blockid_string, int& blockid) {
   for (int i = 0; i < mc::MaterialCount; i++) {
-    if (strcmp(mc::MaterialName[i], blockid_string) == 0) {
+    if (blockid_string.compare(mc::MaterialName[i]) == 0) {
       blockid = i;
       return true;
     }
   }
   
-  blockid = atoi(blockid_string);
+  try {
+    blockid = boost::lexical_cast<int>(blockid_string);
+  } catch(const boost::bad_lexical_cast& e) {
+    error << "Could not be converted to a number: " << blockid_string;
+    return false;
+  }
   
   if (!(blockid >= 0 && blockid < mc::MaterialCount)) {
     error << "Not a valid blockid: " << blockid_string;
@@ -851,7 +835,7 @@ bool parse_set(const char* set_str, int& blockid, color& c)
   assert(getline(iss, key, '='));
   assert(getline(iss, value));
   
-  if (!get_blockid(key.c_str(), blockid)) {
+  if (!get_blockid(key, blockid)) {
     return false;
   }
 
@@ -903,6 +887,82 @@ bool parse_limits(const string& limits_str, settings_t& s) {
   s.max_x = atoi(limits[1].c_str());
   s.min_z = atoi(limits[2].c_str());
   s.max_z = atoi(limits[3].c_str());
+  return true;
+}
+
+bool do_write_palette(settings_t& s, string& path) {
+  std::ofstream pal(path.c_str());
+
+  pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base R,G,B,A>" << " " << setw(16) << "<side R,G,B,A>" << '\n';
+  
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    color mc = mc::MaterialColor[i];
+    color msc = mc::MaterialSideColor[i];
+    pal << left << setw(20) << mc::MaterialName[i] << " " << setw(16) << mc << " " << setw(16) << msc << '\n';
+  }
+
+  if (pal.fail()) {
+    error << "Failed to write palette to " << path;
+    return false;
+  }
+  
+  if (!s.silent) cout << "Sucessfully wrote palette to " << path << endl;
+  
+  return true;
+}
+
+bool do_read_palette(settings_t& s, string& path) {
+  std::ifstream pal(path.c_str());
+  boost::char_separator<char> sep(" \t\n\r");
+  
+  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+  
+  while (!pal.eof()) {
+    string line;
+    getline(pal, line, '\n');
+    
+    tokenizer tokens(line, sep);
+    
+    int blockid = 0, i = 0;
+    color c;
+    
+    for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++i) {
+      string token = *tok_iter;
+      
+      if (token.at(0) == '#') {
+        // rest is comment
+        break;
+      }
+      
+      switch(i) {
+        case 0:
+          if (!get_blockid(token, blockid)) {
+            return false;
+          }
+          break;
+        case 1:
+          if (!parse_color(token, c)) {
+            return false;
+          }
+          
+          mc::MaterialColor[blockid] = c;
+          c.darken(0x20);
+          mc::MaterialSideColor[blockid] = c;
+          break;
+        case 2:
+          if (!parse_color(token, c)) {
+            return false;
+          }
+          
+          mc::MaterialSideColor[blockid] = c;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+  
+  if (!s.silent) cout << "Sucessfully read palette from " << path << endl;
   return true;
 }
 

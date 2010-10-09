@@ -94,7 +94,15 @@ namespace text {
       std::vector<uint32_t> text = utf8_decode(rawtext);
       
       for (std::vector<uint32_t>::iterator it = text.begin(); it != text.end(); it++ ) {
-        error = FT_Load_Char( face, *it, FT_LOAD_RENDER ); 
+        uint32_t cc = *it;
+        
+        if (cc == '\n') {
+          pen_x = x;
+          pen_y += size + 2;
+          continue;
+        }
+        
+        error = FT_Load_Char( face, cc, FT_LOAD_RENDER ); 
         if ( error ) continue;
         
         draw_bitmap(image, &slot->bitmap, pen_x + slot->bitmap_left, pen_y - slot->bitmap_top);

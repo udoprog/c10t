@@ -36,7 +36,7 @@ void register_string(level_file* level, nbt::String name, nbt::String value) {
       level->sign_text = value;
     }
     else {
-      level->sign_text += " " + value;
+      level->sign_text += "\n" + value;
     }
     
     return;

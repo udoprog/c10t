@@ -644,7 +644,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   for (int z = c.z - 1; z >= 0; z--) {
     for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
-
+      
       int cavemode_top = s.top;
 
       if (s.cavemode) {
@@ -700,6 +700,8 @@ image_operations* level_file::get_isometric_image(settings_t& s)
           
           blocked[bp] = top.is_opaque();
           
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
           oper->add_pixel(px - 2, py, top);
           oper->add_pixel(px - 1, py, top);
           
@@ -708,22 +710,14 @@ image_operations* level_file::get_isometric_image(settings_t& s)
           
           oper->add_pixel(px - 2, py + 2, side);
           oper->add_pixel(px - 1, py + 2, side);
-
-          oper->add_pixel(px - 1, py + 2, side);
           
-          top.lighten(0x20);
           side.lighten(0x20);
-          
-          oper->add_pixel(px, py, top);
-          oper->add_pixel(px + 1, py, top);
           
           oper->add_pixel(px, py + 1, side);
           oper->add_pixel(px + 1, py + 1, side);
 
           oper->add_pixel(px, py + 2, side);
           oper->add_pixel(px + 1, py + 2, side);
-          
-          oper->add_pixel(px, py + 2, side);
           break;
         case mc::HalfBlock:
           oper->add_pixel(px, py, top);

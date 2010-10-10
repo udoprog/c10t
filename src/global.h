@@ -97,10 +97,10 @@ struct settings_t {
     this->debug = false;
     this->cache_file = "cache.dat";
     this->memory_limit = 1024 * 1024 * 1000;
-    this->min_x = INT_MIN;
-    this->max_x = INT_MAX;
-    this->min_z = INT_MIN;
-    this->max_z = INT_MAX;
+    this->min_x = -10000;
+    this->max_x = 10000;
+    this->min_z = -10000;
+    this->max_z = 10000;
     this->ttf_path = "font.ttf";
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);

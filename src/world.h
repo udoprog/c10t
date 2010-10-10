@@ -58,7 +58,7 @@ public:
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)
   {
     dirlist broadlisting(world_path);
-
+    
     int i = 1;
     
     // broad phase listing of all the levels to figure out how they are ordered.
@@ -67,17 +67,22 @@ public:
       
       fs::path next = broadlisting.next();
       
-      fast_level_file leveldata(next, !s.pedantic_broad_phase);
+      fast_level_file leveldata(next, s.pedantic_broad_phase);
       
       if (!leveldata.islevel || leveldata.grammar_error) {
         continue;
       }
-
+      
       if (leveldata.xPos < s.min_x ||
           leveldata.xPos > s.max_x ||
           leveldata.zPos < s.min_z ||
           leveldata.zPos > s.max_z) {
-       continue;
+        
+        if (!s.silent && s.debug) {
+          std::cout << "Ignoring block out of limit range: " << leveldata.xPos << "," << leveldata.zPos << " - " << leveldata.path << std::endl;
+        }
+      
+        continue;
       }
 
       level l;

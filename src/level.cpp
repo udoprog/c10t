@@ -778,7 +778,7 @@ void fast_error_handler(fast_level_file* level, size_t where, const char *why) {
   level->grammar_error_why = why;
 }
 
-fast_level_file::fast_level_file(const fs::path path, bool filename)
+fast_level_file::fast_level_file(const fs::path path, bool force_parsing)
   :
     xPos(0), zPos(0),
     has_xPos(false), has_zPos(false),
@@ -791,25 +791,7 @@ fast_level_file::fast_level_file(const fs::path path, bool filename)
 {
   std::string extension = fs::extension(path);
   
-  if (filename) {
-    std::vector<std::string> parts;
-    std::string basename = fs::basename(path);
-    boost::split(parts, basename, boost::is_any_of("."));
-    
-    if (parts.size() != 3 || extension.compare(".dat") != 0) {
-      grammar_error = true;
-      grammar_error_why = "Filename does not match c.<x>.<z>.dat";
-      return;
-    }
-
-    std::string x = parts.at(1);
-    std::string z = parts.at(2);
-
-    xPos = common::b36decode(x);
-    zPos = common::b36decode(z);
-    islevel = true;
-  }
-  else {
+  if (force_parsing) {
     if (extension.compare(".dat") != 0) {
       grammar_error = true;
       grammar_error_why = "File extension is not .dat";
@@ -821,5 +803,30 @@ fast_level_file::fast_level_file(const fs::path path, bool filename)
     parser.error_handler = fast_error_handler;
     
     parser.parse_file(path.string().c_str());
+    return;
   }
+  
+  std::vector<std::string> parts;
+  std::string basename = fs::basename(path);
+  boost::split(parts, basename, boost::is_any_of("."));
+  
+  if (parts.size() != 3 || extension.compare(".dat") != 0) {
+    grammar_error = true;
+    grammar_error_why = "Filename does not match c.<x>.<z>.dat";
+    return;
+  }
+  
+  std::string x = parts.at(1);
+  std::string z = parts.at(2);
+  
+  try {
+    xPos = common::b36decode(x);
+    zPos = common::b36decode(z);
+  } catch(const common::bad_cast& e) {
+    grammar_error = true;
+    grammar_error_why = "Filename does not match c.<x>.<z>.dat";
+    return;
+  }
+  
+  islevel = true;
 }

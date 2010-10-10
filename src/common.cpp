@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <stdlib.h>
+#include <errno.h>
 
 const char *b36alphabet = "0123456789abcdefghijklmnopqrstuvwxyz";
   
@@ -35,7 +36,9 @@ std::string common::b36encode(int number) {
   return ss.str();
 }
 
-int common::b36decode(const std::string num) {
+int common::b36decode(const std::string num) throw(bad_cast) {
+  if (num.empty()) throw common::bad_cast();
   long int res = strtol(num.c_str(), NULL, 36);
+  if (errno == ERANGE) throw common::bad_cast();
   return res;
 }

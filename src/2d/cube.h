@@ -26,18 +26,18 @@ public:
   
   /* perform a trivial top-down projection */
   void project_top(point &p, point2 &r) {
-    r.x = p.x;
-    r.y = p.z;
+    r.x = p.z;
+    r.y = x - p.x;
   }
   
   void project_top(point &p, int &rx, int &ry) {
-    rx = p.x;
-    ry = p.z;
+    rx = z - p.z;
+    ry = p.x;
   }
   
   void project_oblique(point &p, int &rx, int &ry) {
-    rx = p.x;
-    ry = p.z + (y - p.y);
+    rx = z - p.z;
+    ry = p.x + (y - p.y);
   }
   
   void project_obliqueangle(point &p, point2 &r) {
@@ -55,13 +55,13 @@ public:
   }
   
   void get_top_limits(int &rx, int &ry) {
-    rx = x;
-    ry = z;
+    rx = z;
+    ry = x;
   }
   
   void get_oblique_limits(int &rx, int &ry) {
-    rx = x;
-    ry = z + y;
+    rx = z;
+    ry = x + y;
   }
   
   void get_obliqueangle_limits(int &rx, int &ry) {

@@ -181,7 +181,7 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
   
-  Cube c((diffz + 1) * mc::MapZ, mc::MapY, (diffx + 1) * mc::MapX);
+  Cube c((diffx + 1) * mc::MapX, mc::MapY, (diffz + 1) * mc::MapZ);
   
   switch (s.mode) {
   case Top:
@@ -210,7 +210,7 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
   switch (s.mode) {
   case Top:
     {
-      point topleft(diffz - (p.zPos - world.min_z), 16, (p.xPos - world.min_x));
+      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
       c.project_top(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -219,7 +219,7 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
     break;
   case Oblique:
     {
-      point topleft(diffz - (p.zPos - world.min_z), 16, (p.xPos - world.min_x));
+      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
       c.project_oblique(topleft, xoffset, yoffset);
       xoffset *= mc::MapX;
       yoffset *= mc::MapZ;
@@ -230,8 +230,8 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
     {
       point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
       c.project_obliqueangle(topleft, xoffset, yoffset);
-      xoffset = xoffset * mc::MapX;
-      yoffset = yoffset * mc::MapZ;
+      xoffset *= mc::MapX;
+      yoffset *= mc::MapZ;
       all->composite(xoffset, yoffset, *p.operations);
     }
     break;
@@ -239,8 +239,8 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
     {
       point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
       c.project_isometric(topleft, xoffset, yoffset);
-      xoffset = xoffset * mc::MapX;
-      yoffset = yoffset * mc::MapZ;
+      xoffset *= mc::MapX;
+      yoffset *= mc::MapZ;
       all->composite(xoffset, yoffset, *p.operations);
     }
     break;

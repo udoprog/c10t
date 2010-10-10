@@ -391,8 +391,8 @@ image_operations* level_file::get_image(settings_t& s) {
         
         apply_shading(s, bl, sl, 0, y, bc);
         
-        point p(mc::MapZ - z - 1, y, x);
-
+        point p(x, y, z);
+        
         int px, py;
 
         c.project_top(p, px, py);
@@ -424,7 +424,7 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   }
   
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
-
+  
   // block type
   int bt;
       
@@ -432,29 +432,36 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   BlockRotation blocklight_r(s, blocklight);
   BlockRotation skylight_r(s, skylight);
   
-  for (int x = 0, mz = mc::MapZ - 1; x < mc::MapX; x++, mz--) {
-    for (int y = 0, mx = 0; y < mc::MapX; y++, mx++) {
+  int bmx, bmy, bmt;
+  c.get_oblique_limits(bmx, bmy);
+  bmt = bmx * bmy;
+  bool blocked[bmt];
+  
+  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  
+  for (int x = c.x - 1; x >= 0; x--) {
+    for (int z = 0; z < c.z; z++) {
       bool cave_initial = true;
       int cavemode_top = s.top;
       
       if (s.cavemode) {
-        for (int my = s.top; my > 0; my--) {
-          bt = blocks_r.get8(mx, mz, my);
+        for (int y = s.top; y > 0; y--) {
+          bt = blocks_r.get8(x, z, y);
           
           if (!cavemode_isopen(bt)) {
-            cavemode_top = my;
+            cavemode_top = y;
             break;
           }
         }
       }
-
-      for (int my = s.bottom; my <= s.top; my++) {
-        point p(x, my, y);
+      
+      for (int y = s.bottom; y <= s.top; y++) {
+        point p(x, y, z);
         
-        bt = blocks_r.get8(mx, mz, my);
+        bt = blocks_r.get8(x, z, y);
         
         if (s.cavemode) {
-          if (cavemode_ignore_block(s, mx, mz, my, bt, blocks, cave_initial) || my >= cavemode_top) {
+          if (cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
             continue;
           }
         }
@@ -463,25 +470,29 @@ image_operations* level_file::get_oblique_image(settings_t& s)
           continue;
         }
 
-        int bl = blocklight_r.get4(mx, mz, my),
-            sl = skylight_r.get4(mx, mz, my);
-        
-        if (my + 1 <= s.top && mx + 1 < mc::MapX) {
-          int checkblock = blocks_r.get8(mx + 1, mz, my + 1);
-          if (checkblock != mc::Air && mc::MaterialColor[checkblock].is_opaque()) {
-            continue;
-          }
-        }
+        int bl = blocklight_r.get4(x, z, y),
+            sl = skylight_r.get4(x, z, y);
         
         int px, py;
         c.project_oblique(p, px, py);
         
         color top = mc::MaterialColor[bt];
-        apply_shading(s, bl, sl, 0, my, top);
+
+        int bx, by;
+        c.project_oblique(p, bx, by);
+        
+        int bp = bx + bmx * by;
+        
+        if (blocked[bp]) {
+          continue;
+        }
+        
+        blocked[bp] = top.is_opaque();
+        apply_shading(s, bl, sl, 0, y, top);
         oper->add_pixel(px, py - 1, top);
         
         color side = mc::MaterialSideColor[bt];
-        apply_shading(s, bl, sl, 0, my, side);
+        apply_shading(s, bl, sl, 0, y, side);
         oper->add_pixel(px, py, side);
       }
     }

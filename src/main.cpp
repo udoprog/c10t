@@ -734,6 +734,7 @@ int do_help() {
     << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable   " << endl
     << "                              during broad phase by getting x/y/z positions     " << endl
     << "                              from a quick parsing                              " << endl
+    << "  --no-alpha                - Set all colors alpha channel to opaque (solid)    " << endl
     << endl
     << "Font Options:" << endl
     << "  --ttf-path <font>         - Use the following ttf file whenever writing text. " << endl
@@ -1059,6 +1060,7 @@ int main(int argc, char *argv[]){
      {"cache-key",       required_argument, &flag, 11},
      {"cache-dir",       required_argument, &flag, 12},
      {"cache-compress",       no_argument, &flag, 13},
+     {"no-alpha",       no_argument, &flag, 14},
      {0, 0, 0, 0}
   };
 
@@ -1154,6 +1156,10 @@ int main(int argc, char *argv[]){
         break;
       case 13:
         s.cache_compress = true;
+        break;
+      case 14:
+        for (int i = 0; i < mc::MaterialCount; i++)
+          mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
         break;
       }
       

@@ -18,6 +18,14 @@ if [[ ! -d $dir ]]; then
   exit 1;
 fi
 
+echo_palette() {
+  cat << END
+  Wood 0,255,0
+  Stone 0,0,0,20
+  Leaves 0,0,255,20
+END
+}
+
 echo_html() {
   cat << END
 <html>
@@ -44,6 +52,8 @@ echo_html() {
       <img src="n-n.png" />
       <img src="n-H.png" />
       <img src="n-C.png" />
+      <img src="n-A.png" />
+      <img src="n-P.png" />
     </div>
     
     <p class="desc">
@@ -54,6 +64,8 @@ echo_html() {
       <img src="q-n.png" />
       <img src="q-H.png" />
       <img src="q-C.png" />
+      <img src="q-A.png" />
+      <img src="q-P.png" />
     </div>
     
     <p class="desc">
@@ -64,6 +76,8 @@ echo_html() {
       <img src="y-n.png" />
       <img src="y-H.png" />
       <img src="y-C.png" />
+      <img src="y-A.png" />
+      <img src="y-P.png" />
     </div>
     
     <p class="desc">
@@ -74,6 +88,8 @@ echo_html() {
       <img src="z-n.png" />
       <img src="z-H.png" />
       <img src="z-C.png" />
+      <img src="z-A.png" />
+      <img src="z-P.png" />
     </div>
   </body>
 </html>
@@ -87,6 +103,8 @@ motion() {
   $C10T $C10T_ARGS $1 --night -o $dir/$2-n.png
   $C10T $C10T_ARGS $1 --heightmap -o $dir/$2-H.png
   $C10T $C10T_ARGS $1 --cave-mode -o $dir/$2-C.png
+  $C10T $C10T_ARGS $1 --no-alpha -o $dir/$2-A.png
+  $C10T $C10T_ARGS $1 -P <(echo_palette;) -o $dir/$2-P.png
 }
 
 motion "" "n"

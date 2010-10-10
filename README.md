@@ -13,7 +13,6 @@ Requirements
   * libpng (>= 1.2)
   * libfreetype (>= 2)
   * libboost (thread, filesystem, system and test) (>= 1.40)
-  * libpthread (if required through libboost_thread - windows only)
 
 Features
 --------

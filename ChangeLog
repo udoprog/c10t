@@ -1,8 +1,0 @@
-Wed Sep  8 10:33:48 CEST 2010 by udoprog
-	- Fixed commandline options to make it less interactive and more friendly to
-	scripting.
-	Just type: cart5 to see the documentation.
-	- Removed dependency to corona and instead implemented the png writer purely
-	on libpng.
-	- Implemented a proper incremental (memory friendly) nbt parser for reading
-	map fragments.

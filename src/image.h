@@ -44,20 +44,17 @@ struct image_op_key {
 
 class image_operations {
 public:
-  bool reversed;
-  int order;
-  
   int cache_hit_count, cache_miss_count;
   
   std::vector<image_operation> operations;
-  std::map<image_op_key, size_t> operation_map;
+  std::set<image_op_key> opaque_set;
   void add_pixel(int x, int y, color &c);
   
   int maxx, maxy;
   
-  image_operations() : reversed(false), order(0),
+  image_operations() :
     cache_hit_count(0), cache_miss_count(0),
-    operations(), operation_map(),
+    operations(), opaque_set(),
     maxx(0), maxy(0)
   {};
   
@@ -68,35 +65,7 @@ public:
     std::cout << "y: " << maxy << std::endl;
     std::cout << "cache_hit_count: " << cache_hit_count << std::endl;
     std::cout << "cache_miss_count: " << cache_miss_count << std::endl;*/
-    operation_map.clear();
-  }
-  
-  static bool compare_image_operation_by_order(const image_operation& lhs, const image_operation& rhs) {
-    return lhs.order > rhs.order;
-  }
-  
-  void optimize() {
-    std::sort(operations.begin(), operations.end(),
-        compare_image_operation_by_order);
-    
-    /*std::map<image_op_key, color> opaque_map;
-    
-    for (std::vector<image_operation>::reverse_iterator it = operations.rbegin();
-      it != operations.rend(); it++) {
-      image_operation oper = *it;
-      image_op_key key(oper.x, oper.y);
-
-      if (opaque_map.find(key) != opaque_map.end()) {
-        if (opaque_map[key].is_opaque()) {
-          operations.erase(it.base());
-        }
-        
-        opaque_map[key].blend(oper.c);
-      }
-      else {
-        opaque_map[key] = oper.c;
-      }
-    }*/
+    //opaque_set.clear();
   }
 };
 
@@ -141,17 +110,17 @@ private:
   uint8_t *colors;
 public:
   memory_image(int w, int h) : image_base(w, h) {
-    colors = new uint8_t[COLOR_TYPE * w * h];
-
-    color blank;
+    colors = new uint8_t[sizeof(color) * w * h];
     
-    for (int x = 0; x < get_width(); x++) {
+    memset(colors, 0x0, sizeof(color) * w * h);
+    
+    /*for (int x = 0; x < get_width(); x++) {
       for (int y = 0; y < get_height(); y++) {
         set_pixel(x, y, blank);
       }
-    }
+    }*/
   }
-
+  
   ~memory_image() {
     delete [] colors;
   }

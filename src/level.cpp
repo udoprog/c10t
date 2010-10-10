@@ -406,8 +406,6 @@ image_operations* level_file::get_image(settings_t& s) {
     }
   }
 
-  oper->optimize();
-  
   if (cache_use) {
     if (!cache.write(oper)) {
       fs::remove(cache.get_path());
@@ -602,8 +600,6 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
     }
   }
 
-  oper->optimize();
-  
   if (cache_use) {
     if (!cache.write(oper)) {
       fs::remove(cache.get_path());
@@ -735,8 +731,6 @@ image_operations* level_file::get_isometric_image(settings_t& s)
       }
     }
   }
-  
-  oper->optimize();
   
   if (cache_use) {
     if (!cache.write(oper)) {

@@ -11,14 +11,14 @@
 #include <png.h>
 
 void image_operations::add_pixel(int x, int y, color &c) {
+  if (c.is_invisible()) {
+    return;
+  }
+  
   if (!(x >= 0)) { return; }
   if (!(y >= 0)) { return; }
   if (!(x < std::numeric_limits<uint16_t>::max())) { return; }
   if (!(y < std::numeric_limits<uint16_t>::max())) { return; }
-  
-  if (c.is_invisible()) {
-    return;
-  }
   
   image_operation oper;
   
@@ -27,8 +27,18 @@ void image_operations::add_pixel(int x, int y, color &c) {
   
   oper.x = (uint16_t)x;
   oper.y = (uint16_t)y;
-  oper.order = ++order;
+  //oper.order = ++order;
   oper.c = c;
+  
+  if (!oper.c.is_transparent()) {
+    image_op_key key(oper.x, oper.y);
+    
+    if (opaque_set.find(key) != opaque_set.end()) {
+      return;
+    }
+    
+    opaque_set.insert(key);
+  }
   
   operations.push_back(oper);
 }
@@ -77,8 +87,8 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
   
   color hp;
   
-  for (std::vector<image_operation>::iterator it = img.operations.begin();
-      it != img.operations.end(); it++) {
+  for (std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
+      it != img.operations.rend(); it++) {
     image_operation op = *it;
 
     color base;

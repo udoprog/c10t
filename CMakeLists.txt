@@ -1,17 +1,18 @@
 cmake_minimum_required(VERSION 2.6)
 project(c10t)
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
 
 # attempt to find out which revision we are building from
 set(C10T_VERSION "SNAPSHOT")
 set(C10T_SITE "http://github.com/udoprog/c10t")
 set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com> et. al (see README)")
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/src/config.h)
+configure_file(${CMAKE_SOURCE_DIR}/src/config.h.cmake ${CMAKE_BINARY_DIR}/src/config.h)
+include_directories(${CMAKE_BINARY_DIR}/src)
 
-# output the binary to the current directory instead of in src/
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+# output the binary to the build directory instead of in src/
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 find_package(ZLIB REQUIRED)
 find_package(PNG REQUIRED)
@@ -29,7 +30,10 @@ set(c10t_LIBRARIES ${ZLIB_LIBRARIES} ${PNG_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 set(c10t_LIBRARIES ${c10t_LIBRARIES} ${Boost_LIBRARIES} ${FREETYPE_LIBRARY})
 
 # set(Boost_DEBUG TRUE)
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src/")
+include_directories("${CMAKE_SOURCE_DIR}/src/")
+
+#copy font.ttg to build directory as matter of convenience.
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/font.ttf ${CMAKE_BINARY_DIR}/font.ttf)
 
 add_subdirectory(src)
 add_subdirectory(test)

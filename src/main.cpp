@@ -196,7 +196,6 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
   case ObliqueAngle:
     // yes, these are meant to be flipped
     c.get_obliqueangle_limits(image_width, image_height);
-    image_width += 200;
     break;
   }
 }

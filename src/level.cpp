@@ -441,7 +441,7 @@ image_operations* level_file::get_oblique_image(settings_t& s)
       
       if (s.cavemode) {
         for (int my = s.top; my > 0; my--) {
-          bt = blocks_r.get8(mx, mz, y);
+          bt = blocks_r.get8(mx, mz, my);
           
           if (!cavemode_isopen(bt)) {
             cavemode_top = my;

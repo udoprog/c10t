@@ -635,7 +635,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   BlockRotation heightmap_r(s, heightmap);
   
   int bmx, bmy, bmt;
-  c.get_obliqueangle_limits(bmx, bmy);
+  c.get_isometric_limits(bmx, bmy);
   bmt = bmx * bmy;
   bool blocked[bmt];
   
@@ -688,7 +688,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         apply_shading(s, bl, sl, hmval, y, side);
         
         int bx, by;
-        c.project_obliqueangle(p, bx, by);
+        c.project_isometric(p, bx, by);
         
         int bp = bx + bmx * by;
         

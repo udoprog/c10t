@@ -76,3 +76,4 @@ Contributions
     mudaltsov - for mapping out the Mac OS X building process and creating a splendid package!
     frozencow - for fixing boost_thread configuration for cmake
     reportingjsr - for pointing out build issues
+    Dim-Dul - for providing a nice map to render

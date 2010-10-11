@@ -262,13 +262,14 @@ public:
  */
 inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
   // if night, darken all colors not emitting light
-  if (s.night) {
-    c.darken(0x40);
+  
+  if(s.night) {
+    c.darken(0xa * (16 - bl));
+  }
+  else if (sl != -1 && y != s.top) {
+    c.darken(0xa * (16 - std::max(sl, bl)));
   }
   
-  if (sl != -1 && y != s.top) {
-    c.darken(0x8 * (16 - sl));
-  }
   //c.darken((mc::MapY - y));
   
   // in heightmap mode, brightness = height
@@ -544,10 +545,10 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
           blocked[bp] = top.is_opaque();
           oper->add_pixel(px, py, top);
           oper->add_pixel(px + 1, py, top);
-          oper->add_pixel(px + 1, py + 1, side);
-          
-          side.darken(0x20);
           oper->add_pixel(px, py + 1, side);
+          
+          side.lighten(0x20);
+          oper->add_pixel(px + 1, py + 1, side);
           break;
         case mc::HalfBlock:
           oper->add_pixel(px, py, top);

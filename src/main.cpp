@@ -205,45 +205,50 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
   int diffz = world.max_z - world.min_z;
   
   Cube c(diffx, 16, diffz);
-  int xoffset, yoffset;
+  int x, y;
+  
+  point pos(p.xPos - world.min_x, 16, p.zPos - world.min_z);
   
   switch (s.mode) {
-  case Top:
-    {
-      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
-      c.project_top(topleft, xoffset, yoffset);
-      xoffset *= mc::MapX;
-      yoffset *= mc::MapZ;
-      all->composite(xoffset, yoffset, *p.operations);
+    case Top:           c.project_top(pos, x, y);           break;
+    case Oblique:       c.project_oblique(pos, x, y);       break;
+    case ObliqueAngle:  c.project_obliqueangle(pos, x, y);  break;
+    case Isometric:     c.project_isometric(pos, x, y);     break;
+  }
+  
+  x *= mc::MapX;
+  y *= mc::MapZ;
+  
+  all->composite(x, y, *p.operations);
+}
+
+inline void write_markers(settings_t& s, image_base *all, world_info &world, boost::ptr_vector<marker>& markers) {
+  int diffx = (world.max_x - world.min_x) * mc::MapX;
+  int diffz = (world.max_z - world.min_z) * mc::MapZ;
+  int min_z = world.min_z * mc::MapZ;
+  int min_x = world.min_x * mc::MapX;
+  
+  Cube c(diffx + mc::MapX, mc::MapY, diffz + mc::MapZ);
+  
+  boost::ptr_vector<marker>::iterator it;
+  
+  for (it = markers.begin(); it != markers.end(); it++) {
+    marker m = *it;
+
+    int p_x = m.x, p_y = m.y, p_z = m.z;
+    
+    transform_world_xz(p_x, p_z, s.rotation);
+    
+    point pos(p_x - min_x, p_y, p_z - min_z);
+
+    int x, y;
+    
+    switch (s.mode) {
+      case Top:           c.project_top(pos, x, y);           break;
+      case Oblique:       c.project_oblique(pos, x, y);       break;
+      case ObliqueAngle:  c.project_obliqueangle(pos, x, y);  break;
+      case Isometric:     c.project_isometric(pos, x, y);     break;
     }
-    break;
-  case Oblique:
-    {
-      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
-      c.project_oblique(topleft, xoffset, yoffset);
-      xoffset *= mc::MapX;
-      yoffset *= mc::MapZ;
-      all->composite(xoffset, yoffset, *p.operations);
-    }
-    break;
-  case ObliqueAngle:
-    {
-      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
-      c.project_obliqueangle(topleft, xoffset, yoffset);
-      xoffset *= mc::MapX;
-      yoffset *= mc::MapZ;
-      all->composite(xoffset, yoffset, *p.operations);
-    }
-    break;
-  case Isometric:
-    {
-      point topleft(p.xPos - world.min_x, 16, p.zPos - world.min_z);
-      c.project_isometric(topleft, xoffset, yoffset);
-      xoffset *= mc::MapX;
-      yoffset *= mc::MapZ;
-      all->composite(xoffset, yoffset, *p.operations);
-    }
-    break;
   }
 }
 
@@ -254,8 +259,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
   int min_x = world.min_x * mc::MapX;
   
   Cube c(diffx + mc::MapX, mc::MapY, diffz + mc::MapZ);
-  int xoffset, yoffset;
-
+  
   memory_image positionmark(5, 5);
   positionmark.fill(s.ttf_color);
   
@@ -267,41 +271,19 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
     int p_x = m.x, p_y = m.y, p_z = m.z;
     
     transform_world_xz(p_x, p_z, s.rotation);
+    point pos(p_x - min_x, p_y, p_z - min_z);
+
+    int x, y;
     
     switch (s.mode) {
-    case Top:
-      {
-        point playerpos(p_x - min_x, p_y, p_z - min_z);
-        c.project_top(playerpos, xoffset, yoffset);
-        m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
-      }
-      break;
-    case Oblique:
-      {
-        point playerpos(p_x - min_x, p_y, p_z - min_z);
-        c.project_oblique(playerpos, xoffset, yoffset);
-        m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
-      }
-      break;
-    case ObliqueAngle:
-      {
-        point playerpos(p_x - min_x, p_y, p_z - min_z);
-        c.project_obliqueangle(playerpos, xoffset, yoffset);
-        m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
-      }
-      break;
-    case Isometric:
-      {
-        point playerpos(p_x - min_x, p_y, p_z - min_z);
-        c.project_isometric(playerpos, xoffset, yoffset);
-        m.font.draw(*all, m.text, xoffset + 5, yoffset);
-        all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
-      }
-      break;
+      case Top:           c.project_top(pos, x, y);           break;
+      case Oblique:       c.project_oblique(pos, x, y);       break;
+      case ObliqueAngle:  c.project_obliqueangle(pos, x, y);  break;
+      case Isometric:     c.project_isometric(pos, x, y);     break;
     }
+    
+    m.font.draw(*all, m.text, x + 5, y);
+    all->safe_composite(x - 3, y - 3, positionmark);
   }
 }
 
@@ -537,7 +519,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     }
   }
   
-  overlay_markers(s, all, world, markers);
+  if (false) {
+    write_markers(s, all, world, markers);
+  }
+  else {
+    overlay_markers(s, all, world, markers);
+  }
   
   if (!s.silent) cout << "Saving image..." << endl;
   

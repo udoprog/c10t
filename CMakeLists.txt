@@ -4,7 +4,7 @@ project(c10t)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
 
 # attempt to find out which revision we are building from
-set(C10T_VERSION "SNAPSHOT")
+set(C10T_VERSION "SNAPSHOT" CACHE STRING "C10t Version String")
 set(C10T_SITE "http://github.com/udoprog/c10t")
 set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com> et. al (see README)")
 

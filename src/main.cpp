@@ -271,7 +271,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
     switch (s.mode) {
     case Top:
       {
-        point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_top(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
@@ -279,7 +279,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
       break;
     case Oblique:
       {
-        point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_oblique(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
@@ -287,18 +287,16 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
       break;
     case ObliqueAngle:
       {
-        point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_obliqueangle(playerpos, xoffset, yoffset);
-        yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }
       break;
     case Isometric:
       {
-        point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_isometric(playerpos, xoffset, yoffset);
-        yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }

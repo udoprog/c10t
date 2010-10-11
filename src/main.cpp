@@ -253,7 +253,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
   int min_z = world.min_z * mc::MapZ;
   int min_x = world.min_x * mc::MapX;
   
-  Cube c(diffx, mc::MapY, diffz);
+  Cube c(diffx + mc::MapX, mc::MapY, diffz + mc::MapZ);
   int xoffset, yoffset;
 
   memory_image positionmark(5, 5);
@@ -741,6 +741,8 @@ int do_help() {
     << "                              during broad phase by getting x/y/z positions    " << endl
     << "                              from a quick parsing                             " << endl
     << "  --no-alpha                - Set all colors alpha channel to opaque (solid)   " << endl
+    << "  --striped-terrain         - Darken every other block on a vertical basis     " << endl
+    << "                              which helps to distinguish heights               " << endl
     << endl
     << "Font Options:" << endl
     << "  --ttf-path <font>         - Use the following ttf file when drawing text.    " << endl
@@ -1067,6 +1069,7 @@ int main(int argc, char *argv[]){
      {"cache-dir",       required_argument, &flag, 12},
      {"cache-compress",       no_argument, &flag, 13},
      {"no-alpha",       no_argument, &flag, 14},
+     {"striped-terrain",       no_argument, &flag, 15},
      {0, 0, 0, 0}
   };
 
@@ -1167,6 +1170,7 @@ int main(int argc, char *argv[]){
         for (int i = 0; i < mc::MaterialCount; i++)
           mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
         break;
+      case 15: s.striped_terrain = true; break;
       }
       
       continue;

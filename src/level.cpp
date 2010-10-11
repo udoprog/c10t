@@ -208,84 +208,6 @@ level_file::level_file(settings_t& s, const fs::path path)
   parser.parse_file(path.string().c_str());
 }
 
-/**
- * Blocks[ z + ( y * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
- */
-nbt::Byte bget(nbt::ByteArray *blocks, int x, int z, int y) {
-  
-  
-  
-  int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
-  assert (p >= 0 && p < blocks->length);
-  return blocks->values[p];
-}
-
-nbt::Byte bsget(nbt::ByteArray *skylight, int x, int z, int y) {
-  
-  
-  
-  int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
-  int ap = p / 2;
-
-  assert (ap >= 0 && ap < skylight->length);
-  
-  // force unsigned
-  uint8_t bp = skylight->values[ap] & 0xff;
-  
-  if (p % 2 == 0) {
-    return bp >> 4;
-  }
-  else {
-    return bp & 0xf;
-  }
-}
-
-inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
-  // if night, darken all colors not emitting light
-  if (s.night) {
-    c.darken((0xb0 * (16 - bl)) / 16);
-  }
-
-  c.darken(0x02 * sl);
-  
-  c.darken((mc::MapY - y));
-
-  // in heightmap mode, brightness = height
-  if (s.heightmap) {
-    c.b = y*2;
-    c.g = y*2;
-    c.r = y*2;
-    c.a = 0xff;
-  }
-}
-
-inline bool cavemode_isopen(int bt) {
-  switch(bt) {
-    case mc::Air: return true;
-    case mc::Leaves: return true;
-    default: return false;
-  }
-}
-
-inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, nbt::ByteArray *blocks, bool &cave_initial) {
-  if (cave_initial) {
-    if (!cavemode_isopen(bt)) {
-      cave_initial = false;
-      return true;
-    }
-    
-    return true;
-  }
-  
-  if (!cavemode_isopen(bt)) {
-    if (y < s.top && cavemode_isopen(bget(blocks, x, z, y + 1))) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 class BlockRotation {
 private:
   settings_t& s;
@@ -316,9 +238,6 @@ public:
   uint8_t get8(int x, int z, int y) {
     transform_xz(x, z);
     
-    
-    
-    
     int p = y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
@@ -326,33 +245,71 @@ public:
   
   uint8_t get8(int x, int z) {
     transform_xz(x, z);
-    
-    
-    
     int p = x + (z * mc::MapX);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
   }
   
-  uint8_t get4(int x, int z, int y) {
-    transform_xz(x, z);
-    
-    int p = y + (z * mc::MapY + (x * mc::MapY * mc::MapZ));
-    int ap = p / 2;
-
-    assert (ap >= 0 && ap < byte_array->length);
-    
-    // force unsigned
-    uint8_t bp = byte_array->values[ap] & 0xff;
-    
-    if (p % 2 == 0) {
-      return bp >> 4;
-    }
-    else {
-      return bp & 0xf;
-    }
+  int get4(int x, int z, int y) {
+    int p = (y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ)) >> 1;
+    if (!(p >= 0 && p < byte_array->length)) return -1;
+    return ((byte_array->values[p]) >> ((y % 2) * 4)) & 0xf;
   }
 };
+
+/**
+ * Blocks[ z + ( y * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
+ */
+inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
+  // if night, darken all colors not emitting light
+  if (s.night) {
+    c.darken(0x40);
+  }
+  
+  if (sl != -1 && y != s.top) {
+    c.darken(0x8 * (16 - sl));
+  }
+  //c.darken((mc::MapY - y));
+  
+  // in heightmap mode, brightness = height
+  if (s.heightmap) {
+    c.b = y*2;
+    c.g = y*2;
+    c.r = y*2;
+    c.a = 0xff;
+  }
+  
+  if (s.striped_terrain && y % 2 == 0) {
+    c.darken(0xf);
+  }
+}
+
+inline bool cavemode_isopen(int bt) {
+  switch(bt) {
+    case mc::Air: return true;
+    case mc::Leaves: return true;
+    default: return false;
+  }
+}
+
+inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, BlockRotation& b_r, bool &cave_initial) {
+  if (cave_initial) {
+    if (!cavemode_isopen(bt)) {
+      cave_initial = false;
+      return true;
+    }
+    
+    return true;
+  }
+  
+  if (!cavemode_isopen(bt)) {
+    if (y < s.top && cavemode_isopen(b_r.get8(x, z, y + 1))) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 image_operations* level_file::get_image(settings_t& s) {
   if (cache_hit) return oper;
@@ -364,9 +321,9 @@ image_operations* level_file::get_image(settings_t& s) {
   }
   
   // block type
-  BlockRotation blocks_r(s, blocks);
-  BlockRotation blocklight_r(s, blocklight);
-  BlockRotation skylight_r(s, skylight);
+  BlockRotation b_r(s, blocks);
+  BlockRotation bl_r(s, blocklight);
+  BlockRotation sl_r(s, skylight);
   
   for (int z = mc::MapZ - 1; z >= 0; z--) {
     for (int x = 0; x < mc::MapX; x++) {
@@ -374,9 +331,9 @@ image_operations* level_file::get_image(settings_t& s) {
       
       // do incremental color fill until color is opaque
       for (int y = s.top; y > s.bottom; y--) {
-        int bt = blocks_r.get8(x, z, y);
+        int bt = b_r.get8(x, z, y);
         
-        if (s.cavemode && cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial)) {
+        if (s.cavemode && cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
           continue;
         }
         
@@ -386,10 +343,7 @@ image_operations* level_file::get_image(settings_t& s) {
         
         color bc = mc::MaterialColor[bt];
         
-        int bl = blocklight_r.get4(x, z, y),
-            sl = skylight_r.get4(x, z, y);
-        
-        apply_shading(s, bl, sl, 0, y, bc);
+        apply_shading(s, bl_r.get4(x, z, y), sl_r.get4(x, z, y + 1), 0, y, bc);
         
         point p(x, y, z);
         
@@ -428,9 +382,9 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   // block type
   int bt;
       
-  BlockRotation blocks_r(s, blocks);
-  BlockRotation blocklight_r(s, blocklight);
-  BlockRotation skylight_r(s, skylight);
+  BlockRotation b_r(s, blocks);
+  BlockRotation bl_r(s, blocklight);
+  BlockRotation sl_r(s, skylight);
   
   int bmx, bmy, bmt;
   c.get_oblique_limits(bmx, bmy);
@@ -446,7 +400,7 @@ image_operations* level_file::get_oblique_image(settings_t& s)
       
       if (s.cavemode) {
         for (int y = s.top; y > 0; y--) {
-          bt = blocks_r.get8(x, z, y);
+          bt = b_r.get8(x, z, y);
           
           if (!cavemode_isopen(bt)) {
             cavemode_top = y;
@@ -455,13 +409,13 @@ image_operations* level_file::get_oblique_image(settings_t& s)
         }
       }
       
-      for (int y = s.bottom; y <= s.top; y++) {
+      for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
-        bt = blocks_r.get8(x, z, y);
+        bt = b_r.get8(x, z, y);
         
         if (s.cavemode) {
-          if (cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
+          if (cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial) || y >= cavemode_top) {
             continue;
           }
         }
@@ -469,9 +423,8 @@ image_operations* level_file::get_oblique_image(settings_t& s)
         if (s.excludes[bt]) {
           continue;
         }
-
-        int bl = blocklight_r.get4(x, z, y),
-            sl = skylight_r.get4(x, z, y);
+        
+        int bl = bl_r.get4(x, z, y);
         
         int px, py;
         c.project_oblique(p, px, py);
@@ -488,12 +441,12 @@ image_operations* level_file::get_oblique_image(settings_t& s)
         }
         
         blocked[bp] = top.is_opaque();
-        apply_shading(s, bl, sl, 0, y, top);
-        oper->add_pixel(px, py - 1, top);
+        apply_shading(s, bl, sl_r.get4(x, z, y + 1), 0, y, top);
+        oper->add_pixel(px, py, top);
         
         color side = mc::MaterialSideColor[bt];
-        apply_shading(s, bl, sl, 0, y, side);
-        oper->add_pixel(px, py, side);
+        apply_shading(s, bl, -1, 0, y, side);
+        oper->add_pixel(px, py + 1, side);
       }
     }
   }
@@ -520,10 +473,10 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   // block type
   int bt;
       
-  BlockRotation blocks_r(s, blocks);
-  BlockRotation blocklight_r(s, blocklight);
-  BlockRotation skylight_r(s, skylight);
-  BlockRotation heightmap_r(s, heightmap);
+  BlockRotation b_r(s, blocks);
+  BlockRotation bl_r(s, blocklight);
+  BlockRotation sl_r(s, skylight);
+  BlockRotation hm_r(s, heightmap);
 
   int bmx, bmy, bmt;
   c.get_obliqueangle_limits(bmx, bmy);
@@ -540,7 +493,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
 
       if (s.cavemode) {
         for (int y = s.top; y > 0; y--) {
-          bt = blocks_r.get8(x, z, y);
+          bt = b_r.get8(x, z, y);
           
           if (!cavemode_isopen(bt)) {
             cavemode_top = y;
@@ -549,15 +502,15 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
         }
       }
 
-      int hmval = heightmap_r.get8(x, z);
+      int hmval = hm_r.get8(x, z);
       
-      for (int y = s.bottom; y <= s.top; y++) {
+      for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
-        bt = blocks_r.get8(x, z, y);
+        bt = b_r.get8(x, z, y);
         
         if (s.cavemode) {
-          if (cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
+          if (cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial) || y >= cavemode_top) {
             continue;
           }
         }
@@ -566,8 +519,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
           continue;
         }
         
-        int bl = blocklight_r.get4(x, z, y),
-            sl = skylight_r.get4(x, z, y);
+        int bl = bl_r.get4(x, z, y);
         
         int px, py;
         c.project_obliqueangle(p, px, py);
@@ -575,8 +527,8 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
         color top = mc::MaterialColor[bt];
         color side = mc::MaterialSideColor[bt];
         
-        apply_shading(s, bl, sl, hmval, y, top);
-        apply_shading(s, bl, sl, hmval, y, side);
+        apply_shading(s, bl, sl_r.get4(x, z, y + 1), hmval, y, top);
+        apply_shading(s, bl, -1, hmval, y, side);
         
         int bx, by;
         c.project_obliqueangle(p, bx, by);
@@ -590,13 +542,12 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
           }
           
           blocked[bp] = top.is_opaque();
-          oper->add_pixel(px + 1, py - 1, top);
-          oper->add_pixel(px + 1, py, side);
+          oper->add_pixel(px, py, top);
+          oper->add_pixel(px + 1, py, top);
+          oper->add_pixel(px + 1, py + 1, side);
           
-          top.darken(0x20);
           side.darken(0x20);
-          oper->add_pixel(px, py - 1, top);
-          oper->add_pixel(px, py, side);
+          oper->add_pixel(px, py + 1, side);
           break;
         case mc::HalfBlock:
           oper->add_pixel(px, py, top);
@@ -636,10 +587,10 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   // block type
   int bt;
       
-  BlockRotation blocks_r(s, blocks);
-  BlockRotation blocklight_r(s, blocklight);
-  BlockRotation skylight_r(s, skylight);
-  BlockRotation heightmap_r(s, heightmap);
+  BlockRotation b_r(s, blocks);
+  BlockRotation bl_r(s, blocklight);
+  BlockRotation sl_r(s, skylight);
+  BlockRotation hm_r(s, heightmap);
   
   int bmx, bmy, bmt;
   c.get_isometric_limits(bmx, bmy);
@@ -656,7 +607,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
 
       if (s.cavemode) {
         for (int y = s.top; y > 0; y--) {
-          bt = blocks_r.get8(x, z, y);
+          bt = b_r.get8(x, z, y);
           
           if (!cavemode_isopen(bt)) {
             cavemode_top = y;
@@ -665,15 +616,15 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         }
       }
 
-      int hmval = heightmap_r.get8(x, z);
+      int hmval = hm_r.get8(x, z);
       
       for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
-        bt = blocks_r.get8(x, z, y);
+        bt = b_r.get8(x, z, y);
         
         if (s.cavemode) {
-          if (cavemode_ignore_block(s, x, z, y, bt, blocks, cave_initial) || y >= cavemode_top) {
+          if (cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial) || y >= cavemode_top) {
             continue;
           }
         }
@@ -682,8 +633,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
           continue;
         }
         
-        int bl = blocklight_r.get4(x, z, y),
-            sl = skylight_r.get4(x, z, y);
+        int bl = bl_r.get4(x, z, y);
         
         int px, py;
         c.project_isometric(p, px, py);
@@ -691,8 +641,8 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         color top = mc::MaterialColor[bt];
         color side = mc::MaterialSideColor[bt];
         
-        apply_shading(s, bl, sl, hmval, y, top);
-        apply_shading(s, bl, sl, hmval, y, side);
+        apply_shading(s, bl, sl_r.get4(x, z, y + 1), hmval, y, top);
+        apply_shading(s, bl, -1, hmval, y, side);
         
         int bx, by;
         c.project_isometric(p, bx, by);

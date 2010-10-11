@@ -42,13 +42,19 @@ void color::blend(const color &other) {
 
 // pull color down towards black
 void color::darken(uint8_t f) {
-  r -= ((r * f) / 0xff);
-  g -= ((g * f) / 0xff);
-  b -= ((b * f) / 0xff);
+  if (r - f < 0x0) r = 0x0;
+  else             r -= f;
+  if (g - f < 0x0) g = 0x0;
+  else             g -= f;
+  if (b - f < 0x0) b = 0x0;
+  else             b -= f;
 }
 
 void color::lighten(uint8_t f) {
-  r += ((r * f) / 0xff);
-  g += ((g * f) / 0xff);
-  b += ((b * f) / 0xff);
+  if (r + f > 0xff) r = 0xff;
+  else              r += f;
+  if (g + f > 0xff) g = 0xff;
+  else              g += f;
+  if (b + f > 0xff) b = 0xff;
+  else              b += f;
 }

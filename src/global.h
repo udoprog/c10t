@@ -34,6 +34,7 @@ struct settings_t {
   bool binary;
   bool debug;
   bool use_split;
+  bool striped_terrain;
   bool show_players;
   std::set<std::string> show_players_set;
   bool show_coordinates;
@@ -90,6 +91,7 @@ struct settings_t {
     this->show_players = false;
     this->show_coordinates = false;
     this->require_all = false;
+    this->striped_terrain = false;
     this->rotation = 0;
     this->binary = false;
     this->night = false;

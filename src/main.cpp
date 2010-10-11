@@ -577,6 +577,15 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
       error << "Does not exist: " << level_dat;
       return false;
     }
+
+    fs::path output_path = fs::system_complete(fs::path(output));
+
+    fs::path output_parent = output_path.parent_path();
+    
+    if (!fs::is_directory(output_parent)) {
+      error << "Output directory does not exist: " << output_parent.string();
+      return false;
+    }
   }
   
   players_db pdb(s, world_path / "players");

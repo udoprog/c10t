@@ -271,7 +271,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
     switch (s.mode) {
     case Top:
       {
-        point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_top(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
@@ -279,7 +279,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
       break;
     case Oblique:
       {
-        point playerpos(diffz - (p_z - min_z) + mc::MapZ, p_y, (p_x - min_x));
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_oblique(playerpos, xoffset, yoffset);
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
@@ -287,18 +287,16 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
       break;
     case ObliqueAngle:
       {
-        point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_obliqueangle(playerpos, xoffset, yoffset);
-        yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }
       break;
     case Isometric:
       {
-        point playerpos(p_x - min_x + mc::MapX, p_y, p_z - min_z);
+        point playerpos(p_x - min_x, p_y, p_z - min_z);
         c.project_isometric(playerpos, xoffset, yoffset);
-        yoffset -= mc::MapX;
         m.font.draw(*all, m.text, xoffset + 5, yoffset);
         all->safe_composite(xoffset - 3, yoffset - 3, positionmark);
       }
@@ -655,109 +653,109 @@ int do_help() {
   cout << endl;
   cout << "Usage: c10t [options]" << endl;
   cout << "Options:" << endl
-       /********************************************************************************/
-    << "  -w, --world <world>       - use this world directory as input                 " << endl
-    << "  -o, --output <output>     - use this file as output file for generated png    " << endl
+       /*******************************************************************************/
+    << "  -w, --world <world>       - use this world directory as input                " << endl
+    << "  -o, --output <output>     - use this file as output file for generated png   " << endl
     << endl
-    << "  -s, --silent              - execute silently, printing nothing except errors  " << endl
-    << "  -h, --help                - display this help text                            " << endl
-    << "  -v, --version             - display version information                       " << endl
-    << "  -D, --debug               - display debug information while executing         " << endl
-    << "  -l, --list-colors         - list all available colors and block types         " << endl
+    << "  -s, --silent              - execute silently, printing nothing except errors " << endl
+    << "  -h, --help                - display this help text                           " << endl
+    << "  -v, --version             - display version information                      " << endl
+    << "  -D, --debug               - display debug information while executing        " << endl
+    << "  -l, --list-colors         - list all available colors and block types        " << endl
     << endl
-    << "  -t, --top <int>           - splice from the top, must be less than 128        " << endl
-    << "  -b, --bottom <int>        - splice from the bottom, must be greater than or   " << endl
-    << "                              equal to zero.                                    " << endl
-    << "  -L, --limits <int-list>   - limit render to certain area. int-list form:      " << endl
-    << "                              North,South,East,West, e.g.                       " << endl
-    << "                              -L 0,100,-10,20 limiting between 0 and 100 in the " << endl
-    << "                              north-south direction and between -10 and 20 in   " << endl
-    << "                              the east-west direction.                          " << endl
-    << "                              Note: South and West are the positive directions. " << endl
+    << "  -t, --top <int>           - splice from the top, must be less than 128       " << endl
+    << "  -b, --bottom <int>        - splice from the bottom, must be greater than or  " << endl
+    << "                              equal to zero.                                   " << endl
+    << "  -L, --limits <int-list>   - limit render to certain area. int-list form:     " << endl
+    << "                              North,South,East,West, e.g.                      " << endl
+    << "                              -L 0,100,-10,20 limiting between 0 and 100 in the" << endl
+    << "                              north-south direction and between -10 and 20 in  " << endl
+    << "                              the east-west direction.                         " << endl
+    << "                              Note: South and West are the positive directions." << endl
     << endl
     << "Filtering options:" << endl
-    << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences " << endl
-    << "                              is possible)                                      " << endl
-    << "  -i, --include <blockid>   - include only this block-id in render (multiple    " << endl
-    << "                              occurences is possible)                           " << endl
-    << "  -a, --hide-all            - show no blocks except those specified with '-i'   " << endl
-    << "  -c, --cave-mode           - cave mode - top down until solid block found,     " << endl
-    << "                              then render bottom outlines only                  " << endl
-    << "  -n, --night               - night-time rendering mode                         " << endl
-    << "  -H, --heightmap           - heightmap rendering mode                          " << endl
+    << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences" << endl
+    << "                              is possible)                                     " << endl
+    << "  -i, --include <blockid>   - include only this block-id in render (multiple   " << endl
+    << "                              occurences is possible)                          " << endl
+    << "  -a, --hide-all            - show no blocks except those specified with '-i'  " << endl
+    << "  -c, --cave-mode           - cave mode - top down until solid block found,    " << endl
+    << "                              then render bottom outlines only                 " << endl
+    << "  -n, --night               - night-time rendering mode                        " << endl
+    << "  -H, --heightmap           - heightmap rendering mode                         " << endl
     << endl
-    << "  -N, --no-check            - ignore missing <world>/level.dat                  " << endl
+    << "  -N, --no-check            - ignore missing <world>/level.dat                 " << endl
     << endl
     << "Rendering options:" << endl
-    << "  -q, --oblique             - oblique rendering                                 " << endl
-    << "  -y, --oblique-angle       - oblique angle rendering                           " << endl
-    << "  -z, --isometric           - Isometric rendering                               " << endl
-    << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW    " << endl
+    << "  -q, --oblique             - oblique rendering                                " << endl
+    << "  -y, --oblique-angle       - oblique angle rendering                          " << endl
+    << "  -z, --isometric           - Isometric rendering                              " << endl
+    << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW   " << endl
     << endl
-    << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum " << endl
-    << "                              efficency, this should match the amount of cores  " << endl
-    << "                              on your machine                                   " << endl
-    << "  -B <set>                  - Specify the base color for a specific block id    " << endl
-    << "                              <set> has the format <blockid>=<color>            " << endl
-    << "                              <8 digit hex> specifies the RGBA values as        " << endl
-    << "                              `<int>,<int>,<int>[,<int>]'. The side color will  " << endl
-    << "                              be a darkened variant of the base                 " << endl
-    << "                              example: `-B Grass=0,255,0,120'                   " << endl
-    << "  -S <set>                  - Specify the side color for a specific block id    " << endl
-    << "                              this uses the same format as '-B' only the color  " << endl
-    << "                              is applied to the side of the block               " << endl
-    << "  -p, --split <chunks>      - Split the render into chunks, <output> must be a  " << endl
-    << "                              name containing two number format specifiers `%d' " << endl
-    << "                              for `x' and `y' coordinates of the chunks         " << endl
+    << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
+    << "                              efficency, this should match the amount of cores " << endl
+    << "                              on your machine                                  " << endl
+    << "  -B <set>                  - Specify the base color for a specific block id   " << endl
+    << "                              <set> has the format <blockid>=<color>           " << endl
+    << "                              <8 digit hex> specifies the RGBA values as       " << endl
+    << "                              `<int>,<int>,<int>[,<int>]'. The side color will " << endl
+    << "                              be a darkened variant of the base                " << endl
+    << "                              example: `-B Grass=0,255,0,120'                  " << endl
+    << "  -S <set>                  - Specify the side color for a specific block id   " << endl
+    << "                              this uses the same format as '-B' only the color " << endl
+    << "                              is applied to the side of the block              " << endl
+    << "  -p, --split <chunks>      - Split the render into chunks, <output> must be a " << endl
+    << "                              name containing two number format specifiers `%d'" << endl
+    << "                              for `x' and `y' coordinates of the chunks        " << endl
     << endl
     << "Other Options:" << endl
-    << "  -x, --binary              - Will output progress information in a binary form," << endl
-    << "                              good for integration with third party tools       " << endl
-    << "  --require-all             - Will force c10t to require all chunks or fail     " << endl
-    << "                              not ignoring bad chunks                           " << endl
-    << "  --show-players[=NICKLIST] - Will draw out player position and names from the  " << endl
-    << "                              players database in <world>/players               " << endl
-    << "                              it is possible to define which nicks to show by   " << endl
-    << "                              specifying a comma separated list of nicks        " << endl
-    << "  --show-signs[=PREFIX]     - Will draw out signs from all chunks, if PREFIX    " << endl
-    << "                              is specified, only signs matching the prefix will " << endl
-    << "                              be drawn                                          " << endl
-    << "  --show-coordinates        - Will draw out each chunks expected coordinates    " << endl
-    << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to " << endl
-    << "                              file when necessary                               " << endl
-    << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached    " << endl
-    << "  -P <file>                 - use <file> as palette, each line should take the  " << endl
-    << "                              form: <block-id> ' ' <color> ' ' <color>          " << endl
-    << "  -W <file>                 - write <file> with the default colour palette, this" << endl
-    << "                              is useful for figuring out how to write your own  " << endl
-    << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable   " << endl
-    << "                              during broad phase by getting x/y/z positions     " << endl
-    << "                              from a quick parsing                              " << endl
-    << "  --no-alpha                - Set all colors alpha channel to opaque (solid)    " << endl
+    << "  -x, --binary              - Will output progress information in binary form, " << endl
+    << "                              good for integration with third party tools      " << endl
+    << "  --require-all             - Will force c10t to require all chunks or fail    " << endl
+    << "                              not ignoring bad chunks                          " << endl
+    << "  --show-players[=NICKLIST] - Will draw out player position and names from the " << endl
+    << "                              players database in <world>/players              " << endl
+    << "                              it is possible to define which nicks to show by  " << endl
+    << "                              specifying a comma separated list of nicks       " << endl
+    << "  --show-signs[=PREFIX]     - Will draw out signs from all chunks, if PREFIX   " << endl
+    << "                              is specified, only signs matching the prefix will" << endl
+    << "                              be drawn                                         " << endl
+    << "  --show-coordinates        - Will draw out each chunks expected coordinates   " << endl
+    << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
+    << "                              file when necessary                              " << endl
+    << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached   " << endl
+    << "  -P <file>                 - use <file> as palette, each line should take the " << endl
+    << "                              form: <block-id> ' ' <color> ' ' <color>         " << endl
+    << "  -W <file>                 - write the default color palette to <file>, this  " << endl
+    << "                              is useful for figuring out how to write your own " << endl
+    << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable  " << endl
+    << "                              during broad phase by getting x/y/z positions    " << endl
+    << "                              from a quick parsing                             " << endl
+    << "  --no-alpha                - Set all colors alpha channel to opaque (solid)   " << endl
     << endl
     << "Font Options:" << endl
-    << "  --ttf-path <font>         - Use the following ttf file whenever writing text. " << endl
-    << "                              defaults to `font.ttf'                            " << endl
-    << "  --ttf-size <size>         - Use the specified font size whenever drawing text." << endl
-    << "                              defaults to `12'                                  " << endl
-    << "  --ttf-color <color>       - Use the specified color when drawing text.        " << endl
-    << "                              defaults to `0,0,0,255' (black)                   " << endl
-    << "  --sign-color <color>      - Use the specified color when drawing signs.       " << endl
-    << "                              defaults to <ttf-color>                           " << endl
-    << "  --player-color <color>    - Use the specified color when drawing player names." << endl
-    << "                              defaults to <ttf-color>                           " << endl
-    << "  --coordinate-color <color>                                                    " << endl
-    << "                            - Use the specified color when drawing coordinates. " << endl
-    << "                              defaults to <ttf-color>                           " << endl
-    << "  --cache-key <key>         - Indicates that c10t should cache operations using " << endl
-    << "                              the unique cache key <key>, this should represent " << endl
-    << "                              an unique combination of options. The cache files " << endl
-    << "                              will be put in                                    " << endl
-    << "                              <cache-dir>/<cache-key>/c.<coord>.cmap            " << endl
-    << "  --cache-dir <dir>         - Use the following directory as cache directory    " << endl
-    << "                              defaults to 'cache' if not specified              " << endl
-    << "  --cache-compress          - Compress the cache files using zlib compression   " << endl
-       /********************************************************************************/
+    << "  --ttf-path <font>         - Use the following ttf file when drawing text.    " << endl
+    << "                              defaults to `font.ttf'                           " << endl
+    << "  --ttf-size <size>         - Use the specified font size when drawing text.   " << endl
+    << "                              defaults to `12'                                 " << endl
+    << "  --ttf-color <color>       - Use the specified color when drawing text.       " << endl
+    << "                              defaults to `0,0,0,255' (black)                  " << endl
+    << "  --sign-color <color>      - Use the specified color when drawing signs.      " << endl
+    << "                              defaults to <ttf-color>                          " << endl
+    << "  --player-color <color>    - Use the specified color when showing players.    " << endl
+    << "                              defaults to <ttf-color>                          " << endl
+    << "  --coordinate-color <color>                                                   " << endl
+    << "                            - Use the specified color when drawing coordinates." << endl
+    << "                              defaults to <ttf-color>                          " << endl
+    << "  --cache-key <key>         - Indicates that c10t should cache operations using" << endl
+    << "                              the unique cache key <key>, this should represent" << endl
+    << "                              an unique combination of options. The cache files" << endl
+    << "                              will be put in                                   " << endl
+    << "                              <cache-dir>/<cache-key>/c.<coord>.cmap           " << endl
+    << "  --cache-dir <dir>         - Use the following directory as cache directory   " << endl
+    << "                              defaults to 'cache' if not specified             " << endl
+    << "  --cache-compress          - Compress the cache files using zlib compression  " << endl
+       /*******************************************************************************/
     << endl;
   cout << endl;
   cout << "Typical usage:" << endl;

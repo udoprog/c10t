@@ -326,6 +326,8 @@ image_operations* level_file::get_image(settings_t& s) {
   BlockRotation bl_r(s, blocklight);
   BlockRotation sl_r(s, skylight);
   
+  oper->set_limits(c.z, c.x);
+  
   for (int z = mc::MapZ - 1; z >= 0; z--) {
     for (int x = 0; x < mc::MapX; x++) {
       bool cave_initial = true;
@@ -393,6 +395,8 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   bool blocked[bmt];
   
   for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  
+  oper->set_limits(bmx, bmy);
   
   for (int x = c.x - 1; x >= 0; x--) {
     for (int z = 0; z < c.z; z++) {
@@ -485,6 +489,8 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   bool blocked[bmt];
   
   for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  
+  oper->set_limits(bmx, bmy);
   
   for (int z = c.z - 1; z >= 0; z--) {
     for (int x = c.x - 1; x >= 0; x--) {
@@ -599,6 +605,8 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   bool blocked[bmt];
   
   for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+
+  oper->set_limits(bmx, bmy);
   
   for (int z = c.z - 1; z >= 0; z--) {
     for (int x = c.x - 1; x >= 0; x--) {

@@ -43,29 +43,32 @@ struct image_op_key {
 }*/
 
 class image_operations {
+private:
+  int maxx, maxy;
 public:
+  bool *lookup;
   int cache_hit_count, cache_miss_count;
   
   std::vector<image_operation> operations;
-  std::set<image_op_key> opaque_set;
+  
+  //std::set<image_op_key> opaque_set;
   void add_pixel(int x, int y, color &c);
+
+  void set_limits(int x, int y) {
+    maxx = x;
+    maxy = y;
+    
+    lookup = new bool[maxx * maxy];
+    memset(lookup, 0x0, sizeof(bool) * maxx * maxy);
+  }
   
-  int maxx, maxy;
-  
-  image_operations() :
-    cache_hit_count(0), cache_miss_count(0),
-    operations(), opaque_set(),
-    maxx(0), maxy(0)
-  {};
+  image_operations() : maxx(0), maxy(0)
+  {
+  };
   
   ~image_operations() {
-    /*std::cout << "Being destructed..." << std::endl;
-    std::cout << "operation_map: " << operation_map.size()<< std::endl;
-    std::cout << "x: " << maxx << std::endl;
-    std::cout << "y: " << maxy << std::endl;
-    std::cout << "cache_hit_count: " << cache_hit_count << std::endl;
-    std::cout << "cache_miss_count: " << cache_miss_count << std::endl;*/
-    //opaque_set.clear();
+    if (lookup != NULL)
+      delete [] lookup;
   }
 };
 

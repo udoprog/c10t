@@ -17,13 +17,10 @@ void image_operations::add_pixel(int x, int y, color &c) {
   
   if (!(x >= 0)) { return; }
   if (!(y >= 0)) { return; }
-  if (!(x < std::numeric_limits<uint16_t>::max())) { return; }
-  if (!(y < std::numeric_limits<uint16_t>::max())) { return; }
+  if (!(x < maxx)) { return; }
+  if (!(y < maxy)) { return; }
   
   image_operation oper;
-  
-  maxx = std::max(maxx, x);
-  maxy = std::max(maxy, y);
   
   oper.x = (uint16_t)x;
   oper.y = (uint16_t)y;
@@ -31,13 +28,13 @@ void image_operations::add_pixel(int x, int y, color &c) {
   oper.c = c;
   
   if (!oper.c.is_transparent()) {
-    image_op_key key(oper.x, oper.y);
+    size_t p = oper.x + oper.y * maxx;
     
-    if (opaque_set.find(key) != opaque_set.end()) {
+    if (lookup[p]) {
       return;
     }
     
-    opaque_set.insert(key);
+    lookup[p] = true;
   }
   
   operations.push_back(oper);
@@ -86,11 +83,15 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
   if (!(yoffset >= 0)) { return; }
   
   color hp;
-  
-  for (std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
-      it != img.operations.rend(); it++) {
-    image_operation op = *it;
 
+  /*std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
+      it != img.operations.rend(); it++*/
+  
+  std::vector<image_operation>::size_type i = img.operations.size();
+  
+  while (i--) {
+    image_operation op = img.operations[i];
+    
     color base;
     get_pixel(xoffset + op.x, yoffset + op.y, base);
     base.blend(op.c);

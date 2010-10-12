@@ -84,7 +84,7 @@ namespace json {
       friend std::ostream& operator<<(std::ostream& out, dict& w) {
         out << "{";
 
-        int i = 1;
+        unsigned int i = 1;
         
         std::map<std::string, object>::iterator it;
         
@@ -92,7 +92,7 @@ namespace json {
           encode_string(out, (*it).first);
           out << ":";
           out << (*it).second;
-          if (i++ < w.a.size()) out << ",";
+          if (++i < w.a.size()) out << ",";
         }
         
         out << "}";
@@ -111,13 +111,13 @@ namespace json {
       friend std::ostream& operator<<(std::ostream& out, array& a) {
         out << "[";
 
-        int i = 1;
+        unsigned int i = 1;
         
         std::vector<dict>::iterator it;
         
         for (it = a.a.begin(); it != a.a.end(); it++) {
           out << *it;
-          if (i++ < a.a.size()) out << ",";
+          if (++i < a.a.size()) out << ",";
         }
         
         out << "]";

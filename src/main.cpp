@@ -232,10 +232,12 @@ inline void write_markers(settings_t& s, image_base *all, world_info &world, boo
   Cube c(diffx + mc::MapX, mc::MapY, diffz + mc::MapZ);
   
   boost::ptr_vector<marker>::iterator it;
+
+  json::array array;
   
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
-
+    
     int p_x = m.x, p_y = m.y, p_z = m.z;
     
     transform_world_xz(p_x, p_z, s.rotation);
@@ -250,7 +252,19 @@ inline void write_markers(settings_t& s, image_base *all, world_info &world, boo
       case ObliqueAngle:  c.project_obliqueangle(pos, x, y);  break;
       case Isometric:     c.project_isometric(pos, x, y);     break;
     }
+
+    json::dict d;
+    
+    d["text"] = m.text;
+    d["type"] = m.type;
+    d["x"] = x;
+    d["y"] = y;
+    
+    array.push(d);
   }
+  
+  std::ofstream of(s.write_markers_path.string().c_str());
+  of << array;
 }
 
 inline void overlay_markers(settings_t& s, image_base *all, world_info &world, boost::ptr_vector<marker>& markers) {
@@ -471,7 +485,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         if (p.xPos / mc::MapX < s.min_x) continue;
         if (p.xPos / mc::MapX > s.max_x) continue;
         
-        marker *m = new marker(p.name, player_font, p.xPos, p.yPos, p.zPos);
+        marker *m = new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos);
         markers.push_back(m);
       }
     }
@@ -492,7 +506,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
           continue;
         }
         
-        marker *m = new marker(lm.text, sign_font, lm.x, lm.y, lm.z);
+        marker *m = new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z);
         markers.push_back(m);
       }
     }
@@ -514,13 +528,13 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         if (l.xPos % 10 != 0) continue;
         std::stringstream ss;
         ss << "(" << l.xPos * mc::MapX << ", " << l.zPos * mc::MapZ << ")";
-        marker *m = new marker(ss.str(), coordinate_font, l.xPos * mc::MapX, 0, l.zPos * mc::MapZ);
+        marker *m = new marker(ss.str(), "coord", coordinate_font, l.xPos * mc::MapX, 0, l.zPos * mc::MapZ);
         markers.push_back(m);
       }
     }
   }
   
-  if (false) {
+  if (s.write_markers) {
     write_markers(s, all, world, markers);
   }
   else {
@@ -731,6 +745,8 @@ int do_help() {
     << "  --no-alpha                - Set all colors alpha channel to opaque (solid)   " << endl
     << "  --striped-terrain         - Darken every other block on a vertical basis     " << endl
     << "                              which helps to distinguish heights               " << endl
+    << "  --write-markers <file>    - Write markers to <file> in JSON format instead of" << endl
+    << "                              printing them on map                             " << endl
     << endl
     << "Font Options:" << endl
     << "  --ttf-path <font>         - Use the following ttf file when drawing text.    " << endl
@@ -1058,6 +1074,7 @@ int main(int argc, char *argv[]){
      {"cache-compress",       no_argument, &flag, 13},
      {"no-alpha",       no_argument, &flag, 14},
      {"striped-terrain",       no_argument, &flag, 15},
+     {"write-markers",       required_argument, &flag, 16},
      {0, 0, 0, 0}
   };
 
@@ -1159,6 +1176,19 @@ int main(int argc, char *argv[]){
           mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
         break;
       case 15: s.striped_terrain = true; break;
+      case 16:
+        s.write_markers = true;
+
+        s.write_markers_path = fs::system_complete(fs::path(optarg));
+
+        fs::path parent = s.write_markers_path.parent_path();
+        
+        if (!fs::is_directory(parent)) {
+          error << "Not a directory: " << parent.string();
+          goto exit_error;
+        }
+        
+        break;
       }
       
       continue;

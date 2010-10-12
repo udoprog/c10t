@@ -8,11 +8,12 @@
 struct marker {
 public:
   std::string text;
+  std::string type;
   text::font_face font;
   int x, y, z;
   
-  marker(std::string text, text::font_face font, int x, int y, int z) :
-      text(text), font(font), x(x), y(y), z(z)
+  marker(std::string text, std::string type, text::font_face font, int x, int y, int z) :
+      text(text), type(type), font(font), x(x), y(y), z(z)
   {
   }
 };

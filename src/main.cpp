@@ -34,6 +34,7 @@
 #include "players.h"
 #include "text.h"
 #include "marker.h"
+#include "json.h"
 
 using namespace std;
 namespace fs = boost::filesystem;

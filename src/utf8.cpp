@@ -183,3 +183,30 @@ std::vector<uint32_t> utf8_decode(std::string s) {
   
   return res;
 }
+
+void utf8_encode(uint32_t v, std::ostream& out) {
+  if (v <= 0x7F) {
+    out << (char)(v & 0xff);
+    return;
+  }
+  
+  if (v <= 0x7FF) {
+    uint8_t n1 = (v >> 8) & 0xFF;
+    uint8_t n2 = v & 0xFF;
+    out << (char)((0xC0 | (n1 << 2)) | ((n2 >> 6) & 0x03));
+    out << (char)(0x80 | (n2 & 0x3F));
+    return;
+  }
+}
+
+#include <sstream>
+
+std::string utf8_encode(std::vector<uint32_t>& v) {
+  std::stringstream ss;
+  
+  for (std::vector<uint32_t>::iterator it = v.begin(); it != v.end(); it++) {
+    utf8_encode(*it, ss);
+  }
+  
+  return ss.str();
+}

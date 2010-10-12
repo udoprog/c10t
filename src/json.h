@@ -44,25 +44,23 @@ namespace json {
     out << "\"";
   }
   
-  class object {
+  class value {
     private:
       int int_value;
       std::string string_value;
-      object_type type;
     public:
-      object& operator= (int v) {
-        type = Int;
-        int_value = v;
-        return *this;
+      object_type type;
+      
+      value() : type(Null) {
       }
       
-      object& operator= (std::string v) {
-        type = String;
-        string_value = v;
-        return *this;
+      value(int v) : int_value(v), type(Int) {
       }
       
-      friend std::ostream& operator<<(std::ostream& out, const object& o) {
+      value(std::string v) : string_value(v), type(String) {
+      }
+      
+      friend std::ostream& operator<<(std::ostream& out, const value& o) {
         switch(o.type) {
           case Int: out << o.int_value; break;
           case String: encode_string(out, o.string_value); break;
@@ -73,20 +71,20 @@ namespace json {
       }
   };
   
-  class dict {
+  class object {
     private:
-      std::map<std::string, object> a;
+      std::map<std::string, value> a;
     public:
-      object& operator[] (const std::string s) {
+      value& operator[] (const std::string s) {
         return a[s];
       }
       
-      friend std::ostream& operator<<(std::ostream& out, dict& w) {
+      friend std::ostream& operator<<(std::ostream& out, object& w) {
         out << "{";
 
         unsigned int i = 0;
         
-        std::map<std::string, object>::iterator it;
+        std::map<std::string, value>::iterator it;
         
         for (it = w.a.begin(); it != w.a.end(); it++) {
           encode_string(out, (*it).first);
@@ -102,9 +100,9 @@ namespace json {
   
   class array {
     private:
-      std::vector<dict> a;
+      std::vector<object> a;
     public:
-      void push(dict& o) {
+      void push(object& o) {
         a.push_back(o);
       }
       
@@ -113,7 +111,7 @@ namespace json {
 
         unsigned int i = 0;
         
-        std::vector<dict>::iterator it;
+        std::vector<object>::iterator it;
         
         for (it = a.a.begin(); it != a.a.end(); it++) {
           out << *it;

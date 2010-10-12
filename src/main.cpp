@@ -253,14 +253,14 @@ inline void write_markers(settings_t& s, image_base *all, world_info &world, boo
       case Isometric:     c.project_isometric(pos, x, y);     break;
     }
 
-    json::dict d;
+    json::object o;
     
-    d["text"] = m.text;
-    d["type"] = m.type;
-    d["x"] = x;
-    d["y"] = y;
+    o["text"] = m.text;
+    o["type"] = m.type;
+    o["x"] = x;
+    o["y"] = y;
     
-    array.push(d);
+    array.push(o);
   }
   
   std::ofstream of(s.write_markers_path.string().c_str());

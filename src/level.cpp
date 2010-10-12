@@ -285,7 +285,7 @@ inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c
   }
 }
 
-inline bool cavemode_isopen(int bt) {
+inline bool cave_isopen(int bt) {
   switch(bt) {
     case mc::Air: return true;
     case mc::Leaves: return true;
@@ -293,9 +293,9 @@ inline bool cavemode_isopen(int bt) {
   }
 }
 
-inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, BlockRotation& b_r, bool &cave_initial) {
+inline bool cave_ignore_block(settings_t& s, int x, int z, int y, int bt, BlockRotation& b_r, bool &cave_initial) {
   if (cave_initial) {
-    if (!cavemode_isopen(bt)) {
+    if (!cave_isopen(bt)) {
       cave_initial = false;
       return true;
     }
@@ -303,8 +303,8 @@ inline bool cavemode_ignore_block(settings_t& s, int x, int z, int y, int bt, Bl
     return true;
   }
   
-  if (!cavemode_isopen(bt)) {
-    if (y < s.top && cavemode_isopen(b_r.get8(x, z, y + 1))) {
+  if (!cave_isopen(bt)) {
+    if (y < s.top && cave_isopen(b_r.get8(x, z, y + 1))) {
       return false;
     }
   }
@@ -340,7 +340,7 @@ image_operations* level_file::get_image(settings_t& s) {
       for (int y = s.top; y > s.bottom; y--) {
         int bt = b_r.get8(x, z, y);
         
-        if (s.cavemode && cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
           continue;
         }
         
@@ -387,7 +387,6 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
   
   // block type
-  int bt;
       
   BlockRotation b_r(s, blocks);
   BlockRotation bl_r(s, blocklight);
@@ -401,31 +400,30 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   
   oper->set_limits(bmx + 1, bmy);
   
-  for (int x = c.x - 1; x >= 0; x--) {
-    for (int z = 0; z < c.z; z++) {
+  for (int z = c.z - 1; z >= 0; z--) {
+    for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
-      int cavemode_top = s.top;
-      
-      if (s.cavemode) {
-        for (int y = s.top; y > 0; y--) {
-          bt = b_r.get8(x, z, y);
-          
-          if (!cavemode_isopen(bt)) {
-            cavemode_top = y;
-            break;
-          }
-        }
-      }
       
       for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
-        bt = b_r.get8(x, z, y);
+        int bt = b_r.get8(x, z, y);
         
-        if (s.cavemode) {
-          if (cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial) || y >= cavemode_top) {
-            continue;
-          }
+        int px, py;
+        c.project_oblique(p, px, py);
+        
+        color top = mc::MaterialColor[bt];
+        
+        int bp = px + bmx * py;
+        
+        if (blocked[bp]) {
+          continue;
+        }
+        
+        blocked[bp] = top.is_opaque();
+        
+        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+          continue;
         }
         
         if (s.excludes[bt]) {
@@ -434,21 +432,6 @@ image_operations* level_file::get_oblique_image(settings_t& s)
         
         int bl = bl_r.get4(x, z, y);
         
-        int px, py;
-        c.project_oblique(p, px, py);
-        
-        color top = mc::MaterialColor[bt];
-
-        int bx, by;
-        c.project_oblique(p, bx, by);
-        
-        int bp = bx + bmx * by;
-        
-        if (blocked[bp]) {
-          continue;
-        }
-        
-        blocked[bp] = top.is_opaque();
         apply_shading(s, bl, sl_r.get4(x, z, y + 1), 0, y, top);
         oper->add_pixel(px, py, top);
         
@@ -479,8 +462,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
   
   // block type
-  int bt;
-      
+  
   BlockRotation b_r(s, blocks);
   BlockRotation bl_r(s, blocklight);
   BlockRotation sl_r(s, skylight);
@@ -498,30 +480,30 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
     for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
       
-      int cavemode_top = s.top;
-
-      if (s.cavemode) {
-        for (int y = s.top; y > 0; y--) {
-          bt = b_r.get8(x, z, y);
-          
-          if (!cavemode_isopen(bt)) {
-            cavemode_top = y;
-            break;
-          }
-        }
-      }
-
       int hmval = hm_r.get8(x, z);
       
       for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
-        bt = b_r.get8(x, z, y);
+        int px, py;
+        c.project_obliqueangle(p, px, py);
         
-        if (s.cavemode) {
-          if (cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial) || y >= cavemode_top) {
+        int bt = b_r.get8(x, z, y);
+        
+        color top = mc::MaterialColor[bt];
+        
+        if (mc::MaterialModes[bt] == mc::Block) {
+          int bp = px + bmx * py;
+          
+          if (blocked[bp]) {
             continue;
           }
+          
+          blocked[bp] = top.is_opaque();
+        }
+        
+        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+          continue;
         }
         
         if (s.excludes[bt]) {
@@ -530,27 +512,13 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
         
         int bl = bl_r.get4(x, z, y);
         
-        int px, py;
-        c.project_obliqueangle(p, px, py);
-        
-        color top = mc::MaterialColor[bt];
         color side = mc::MaterialSideColor[bt];
         
         apply_shading(s, bl, sl_r.get4(x, z, y + 1), hmval, y, top);
         apply_shading(s, bl, -1, hmval, y, side);
         
-        int bx, by;
-        c.project_obliqueangle(p, bx, by);
-        
-        int bp = bx + bmx * by;
-        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
-          if (blocked[bp]) {
-            continue;
-          }
-          
-          blocked[bp] = top.is_opaque();
           oper->add_pixel(px, py, top);
           oper->add_pixel(px + 1, py, top);
           oper->add_pixel(px, py + 1, side);
@@ -594,79 +562,59 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   }
   
   // block type
-  int bt;
-      
   BlockRotation b_r(s, blocks);
   BlockRotation bl_r(s, blocklight);
   BlockRotation sl_r(s, skylight);
   BlockRotation hm_r(s, heightmap);
   
-  int bmx, bmy, bmt;
-  c.get_isometric_limits(bmx, bmy);
-  bmt = bmx * bmy;
+  int bmt;
+  bmt = iw * ih;
   bool blocked[bmt];
   memset(blocked, 0x0, sizeof(bool) * bmt);
 
-  oper->set_limits(bmx + 1, bmy);
+  oper->set_limits(iw + 1, ih);
   
   for (int z = c.z - 1; z >= 0; z--) {
     for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
       
-      int cavemode_top = s.top;
-
-      if (s.cavemode) {
-        for (int y = s.top; y > 0; y--) {
-          bt = b_r.get8(x, z, y);
-          
-          if (!cavemode_isopen(bt)) {
-            cavemode_top = y;
-            break;
-          }
-        }
-      }
-
       int hmval = hm_r.get8(x, z);
       
       for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
+        int bt = b_r.get8(x, z, y);
+        color top = mc::MaterialColor[bt];
         
-        bt = b_r.get8(x, z, y);
+        int px, py;
+        c.project_isometric(p, px, py);
         
-        if (s.cavemode) {
-          if (cavemode_ignore_block(s, x, z, y, bt, b_r, cave_initial) || y >= cavemode_top) {
+        if (mc::MaterialModes[bt] == mc::Block) {
+          int bp = px + iw * py;
+          
+          if (blocked[bp]) {
             continue;
           }
+          
+          blocked[bp] = top.is_opaque();
+        }
+        
+        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+          continue;
         }
         
         if (s.excludes[bt]) {
           continue;
         }
         
-        int bl = bl_r.get4(x, z, y);
-        
-        int px, py;
-        c.project_isometric(p, px, py);
-        
-        color top = mc::MaterialColor[bt];
         color side = mc::MaterialSideColor[bt];
+        
+        int bl = bl_r.get4(x, z, y);
         
         apply_shading(s, bl, sl_r.get4(x, z, y + 1), hmval, y, top);
         apply_shading(s, bl, -1, hmval, y, side);
         
-        int bx, by;
-        c.project_isometric(p, bx, by);
-        
-        int bp = bx + bmx * by;
-        
         switch(mc::MaterialModes[bt]) {
         case mc::Block:
-          if (blocked[bp]) {
-            continue;
-          }
-          
-          blocked[bp] = top.is_opaque();
-          
           oper->add_pixel(px, py, top);
           oper->add_pixel(px + 1, py, top);
           oper->add_pixel(px - 2, py, top);

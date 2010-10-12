@@ -1172,7 +1172,7 @@ int main(int argc, char *argv[]){
         s.cache_compress = true;
         break;
       case 14:
-        for (int i = 0; i < mc::MaterialCount; i++)
+        for (int i = mc::Air + 1; i < mc::MaterialCount; i++)
           mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
         break;
       case 15: s.striped_terrain = true; break;

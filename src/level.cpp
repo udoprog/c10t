@@ -326,7 +326,11 @@ image_operations* level_file::get_image(settings_t& s) {
   BlockRotation bl_r(s, blocklight);
   BlockRotation sl_r(s, skylight);
   
-  oper->set_limits(c.z, c.x);
+  int bx, by;
+
+  c.get_top_limits(bx, by);
+
+  oper->set_limits(bx + 1, by);
   
   for (int z = mc::MapZ - 1; z >= 0; z--) {
     for (int x = 0; x < mc::MapX; x++) {
@@ -393,10 +397,9 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   c.get_oblique_limits(bmx, bmy);
   bmt = bmx * bmy;
   bool blocked[bmt];
+  memset(blocked, 0x0, sizeof(bool) * bmt);
   
-  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
-  
-  oper->set_limits(bmx, bmy);
+  oper->set_limits(bmx + 1, bmy);
   
   for (int x = c.x - 1; x >= 0; x--) {
     for (int z = 0; z < c.z; z++) {
@@ -487,10 +490,9 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   c.get_obliqueangle_limits(bmx, bmy);
   bmt = bmx * bmy;
   bool blocked[bmt];
+  memset(blocked, 0x0, sizeof(bool) * bmt);
   
-  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
-  
-  oper->set_limits(bmx, bmy);
+  oper->set_limits(bmx + 1, bmy);
   
   for (int z = c.z - 1; z >= 0; z--) {
     for (int x = c.x - 1; x >= 0; x--) {
@@ -603,10 +605,9 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   c.get_isometric_limits(bmx, bmy);
   bmt = bmx * bmy;
   bool blocked[bmt];
-  
-  for (int i = 0; i < bmt; i++) { blocked[i] = false; }
+  memset(blocked, 0x0, sizeof(bool) * bmt);
 
-  oper->set_limits(bmx, bmy);
+  oper->set_limits(bmx + 1, bmy);
   
   for (int z = c.z - 1; z >= 0; z--) {
     for (int x = c.x - 1; x >= 0; x--) {

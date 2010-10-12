@@ -62,7 +62,7 @@ public:
     memset(lookup, 0x0, sizeof(bool) * maxx * maxy);
   }
   
-  image_operations() : maxx(0), maxy(0)
+  image_operations() : maxx(0), maxy(0), operations()
   {
   };
   

@@ -84,7 +84,7 @@ namespace json {
       friend std::ostream& operator<<(std::ostream& out, dict& w) {
         out << "{";
 
-        unsigned int i = 1;
+        unsigned int i = 0;
         
         std::map<std::string, object>::iterator it;
         
@@ -111,7 +111,7 @@ namespace json {
       friend std::ostream& operator<<(std::ostream& out, array& a) {
         out << "[";
 
-        unsigned int i = 1;
+        unsigned int i = 0;
         
         std::vector<dict>::iterator it;
         

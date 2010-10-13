@@ -251,6 +251,7 @@ public:
   }
   
   int get4(int x, int z, int y) {
+    transform_xz(x, z);
     int p = (y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ)) >> 1;
     if (!(p >= 0 && p < byte_array->length)) return -1;
     return ((byte_array->values[p]) >> ((y % 2) * 4)) & 0xf;

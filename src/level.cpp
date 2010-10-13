@@ -213,6 +213,8 @@ private:
   settings_t& s;
   nbt::ByteArray *byte_array;
 
+  int x, z;
+
   void transform_xz(int& x, int& z) {
     int t = x;
     switch (s.rotation) {
@@ -234,24 +236,26 @@ private:
 public:
   BlockRotation(settings_t& s, nbt::ByteArray *byte_array)
     : s(s), byte_array(byte_array) {}
-  
-  uint8_t get8(int x, int z, int y) {
+
+  void set_xz(int x, int z) {
     transform_xz(x, z);
-    
+    this->x = x;
+    this->z = z;
+  }
+  
+  uint8_t get8(int y) {
     int p = y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
   }
   
-  uint8_t get8(int x, int z) {
-    transform_xz(x, z);
+  uint8_t get8() {
     int p = x + (z * mc::MapX);
     assert (p >= 0 && p < byte_array->length);
     return byte_array->values[p];
   }
   
-  int get4(int x, int z, int y) {
-    transform_xz(x, z);
+  int get4(int y) {
     int p = (y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ)) >> 1;
     if (!(p >= 0 && p < byte_array->length)) return -1;
     return ((byte_array->values[p]) >> ((y % 2) * 4)) & 0xf;
@@ -294,7 +298,7 @@ inline bool cave_isopen(int bt) {
   }
 }
 
-inline bool cave_ignore_block(settings_t& s, int x, int z, int y, int bt, BlockRotation& b_r, bool &cave_initial) {
+inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, bool &cave_initial) {
   if (cave_initial) {
     if (!cave_isopen(bt)) {
       cave_initial = false;
@@ -305,7 +309,7 @@ inline bool cave_ignore_block(settings_t& s, int x, int z, int y, int bt, BlockR
   }
   
   if (!cave_isopen(bt)) {
-    if (y < s.top && cave_isopen(b_r.get8(x, z, y + 1))) {
+    if (y < s.top && cave_isopen(b_r.get8(y + 1))) {
       return false;
     }
   }
@@ -336,12 +340,16 @@ image_operations* level_file::get_image(settings_t& s) {
   for (int z = mc::MapZ - 1; z >= 0; z--) {
     for (int x = 0; x < mc::MapX; x++) {
       bool cave_initial = true;
+
+      b_r.set_xz(x, z);
+      bl_r.set_xz(x, z);
+      sl_r.set_xz(x, z);
       
       // do incremental color fill until color is opaque
       for (int y = s.top; y > s.bottom; y--) {
-        int bt = b_r.get8(x, z, y);
+        int bt = b_r.get8(y);
         
-        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
           continue;
         }
         
@@ -351,7 +359,7 @@ image_operations* level_file::get_image(settings_t& s) {
         
         color bc = mc::MaterialColor[bt];
         
-        apply_shading(s, bl_r.get4(x, z, y), sl_r.get4(x, z, y + 1), 0, y, bc);
+        apply_shading(s, bl_r.get4(y), sl_r.get4(y + 1), 0, y, bc);
         
         point p(x, y, z);
         
@@ -404,11 +412,15 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   for (int z = c.z - 1; z >= 0; z--) {
     for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
+
+      b_r.set_xz(x, z);
+      bl_r.set_xz(x, z);
+      sl_r.set_xz(x, z);
       
       for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
         
-        int bt = b_r.get8(x, z, y);
+        int bt = b_r.get8(y);
         
         int px, py;
         c.project_oblique(p, px, py);
@@ -423,7 +435,7 @@ image_operations* level_file::get_oblique_image(settings_t& s)
         
         blocked[bp] = top.is_opaque();
         
-        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
           continue;
         }
         
@@ -431,9 +443,9 @@ image_operations* level_file::get_oblique_image(settings_t& s)
           continue;
         }
         
-        int bl = bl_r.get4(x, z, y);
+        int bl = bl_r.get4(y);
         
-        apply_shading(s, bl, sl_r.get4(x, z, y + 1), 0, y, top);
+        apply_shading(s, bl, sl_r.get4(y + 1), 0, y, top);
         oper->add_pixel(px, py, top);
         
         color side = mc::MaterialSideColor[bt];
@@ -481,7 +493,12 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
     for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
       
-      int hmval = hm_r.get8(x, z);
+      hm_r.set_xz(x, z);
+      b_r.set_xz(x, z);
+      bl_r.set_xz(x, z);
+      sl_r.set_xz(x, z);
+      
+      int hmval = hm_r.get8();
       
       for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
@@ -489,7 +506,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
         int px, py;
         c.project_obliqueangle(p, px, py);
         
-        int bt = b_r.get8(x, z, y);
+        int bt = b_r.get8(y);
         
         color top = mc::MaterialColor[bt];
         
@@ -503,7 +520,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
           blocked[bp] = top.is_opaque();
         }
         
-        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
           continue;
         }
         
@@ -511,11 +528,11 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
           continue;
         }
         
-        int bl = bl_r.get4(x, z, y);
+        int bl = bl_r.get4(y);
         
         color side = mc::MaterialSideColor[bt];
         
-        apply_shading(s, bl, sl_r.get4(x, z, y + 1), hmval, y, top);
+        apply_shading(s, bl, sl_r.get4(y + 1), hmval, y, top);
         apply_shading(s, bl, -1, hmval, y, side);
         
         switch(mc::MaterialModes[bt]) {
@@ -579,11 +596,16 @@ image_operations* level_file::get_isometric_image(settings_t& s)
     for (int x = c.x - 1; x >= 0; x--) {
       bool cave_initial = true;
       
-      int hmval = hm_r.get8(x, z);
+      hm_r.set_xz(x, z);
+      b_r.set_xz(x, z);
+      bl_r.set_xz(x, z);
+      sl_r.set_xz(x, z);
+      
+      int hmval = hm_r.get8();
       
       for (int y = s.top; y >= s.bottom; y--) {
         point p(x, y, z);
-        int bt = b_r.get8(x, z, y);
+        int bt = b_r.get8(y);
         color top = mc::MaterialColor[bt];
         
         int px, py;
@@ -599,7 +621,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
           blocked[bp] = top.is_opaque();
         }
         
-        if (s.cavemode && cave_ignore_block(s, x, z, y, bt, b_r, cave_initial)) {
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
           continue;
         }
         
@@ -609,9 +631,9 @@ image_operations* level_file::get_isometric_image(settings_t& s)
         
         color side = mc::MaterialSideColor[bt];
         
-        int bl = bl_r.get4(x, z, y);
+        int bl = bl_r.get4(y);
         
-        apply_shading(s, bl, sl_r.get4(x, z, y + 1), hmval, y, top);
+        apply_shading(s, bl, sl_r.get4(y + 1), hmval, y, top);
         apply_shading(s, bl, -1, hmval, y, side);
         
         switch(mc::MaterialModes[bt]) {

@@ -116,7 +116,6 @@ private:
       operation.x = iof.x;
       operation.y = iof.y;
       operation.c = iof.c;
-      operation.order = i;
       operations->operations.push_back(operation);
     }
     
@@ -166,7 +165,6 @@ public:
       operation.x = iof.x;
       operation.y = iof.y;
       operation.c = iof.c;
-      operation.order = i;
       operations->operations.push_back(operation);
     }
     

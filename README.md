@@ -36,7 +36,7 @@ Building from Source (using cmake)
 
   1. Install dependencies:
 
-    $ sudo apt-get install cmake libpng-dev zlib1g-dev libboost-all-dev libboost-all
+    $ sudo apt-get install cmake libpng-dev zlib1g-dev libboost-all-dev libboost-all libfreetype6-dev
 
   2. Run:
 

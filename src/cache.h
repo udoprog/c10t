@@ -17,6 +17,7 @@ struct imop_file {
 
 class cache_file {
 private:
+  fs::path cache_dir;
   bool cache_compress;
   fs::path path;
   std::time_t modification_time;
@@ -124,7 +125,7 @@ private:
     return true;
   }
 public:
-  cache_file(settings_t& s) : cache_compress(s.cache_compress) {
+  cache_file(const fs::path cache_dir, bool cache_compress) : cache_dir(cache_dir), cache_compress(cache_compress) {
   }
   
   fs::path get_path() {
@@ -132,7 +133,7 @@ public:
   }
 
   void set_path(fs::path path) {
-    this->path = path;
+    this->path = cache_dir / path;
   }
 
   std::time_t get_modification_time() {

@@ -26,9 +26,11 @@ private:
   boost::condition in_cond;
   boost::condition out_cond;
   boost::condition start_cond;
+  boost::condition order_cond;
   boost::mutex in_mutex;
   boost::mutex out_mutex;
   boost::mutex start_mutex;
+  boost::mutex order_mutex;
   
   const int thread_count;
   volatile int running;
@@ -97,14 +99,16 @@ public:
       {
         // first, make sure that we output the results in the same order they came in
         // try to make it as lock-free as possible
+        boost::mutex::scoped_lock lock(out_mutex);
+        
         while (qp != output) {
-          boost::thread::yield();
+          order_cond.wait(out_mutex);
         }
         
-        boost::mutex::scoped_lock lock(out_mutex);
         out.push(o);
         out_cond.notify_one();
         ++output;
+        order_cond.notify_all();
       }
     }
   }

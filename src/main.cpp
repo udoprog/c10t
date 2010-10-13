@@ -15,6 +15,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/ptr_container/ptr_list.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/tokenizer.hpp>
@@ -114,43 +115,40 @@ inline void cout_error(const string& message) {
  * This will allow us to composite the entire image later and calculate sizes then.
  */
 struct render_result {
-  int xPos;
-  int zPos;
-  image_operations *operations;
-  bool islevel;
-  bool grammar_error;
-  size_t grammar_error_where;
-  string grammar_error_why;
+  int xPos, zPos;
   fs::path path;
+  boost::shared_ptr<image_operations> operations;
   std::vector<light_marker> markers;
+  level_file *level;
+
+  ~render_result() {
+    delete level;
+  }
 };
 
 struct render_job {
   fs::path path;
+  level_file* level;
   int xPos, zPos;
 };
 
-
-class render_resultRenderer : public threadworker<render_job, render_result*> {
+class Renderer : public threadworker<render_job, render_result*> {
 public:
   settings_t& s;
   
-  render_resultRenderer(settings_t& s, int n) : threadworker<render_job, render_result*>(n), s(s) {
+  Renderer(settings_t& s, int n) : threadworker<render_job, render_result*>(n), s(s) {
   }
   
   render_result *work(render_job job) {
-    level_file *level = new level_file(s, job.path);
+    level_file *level = job.level;
+    
+    level->load_file(job.path);
     
     render_result *p = new render_result;
-    p->operations = NULL;
-    p->islevel = false;
-    p->grammar_error = false;
     p->path = job.path;
+    p->level = level;
     
     if (level->grammar_error) {
-      p->grammar_error = true;
-      p->grammar_error_where = level->grammar_error_where;
-      p->grammar_error_why = level->grammar_error_why;
       return p;
     }
     
@@ -158,7 +156,6 @@ public:
       return p;
     }
     
-    p->islevel = true;
     p->xPos = job.xPos;
     p->zPos = job.zPos;
     
@@ -169,11 +166,6 @@ public:
     case ObliqueAngle:  p->operations = level->get_obliqueangle_image(s); break;
     }
     
-    if (level->markers.size() > 0) {
-      p->markers = level->markers;
-    }
-    
-    delete level;
     return p;
   }
 };
@@ -362,7 +354,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   } else {
   }*/
   
-  render_resultRenderer renderer(s, s.threads);
+  Renderer renderer(s, s.threads);
   renderer.start();
   unsigned int world_size = world.levels.size();
   
@@ -387,8 +379,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         if (s.debug) {
           cout << "using file: " << path << endl;
         }
-
+        
         render_job job;
+        job.level = new level_file(s);
         job.path = path;
         job.xPos = l.xPos;
         job.zPos = l.zPos;
@@ -399,36 +392,37 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     }
     
     --lvlq;
-    render_result *p = renderer.get();
+    
+    boost::scoped_ptr<render_result> p(renderer.get());
 
-    if (p->grammar_error) {
+    level_file* level = p->level;
+    
+    if (level->grammar_error) {
       if (s.require_all) {
-        error << "Parser Error: " << p->path.string() << " at (uncompressed) byte " << p->grammar_error_where
-          << " - " << p->grammar_error_why;
+        error << "Parser Error: " << p->path.string() << " at (uncompressed) byte " << level->grammar_error_where
+          << " - " << level->grammar_error_why;
         
         // effectively join all worker threads and prepare for exit
         renderer.join();
-        delete p;
         return false;
       }
-
+      
       if (!s.silent) {
-        cout << "Ignoring unparseable file: " << p->path << " - " << p->grammar_error_why << endl;
-        delete p;
+        cout << "Ignoring unparseable file: " << p->path << " - " << level->grammar_error_why << endl;
         continue;
       }
     }
     
-    if (!p->islevel) {
+    if (!level->islevel) {
       if (s.debug) {
         cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
       }
-      delete p;
+      
       continue;
     }
     
     if (progress_c != NULL) progress_c(i, world_size);
-
+    
     if (p->markers.size() > 0) {
       if (s.debug) { cout << "Found " << p->markers.size() << " signs"; };
       light_markers.insert(light_markers.end(), p->markers.begin(), p->markers.end());
@@ -439,14 +433,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     } catch(std::ios::failure& e) {
       error << strerror(errno) << ": " << s.cache_file;
       renderer.join();
-      delete p->operations;
-      delete p;
     }
-
-    delete p->operations;
-    /*int wait;
-    std::cin >> wait;*/
-    delete p;
   }
   
   if (progress_c != NULL) progress_c(world_size, world_size);

@@ -26,7 +26,7 @@ void register_string(level_file* level, nbt::String name, nbt::String value) {
   if (!level->in_te) {
     return;
   }
-
+  
   if (level->in_sign) {
     if (value.size() == 0) {
       return;
@@ -63,20 +63,6 @@ void register_int(level_file* level, nbt::String name, nbt::Int i) {
     
     return;
   }
-  
-  if (!level->islevel) {
-    return;
-  }
-
-  if (name.compare("xPos") == 0) {
-    level->xPos = i;
-    return;
-  }
-  
-  if (name.compare("zPos") == 0) {
-    level->zPos = i;
-    return;
-  }
 }
 
 void register_byte_array(level_file* level, nbt::String name, nbt::ByteArray* byte_array) {
@@ -86,22 +72,22 @@ void register_byte_array(level_file* level, nbt::String name, nbt::ByteArray* by
   }
   
   if (name.compare("Blocks") == 0) {
-    level->blocks = byte_array;
+    level->blocks.reset(byte_array);
     return;
   }
   
   if (name.compare("SkyLight") == 0) {
-    level->skylight = byte_array;
+    level->skylight.reset(byte_array);
     return;
   }
 
   if (name.compare("HeightMap") == 0) {
-    level->heightmap = byte_array;
+    level->heightmap.reset(byte_array);
     return;
   }
   
   if (name.compare("BlockLight") == 0) {
-    level->blocklight = byte_array;
+    level->blocklight.reset(byte_array);
     return;
   }
   
@@ -143,50 +129,37 @@ void error_handler(level_file* level, size_t where, const char *why) {
 #include <iostream>
 
 level_file::~level_file(){
-  delete blocks;
-  delete skylight;
-  delete heightmap;
-  delete blocklight;
 }
 
-level_file::level_file(settings_t& s, const fs::path path)
-  : blocks(NULL),
-    skylight(NULL),
-    heightmap(NULL),
-    blocklight(NULL),
-    xPos(0),
-    zPos(0),
+level_file::level_file(settings_t& s)
+    :
     islevel(false),
     grammar_error(false),
     grammar_error_where(0),
     grammar_error_why(""),
-    path(path),
     in_te(false), in_sign(false),
     sign_x(0), sign_y(0), sign_z(0),
     sign_text(""),
-    cache(s),
-    cache_use(s.cache_use)
-{
-  cache_hit = false;
-  oper = new image_operations;
-  
+    cache(s.cache_dir, s.cache_compress),
+    cache_use(s.cache_use),
+    cache_hit(false),
+    oper(new image_operations)
+{ }
+
+void level_file::load_file(const fs::path path) {
   if (cache_use) {
-    cache.set_path(s.cache_dir / ( fs::basename(path) + ".cmap" ));
+    cache.set_path(fs::basename(path) + ".cmap" );
     
     std::time_t level_mod = fs::last_write_time(path);
   
     if (fs::exists(cache.get_path())) {
-      if (!cache.read(oper, level_mod)) {
-        fs::remove(cache.get_path());
-      }
-      else {
+      if (cache.read(oper.get(), level_mod)) {
         cache_hit = true;
+        islevel = true;
+        return;
       }
-    }
-    
-    if (cache_hit) {
-      islevel = true;
-      return;
+      
+      fs::remove(cache.get_path());
     }
     
     // in case of future writes, save the modification time
@@ -196,7 +169,6 @@ level_file::level_file(settings_t& s, const fs::path path)
   nbt::Parser<level_file> parser(this);
   
   parser.register_byte_array = register_byte_array;
-  parser.register_int = register_int;
   parser.register_string = register_string;
   parser.begin_compound = begin_compound;
   parser.begin_list = begin_list;
@@ -317,7 +289,7 @@ inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
   return true;
 }
 
-image_operations* level_file::get_image(settings_t& s) {
+boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
   if (cache_hit) return oper;
   
   Cube c(mc::MapX, mc::MapY, mc::MapZ);
@@ -327,9 +299,9 @@ image_operations* level_file::get_image(settings_t& s) {
   }
   
   // block type
-  BlockRotation b_r(s, blocks);
-  BlockRotation bl_r(s, blocklight);
-  BlockRotation sl_r(s, skylight);
+  BlockRotation b_r(s, blocks.get());
+  BlockRotation bl_r(s, blocklight.get());
+  BlockRotation sl_r(s, skylight.get());
   
   int bx, by;
 
@@ -377,7 +349,7 @@ image_operations* level_file::get_image(settings_t& s) {
   }
 
   if (cache_use) {
-    if (!cache.write(oper)) {
+    if (!cache.write(oper.get())) {
       fs::remove(cache.get_path());
     }
   }
@@ -385,7 +357,7 @@ image_operations* level_file::get_image(settings_t& s) {
   return oper;
 }
 
-image_operations* level_file::get_oblique_image(settings_t& s)
+boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
 {
   if (cache_hit) return oper;
   
@@ -397,9 +369,9 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   
   // block type
       
-  BlockRotation b_r(s, blocks);
-  BlockRotation bl_r(s, blocklight);
-  BlockRotation sl_r(s, skylight);
+  BlockRotation b_r(s, blocks.get());
+  BlockRotation bl_r(s, blocklight.get());
+  BlockRotation sl_r(s, skylight.get());
   
   int bmx, bmy, bmt;
   c.get_oblique_limits(bmx, bmy);
@@ -456,15 +428,14 @@ image_operations* level_file::get_oblique_image(settings_t& s)
   }
   
   if (cache_use) {
-    if (!cache.write(oper)) {
+    if (!cache.write(oper.get())) {
       fs::remove(cache.get_path());
     }
   }
   
   return oper;
 }
-
-image_operations* level_file::get_obliqueangle_image(settings_t& s)
+boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_t& s)
 {
   if (cache_hit) return oper;
   
@@ -476,10 +447,10 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   
   // block type
   
-  BlockRotation b_r(s, blocks);
-  BlockRotation bl_r(s, blocklight);
-  BlockRotation sl_r(s, skylight);
-  BlockRotation hm_r(s, heightmap);
+  BlockRotation b_r(s, blocks.get());
+  BlockRotation bl_r(s, blocklight.get());
+  BlockRotation sl_r(s, skylight.get());
+  BlockRotation hm_r(s, heightmap.get());
 
   int bmx, bmy, bmt;
   c.get_obliqueangle_limits(bmx, bmy);
@@ -558,7 +529,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   }
 
   if (cache_use) {
-    if (!cache.write(oper)) {
+    if (!cache.write(oper.get())) {
       fs::remove(cache.get_path());
     }
   }
@@ -566,7 +537,7 @@ image_operations* level_file::get_obliqueangle_image(settings_t& s)
   return oper;
 }
 
-image_operations* level_file::get_isometric_image(settings_t& s)
+boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& s)
 {
   if (cache_hit) return oper;
   
@@ -580,10 +551,10 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   }
   
   // block type
-  BlockRotation b_r(s, blocks);
-  BlockRotation bl_r(s, blocklight);
-  BlockRotation sl_r(s, skylight);
-  BlockRotation hm_r(s, heightmap);
+  BlockRotation b_r(s, blocks.get());
+  BlockRotation bl_r(s, blocklight.get());
+  BlockRotation sl_r(s, skylight.get());
+  BlockRotation hm_r(s, heightmap.get());
   
   int bmt;
   bmt = iw * ih;
@@ -675,7 +646,7 @@ image_operations* level_file::get_isometric_image(settings_t& s)
   }
   
   if (cache_use) {
-    if (!cache.write(oper)) {
+    if (!cache.write(oper.get())) {
       fs::remove(cache.get_path());
     }
   }

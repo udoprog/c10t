@@ -26,6 +26,8 @@
 #include "cache.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -33,35 +35,35 @@ class level_file
 {
   public:
     // these must be public for the parser to be able to reach them.
-    nbt::ByteArray *blocks;
-    nbt::ByteArray *skylight;
-    nbt::ByteArray *heightmap;
-    nbt::ByteArray *blocklight;
-    int xPos;
-    int zPos;
     bool islevel;
     bool grammar_error;
     bool from_cache;
     size_t grammar_error_where;
     std::string grammar_error_why;
-    const fs::path path;
-    bool cache_hit;
-    image_operations* oper;
     bool ignore_blocks;
     bool in_te, in_sign;
     nbt::Int sign_x, sign_y, sign_z;
     std::string sign_text;
     cache_file cache;
     bool cache_use;
+    bool cache_hit;
     std::vector<light_marker> markers;
     
-    level_file(settings_t& s, const fs::path path);
+    boost::scoped_ptr<nbt::ByteArray> blocks;
+    boost::scoped_ptr<nbt::ByteArray> skylight;
+    boost::scoped_ptr<nbt::ByteArray> heightmap;
+    boost::scoped_ptr<nbt::ByteArray> blocklight;
+    boost::shared_ptr<image_operations> oper;
+    
+    level_file(settings_t& s);
     ~level_file();
-
-    image_operations* get_image(settings_t& s);
-    image_operations* get_oblique_image(settings_t& s);
-    image_operations* get_obliqueangle_image(settings_t& s);
-    image_operations* get_isometric_image(settings_t& s);
+    
+    void load_file(const fs::path path);
+    
+    boost::shared_ptr<image_operations> get_image(settings_t& s);
+    boost::shared_ptr<image_operations> get_oblique_image(settings_t& s);
+    boost::shared_ptr<image_operations> get_obliqueangle_image(settings_t& s);
+    boost::shared_ptr<image_operations> get_isometric_image(settings_t& s);
 };
 
 class fast_level_file

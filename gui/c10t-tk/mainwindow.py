@@ -443,6 +443,10 @@ class ImageFrame(Frame):
     """This is just a Frame containing one Canvas, two scrollbars and some
     logic for scrolling the image."""
 
+    # This class is inspired by:
+    # http://effbot.org/tkinterbook/photoimage.htm
+    # http://www.swharden.com/blog/2010-03-03-viewing-large-images-with-scrollbars-using-python-tk-and-pil/
+
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
@@ -475,8 +479,10 @@ class ImageFrame(Frame):
 
         # Internal vars for handling the image
         self.pilimage = None
-        self.photoimage = None
+        self.pilresizedimage = None
+        self.tkphotoimage = None
         self.canvasimage = None
+        self.zoom = 0
 
     def button_press_1_handler(self, event):
         self.canvas.scan_mark(event.x, event.y)
@@ -500,28 +506,63 @@ class ImageFrame(Frame):
         else:
             return
 
-        self.canvas.yview_scroll(dir, UNITS)
+        # negative dir ==> scrolling up
+        # positive dir ==> scrolling down
+
+        # Code for scrolling the image up/down
+        #self.canvas.yview_scroll(dir, UNITS)
+
+        # Code for zooming the image (like Google Maps)
+        self.resize_image_to_zoom(delta=-dir)
+
+    def resize_image_to_zoom(self, delta=None, zoom=None, forcereload=False):
+        if PIL_NOT_AVAILABLE:
+            return
+        if self.pilimage is None:
+            return
+
+        prevzoom = self.zoom
+
+        if zoom is not None:
+            self.zoom = zoom
+        if delta is not None:
+            self.zoom += delta
+
+        # Clamping maximum zoom:
+        if self.zoom > 2:
+            self.zoom = 2
+        # Clamping minimum zoom:
+        if self.zoom < -8:
+            self.zoom = -8
+
+        if prevzoom != self.zoom or forcereload:
+            mult = 2 ** self.zoom
+            ow, oh = self.pilimage.size
+            w, h = int(mult * ow), int(mult * oh)
+
+            # Let's apply a nice filter when scaling down,
+            # but keep those lovely pixels when scaling up!
+            filter = PIL.Image.NEAREST if mult >=1 else PIL.Image.BICUBIC
+
+            self.pilresizedimage = self.pilimage.resize((w,h), filter)
+            self.tkphotoimage = PIL.ImageTk.PhotoImage(self.pilresizedimage)
+            self.canvas.itemconfigure(self.canvasimage, image=self.tkphotoimage)
+
+            self.canvas["scrollregion"] = (0, 0, w, h)
 
     def load_image_from_file(self, imagepath):
         if PIL_NOT_AVAILABLE:
             return
 
-        # The image must be kept in a Python variable to prevent it from
-        # being garbage-collected.
-        # http://effbot.org/tkinterbook/photoimage.htm
+        # Loading the image from disk
         self.pilimage = PIL.Image.open(imagepath)
-        self.photoimage = PIL.ImageTk.PhotoImage(self.pilimage)
 
-        # Creating the image inside the canvas...
+        # Creating the image inside the canvas
         if self.canvasimage is None:
             self.canvasimage = self.canvas.create_image(0, 0, anchor=NW)
 
-        # Updating to the latest image...
-        self.canvas.itemconfigure(self.canvasimage, image=self.photoimage)
-
-        # http://www.swharden.com/blog/2010-03-03-viewing-large-images-with-scrollbars-using-python-tk-and-pil/
-        width, height = self.pilimage.size
-        self.canvas["scrollregion"] = (0, 0, width, height)
+        # Updating the canvas image
+        self.resize_image_to_zoom(forcereload=True)
 
 
 class ApplicationFrame(Frame):

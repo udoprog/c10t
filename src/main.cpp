@@ -212,8 +212,6 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
   x *= mc::MapX;
   y *= mc::MapZ;
 
-  std::cout << x << " " << y << std::endl;
-  
   all->composite(x, y, *p.operations);
 }
 

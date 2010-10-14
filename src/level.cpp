@@ -347,7 +347,7 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
       }
     }
   }
-
+  
   if (cache_use) {
     if (!cache.write(oper.get())) {
       fs::remove(cache.get_path());

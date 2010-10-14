@@ -3,14 +3,17 @@
 #ifndef _WORLD_H_
 #define _WORLD_H_
 
+#include <stdlib.h>
 #include <limits.h>
 
 #include <algorithm>
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
 
 #include <boost/filesystem.hpp>
+#include <boost/ptr_container/ptr_map.hpp>
 
 #include "fileutils.h"
 #include "global.h"
@@ -24,6 +27,17 @@ void transform_world_xz(int& x, int& z, int rotation);
 struct level {
   int xPos, zPos;
   int xReal, zReal;
+};
+
+struct world_pos {
+  int x, z;
+  
+  bool operator<(const world_pos& o) const
+  {
+    if (x < o.x) return true;
+    if (x == o.x && z < o.z) return true;
+    return false;
+  }
 };
 
 class world_info {
@@ -116,74 +130,83 @@ public:
     if (modz < 0) modz += 64;
     return world_path / b36encode(modx) / b36encode(modz) / ("c." + b36encode(l.xReal) + "." + b36encode(l.zReal) + ".dat");
   }
-
+  
   world_info** split(int chunk_size) {
-    int b_min_z = min_z / chunk_size;
-    if (min_z % chunk_size != 0) b_min_z -= 1;
-    int b_min_x = min_x / chunk_size;
-    if (min_x % chunk_size != 0) b_min_x -= 1;
-    int b_max_z = max_z / chunk_size;
-    if (max_z % chunk_size != 0) b_max_z += 1;
-    int b_max_x = max_x / chunk_size;
-    if (max_x % chunk_size != 0) b_max_x += 1;
-    
-    int b_diff_z = b_max_z - b_min_z;
-    int b_diff_x = b_max_x - b_min_x;
-    
-    int world_count = b_diff_z * b_diff_x;
+    typedef boost::ptr_map<world_pos, std::vector<level> > world_levels_type;
 
-    world_info** worlds = new world_info*[world_count + 1];
+    world_levels_type world_levels;
     
-    for (int z = 0; z < b_diff_z; z++) {
-      for (int x = 0; x < b_diff_x; x++) {
-        int p = z + (x * b_diff_z);
-        world_info *w = worlds[p] = new world_info();
-        w->min_z = (z + b_min_z) * chunk_size;
-        w->max_z = (z + b_min_z + 1) * chunk_size - 1;
-        w->min_x = (x + b_min_x) * chunk_size;
-        w->max_x = (x + b_min_x + 1) * chunk_size - 1;
-        w->world_path = fs::path(world_path);
-        w->chunk_x = b_diff_z - z - 1;
-        w->chunk_y = x;
-        //std::cout << w->min_z << " " << w->max_z << " | " << w->min_x << " " << w->max_x << std::endl;
-      }
-    }
-
     for (std::list<level>::iterator it = levels.begin(); it != levels.end(); it++) {
       level l = *it;
-      int l_z, l_x;
+      
+      div_t d_x = div(l.xPos, chunk_size);
+      div_t d_z = div(l.zPos, chunk_size);
 
-      if (l.zPos < 0) {
-        l_z = l.zPos / chunk_size - 1;
-        if (l.zPos % chunk_size == 0) l_z += 1;
+      if (d_x.rem < 0) { d_x.rem = chunk_size + d_x.rem, --d_x.quot; }
+      if (d_z.rem < 0) { d_z.rem = chunk_size + d_z.rem, --d_z.quot; }
+
+      world_pos pos;
+      pos.x = d_x.quot;
+      pos.z = d_z.quot;
+      
+      std::vector<level>* levels;
+      
+      world_levels_type::iterator it = world_levels.find(pos);
+      
+      if (it == world_levels.end()) {
+        levels = new std::vector<level>();
+        world_levels.insert(pos, levels);
       }
       else {
-        l_z = l.zPos / chunk_size;
+        levels = (*it).second;
       }
       
-      if (l.xPos < 0) {
-        l_x = l.xPos / chunk_size - 1;
-        if (l.xPos % chunk_size == 0) l_x += 1;
-      }
-      else {
-        l_x = l.xPos / chunk_size;
-      }
+      levels->push_back(l);
+    }
 
-      int z = l_z - b_min_z;
-      int x = l_x - b_min_x;
+    world_info** worlds = new world_info*[world_levels.size() + 1];
+
+    int i = 0;
+    
+    for (world_levels_type::iterator it = world_levels.begin(); it != world_levels.end(); it++) {
+      world_pos pos = (*it).first;
+      std::vector<level>* levels = (*it).second;
       
-      world_info* w = worlds[z + (x * b_diff_z)];
+      world_info *w = worlds[i++] = new world_info();
+      w->min_z = 10000;
+      w->max_z = -10000;
+      w->min_x = 10000;
+      w->max_x = -10000;
+      w->world_path = world_path;
       
-      //std::cout << x << ":" << z << std::endl;
-      //std::cout << l.zPos << ":" << l_z << std::endl;
-      //std::cout << l.xPos << ":" << l_x << std::endl;
-      w->levels.push_back(l);
-      //std::cout << "(" << l_block_z << " " << l_block_x << ")" << std::endl;
+      w->chunk_x = pos.x;
+      w->chunk_y = pos.z;
+      
+      std::vector<level>::iterator it = levels->begin();
+
+      w->min_x = (pos.x) * chunk_size;
+      w->max_x = (pos.x + 1) * chunk_size;
+      w->min_z = (pos.z) * chunk_size;
+      w->max_z = (pos.z + 1) * chunk_size;
+      
+      for (; it != levels->end(); it++) {
+        level l = *it;
+        
+        /*w->min_x = std::min(w->min_x, l.xPos);
+        w->max_x = std::max(w->max_x, l.xPos);
+        w->min_z = std::min(w->min_z, l.zPos);
+        w->max_z = std::max(w->max_z, l.zPos);*/
+        
+        w->levels.push_back(l);
+      }
+      
+      w->min_x -= 0;
+      w->min_z -= 1;
+      w->max_x += 0;
+      w->max_z += 0;
     }
     
-    //std::cout << min_z << " " << max_z << " - " << b_min_z << " " << b_max_z << " (" << b_diff_z << ")" << std::endl;
-    //std::cout << min_x << " " << max_x << " - " << b_min_x << " " << b_max_x << " (" << b_diff_x << ")" << std::endl;
-    worlds[world_count] = NULL;
+    worlds[world_levels.size()] = NULL;
     
     return worlds;
   }

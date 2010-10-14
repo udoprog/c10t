@@ -211,6 +211,8 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
   
   x *= mc::MapX;
   y *= mc::MapZ;
+
+  std::cout << x << " " << y << std::endl;
   
   all->composite(x, y, *p.operations);
 }
@@ -607,23 +609,17 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
   world_info** worlds = world.split(s.split);
 
   int i = 0;
-  int max_x = INT_MIN, max_y = INT_MIN;
   
   while (worlds[i] != NULL) {
     world_info* current = worlds[i++];
-
+    
     stringstream ss;
     ss << boost::format(output) % current->chunk_x % current->chunk_y;
     
     if (!do_one_world(s, *current, pdb, ss.str())) {
       return false;
     }
-
-    if (current->chunk_x > max_x) max_x = current->chunk_x;
-    if (current->chunk_y > max_y) max_y = current->chunk_y;
   }
-
-  cout << "world_info size in chunks is " << s.split * ((max_x + 1) * mc::MapX) << "x" << s.split * (max_y * mc::MapZ) << endl;
   
   delete [] worlds;
   return true;

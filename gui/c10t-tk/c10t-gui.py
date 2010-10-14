@@ -93,7 +93,7 @@ class Program(object):
             for block in re.split("[ \t,;/]+", ui.exclude):
                 args.extend(["-e", str(block)])
         if ui.includecheck:
-            # TODO: Should I include --hide-all ?
+            args.append("--hide-all")
             for block in re.split("[ \t,;/]+", ui.include):
                 args.extend(["-i", str(block)])
 
@@ -102,6 +102,7 @@ class Program(object):
         if ui.obliqueanglecheck: args.append("--oblique-angle")
         if ui.isometriccheck   : args.append("--isometric")
         if ui.nightcheck       : args.append("--night")
+        if ui.heightmapcheck   : args.append("--heightmap")
         if ui.rotate           : args.extend(["-r", str(ui.rotate)])
         if int(ui.threads) != 0: args.extend(["--threads", str(ui.threads)])
 

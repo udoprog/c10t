@@ -16,7 +16,7 @@ This is what it does:
 What it still doesn't do:
 * It don't show any output from c10t
 * There is no error checking when c10t runs
-* There is no progress bar (the program just hangs whie c10t is running)
+* There is no progress bar (the program just hangs while c10t is running)
 
 Possible improvements:
 * Some kind of interface to select blocks
@@ -24,5 +24,6 @@ Possible improvements:
 * Auto-detect the correct minecraft save path on other systems
 * Implement image zooming (like Google Maps) [tip: PIL.Image.resize]
 * Use a checkbutton for threads (when off, use the built-in auto-detection) instead of the quick-and-dirty hack of selecting zero threads
-* Use radiobuttons (intead of checkbuttons) for selecting the rendering mode
+* Use radiobuttons (intead of checkbuttons) for selecting the rendering mode (group by (normal, oblique, obliqueangle, isometric) (normal, night, heightmap) )
+* Add support for --no-alpha and --striped-terrain
 * Improve the packaging?

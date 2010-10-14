@@ -440,11 +440,13 @@ class RunFrame(Frame):
 
 
 class ImageFrame(Frame):
-    """This is just a Frame containing one Canvas and two scrollbars."""
+    """This is just a Frame containing one Canvas, two scrollbars and some
+    logic for scrolling the image."""
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
+        # Adding the widgets
         self.vertical_scrollbar = Scrollbar(self, orient=VERTICAL)
         self.vertical_scrollbar.pack(side=RIGHT, fill=Y)
         self.horizontal_scrollbar = Scrollbar(self, orient=HORIZONTAL)
@@ -453,6 +455,11 @@ class ImageFrame(Frame):
         self.canvas = Canvas(self)
         self.canvas.pack(side=LEFT, expand=YES, fill=BOTH)
 
+        # Add an error message if needed
+        if PIL_NOT_AVAILABLE:
+            self.canvas.create_text(10, 10, anchor=NW, text=u"Python Image Library (PIL) could not be loaded.\n\nNo image will be displayed here, but\nthey will still be rendered to the disk.\n\n%s" % (PIL_NOT_AVAILABLE_MESSAGE,))
+
+        # Adding the event handlers
         self.horizontal_scrollbar["command"] = self.canvas.xview
         self.vertical_scrollbar["command"] = self.canvas.yview
         self.canvas["xscrollcommand"] = self.horizontal_scrollbar.set
@@ -466,8 +473,10 @@ class ImageFrame(Frame):
         self.canvas.bind("<Button-4>", self.mouse_wheel_handler)
         self.canvas.bind("<Button-5>", self.mouse_wheel_handler)
 
-        if PIL_NOT_AVAILABLE:
-            self.canvas.create_text(10, 10, anchor=NW, text=u"Python Image Library (PIL) could not be loaded.\n\nNo image will be displayed here, but\nthey will still be rendered to the disk.\n\n%s" % (PIL_NOT_AVAILABLE_MESSAGE,))
+        # Internal vars for handling the image
+        self.pilimage = None
+        self.photoimage = None
+        self.canvasimage = None
 
     def button_press_1_handler(self, event):
         self.canvas.scan_mark(event.x, event.y)
@@ -493,6 +502,26 @@ class ImageFrame(Frame):
 
         self.canvas.yview_scroll(dir, UNITS)
 
+    def load_image_from_file(self, imagepath):
+        if PIL_NOT_AVAILABLE:
+            return
+
+        # The image must be kept in a Python variable to prevent it from
+        # being garbage-collected.
+        # http://effbot.org/tkinterbook/photoimage.htm
+        self.pilimage = PIL.Image.open(imagepath)
+        self.photoimage = PIL.ImageTk.PhotoImage(self.pilimage)
+
+        # Creating the image inside the canvas...
+        if self.canvasimage is None:
+            self.canvasimage = self.canvas.create_image(0, 0, anchor=NW)
+
+        # Updating to the latest image...
+        self.canvas.itemconfigure(self.canvasimage, image=self.photoimage)
+
+        # http://www.swharden.com/blog/2010-03-03-viewing-large-images-with-scrollbars-using-python-tk-and-pil/
+        width, height = self.pilimage.size
+        self.canvas["scrollregion"] = (0, 0, width, height)
 
 
 class ApplicationFrame(Frame):
@@ -600,13 +629,6 @@ class MainWindow(Tk):
 
         self.ui = UiShortcuts(self)
 
-        # Simple shortcut to the canvas object
-        self.canvas = self.app.image_frame.canvas
-        # And all image-related objects
-        self.pilimage = None
-        self.photoimage = None
-        self.canvasimage = None
-
         # Global quit handlers
         self.bind_all("<Control-q>", self.quit_handler)
         self.protocol("WM_DELETE_WINDOW", self.quit_handler)
@@ -646,22 +668,5 @@ class MainWindow(Tk):
             self.load_button_callback()
 
     def load_image_from_file(self, imagepath):
-        if PIL_NOT_AVAILABLE:
-            return
+        self.app.image_frame.load_image_from_file(imagepath)
 
-        # The image must be kept in a Python variable to prevent it from
-        # being garbage-collected.
-        # http://effbot.org/tkinterbook/photoimage.htm
-        self.pilimage = PIL.Image.open(imagepath)
-        self.photoimage = PIL.ImageTk.PhotoImage(self.pilimage)
-
-        # Creating the image inside the canvas...
-        if self.canvasimage is None:
-            self.canvasimage = self.canvas.create_image(0, 0, anchor=NW)
-
-        # Updating to the latest image...
-        self.canvas.itemconfigure(self.canvasimage, image=self.photoimage)
-
-        # http://www.swharden.com/blog/2010-03-03-viewing-large-images-with-scrollbars-using-python-tk-and-pil/
-        width, height = self.pilimage.size
-        self.canvas["scrollregion"] = (0, 0, width, height)

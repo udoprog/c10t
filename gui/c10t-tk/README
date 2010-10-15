@@ -2,6 +2,8 @@ This is a simple GUI using Python and Tkinter.
 
 I know Tkinter is ugly and it sucks... But it is available on the standard Python library, so this GUI works out-of-the-box on Linux and Windows and Mac (but I don't have a Mac to test).
 
+The image previewing feature requires PIL (Python Imaging Library). If it is not available, the GUI will still work, the image will be saved to disk, but it won't be displayed.
+
 How to run:
 * cd to the project root dir (the one which will contain the c10t executable)
 * run ./gui/c10t-gui.py

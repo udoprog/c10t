@@ -195,11 +195,14 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
 inline void calc_image_partial(settings_t& s, render_result &p, image_base *all, world_info &world, int image_width, int image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
+
+  int posx = p.xPos - world.min_x;
+  int posz = p.zPos - world.min_z;
   
-  Cube c(diffx, 16, diffz);
+  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
   int x, y;
   
-  point pos(p.xPos - world.min_x, 16, p.zPos - world.min_z);
+  point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
   
   switch (s.mode) {
     case Top:           c.project_top(pos, x, y);           break;
@@ -208,9 +211,10 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
     case Isometric:     c.project_isometric(pos, x, y);     break;
   }
   
-  x *= mc::MapX;
-  y *= mc::MapZ;
-
+  /*std::cout << "diff-xy: " << diffx << " " << diffz << std::endl;
+  std::cout << "pos-xy: " << posx << " " << posz << std::endl;
+  std::cout << "xy: " << x << " " << y << std::endl;*/
+  
   all->composite(x, y, *p.operations);
 }
 

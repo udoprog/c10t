@@ -79,14 +79,6 @@ void image_base::fill(color &q){
 }
 
 void image_base::composite(int xoffset, int yoffset, image_operations &img) {
-  if (!(xoffset >= 0)) { return; }
-  if (!(yoffset >= 0)) { return; }
-  
-  color hp;
-
-  /*std::vector<image_operation>::reverse_iterator it = img.operations.rbegin();
-      it != img.operations.rend(); it++*/
-  
   std::vector<image_operation>::size_type i = img.operations.size();
   
   while (i--) {

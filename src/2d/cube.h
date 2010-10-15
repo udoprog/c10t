@@ -30,18 +30,18 @@ public:
   }
   
   void project_oblique(point &p, int &rx, int &ry) {
-    rx = z - p.z;
-    ry = p.x + (y - p.y);
+    rx = z - p.z - 1;
+    ry = p.x + (y - p.y - 1);
   }
   
   void project_obliqueangle(point &p, int &rx, int &ry) {
-    rx = z + p.x - p.z;
-    ry = (y - p.y) + p.z + p.x;
+    rx = (z - p.z - 1) + p.x;
+    ry = (y - p.y - 1) + p.z + p.x;
   }
 
   void project_isometric(point &p, int &rx, int &ry) {
-    rx = 2 * (z + p.x - p.z);
-    ry = 2 * (y - p.y) + p.z + p.x;
+    rx = 2 * ((z - p.z - 1) + p.x);
+    ry = 2 * (y - p.y - 1) + p.z + p.x;
   }
   
   void get_top_limits(int &rx, int &ry) {

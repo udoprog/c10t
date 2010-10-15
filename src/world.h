@@ -199,11 +199,9 @@ public:
         
         w->levels.push_back(l);
       }
-      
-      w->min_x -= 0;
-      w->min_z -= 1;
-      w->max_x += 0;
-      w->max_z += 0;
+
+      w->max_x -= 1;
+      w->max_z -= 1;
     }
     
     worlds[world_levels.size()] = NULL;

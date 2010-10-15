@@ -288,7 +288,7 @@ inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
 boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
   if (cache_hit) return oper;
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   if (!islevel) {
     return oper;
@@ -300,12 +300,12 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
   BlockRotation sl_r(s, skylight.get());
   
   int bx, by;
-
+  
   c.get_top_limits(bx, by);
 
   oper->set_limits(bx + 1, by);
   
-  for (int z = mc::MapZ - 1; z >= 0; z--) {
+  for (int z = 0; z < mc::MapZ; z++) {
     for (int x = 0; x < mc::MapX; x++) {
       bool cave_initial = true;
 
@@ -361,7 +361,7 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
     return oper;
   }
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   // block type
       
@@ -377,10 +377,10 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
   
   oper->set_limits(bmx + 1, bmy);
   
-  for (int z = c.z - 1; z >= 0; z--) {
-    for (int x = c.x - 1; x >= 0; x--) {
+  for (int z = mc::MapZ - 1; z >= 0; z--) {
+    for (int x = mc::MapX - 1; x >= 0; x--) {
       bool cave_initial = true;
-
+      
       b_r.set_xz(x, z);
       bl_r.set_xz(x, z);
       sl_r.set_xz(x, z);
@@ -439,7 +439,7 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
     return oper;
   }
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   // block type
   
@@ -456,8 +456,8 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
   
   oper->set_limits(bmx + 1, bmy);
   
-  for (int z = c.z - 1; z >= 0; z--) {
-    for (int x = c.x - 1; x >= 0; x--) {
+  for (int z = mc::MapZ - 1; z >= 0; z--) {
+    for (int x = mc::MapX - 1; x >= 0; x--) {
       bool cave_initial = true;
       
       hm_r.set_xz(x, z);
@@ -537,8 +537,8 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
 {
   if (cache_hit) return oper;
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
-
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
+  
   int iw, ih;
   c.get_isometric_limits(iw, ih);
   
@@ -559,8 +559,8 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
 
   oper->set_limits(iw + 1, ih);
   
-  for (int z = c.z - 1; z >= 0; z--) {
-    for (int x = c.x - 1; x >= 0; x--) {
+  for (int z = mc::MapZ - 1; z >= 0; z--) {
+    for (int x = mc::MapX - 1; x >= 0; x--) {
       bool cave_initial = true;
       
       hm_r.set_xz(x, z);

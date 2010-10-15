@@ -478,10 +478,9 @@ class ImageFrame(Frame):
         self.canvas.bind("<Button-5>", self.mouse_wheel_handler)
 
         # Internal vars for handling the image
-        self.pilimage = None
-        self.pilresizedimage = None
-        self.tkphotoimage = None
-        self.canvasimage = None
+        self.pil_image = None
+        self.tk_resized_images = {}
+        self.canvas_image = None
         self.zoom = 0
 
     def button_press_1_handler(self, event):
@@ -518,10 +517,8 @@ class ImageFrame(Frame):
     def resize_image_to_zoom(self, delta=None, zoom=None, forcereload=False):
         if PIL_NOT_AVAILABLE:
             return
-        if self.pilimage is None:
+        if self.pil_image is None:
             return
-
-        prevzoom = self.zoom
 
         if zoom is not None:
             self.zoom = zoom
@@ -535,31 +532,44 @@ class ImageFrame(Frame):
         if self.zoom < -8:
             self.zoom = -8
 
-        if prevzoom != self.zoom or forcereload:
+        if forcereload:
+            # Clearing the image cache
+            self.tk_resized_images = {}
+
+        # Zoom size is not cached...
+        if not self.tk_resized_images.has_key(self.zoom):
             mult = 2 ** self.zoom
-            ow, oh = self.pilimage.size
+            ow, oh = self.pil_image.size
             w, h = int(mult * ow), int(mult * oh)
 
             # Let's apply a nice filter when scaling down,
             # but keep those lovely pixels when scaling up!
             filter = PIL.Image.NEAREST if mult >=1 else PIL.Image.BICUBIC
 
-            self.pilresizedimage = self.pilimage.resize((w,h), filter)
-            self.tkphotoimage = PIL.ImageTk.PhotoImage(self.pilresizedimage)
-            self.canvas.itemconfigure(self.canvasimage, image=self.tkphotoimage)
+            # Resizing
+            pil_resized_image = self.pil_image.resize((w,h), filter)
+            # Converting to Tk
+            tk_photoimage = PIL.ImageTk.PhotoImage(pil_resized_image)
+            # Saving the Tk image to cache
+            self.tk_resized_images[self.zoom] = tk_photoimage
 
-            self.canvas["scrollregion"] = (0, 0, w, h)
+        # Getting the image from cache
+        tk_img = self.tk_resized_images[self.zoom]
+        # Setting it to canvas
+        self.canvas.itemconfigure(self.canvas_image, image=tk_img)
+        # Setting the size
+        self.canvas["scrollregion"] = (0, 0, tk_img.width(), tk_img.height())
 
     def load_image_from_file(self, imagepath):
         if PIL_NOT_AVAILABLE:
             return
 
         # Loading the image from disk
-        self.pilimage = PIL.Image.open(imagepath)
+        self.pil_image = PIL.Image.open(imagepath)
 
         # Creating the image inside the canvas
-        if self.canvasimage is None:
-            self.canvasimage = self.canvas.create_image(0, 0, anchor=NW)
+        if self.canvas_image is None:
+            self.canvas_image = self.canvas.create_image(0, 0, anchor=NW)
 
         # Updating the canvas image
         self.resize_image_to_zoom(forcereload=True)

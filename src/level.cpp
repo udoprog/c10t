@@ -236,6 +236,8 @@ public:
 inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
   // if night, darken all colors not emitting light
   
+  if (bl == -1) bl = 0;
+  
   if(s.night) {
     c.darken(0xa * (16 - bl));
   }
@@ -327,7 +329,7 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
         
         color bc = mc::MaterialColor[bt];
         
-        apply_shading(s, bl_r.get4(y), sl_r.get4(y + 1), 0, y, bc);
+        apply_shading(s, bl_r.get4(y + 1), sl_r.get4(y + 1), 0, y, bc);
         
         point p(x, y, z);
         
@@ -411,7 +413,7 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
           continue;
         }
         
-        int bl = bl_r.get4(y);
+        int bl = bl_r.get4(y + 1);
         
         apply_shading(s, bl, sl_r.get4(y + 1), 0, y, top);
         oper->add_pixel(px, py, top);
@@ -495,7 +497,7 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
           continue;
         }
         
-        int bl = bl_r.get4(y);
+        int bl = bl_r.get4(y + 1);
         
         color side = mc::MaterialSideColor[bt];
         
@@ -598,7 +600,7 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
         
         color side = mc::MaterialSideColor[bt];
         
-        int bl = bl_r.get4(y);
+        int bl = bl_r.get4(y + 1);
         
         apply_shading(s, bl, sl_r.get4(y + 1), hmval, y, top);
         apply_shading(s, bl, -1, hmval, y, side);

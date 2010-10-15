@@ -28,10 +28,6 @@ void register_string(level_file* level, nbt::String name, nbt::String value) {
   }
   
   if (level->in_sign) {
-    if (value.size() == 0) {
-      return;
-    }
-    
     if (level->sign_text.size() == 0) {
       level->sign_text = value;
     }
@@ -170,10 +166,10 @@ void level_file::load_file(const fs::path path) {
   
   parser.register_byte_array = register_byte_array;
   parser.register_string = register_string;
+  parser.register_int = register_int;
   parser.begin_compound = begin_compound;
   parser.begin_list = begin_list;
   parser.end_list = end_list;
-  parser.begin_compound = begin_compound;
   parser.end_compound = end_compound;
   parser.error_handler = error_handler;
   

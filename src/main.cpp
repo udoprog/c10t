@@ -118,7 +118,6 @@ struct render_result {
   int xPos, zPos;
   fs::path path;
   boost::shared_ptr<image_operations> operations;
-  std::vector<light_marker> markers;
   level_file *level;
 
   ~render_result() {
@@ -423,9 +422,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     
     if (progress_c != NULL) progress_c(i, world_size);
     
-    if (p->markers.size() > 0) {
-      if (s.debug) { cout << "Found " << p->markers.size() << " signs"; };
-      light_markers.insert(light_markers.end(), p->markers.begin(), p->markers.end());
+    if (p->level->markers.size() > 0) {
+      if (s.debug) { cout << "Found " << p->level->markers.size() << " signs"; };
+      light_markers.insert(light_markers.end(), p->level->markers.begin(), p->level->markers.end());
     }
     
     try {

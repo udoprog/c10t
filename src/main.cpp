@@ -46,6 +46,7 @@ const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
 const uint8_t IMAGE_BYTE = 0x30;
 const uint8_t PARSE_BYTE = 0x40;
+const uint8_t END_BYTE = 0xF0;
 
 void cout_progress_n(int i, int all) {
   if (i == all) {
@@ -77,12 +78,15 @@ void cout_progress_ionly_n(int i, int all) {
 
 inline void cout_progress_ionly_b(const uint8_t type, int part, int whole) {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
-
+  
   if (whole == 1) {
     cout << hex << std::setw(2) << setfill('0') << static_cast<int>(2) << flush;
   }
   else if (part % 1000 == 0) {
     cout << hex << std::setw(2) << setfill('0') << static_cast<int>(1) << flush;
+  }
+  else {
+    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(0) << flush;
   }
 }
 
@@ -107,6 +111,10 @@ void cout_progress_b_image(int i, int all) {
 inline void cout_error(const string& message) {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE)
        << hex << message << flush;
+}
+
+inline void cout_end() {
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
 }
 
 /*
@@ -1364,7 +1372,14 @@ int main(int argc, char *argv[]){
       goto exit_error;
     }
   }
-
+  
+  if (s.binary) {
+    cout_end();
+  }
+  else {
+    if (!s.silent) cout << argv[0] << ": all done!" << endl;
+  }
+  
   mc::deinitialize_constants();
   return 0;
 

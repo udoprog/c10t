@@ -595,8 +595,11 @@ class ImageFrame(Frame):
             wx, wy = center
 
             # Old canvas coordinates
-            ocx = int(self.canvas.canvasx(wx))
-            ocy = int(self.canvas.canvasy(wy))
+            ocx = self.canvas.canvasx(wx)
+            ocy = self.canvas.canvasy(wy)
+
+            tx = self.canvas.canvasx(0)
+            ty = self.canvas.canvasy(0)
 
             # Old scroll position
             osx = ocx - wx
@@ -607,31 +610,24 @@ class ImageFrame(Frame):
             deltamult = 2 ** deltazoom
 
             # New canvas coordinates
-            ncx = int(ocx * deltamult)
-            ncy = int(ocy * deltamult)
+            ncx = ocx * deltamult
+            ncy = ocy * deltamult
 
             # New scroll position
             nsx = ncx - wx
             nsy = ncy - wy
 
-            tx = self.canvas.canvasx(0)
-            ty = self.canvas.canvasy(0)
-
             # Debug
             print (
                 "w=({wx},{wy})\n"
-                "0,0 => ({tx},{ty})\n"
                 "old canvas=({ocx},{ocy})\n"
                 "old scroll=({osx},{osy})\n"
+                "old scroll=({tx},{ty})\n"
                 "new canvas=({ncx},{ncy})\n"
                 "new scroll=({nsx},{nsy})\n"
                 "deltazoom={deltazoom}; deltamult={deltamult}"
                 .format(**locals())
             )
-
-            # Scrolling...
-            self.canvas.xview_scroll(nsx-osx, UNITS)
-            self.canvas.yview_scroll(nsy-osy, UNITS)
 
         # Getting the image from cache
         tk_img = self.tk_resized_images[self.zoom]
@@ -639,6 +635,22 @@ class ImageFrame(Frame):
         self.canvas.itemconfigure(self.canvas_image, image=tk_img)
         # Setting the size
         self.canvas["scrollregion"] = (0, 0, tk_img.width(), tk_img.height())
+
+        # Finally, scrolling in order to keep the position centered
+        if center:
+            # Little hack to scroll by 1-pixel increments.
+            oldincx = self.canvas["xscrollincrement"]
+            oldincy = self.canvas["yscrollincrement"]
+            self.canvas["xscrollincrement"] = 1
+            self.canvas["yscrollincrement"] = 1
+            self.canvas.xview_moveto(0.0)
+            self.canvas.yview_moveto(0.0)
+            self.canvas.xview_scroll(int(nsx)+1, UNITS)
+            self.canvas.yview_scroll(int(nsy)+1, UNITS)
+            self.canvas["xscrollincrement"] = oldincx
+            self.canvas["yscrollincrement"] = oldincy
+            # An alternative solution would be to use xview_moveto and
+            # calculate a floating point value.
 
     def load_image_from_file(self, imagepath):
         if PIL_NOT_AVAILABLE:

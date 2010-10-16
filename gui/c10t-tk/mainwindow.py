@@ -492,8 +492,6 @@ class ImageFrame(Frame):
         self.canvas.bind("<B1-Motion>", self.button_motion_1_handler)
         self.canvas.bind("<ButtonRelease-1>", self.button_release_1_handler)
 
-        self.canvas.bind("<Button-2>", self.mouse_wheel_handler)  # DEBUG
-        self.canvas.bind("<Button-3>", self.mouse_wheel_handler)  # DEBUG
         self.canvas.bind("<MouseWheel>", self.mouse_wheel_handler)
         self.canvas.bind("<Button-4>", self.mouse_wheel_handler)
         self.canvas.bind("<Button-5>", self.mouse_wheel_handler)
@@ -532,8 +530,8 @@ class ImageFrame(Frame):
 
     def mouse_wheel_handler(self, event):
         dir = cross_platform_mouse_wheel(event)
-        #if dir == 0:
-        #    return
+        if dir == 0:
+            return
 
         # Code for zooming the image (like Google Maps)
         self.resize_image_to_zoom(delta=dir, center=(event.x, event.y))

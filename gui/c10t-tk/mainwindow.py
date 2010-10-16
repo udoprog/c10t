@@ -31,6 +31,35 @@ def add_tooltip(text, widgets):
         w.tooltip = ToolTip(w, text=text)
 
 
+def cross_platform_mouse_wheel(event):
+    """Abstracts all Windows/Linux/Mac differences when handling the
+    mouse wheel. Receives an 'event' object, and returns:
+     negative value ==> scrolling down
+     positive value ==> scrolling up
+     zero           ==> something went wrong...
+
+    This function should be called from within "<MouseWheel>",
+    "<Button-4>" and "<Button-5>" event handlers.
+    """
+    # http://infohost.nmt.edu/tcc/help/pubs/tkinter/events.html#event-handlers
+
+    # Linux maps scrolling to mouse buttons 4 and 5
+    if event.num == 4:  # scroll up
+        return 1
+    elif event.num == 5:  # scroll down
+        return -1
+    # Windows and MacOs have a MouseWheel event
+    elif event.delta:
+        # In Windows, delta is a multiple of 120
+        if abs(event.delta) >= 120:
+            return event.delta // 120
+        # In MacOS, delta is a multiples of 1
+        else:
+            return event.delta
+
+    return 0
+
+
 class XCheckbutton(Checkbutton):
     """Tkinter requires a Tk variable for Checkbutton. This class
     automatically creates such variable (as IntVar), stores it at the
@@ -72,13 +101,9 @@ class XSpinbox(Spinbox):
     def __init__(self, *args, **kwargs):
         Spinbox.__init__(self, *args, **kwargs)
 
-        # Windows
         self.bind("<MouseWheel>", self.mouse_wheel_handler)
-        # Linux
         self.bind("<Button-4>", self.mouse_wheel_handler)
         self.bind("<Button-5>", self.mouse_wheel_handler)
-        # How about Mac... ???
-        # I have no idea! Can someone test it please?
 
     def set(self, value):
         # Adding a simple ".set()" method to spinboxes...
@@ -90,14 +115,7 @@ class XSpinbox(Spinbox):
     def mouse_wheel_handler(self, event):
         # Mouse wheel in spinboxes...
         # http://www.daniweb.com/forums/post1158775.html#post1158775
-        if event.num == 5:
-            dir = -1
-        elif event.num == 4:
-            dir = 1
-        elif abs(event.delta) >= 120:
-            dir = event.delta // 120
-        else:
-            return
+        dir = cross_platform_mouse_wheel(event)
 
         while dir > 0:
             self.invoke("buttonup")
@@ -494,25 +512,9 @@ class ImageFrame(Frame):
         self.canvas["cursor"] = ""
 
     def mouse_wheel_handler(self, event):
-        # Linux maps scrolling to mouse buttons 4 and 5
-        if event.num == 4:  # scroll up
-            dir = 1
-        elif event.num == 5:  # scroll down
-            dir = -1
-        elif event.delta:
-            # Windows has a MouseWheel event, with delta in multiples of 120
-            if abs(event.delta) >= 120:
-                delta = event.delta // 120
-            # MacOS has a MouseWheel event, with delta in multiples of 1
-            else:
-                delta = event.delta
-            # Positive delta means up, negative means down
-            dir = delta
-        else:
+        dir = cross_platform_mouse_wheel(event)
+        if dir == 0:
             return
-
-        # positive dir ==> scrolling up
-        # negative dir ==> scrolling down
 
         # Code for scrolling the image up/down
         #self.canvas.yview_scroll(-dir, UNITS)

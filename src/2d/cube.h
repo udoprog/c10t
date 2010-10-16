@@ -4,62 +4,62 @@
 #define _CUBE_H_
 
 struct point {
-  int x;
-  int y;
-  int z;
+  size_t x;
+  size_t y;
+  size_t z;
 
-  inline point(int x, int y, int z) : x(x), y(y), z(z) {}
+  inline point(size_t x, size_t y, size_t z) : x(x), y(y), z(z) {}
 };
 
 struct point2 {
-  int x;
-  int y;
+  size_t x;
+  size_t y;
 };
 
 class Cube {
 public:
-  const int x;
-  const int y;
-  const int z;
+  const size_t x;
+  const size_t y;
+  const size_t z;
   
-  Cube(const int x, const int y, const int z) : x(x), y(y), z(z) {}
+  Cube(const size_t x, const size_t y, const size_t z) : x(x), y(y), z(z) {}
   
-  void project_top(point &p, int &rx, int &ry) {
+  void project_top(point &p, size_t &rx, size_t &ry) {
     rx = z - p.z - 1;
     ry = p.x;
   }
   
-  void project_oblique(point &p, int &rx, int &ry) {
+  void project_oblique(point &p, size_t &rx, size_t &ry) {
     rx = z - p.z - 1;
     ry = p.x + (y - p.y - 1);
   }
   
-  void project_obliqueangle(point &p, int &rx, int &ry) {
+  void project_obliqueangle(point &p, size_t &rx, size_t &ry) {
     rx = (z - p.z - 1) + p.x;
     ry = (y - p.y - 1) + p.z + p.x;
   }
 
-  void project_isometric(point &p, int &rx, int &ry) {
+  void project_isometric(point &p, size_t &rx, size_t &ry) {
     rx = 2 * ((z - p.z - 1) + p.x);
     ry = 2 * (y - p.y - 1) + p.z + p.x;
   }
   
-  void get_top_limits(int &rx, int &ry) {
+  void get_top_limits(size_t &rx, size_t &ry) {
     rx = z;
     ry = x;
   }
   
-  void get_oblique_limits(int &rx, int &ry) {
+  void get_oblique_limits(size_t &rx, size_t &ry) {
     rx = z;
     ry = x + y;
   }
   
-  void get_obliqueangle_limits(int &rx, int &ry) {
+  void get_obliqueangle_limits(size_t &rx, size_t &ry) {
     rx = z + x;
     ry = y + z + x;
   }
   
-  void get_isometric_limits(int &rx, int &ry) {
+  void get_isometric_limits(size_t &rx, size_t &ry) {
     rx = 2 * (z + x);
     ry = 2 * y + z + x;
   }

@@ -213,7 +213,7 @@ public:
   
   uint8_t get8(int y) {
     int p = y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ);
-    assert (p >= 0 && p < byte_array->length);
+    if (!(p >= 0 && p < byte_array->length)) return -1;
     return byte_array->values[p];
   }
   
@@ -261,6 +261,10 @@ inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c
 }
 
 inline bool cave_isopen(int bt) {
+  if (bt == -1) {
+    return false;
+  }
+  
   switch(bt) {
     case mc::Air: return true;
     case mc::Leaves: return true;
@@ -278,12 +282,10 @@ inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
     return true;
   }
   
-  if (!cave_isopen(bt)) {
-    if (y < s.top && cave_isopen(b_r.get8(y + 1))) {
-      return false;
-    }
+  if (!cave_isopen(bt) && cave_isopen(b_r.get8(y + 1))) {
+    return false;
   }
-
+  
   return true;
 }
 
@@ -301,7 +303,8 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
   BlockRotation bl_r(s, blocklight.get());
   BlockRotation sl_r(s, skylight.get());
   
-  int bx, by;
+  size_t bx;
+  size_t by;
   
   c.get_top_limits(bx, by);
 
@@ -333,7 +336,8 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
         
         point p(x, y, z);
         
-        int px, py;
+        size_t px;
+        size_t py;
 
         c.project_top(p, px, py);
         
@@ -371,7 +375,7 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
   BlockRotation bl_r(s, blocklight.get());
   BlockRotation sl_r(s, skylight.get());
   
-  int bmx, bmy, bmt;
+  size_t bmx, bmy, bmt;
   c.get_oblique_limits(bmx, bmy);
   bmt = bmx * bmy;
   bool blocked[bmt];
@@ -388,11 +392,15 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
       sl_r.set_xz(x, z);
       
       for (int y = s.top; y >= s.bottom; y--) {
-        point p(x, y, z);
-        
         int bt = b_r.get8(y);
         
-        int px, py;
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
+          continue;
+        }
+
+        point p(x, y, z);
+        
+        size_t px, py;
         c.project_oblique(p, px, py);
         
         color top = mc::MaterialColor[bt];
@@ -404,10 +412,6 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
         }
         
         blocked[bp] = top.is_opaque();
-        
-        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
-          continue;
-        }
         
         if (s.excludes[bt]) {
           continue;
@@ -450,7 +454,7 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
   BlockRotation sl_r(s, skylight.get());
   BlockRotation hm_r(s, heightmap.get());
 
-  int bmx, bmy, bmt;
+  size_t bmx, bmy, bmt;
   c.get_obliqueangle_limits(bmx, bmy);
   bmt = bmx * bmy;
   bool blocked[bmt];
@@ -470,12 +474,16 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
       int hmval = hm_r.get8();
       
       for (int y = s.top; y >= s.bottom; y--) {
+        int bt = b_r.get8(y);
+        
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
+          continue;
+        }
+        
         point p(x, y, z);
         
-        int px, py;
+        size_t px, py;
         c.project_obliqueangle(p, px, py);
-        
-        int bt = b_r.get8(y);
         
         color top = mc::MaterialColor[bt];
         
@@ -487,10 +495,6 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
           }
           
           blocked[bp] = top.is_opaque();
-        }
-        
-        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
-          continue;
         }
         
         if (s.excludes[bt]) {
@@ -541,7 +545,7 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
   
   Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
-  int iw, ih;
+  size_t iw, ih;
   c.get_isometric_limits(iw, ih);
   
   if (!islevel) {
@@ -573,12 +577,18 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
       int hmval = hm_r.get8();
       
       for (int y = s.top; y >= s.bottom; y--) {
-        point p(x, y, z);
         int bt = b_r.get8(y);
-        color top = mc::MaterialColor[bt];
         
-        int px, py;
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
+          continue;
+        }
+        
+        point p(x, y, z);
+        
+        size_t px, py;
         c.project_isometric(p, px, py);
+        
+        color top = mc::MaterialColor[bt];
         
         if (mc::MaterialModes[bt] == mc::Block) {
           int bp = px + iw * py;
@@ -588,10 +598,6 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
           }
           
           blocked[bp] = top.is_opaque();
-        }
-        
-        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
-          continue;
         }
         
         if (s.excludes[bt]) {

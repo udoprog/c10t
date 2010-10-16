@@ -3,6 +3,8 @@
 #include "image.h"
 #include "global.h"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include <algorithm>
 #include <assert.h>
 #include <stdint.h>
@@ -40,27 +42,27 @@ void image_operations::add_pixel(int x, int y, color &c) {
   operations.push_back(oper);
 }
 
-void memory_image::set_pixel(int x, int y, color &c) {
-  if (!(x >= 0 && x < get_width())) { return; }
-  if (!(y >= 0 && y < get_height())) { return; }
+void memory_image::set_pixel(size_t x, size_t y, color &c) {
+  if (!(x < get_width())) { return; }
+  if (!(y < get_height())) { return; }
   c.write(this->colors + get_offset(x, y));
 }
 
-void memory_image::get_pixel(int x, int y, color &c){
-  if (!(x >= 0 && x < get_width())) { return; }
-  if (!(y >= 0 && y < get_height())) { return; }
+void memory_image::get_pixel(size_t x, size_t y, color &c){
+  if (!(x < get_width())) { return; }
+  if (!(y < get_height())) { return; }
   c.read(this->colors + get_offset(x, y));
 }
 
-void memory_image::get_line(int y, color *c){
-  if (!(y >= 0 && y < get_height())) { return; }
+void memory_image::get_line(size_t y, color *c){
+  if (!(y < get_height())) { return; }
   memcpy(c, this->colors + get_offset(0, y), get_width() * sizeof(color));
 }
 
-void memory_image::blend_pixel(int x, int y, color &c){
+void memory_image::blend_pixel(size_t x, size_t y, color &c){
   color o;
   get_pixel(x, y, o);
-
+  
   if (o.is_invisible()) {
     set_pixel(x, y, c);
     return;
@@ -71,8 +73,8 @@ void memory_image::blend_pixel(int x, int y, color &c){
 }
 
 void image_base::fill(color &q){
-  for (int x = 0; x < get_width(); x++) {
-    for (int y = 0; y < get_height(); y++) {
+  for (size_t x = 0; x < get_width(); x++) {
+    for (size_t y = 0; y < get_height(); y++) {
       set_pixel(x, y, q);
     }
   }
@@ -93,19 +95,23 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
 
 void image_base::composite(int xoffset, int yoffset, image_base &img) {
   if (!(xoffset >= 0)) { return; }
-  if (!(xoffset + img.get_width() <= w)) { return; }
   if (!(yoffset >= 0)) { return; }
-  if (!(yoffset + img.get_height() <= h)) { return; }
 
+  size_t s_xoffset = boost::numeric_cast<size_t>(xoffset);
+  size_t s_yoffset = boost::numeric_cast<size_t>(yoffset);
+  
+  if (!(s_xoffset + img.get_width() <= w)) { return; }
+  if (!(s_yoffset + img.get_height() <= h)) { return; }
+  
   color hp;
   color base;
-
-  for (int x = 0; x < img.get_width(); x++) {
-    for (int y = 0; y < img.get_height(); y++) {
-      get_pixel(xoffset + x, yoffset + y, base);
+  
+  for (size_t x = 0; x < img.get_width(); x++) {
+    for (size_t y = 0; y < img.get_height(); y++) {
+      get_pixel(xoffset + x, s_yoffset + y, base);
       img.get_pixel(x, y, hp);
       base.blend(hp);
-      set_pixel(xoffset + x, yoffset + y, base);
+      set_pixel(xoffset + x, s_yoffset + y, base);
     }
   }
 }
@@ -118,9 +124,9 @@ void image_base::safe_composite(int xoffset, int yoffset, image_base &img) {
   composite(xoffset, yoffset, img);
 }
 
-void image_base::safe_blend_pixel(int x, int y, color &c) {
-  if (x < 0 || x >= w) return;
-  if (y < 0 ||y >= h) return;
+void image_base::safe_blend_pixel(size_t x, size_t y, color &c) {
+  if (x >= w) return;
+  if (y >= h) return;
   blend_pixel(x, y, c);
 }
 
@@ -181,9 +187,7 @@ bool image_base::save_png(const std::string path, const char *title, progress_c 
 
   row = (png_bytep) malloc(4 * get_width() * sizeof(png_byte));
   
-  int y;
-  
-  for (y=0 ; y < get_height(); y++) {
+  for (size_t y = 0; y < get_height(); y++) {
     if (progress_c_cb != NULL) progress_c_cb(y, get_height());
     
     get_line(y, reinterpret_cast<color*>(row));
@@ -216,27 +220,27 @@ finalise:
 }
 
 
-void cached_image::set_pixel(int x, int y, color& c) {
-  if (!(x >= 0 && x < get_width())) { return; }
-  if (!(y >= 0 && y < get_height())) { return; }
+void cached_image::set_pixel(size_t x, size_t y, color& c) {
+  if (!(x < get_width())) { return; }
+  if (!(y < get_height())) { return; }
   fs.seekp(get_offset(x, y), std::ios::beg);
   fs.write(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_pixel(int x, int y, color& c) {
-  if (!(x >= 0 && x < get_width())) { return; }
-  if (!(y >= 0 && y < get_height())) { return; }
+void cached_image::get_pixel(size_t x, size_t y, color& c) {
+  if (!(x < get_width())) { return; }
+  if (!(y < get_height())) { return; }
   fs.seekg(get_offset(x, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_line(int y, color *c){
-  if (!(y >= 0 && y < get_height())) { return; }
+void cached_image::get_line(size_t y, color *c){
+  if (!(y < get_height())) { return; }
   fs.seekg(get_offset(0, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(c), sizeof(color) * get_width());
 }
 
-void cached_image::blend_pixel(int x, int y, color &c){
+void cached_image::blend_pixel(size_t x, size_t y, color &c){
   // do nothing if color is invisible
   if (c.is_invisible()) {
     return;
@@ -247,7 +251,7 @@ void cached_image::blend_pixel(int x, int y, color &c){
   icache* ic = &buffer[s];
   
   // cache hit
-  if (ic->isset()) {
+  if (ic->is_set()) {
     // cache hit, but wrong coordinates - flush pixel to file
     if (ic->x != x || ic->y != y)  {
       set_pixel(ic->x, ic->y, ic->c);

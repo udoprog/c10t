@@ -75,22 +75,22 @@ public:
 
 class image_base {
 private:
-  int w, h;
+  size_t w, h;
 public:
   typedef void (*progress_c)(int , int);
   
   static const short COLOR_TYPE = 4;
   
-  image_base(int w, int h) : w(w), h(h) {
+  image_base(size_t w, size_t h) : w(w), h(h) {
   }
-
+  
   virtual ~image_base() {
   }
   
   void fill(color& c);
   
-  inline int get_width() { return w; };
-  inline int get_height() { return h; };
+  inline size_t get_width() { return w; };
+  inline size_t get_height() { return h; };
   
   void composite(int xoffset, int yoffset, image_operations& oper);
   void composite(int xoffset, int yoffset, image_base& img);
@@ -102,11 +102,11 @@ public:
   
   bool save_png(const std::string filename, const char *title, progress_c);
   
-  void safe_blend_pixel(int x, int y, color &c);
-  virtual void blend_pixel(int x, int y, color &c) = 0;
-  virtual void set_pixel(int x, int y, color& c) = 0;
-  virtual void get_pixel(int x, int y, color& c) = 0;
-  virtual void get_line(int y, color*) = 0;
+  void safe_blend_pixel(size_t x, size_t y, color &c);
+  virtual void blend_pixel(size_t x, size_t y, color &c) = 0;
+  virtual void set_pixel(size_t x, size_t y, color& c) = 0;
+  virtual void get_pixel(size_t x, size_t y, color& c) = 0;
+  virtual void get_line(size_t y, color*) = 0;
 };
 
 class memory_image : public image_base {
@@ -129,28 +129,29 @@ public:
     delete [] colors;
   }
 
-  void blend_pixel(int x, int y, color &c);
-  void set_pixel(int x, int y, color&);
-  void get_pixel(int x, int y, color&);
-  void get_line(int y, color*);
+  void blend_pixel(size_t x, size_t y, color &c);
+  void set_pixel(size_t x, size_t y, color&);
+  void get_pixel(size_t x, size_t y, color&);
+  void get_line(size_t y, color*);
 };
 
 #include <iostream>
 
 struct icache {
   color c;
-  int x, y;
+  size_t x;
+  size_t y;
+  bool isset;
   
-  icache() : c(0x00, 0x00, 0x00, 0x00), x(-1), y(-1) {
+  icache() : c(0x00, 0x00, 0x00, 0x00), isset(false) {
   }
   
-  inline bool isset() {
-    return x >= 0 && y >= 0;
+  inline bool is_set() {
+    return isset;
   }
-
+  
   inline void unset() {
-    x = -1;
-    y = -1;
+    isset = false;
   }
 };
 
@@ -162,7 +163,7 @@ private:
   int buffer_size;
   std::fstream fs;
 public:
-  cached_image(const char *path, int w, int h, int buffer_size) :
+  cached_image(const char *path, size_t w, size_t h, size_t buffer_size) :
     image_base(w, h),
     path(path),
     buffer_size(buffer_size)
@@ -186,7 +187,7 @@ public:
     
     buffer = new icache[buffer_size];
     
-    for (int i = 0; i < buffer_size; i++) {
+    for (size_t i = 0; i < buffer_size; i++) {
       icache ic = buffer[i];
     }
     
@@ -197,7 +198,7 @@ public:
     // flush the memory cache
     for (int i = 0; i < buffer_size; i++) { 
       icache* ic = &buffer[i];
-      if (ic->isset()) {
+      if (ic->is_set()) {
         set_pixel(ic->x, ic->y, ic->c);
       }
     }
@@ -206,10 +207,10 @@ public:
     fs.close();
   }
   
-  void blend_pixel(int x, int y, color &c);
-  void set_pixel(int x, int y, color&);
-  void get_pixel(int x, int y, color&);
-  void get_line(int y, color*);
+  void blend_pixel(size_t x, size_t y, color &c);
+  void set_pixel(size_t x, size_t y, color&);
+  void get_pixel(size_t x, size_t y, color&);
+  void get_line(size_t y, color*);
 };
 
 #endif /* _IMG_H_ */

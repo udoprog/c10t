@@ -122,6 +122,6 @@ namespace json {
         return out;
       }
   };
-};
+}
 
 #endif /* _JSON_H_ */

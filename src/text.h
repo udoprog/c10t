@@ -5,6 +5,7 @@
 
 #include <exception>
 
+#include <boost/numeric/conversion/cast.hpp>
 #include <boost/filesystem.hpp>
 
 #include <ft2build.h>
@@ -70,13 +71,16 @@ namespace text {
       this->size = size;
     }
     
-    void draw_bitmap(image_base& target, FT_Bitmap* bitmap, int pen_x, int pen_y) const {
+    void draw_bitmap(image_base& target, FT_Bitmap* bitmap, size_t pen_x, size_t pen_y) const {
       assert(bitmap->pixel_mode == FT_PIXEL_MODE_GRAY);
       
       uint8_t* buffer = bitmap->buffer;
+
+      size_t s_bitmap_rows = boost::numeric_cast<size_t>(bitmap->rows);
+      size_t s_bitmap_width = boost::numeric_cast<size_t>(bitmap->width);
       
-      for (int y = 0; y < bitmap->rows && y < target.get_height() + pen_y; y++) {
-        for (int x = 0; x < bitmap->width && x < target.get_width() + pen_x; x++) {
+      for (size_t y = 0; y < s_bitmap_rows && y < target.get_height() + pen_y; y++) {
+        for (size_t  x = 0; x < s_bitmap_width && x < target.get_width() + pen_x; x++) {
           color c(base);
           c.a = buffer[x + y * bitmap->width];
           target.safe_blend_pixel(pen_x + x, pen_y + y, c);

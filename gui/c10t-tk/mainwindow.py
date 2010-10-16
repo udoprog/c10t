@@ -481,12 +481,13 @@ class ImageFrame(Frame):
         if PIL_NOT_AVAILABLE:
             self.canvas.create_text(10, 10, anchor=NW, text=u"Python Image Library (PIL) could not be loaded.\n\nNo image will be displayed here, but\nthey will still be rendered to the disk.\n\n%s" % (PIL_NOT_AVAILABLE_MESSAGE,))
 
-        # Adding the event handlers
+        # Connecting canvas and scrollbars
         self.horizontal_scrollbar["command"] = self.canvas.xview
         self.vertical_scrollbar["command"] = self.canvas.yview
         self.canvas["xscrollcommand"] = self.horizontal_scrollbar.set
         self.canvas["yscrollcommand"] = self.vertical_scrollbar.set
 
+        # Adding the event handlers to the canvas
         self.canvas.bind("<Button-1>", self.button_press_1_handler)
         self.canvas.bind("<B1-Motion>", self.button_motion_1_handler)
         self.canvas.bind("<ButtonRelease-1>", self.button_release_1_handler)
@@ -495,11 +496,27 @@ class ImageFrame(Frame):
         self.canvas.bind("<Button-4>", self.mouse_wheel_handler)
         self.canvas.bind("<Button-5>", self.mouse_wheel_handler)
 
+        # Adding mouse wheel support to scrollbars
+        self.horizontal_scrollbar.bind("<MouseWheel>", self.hscroll_mouse_wheel_handler)
+        self.horizontal_scrollbar.bind("<Button-4>", self.hscroll_mouse_wheel_handler)
+        self.horizontal_scrollbar.bind("<Button-5>", self.hscroll_mouse_wheel_handler)
+        self.vertical_scrollbar.bind("<MouseWheel>", self.vscroll_mouse_wheel_handler)
+        self.vertical_scrollbar.bind("<Button-4>", self.vscroll_mouse_wheel_handler)
+        self.vertical_scrollbar.bind("<Button-5>", self.vscroll_mouse_wheel_handler)
+
         # Internal vars for handling the image
         self.pil_image = None
         self.tk_resized_images = {}
         self.canvas_image = None
         self.zoom = 0
+
+    def hscroll_mouse_wheel_handler(self, event):
+        dir = cross_platform_mouse_wheel(event)
+        self.canvas.xview_scroll(-dir, UNITS)
+
+    def vscroll_mouse_wheel_handler(self, event):
+        dir = cross_platform_mouse_wheel(event)
+        self.canvas.yview_scroll(-dir, UNITS)
 
     def button_press_1_handler(self, event):
         self.canvas.scan_mark(event.x, event.y)
@@ -516,27 +533,36 @@ class ImageFrame(Frame):
         if dir == 0:
             return
 
-        # Code for scrolling the image up/down
-        #self.canvas.yview_scroll(-dir, UNITS)
-
         # Code for zooming the image (like Google Maps)
-        self.resize_image_to_zoom(delta=dir)
+        self.resize_image_to_zoom(delta=dir, center=(event.x, event.y))
 
-    def resize_image_to_zoom(self, delta=None, zoom=None, forcereload=False):
+    def resize_image_to_zoom(self, delta=None, zoom=None, center=None, forcereload=False):
+        """Parameters:
+         delta      : How much to increase/decrease the current zoom?
+         zoom       : Set zoom to this absolute value
+         center     : Uses these coordinates (x,y) as the zoom center,
+                      scrolling the canvas as needed.
+         forcereload: Clears the zoom cache, forces reloading the canvas
+                      from self.pil_image
+        """
+
+        # Sanity check
         if PIL_NOT_AVAILABLE:
             return
         if self.pil_image is None:
             return
 
+        # Calculating the new zoom value
+        prevzoom = self.zoom
         if zoom is not None:
             self.zoom = zoom
         if delta is not None:
             self.zoom += delta
 
-        # Clamping maximum zoom:
+        # Clamping maximum zoom
         if self.zoom > 2:
             self.zoom = 2
-        # Clamping minimum zoom:
+        # Clamping minimum zoom
         if self.zoom < -8:
             self.zoom = -8
 

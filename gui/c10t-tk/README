@@ -6,7 +6,7 @@ The image previewing feature requires PIL (Python Imaging Library). If it is not
 
 How to run:
 * cd to the project root dir (the one which will contain the c10t executable)
-* run ./gui/c10t-gui.py
+* run ./gui/c10t-tk/c10t-tk.py
 Notice: in fact, you can run the GUI from whatever directory you want, but the suggestion above will make everything work by default.
 
 This is what it does:
@@ -19,7 +19,7 @@ What it still doesn't do:
 * It don't show any output from c10t
 * There is no error checking when c10t runs
 * There is no progress bar (the program just hangs while c10t is running)
-* The program also hangs while zooming in/out the image
+* The program also hangs briefly while zooming in/out the image
 
 Possible improvements:
 * Some kind of interface to select blocks

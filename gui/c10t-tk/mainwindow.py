@@ -539,11 +539,13 @@ class ImageFrame(Frame):
     def resize_image_to_zoom(self, delta=None, zoom=None, center=None, forcereload=False):
         """Parameters:
          delta      : How much to increase/decrease the current zoom?
-         zoom       : Set zoom to this absolute value
+         zoom       : Set zoom to this absolute value.
          center     : Uses these coordinates (x,y) as the zoom center,
-                      scrolling the canvas as needed.
+                      scrolling the canvas as needed. These are "window
+                      coordinates", relative to the widget's top-left
+                      corner.
          forcereload: Clears the zoom cache, forces reloading the canvas
-                      from self.pil_image
+                      from self.pil_image.
         """
 
         # Sanity check
@@ -586,6 +588,50 @@ class ImageFrame(Frame):
             tk_photoimage = PIL.ImageTk.PhotoImage(pil_resized_image)
             # Saving the Tk image to cache
             self.tk_resized_images[self.zoom] = tk_photoimage
+
+        # Keeping the position centered
+        if center:
+            # Window coordinates, relative to widget's top-left corner
+            wx, wy = center
+
+            # Old canvas coordinates
+            ocx = int(self.canvas.canvasx(wx))
+            ocy = int(self.canvas.canvasy(wy))
+
+            # Old scroll position
+            osx = ocx - wx
+            osy = ocy - wy
+
+            # Multiplication...
+            deltazoom = self.zoom - prevzoom
+            deltamult = 2 ** deltazoom
+
+            # New canvas coordinates
+            ncx = int(ocx * deltamult)
+            ncy = int(ocy * deltamult)
+
+            # New scroll position
+            nsx = ncx - wx
+            nsy = ncy - wy
+
+            tx = self.canvas.canvasx(0)
+            ty = self.canvas.canvasy(0)
+
+            # Debug
+            print (
+                "w=({wx},{wy})\n"
+                "0,0 => ({tx},{ty})\n"
+                "old canvas=({ocx},{ocy})\n"
+                "old scroll=({osx},{osy})\n"
+                "new canvas=({ncx},{ncy})\n"
+                "new scroll=({nsx},{nsy})\n"
+                "deltazoom={deltazoom}; deltamult={deltamult}"
+                .format(**locals())
+            )
+
+            # Scrolling...
+            self.canvas.xview_scroll(nsx-osx, UNITS)
+            self.canvas.yview_scroll(nsy-osy, UNITS)
 
         # Getting the image from cache
         tk_img = self.tk_resized_images[self.zoom]

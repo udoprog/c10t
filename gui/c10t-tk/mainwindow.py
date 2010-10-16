@@ -495,24 +495,30 @@ class ImageFrame(Frame):
 
     def mouse_wheel_handler(self, event):
         # Linux maps scrolling to mouse buttons 4 and 5
-        if event.num == 5:
+        if event.num == 4:  # scroll up
             dir = 1
-        elif event.num == 4:
+        elif event.num == 5:  # scroll down
             dir = -1
-        # Windows has a MouseWheel event, with delta in multiples of 120
         elif event.delta:
-            dir = -event.delta / 120
+            # Windows has a MouseWheel event, with delta in multiples of 120
+            if abs(event.delta) >= 120:
+                delta = event.delta // 120
+            # MacOS has a MouseWheel event, with delta in multiples of 1
+            else:
+                delta = event.delta
+            # Positive delta means up, negative means down
+            dir = delta
         else:
             return
 
-        # negative dir ==> scrolling up
-        # positive dir ==> scrolling down
+        # positive dir ==> scrolling up
+        # negative dir ==> scrolling down
 
         # Code for scrolling the image up/down
-        #self.canvas.yview_scroll(dir, UNITS)
+        #self.canvas.yview_scroll(-dir, UNITS)
 
         # Code for zooming the image (like Google Maps)
-        self.resize_image_to_zoom(delta=-dir)
+        self.resize_image_to_zoom(delta=dir)
 
     def resize_image_to_zoom(self, delta=None, zoom=None, forcereload=False):
         if PIL_NOT_AVAILABLE:

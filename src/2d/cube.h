@@ -24,34 +24,24 @@ public:
   
   Cube(const int x, const int y, const int z) : x(x), y(y), z(z) {}
   
-  /* perform a trivial top-down projection */
-  void project_top(point &p, point2 &r) {
-    r.x = p.z;
-    r.y = x - p.x;
-  }
-  
   void project_top(point &p, int &rx, int &ry) {
-    rx = z - p.z;
+    rx = z - p.z - 1;
     ry = p.x;
   }
   
   void project_oblique(point &p, int &rx, int &ry) {
-    rx = z - p.z;
-    ry = p.x + (y - p.y);
-  }
-  
-  void project_obliqueangle(point &p, point2 &r) {
-    project_obliqueangle(p, r.x, r.y);
+    rx = z - p.z - 1;
+    ry = p.x + (y - p.y - 1);
   }
   
   void project_obliqueangle(point &p, int &rx, int &ry) {
-    rx = z + p.x - p.z;
-    ry = (y - p.y) + p.z + p.x;
+    rx = (z - p.z - 1) + p.x;
+    ry = (y - p.y - 1) + p.z + p.x;
   }
 
   void project_isometric(point &p, int &rx, int &ry) {
-    rx = 2 * (z + p.x - p.z);
-    ry = 2 * (y - p.y) + p.z + p.x;
+    rx = 2 * ((z - p.z - 1) + p.x);
+    ry = 2 * (y - p.y - 1) + p.z + p.x;
   }
   
   void get_top_limits(int &rx, int &ry) {

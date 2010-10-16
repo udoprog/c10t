@@ -46,6 +46,7 @@ const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
 const uint8_t IMAGE_BYTE = 0x30;
 const uint8_t PARSE_BYTE = 0x40;
+const uint8_t END_BYTE = 0xF0;
 
 void cout_progress_n(int i, int all) {
   if (i == all) {
@@ -77,12 +78,15 @@ void cout_progress_ionly_n(int i, int all) {
 
 inline void cout_progress_ionly_b(const uint8_t type, int part, int whole) {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
-
+  
   if (whole == 1) {
     cout << hex << std::setw(2) << setfill('0') << static_cast<int>(2) << flush;
   }
   else if (part % 1000 == 0) {
     cout << hex << std::setw(2) << setfill('0') << static_cast<int>(1) << flush;
+  }
+  else {
+    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(0) << flush;
   }
 }
 
@@ -109,6 +113,10 @@ inline void cout_error(const string& message) {
        << hex << message << flush;
 }
 
+inline void cout_end() {
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
+}
+
 /*
  * Store part of a level rendered as a small image.
  *
@@ -118,7 +126,6 @@ struct render_result {
   int xPos, zPos;
   fs::path path;
   boost::shared_ptr<image_operations> operations;
-  std::vector<light_marker> markers;
   level_file *level;
 
   ~render_result() {
@@ -196,11 +203,14 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
 inline void calc_image_partial(settings_t& s, render_result &p, image_base *all, world_info &world, int image_width, int image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
+
+  int posx = p.xPos - world.min_x;
+  int posz = p.zPos - world.min_z;
   
-  Cube c(diffx, 16, diffz);
+  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
   int x, y;
   
-  point pos(p.xPos - world.min_x, 16, p.zPos - world.min_z);
+  point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
   
   switch (s.mode) {
     case Top:           c.project_top(pos, x, y);           break;
@@ -209,8 +219,9 @@ inline void calc_image_partial(settings_t& s, render_result &p, image_base *all,
     case Isometric:     c.project_isometric(pos, x, y);     break;
   }
   
-  x *= mc::MapX;
-  y *= mc::MapZ;
+  /*std::cout << "diff-xy: " << diffx << " " << diffz << std::endl;
+  std::cout << "pos-xy: " << posx << " " << posz << std::endl;
+  std::cout << "xy: " << x << " " << y << std::endl;*/
   
   all->composite(x, y, *p.operations);
 }
@@ -423,9 +434,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     
     if (progress_c != NULL) progress_c(i, world_size);
     
-    if (p->markers.size() > 0) {
-      if (s.debug) { cout << "Found " << p->markers.size() << " signs"; };
-      light_markers.insert(light_markers.end(), p->markers.begin(), p->markers.end());
+    if (p->level->markers.size() > 0) {
+      if (s.debug) { cout << "Found " << p->level->markers.size() << " signs"; };
+      light_markers.insert(light_markers.end(), p->level->markers.begin(), p->level->markers.end());
     }
     
     try {
@@ -607,23 +618,17 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
   world_info** worlds = world.split(s.split);
 
   int i = 0;
-  int max_x = INT_MIN, max_y = INT_MIN;
   
   while (worlds[i] != NULL) {
     world_info* current = worlds[i++];
-
+    
     stringstream ss;
     ss << boost::format(output) % current->chunk_x % current->chunk_y;
     
     if (!do_one_world(s, *current, pdb, ss.str())) {
       return false;
     }
-
-    if (current->chunk_x > max_x) max_x = current->chunk_x;
-    if (current->chunk_y > max_y) max_y = current->chunk_y;
   }
-
-  cout << "world_info size in chunks is " << s.split * ((max_x + 1) * mc::MapX) << "x" << s.split * (max_y * mc::MapZ) << endl;
   
   delete [] worlds;
   return true;
@@ -1367,7 +1372,14 @@ int main(int argc, char *argv[]){
       goto exit_error;
     }
   }
-
+  
+  if (s.binary) {
+    cout_end();
+  }
+  else {
+    if (!s.silent) cout << argv[0] << ": all done!" << endl;
+  }
+  
   mc::deinitialize_constants();
   return 0;
 

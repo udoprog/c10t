@@ -28,10 +28,6 @@ void register_string(level_file* level, nbt::String name, nbt::String value) {
   }
   
   if (level->in_sign) {
-    if (value.size() == 0) {
-      return;
-    }
-    
     if (level->sign_text.size() == 0) {
       level->sign_text = value;
     }
@@ -170,10 +166,10 @@ void level_file::load_file(const fs::path path) {
   
   parser.register_byte_array = register_byte_array;
   parser.register_string = register_string;
+  parser.register_int = register_int;
   parser.begin_compound = begin_compound;
   parser.begin_list = begin_list;
   parser.end_list = end_list;
-  parser.begin_compound = begin_compound;
   parser.end_compound = end_compound;
   parser.error_handler = error_handler;
   
@@ -240,6 +236,8 @@ public:
 inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
   // if night, darken all colors not emitting light
   
+  if (bl == -1) bl = 0;
+  
   if(s.night) {
     c.darken(0xa * (16 - bl));
   }
@@ -292,7 +290,7 @@ inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
 boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
   if (cache_hit) return oper;
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   if (!islevel) {
     return oper;
@@ -304,12 +302,12 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
   BlockRotation sl_r(s, skylight.get());
   
   int bx, by;
-
+  
   c.get_top_limits(bx, by);
 
   oper->set_limits(bx + 1, by);
   
-  for (int z = mc::MapZ - 1; z >= 0; z--) {
+  for (int z = 0; z < mc::MapZ; z++) {
     for (int x = 0; x < mc::MapX; x++) {
       bool cave_initial = true;
 
@@ -331,7 +329,7 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
         
         color bc = mc::MaterialColor[bt];
         
-        apply_shading(s, bl_r.get4(y), sl_r.get4(y + 1), 0, y, bc);
+        apply_shading(s, bl_r.get4(y + 1), sl_r.get4(y + 1), 0, y, bc);
         
         point p(x, y, z);
         
@@ -347,7 +345,7 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
       }
     }
   }
-
+  
   if (cache_use) {
     if (!cache.write(oper.get())) {
       fs::remove(cache.get_path());
@@ -365,7 +363,7 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
     return oper;
   }
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   // block type
       
@@ -381,10 +379,10 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
   
   oper->set_limits(bmx + 1, bmy);
   
-  for (int z = c.z - 1; z >= 0; z--) {
-    for (int x = c.x - 1; x >= 0; x--) {
+  for (int z = mc::MapZ - 1; z >= 0; z--) {
+    for (int x = mc::MapX - 1; x >= 0; x--) {
       bool cave_initial = true;
-
+      
       b_r.set_xz(x, z);
       bl_r.set_xz(x, z);
       sl_r.set_xz(x, z);
@@ -415,7 +413,7 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
           continue;
         }
         
-        int bl = bl_r.get4(y);
+        int bl = bl_r.get4(y + 1);
         
         apply_shading(s, bl, sl_r.get4(y + 1), 0, y, top);
         oper->add_pixel(px, py, top);
@@ -443,7 +441,7 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
     return oper;
   }
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   // block type
   
@@ -460,8 +458,8 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
   
   oper->set_limits(bmx + 1, bmy);
   
-  for (int z = c.z - 1; z >= 0; z--) {
-    for (int x = c.x - 1; x >= 0; x--) {
+  for (int z = mc::MapZ - 1; z >= 0; z--) {
+    for (int x = mc::MapX - 1; x >= 0; x--) {
       bool cave_initial = true;
       
       hm_r.set_xz(x, z);
@@ -499,7 +497,7 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
           continue;
         }
         
-        int bl = bl_r.get4(y);
+        int bl = bl_r.get4(y + 1);
         
         color side = mc::MaterialSideColor[bt];
         
@@ -541,8 +539,8 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
 {
   if (cache_hit) return oper;
   
-  Cube c(mc::MapX, mc::MapY, mc::MapZ);
-
+  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
+  
   int iw, ih;
   c.get_isometric_limits(iw, ih);
   
@@ -563,8 +561,8 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
 
   oper->set_limits(iw + 1, ih);
   
-  for (int z = c.z - 1; z >= 0; z--) {
-    for (int x = c.x - 1; x >= 0; x--) {
+  for (int z = mc::MapZ - 1; z >= 0; z--) {
+    for (int x = mc::MapX - 1; x >= 0; x--) {
       bool cave_initial = true;
       
       hm_r.set_xz(x, z);
@@ -602,7 +600,7 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
         
         color side = mc::MaterialSideColor[bt];
         
-        int bl = bl_r.get4(y);
+        int bl = bl_r.get4(y + 1);
         
         apply_shading(s, bl, sl_r.get4(y + 1), hmval, y, top);
         apply_shading(s, bl, -1, hmval, y, side);

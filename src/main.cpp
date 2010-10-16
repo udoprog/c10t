@@ -177,7 +177,7 @@ public:
   }
 };
 
-inline void calc_image_width_height(settings_t& s, world_info& world, int &image_width, int &image_height) {
+inline void calc_image_width_height(settings_t& s, world_info& world, size_t &image_width, size_t &image_height) {
   int diffx = world.max_x - world.min_x;
   int diffz = world.max_z - world.min_z;
   
@@ -201,14 +201,14 @@ inline void calc_image_width_height(settings_t& s, world_info& world, int &image
 }
 
 inline void calc_image_partial(settings_t& s, render_result &p, image_base *all, world_info &world, int image_width, int image_height) {
-  int diffx = world.max_x - world.min_x;
-  int diffz = world.max_z - world.min_z;
+  size_t diffx = world.max_x - world.min_x;
+  size_t diffz = world.max_z - world.min_z;
 
-  int posx = p.xPos - world.min_x;
-  int posz = p.zPos - world.min_z;
+  size_t posx = p.xPos - world.min_x;
+  size_t posz = p.zPos - world.min_z;
   
   Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
-  int x, y;
+  size_t x, y;
   
   point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
   
@@ -247,7 +247,7 @@ inline void write_markers(settings_t& s, image_base *all, world_info &world, boo
     
     point pos(p_x - min_x, p_y, p_z - min_z);
 
-    int x, y;
+    size_t x, y;
     
     switch (s.mode) {
       case Top:           c.project_top(pos, x, y);           break;
@@ -291,7 +291,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
     transform_world_xz(p_x, p_z, s.rotation);
     point pos(p_x - min_x, p_y, p_z - min_z);
 
-    int x, y;
+    size_t x, y;
     
     switch (s.mode) {
       case Top:           c.project_top(pos, x, y);           break;
@@ -317,7 +317,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     cout << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
   }
   
-  int i_w = 0, i_h = 0;
+  size_t i_w = 0;
+  size_t i_h = 0;
   
   void (*progress_c)(int part, int all) = NULL;
   
@@ -330,13 +331,15 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   
   size_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
   float mem;
+  float mem_x_r;
   
   if (mem_x > s.memory_limit) {
     mem = (float)(s.memory_limit) / 1000000.0f; 
+    mem_x_r = (float)(mem_x) / 1000000.0f; 
     
     if (!s.silent) cout << output << ": "
          << i_w << "x" << i_h << " "
-         << "~" << mem << " MB (cached at " << s.cache_file << ")... " << endl;
+         << "~" << mem << " MB (" << mem_x_r << "MB cached at " << s.cache_file << ")... " << endl;
   } else {
     mem = (float)(i_w * i_h * 4 * sizeof(uint8_t)) / 1000000.0f; 
   
@@ -349,13 +352,14 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   
   if (mem_x > s.memory_limit) {
     try {
+      if (!s.silent) cout << "Building cache... " << flush;
       all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
+      if (!s.silent) cout << "done!" << endl;
     } catch(std::ios::failure& e) {
       error << strerror(errno) << ": " << s.cache_file;
       return false;
     }
   }
-
   else {
     all = new memory_image(i_w, i_h);
   }

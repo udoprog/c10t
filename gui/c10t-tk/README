@@ -20,7 +20,6 @@ What it still doesn't do:
 * There is no error checking when c10t runs
 * There is no progress bar (the program just hangs while c10t is running)
 * The program also hangs while zooming in/out the image
-* It doesn't keep the current pointed position when zooming (like google maps)
 
 Possible improvements:
 * Some kind of interface to select blocks

@@ -492,6 +492,8 @@ class ImageFrame(Frame):
         self.canvas.bind("<B1-Motion>", self.button_motion_1_handler)
         self.canvas.bind("<ButtonRelease-1>", self.button_release_1_handler)
 
+        self.canvas.bind("<Button-2>", self.mouse_wheel_handler)  # DEBUG
+        self.canvas.bind("<Button-3>", self.mouse_wheel_handler)  # DEBUG
         self.canvas.bind("<MouseWheel>", self.mouse_wheel_handler)
         self.canvas.bind("<Button-4>", self.mouse_wheel_handler)
         self.canvas.bind("<Button-5>", self.mouse_wheel_handler)
@@ -530,8 +532,8 @@ class ImageFrame(Frame):
 
     def mouse_wheel_handler(self, event):
         dir = cross_platform_mouse_wheel(event)
-        if dir == 0:
-            return
+        #if dir == 0:
+        #    return
 
         # Code for zooming the image (like Google Maps)
         self.resize_image_to_zoom(delta=dir, center=(event.x, event.y))
@@ -565,8 +567,8 @@ class ImageFrame(Frame):
         if self.zoom > 2:
             self.zoom = 2
         # Clamping minimum zoom
-        if self.zoom < -8:
-            self.zoom = -8
+        if self.zoom < -4:
+            self.zoom = -4
 
         if forcereload:
             # Clearing the image cache
@@ -618,39 +620,35 @@ class ImageFrame(Frame):
             nsy = ncy - wy
 
             # Debug
-            print (
-                "w=({wx},{wy})\n"
-                "old canvas=({ocx},{ocy})\n"
-                "old scroll=({osx},{osy})\n"
-                "old scroll=({tx},{ty})\n"
-                "new canvas=({ncx},{ncy})\n"
-                "new scroll=({nsx},{nsy})\n"
-                "deltazoom={deltazoom}; deltamult={deltamult}"
-                .format(**locals())
-            )
+            #print (
+            #    "w=({wx},{wy})\n"
+            #    "old canvas=({ocx},{ocy})\n"
+            #    "old scroll=({osx},{osy})\n"
+            #    "old scroll=({tx},{ty})\n"
+            #    "new canvas=({ncx},{ncy})\n"
+            #    "new scroll=({nsx},{nsy})\n"
+            #    "deltazoom={deltazoom}; deltamult={deltamult}"
+            #    .format(**locals())
+            #)
 
         # Getting the image from cache
         tk_img = self.tk_resized_images[self.zoom]
         # Setting it to canvas
         self.canvas.itemconfigure(self.canvas_image, image=tk_img)
         # Setting the size
-        self.canvas["scrollregion"] = (0, 0, tk_img.width(), tk_img.height())
+        new_width = tk_img.width()
+        new_height = tk_img.height()
+        self.canvas["scrollregion"] = (0, 0, new_width, new_height)
 
         # Finally, scrolling in order to keep the position centered
         if center:
-            # Little hack to scroll by 1-pixel increments.
-            oldincx = self.canvas["xscrollincrement"]
-            oldincy = self.canvas["yscrollincrement"]
-            self.canvas["xscrollincrement"] = 1
-            self.canvas["yscrollincrement"] = 1
-            self.canvas.xview_moveto(0.0)
-            self.canvas.yview_moveto(0.0)
-            self.canvas.xview_scroll(int(nsx)+1, UNITS)
-            self.canvas.yview_scroll(int(nsy)+1, UNITS)
-            self.canvas["xscrollincrement"] = oldincx
-            self.canvas["yscrollincrement"] = oldincy
-            # An alternative solution would be to use xview_moveto and
-            # calculate a floating point value.
+            # It was difficult to find the right formula to make
+            # tkinter flawlessly...
+            # http://stackoverflow.com/questions/3950773/how-to-scroll-a-tkinter-canvas-to-an-absolute-position
+            offset_x = +1 if nsx >= 0 else 0
+            offset_y = +1 if nsy >= 0 else 0
+            self.canvas.xview_moveto(float(nsx + offset_x)/new_width)
+            self.canvas.yview_moveto(float(nsy + offset_y)/new_height)
 
     def load_image_from_file(self, imagepath):
         if PIL_NOT_AVAILABLE:

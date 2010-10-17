@@ -12,7 +12,7 @@ world=$1
 target=$2
 
 C10T=./c10t
-C10T_OPTS="-s -w $world"
+C10T_OPTS="-s -w $world --split 16"
 
 if [[ -z $world ]] || [[ ! -d $world ]]; then
   echo "Directory does not exist: $world";

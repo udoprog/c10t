@@ -658,6 +658,12 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
           oper->add_pixel(px, py, top);
           oper->add_pixel(px - 1, py, top);
           
+          top.lighten(0x20);
+          top.a -= 0xb0;
+          
+          oper->add_pixel(px, py + 1, top);
+          oper->add_pixel(px - 1, py + 1, top);
+          
           oper->add_pixel(px - 1, py + 1, side);
           oper->add_pixel(px - 1, py + 2, side);
           
@@ -666,14 +672,10 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
           oper->add_pixel(px, py + 1, side);
           oper->add_pixel(px, py + 2, side);
           
-          top.lighten(0x20);
-          top.a -= 0xb0;
           oper->add_pixel(px - 2, py, top);
           oper->add_pixel(px + 1, py, top);
           oper->add_pixel(px, py - 1, top);
           oper->add_pixel(px - 1, py - 1, top);
-          oper->add_pixel(px, py + 1, top);
-          oper->add_pixel(px - 1, py + 1, top);
           break;
         }
       }

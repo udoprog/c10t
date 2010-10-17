@@ -9,7 +9,7 @@ namespace mc {
   enum MaterialMode {
     Block,
     HalfBlock,
-    TopBlock
+    TorchBlock
   };
   
   enum {
@@ -99,7 +99,7 @@ namespace mc {
     Reed = 0x53,
     Jukebox = 0x54,
     Fence = 0x55,
-
+    
     MaterialCount = 0x56
   };
 

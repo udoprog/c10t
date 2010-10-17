@@ -518,12 +518,20 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
           oper->add_pixel(px + 1, py + 1, side);
           break;
         case mc::HalfBlock:
-          oper->add_pixel(px, py, top);
-          oper->add_pixel(px + 1, py, top);
+          oper->add_pixel(px, py + 1, top);
+          oper->add_pixel(px + 1, py + 1, top);
           break;
-        case mc::TopBlock:
+        case mc::TorchBlock:
+          oper->add_pixel(px, py, top);
+
+          top.lighten(0x20);
+          top.a -= 0xb0;
+          oper->add_pixel(px - 1, py, top);
+          oper->add_pixel(px + 2, py, top);
           oper->add_pixel(px, py - 1, top);
-          oper->add_pixel(px + 1, py - 1, top);
+          oper->add_pixel(px, py + 1, top);
+          
+          oper->add_pixel(px, py + 1, side);
           break;
         }
       }
@@ -628,21 +636,44 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
           
           oper->add_pixel(px, py + 1, side);
           oper->add_pixel(px + 1, py + 1, side);
-
+          
           oper->add_pixel(px, py + 2, side);
           oper->add_pixel(px + 1, py + 2, side);
           break;
         case mc::HalfBlock:
-          oper->add_pixel(px, py, top);
-          oper->add_pixel(px + 1, py, top);
           oper->add_pixel(px, py + 1, top);
           oper->add_pixel(px + 1, py + 1, top);
+          oper->add_pixel(px - 2, py + 1, top);
+          oper->add_pixel(px - 1, py + 1, top);
+          
+          oper->add_pixel(px - 2, py + 2, side);
+          oper->add_pixel(px - 1, py + 2, side);
+          
+          side.lighten(0x20);
+          
+          oper->add_pixel(px, py + 2, side);
+          oper->add_pixel(px + 1, py + 2, side);
           break;
-        case mc::TopBlock:
-          oper->add_pixel(px, py - 1, top);
-          oper->add_pixel(px + 1, py - 1, top);
+        case mc::TorchBlock:
           oper->add_pixel(px, py, top);
+          oper->add_pixel(px - 1, py, top);
+          
+          oper->add_pixel(px - 1, py + 1, side);
+          oper->add_pixel(px - 1, py + 2, side);
+          
+          side.lighten(0x20);
+          
+          oper->add_pixel(px, py + 1, side);
+          oper->add_pixel(px, py + 2, side);
+          
+          top.lighten(0x20);
+          top.a -= 0xb0;
+          oper->add_pixel(px - 2, py, top);
           oper->add_pixel(px + 1, py, top);
+          oper->add_pixel(px, py - 1, top);
+          oper->add_pixel(px - 1, py - 1, top);
+          oper->add_pixel(px, py + 1, top);
+          oper->add_pixel(px - 1, py + 1, top);
           break;
         }
       }

@@ -155,7 +155,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Bookcase] = color(0xbf, 0xa9, 0x74, 0xff);
   mc::MaterialColor[mc::MossyCobblestone] = color(0x7f, 0xae, 0x7d, 0xff);
   mc::MaterialColor[mc::Obsidian] = color(0x53, 0x14, 0xd4, 0xff);
-  mc::MaterialColor[mc::Torch] = color(0xff, 0xe1, 0x87,0xb0);
+  mc::MaterialColor[mc::Torch] = color(0xff, 0xe1, 0x60,0xd0);
   mc::MaterialColor[mc::Fire] = color(0xe0, 0xae, 0x15, 0xff);
   mc::MaterialColor[mc::MobSpawner] = color(0xff, 0xff, 0xff, 0x00);
   mc::MaterialColor[mc::WoodenStairs] = color(0xbf, 0xa9, 0x74, 0xff);
@@ -329,7 +329,7 @@ void mc::initialize_constants() {
   mc::MaterialModes[mc::Bookcase] = Block;
   mc::MaterialModes[mc::MossyCobblestone] = Block;
   mc::MaterialModes[mc::Obsidian] = Block;
-  mc::MaterialModes[mc::Torch] = TopBlock;
+  mc::MaterialModes[mc::Torch] = TorchBlock;
   mc::MaterialModes[mc::Fire] = Block;
   mc::MaterialModes[mc::MobSpawner] = Block;
   mc::MaterialModes[mc::WoodenStairs] = Block;
@@ -354,8 +354,8 @@ void mc::initialize_constants() {
   mc::MaterialModes[mc::WoodenPressurePlate] = Block;
   mc::MaterialModes[mc::RedstoneOre] = Block;
   mc::MaterialModes[mc::GlowingRedstoneOre] = Block;
-  mc::MaterialModes[mc::RedstoneTorchOff] = TopBlock;
-  mc::MaterialModes[mc::RedstoneTorchOn] = TopBlock;
+  mc::MaterialModes[mc::RedstoneTorchOff] = TorchBlock;
+  mc::MaterialModes[mc::RedstoneTorchOn] = TorchBlock;
   mc::MaterialModes[mc::StoneButton] = Block;
   mc::MaterialModes[mc::Snow] = Block;
   mc::MaterialModes[mc::Ice] = Block;
@@ -373,6 +373,9 @@ void mc::initialize_constants() {
   mc::MaterialSideColor[mc::Air] = mc::MaterialColor[mc::Air];
   mc::MaterialSideColor[mc::Water] = mc::MaterialColor[mc::Water];
   mc::MaterialSideColor[mc::StationaryWater] = mc::MaterialColor[mc::StationaryWater];
+  mc::MaterialSideColor[mc::Torch] = mc::MaterialColor[mc::Wood];
+  mc::MaterialSideColor[mc::RedstoneTorchOff] = mc::MaterialColor[mc::Wood];
+  mc::MaterialSideColor[mc::RedstoneTorchOn] = mc::MaterialColor[mc::Wood];
 }
 
 void mc::deinitialize_constants() {

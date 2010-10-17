@@ -31,6 +31,35 @@ def add_tooltip(text, widgets):
         w.tooltip = ToolTip(w, text=text)
 
 
+def cross_platform_mouse_wheel(event):
+    """Abstracts all Windows/Linux/Mac differences when handling the
+    mouse wheel. Receives an 'event' object, and returns:
+     negative value ==> scrolling down
+     positive value ==> scrolling up
+     zero           ==> something went wrong...
+
+    This function should be called from within "<MouseWheel>",
+    "<Button-4>" and "<Button-5>" event handlers.
+    """
+    # http://infohost.nmt.edu/tcc/help/pubs/tkinter/events.html#event-handlers
+
+    # Linux maps scrolling to mouse buttons 4 and 5
+    if event.num == 4:  # scroll up
+        return 1
+    elif event.num == 5:  # scroll down
+        return -1
+    # Windows and MacOs have a MouseWheel event
+    elif event.delta:
+        # In Windows, delta is a multiple of 120
+        if abs(event.delta) >= 120:
+            return event.delta // 120
+        # In MacOS, delta is a multiples of 1
+        else:
+            return event.delta
+
+    return 0
+
+
 class XCheckbutton(Checkbutton):
     """Tkinter requires a Tk variable for Checkbutton. This class
     automatically creates such variable (as IntVar), stores it at the
@@ -72,13 +101,9 @@ class XSpinbox(Spinbox):
     def __init__(self, *args, **kwargs):
         Spinbox.__init__(self, *args, **kwargs)
 
-        # Windows
         self.bind("<MouseWheel>", self.mouse_wheel_handler)
-        # Linux
         self.bind("<Button-4>", self.mouse_wheel_handler)
         self.bind("<Button-5>", self.mouse_wheel_handler)
-        # How about Mac... ???
-        # I have no idea! Can someone test it please?
 
     def set(self, value):
         # Adding a simple ".set()" method to spinboxes...
@@ -90,14 +115,7 @@ class XSpinbox(Spinbox):
     def mouse_wheel_handler(self, event):
         # Mouse wheel in spinboxes...
         # http://www.daniweb.com/forums/post1158775.html#post1158775
-        if event.num == 5:
-            dir = -1
-        elif event.num == 4:
-            dir = 1
-        elif abs(event.delta) >= 120:
-            dir = event.delta // 120
-        else:
-            return
+        dir = cross_platform_mouse_wheel(event)
 
         while dir > 0:
             self.invoke("buttonup")
@@ -230,7 +248,7 @@ class FilteringFrame(LabelFrame):
         self.include_checkbutton.grid(column=0, row=5, sticky=EW)
         self.include_entry = XEntry(self, name="include")
         self.include_entry.grid(column=1, row=5, sticky=EW)
-        add_tooltip(u"Include block-ids in render", (
+        add_tooltip(u"Include block-ids in render (and automatically exclude all non-listed blocks)", (
             self.include_checkbutton,
             self.include_entry,
         ))
@@ -262,25 +280,31 @@ class RenderingFrame(LabelFrame):
             self.obliqueangle_checkbutton,
         ))
 
-        self.isometric_checkbutton = XCheckbutton(self, name="isometriccheck", text=u"Isometric rendering", anchor=W, justify=LEFT)
+        self.isometric_checkbutton = XCheckbutton(self, name="isometriccheck", text=u"Isometric", anchor=W, justify=LEFT)
         self.isometric_checkbutton.grid(column=0, row=2, sticky=EW)
         add_tooltip(u"Isometric rendering", (
             self.isometric_checkbutton,
         ))
 
-        self.night_checkbutton = XCheckbutton(self, name="nightcheck", text=u"Night", anchor=W, justify=LEFT)
+        self.night_checkbutton = XCheckbutton(self, name="nightcheck", text=u"Night-time", anchor=W, justify=LEFT)
         self.night_checkbutton.grid(column=0, row=3, sticky=EW)
         add_tooltip(u"Night-time rendering", (
             self.night_checkbutton,
         ))
 
+        self.heightmap_checkbutton = XCheckbutton(self, name="heightmapcheck", text=u"Heightmap", anchor=W, justify=LEFT)
+        self.heightmap_checkbutton.grid(column=0, row=4, sticky=EW)
+        add_tooltip(u"Heightmap rendering", (
+            self.heightmap_checkbutton,
+        ))
+
         self.rotate_label = Label(self, text=u"Rotate", anchor=W, justify=LEFT)
-        self.rotate_label.grid(column=0, row=4, sticky=EW)
+        self.rotate_label.grid(column=0, row=5, sticky=EW)
         add_tooltip(u"Rotate the rendering clockwise", (
             self.rotate_label,
         ))
         self.rotate_frame = Frame(self)
-        self.rotate_frame.grid(column=1, row=4, sticky=EW)
+        self.rotate_frame.grid(column=1, row=5, sticky=EW)
         self.rotate_var = IntVar(name="rotate")
         # This loop sets the following vars:
         # self.rotate0_radiobutton
@@ -297,10 +321,10 @@ class RenderingFrame(LabelFrame):
         self.rotate_var.set(0)
 
         self.threads_label = Label(self, text=u"Threads", anchor=W, justify=LEFT)
-        self.threads_label.grid(column=0, row=5, sticky=EW)
+        self.threads_label.grid(column=0, row=6, sticky=EW)
         self.threads_spinbox = XSpinbox(self, name="threads", from_=0, to=999, width=3)
         self.threads_spinbox.set(0)
-        self.threads_spinbox.grid(column=1, row=5, sticky=EW)
+        self.threads_spinbox.grid(column=1, row=6, sticky=EW)
         add_tooltip(u"Specify the amount of threads to use, for maximum efficency, this should match the amount of cores on your machine. Use zero to auto-detect the number of cores.", (
             self.threads_label,
             self.threads_spinbox,
@@ -309,7 +333,7 @@ class RenderingFrame(LabelFrame):
         # Setting columns to auto-expand
         for i in xrange(2):
             self.columnconfigure(i, weight=1)
-        for i in xrange(6):
+        for i in xrange(7):
             self.rowconfigure(i, weight=1)
 
 
@@ -434,11 +458,17 @@ class RunFrame(Frame):
 
 
 class ImageFrame(Frame):
-    """This is just a Frame containing one Canvas and two scrollbars."""
+    """This is just a Frame containing one Canvas, two scrollbars and some
+    logic for scrolling the image."""
+
+    # This class is inspired by:
+    # http://effbot.org/tkinterbook/photoimage.htm
+    # http://www.swharden.com/blog/2010-03-03-viewing-large-images-with-scrollbars-using-python-tk-and-pil/
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
 
+        # Adding the widgets
         self.vertical_scrollbar = Scrollbar(self, orient=VERTICAL)
         self.vertical_scrollbar.pack(side=RIGHT, fill=Y)
         self.horizontal_scrollbar = Scrollbar(self, orient=HORIZONTAL)
@@ -447,11 +477,17 @@ class ImageFrame(Frame):
         self.canvas = Canvas(self)
         self.canvas.pack(side=LEFT, expand=YES, fill=BOTH)
 
+        # Add an error message if needed
+        if PIL_NOT_AVAILABLE:
+            self.canvas.create_text(10, 10, anchor=NW, text=u"Python Image Library (PIL) could not be loaded.\n\nNo image will be displayed here, but\nthey will still be rendered to the disk.\n\n%s" % (PIL_NOT_AVAILABLE_MESSAGE,))
+
+        # Connecting canvas and scrollbars
         self.horizontal_scrollbar["command"] = self.canvas.xview
         self.vertical_scrollbar["command"] = self.canvas.yview
         self.canvas["xscrollcommand"] = self.horizontal_scrollbar.set
         self.canvas["yscrollcommand"] = self.vertical_scrollbar.set
 
+        # Adding the event handlers to the canvas
         self.canvas.bind("<Button-1>", self.button_press_1_handler)
         self.canvas.bind("<B1-Motion>", self.button_motion_1_handler)
         self.canvas.bind("<ButtonRelease-1>", self.button_release_1_handler)
@@ -460,8 +496,27 @@ class ImageFrame(Frame):
         self.canvas.bind("<Button-4>", self.mouse_wheel_handler)
         self.canvas.bind("<Button-5>", self.mouse_wheel_handler)
 
-        if PIL_NOT_AVAILABLE:
-            self.canvas.create_text(10, 10, anchor=NW, text=u"Python Image Library (PIL) could not be loaded.\n\nNo image will be displayed here, but\nthey will still be rendered to the disk.\n\n%s" % (PIL_NOT_AVAILABLE_MESSAGE,))
+        # Adding mouse wheel support to scrollbars
+        self.horizontal_scrollbar.bind("<MouseWheel>", self.hscroll_mouse_wheel_handler)
+        self.horizontal_scrollbar.bind("<Button-4>", self.hscroll_mouse_wheel_handler)
+        self.horizontal_scrollbar.bind("<Button-5>", self.hscroll_mouse_wheel_handler)
+        self.vertical_scrollbar.bind("<MouseWheel>", self.vscroll_mouse_wheel_handler)
+        self.vertical_scrollbar.bind("<Button-4>", self.vscroll_mouse_wheel_handler)
+        self.vertical_scrollbar.bind("<Button-5>", self.vscroll_mouse_wheel_handler)
+
+        # Internal vars for handling the image
+        self.pil_image = None
+        self.tk_resized_images = {}
+        self.canvas_image = None
+        self.zoom = 0
+
+    def hscroll_mouse_wheel_handler(self, event):
+        dir = cross_platform_mouse_wheel(event)
+        self.canvas.xview_scroll(-dir, UNITS)
+
+    def vscroll_mouse_wheel_handler(self, event):
+        dir = cross_platform_mouse_wheel(event)
+        self.canvas.yview_scroll(-dir, UNITS)
 
     def button_press_1_handler(self, event):
         self.canvas.scan_mark(event.x, event.y)
@@ -474,19 +529,138 @@ class ImageFrame(Frame):
         self.canvas["cursor"] = ""
 
     def mouse_wheel_handler(self, event):
-        # Linux maps scrolling to mouse buttons 4 and 5
-        if event.num == 5:
-            dir = 1
-        elif event.num == 4:
-            dir = -1
-        # Windows has a MouseWheel event, with delta in multiples of 120
-        elif event.delta:
-            dir = -event.delta / 120
-        else:
+        dir = cross_platform_mouse_wheel(event)
+        if dir == 0:
             return
 
-        self.canvas.yview_scroll(dir, UNITS)
+        # Code for zooming the image (like Google Maps)
+        self.resize_image_to_zoom(delta=dir, center=(event.x, event.y))
 
+    def resize_image_to_zoom(self, delta=None, zoom=None, center=None, forcereload=False):
+        """Parameters:
+         delta      : How much to increase/decrease the current zoom?
+         zoom       : Set zoom to this absolute value.
+         center     : Uses these coordinates (x,y) as the zoom center,
+                      scrolling the canvas as needed. These are "window
+                      coordinates", relative to the widget's top-left
+                      corner.
+         forcereload: Clears the zoom cache, forces reloading the canvas
+                      from self.pil_image.
+        """
+
+        # Sanity check
+        if PIL_NOT_AVAILABLE:
+            return
+        if self.pil_image is None:
+            return
+
+        # Calculating the new zoom value
+        prevzoom = self.zoom
+        if zoom is not None:
+            self.zoom = zoom
+        if delta is not None:
+            self.zoom += delta
+
+        # Clamping maximum zoom
+        if self.zoom > 2:
+            self.zoom = 2
+        # Clamping minimum zoom
+        if self.zoom < -4:
+            self.zoom = -4
+
+        if forcereload:
+            # Clearing the image cache
+            self.tk_resized_images = {}
+
+        # Zoom size is not cached...
+        if not self.tk_resized_images.has_key(self.zoom):
+            mult = 2 ** self.zoom
+            ow, oh = self.pil_image.size
+            w, h = int(mult * ow), int(mult * oh)
+
+            # Let's apply a nice filter when scaling down,
+            # but keep those lovely pixels when scaling up!
+            filter = PIL.Image.NEAREST if mult >=1 else PIL.Image.BICUBIC
+
+            # Resizing
+            pil_resized_image = self.pil_image.resize((w,h), filter)
+            # Converting to Tk
+            tk_photoimage = PIL.ImageTk.PhotoImage(pil_resized_image)
+            # Saving the Tk image to cache
+            self.tk_resized_images[self.zoom] = tk_photoimage
+
+        # Keeping the position centered
+        if center:
+            # Window coordinates, relative to widget's top-left corner
+            wx, wy = center
+
+            # Old canvas coordinates
+            ocx = self.canvas.canvasx(wx)
+            ocy = self.canvas.canvasy(wy)
+
+            tx = self.canvas.canvasx(0)
+            ty = self.canvas.canvasy(0)
+
+            # Old scroll position
+            osx = ocx - wx
+            osy = ocy - wy
+
+            # Multiplication...
+            deltazoom = self.zoom - prevzoom
+            deltamult = 2 ** deltazoom
+
+            # New canvas coordinates
+            ncx = ocx * deltamult
+            ncy = ocy * deltamult
+
+            # New scroll position
+            nsx = ncx - wx
+            nsy = ncy - wy
+
+            # Debug
+            #print (
+            #    "w=({wx},{wy})\n"
+            #    "old canvas=({ocx},{ocy})\n"
+            #    "old scroll=({osx},{osy})\n"
+            #    "old scroll=({tx},{ty})\n"
+            #    "new canvas=({ncx},{ncy})\n"
+            #    "new scroll=({nsx},{nsy})\n"
+            #    "deltazoom={deltazoom}; deltamult={deltamult}"
+            #    .format(**locals())
+            #)
+
+        # Getting the image from cache
+        tk_img = self.tk_resized_images[self.zoom]
+        # Setting it to canvas
+        self.canvas.itemconfigure(self.canvas_image, image=tk_img)
+        # Setting the size
+        new_width = tk_img.width()
+        new_height = tk_img.height()
+        self.canvas["scrollregion"] = (0, 0, new_width, new_height)
+
+        # Finally, scrolling in order to keep the position centered
+        if center:
+            # It was difficult to find the right formula to make
+            # tkinter flawlessly...
+            # http://stackoverflow.com/questions/3950773/how-to-scroll-a-tkinter-canvas-to-an-absolute-position
+            offset_x = +1 if nsx >= 0 else 0
+            offset_y = +1 if nsy >= 0 else 0
+            self.canvas.xview_moveto(float(nsx + offset_x)/new_width)
+            self.canvas.yview_moveto(float(nsy + offset_y)/new_height)
+
+    def load_image_from_file(self, imagepath):
+        if PIL_NOT_AVAILABLE:
+            return
+
+        # Loading the image from disk
+        self.pil_image = PIL.Image.open(imagepath)
+
+        # Creating the image inside the canvas
+        if self.canvas_image is None:
+            self.canvas_image = self.canvas.create_image(0, 0, anchor=NW)
+
+        # Updating the canvas image
+        self.resize_image_to_zoom(forcereload=True)
 
 
 class ApplicationFrame(Frame):
@@ -594,13 +768,6 @@ class MainWindow(Tk):
 
         self.ui = UiShortcuts(self)
 
-        # Simple shortcut to the canvas object
-        self.canvas = self.app.image_frame.canvas
-        # And all image-related objects
-        self.pilimage = None
-        self.photoimage = None
-        self.canvasimage = None
-
         # Global quit handlers
         self.bind_all("<Control-q>", self.quit_handler)
         self.protocol("WM_DELETE_WINDOW", self.quit_handler)
@@ -640,22 +807,5 @@ class MainWindow(Tk):
             self.load_button_callback()
 
     def load_image_from_file(self, imagepath):
-        if PIL_NOT_AVAILABLE:
-            return
+        self.app.image_frame.load_image_from_file(imagepath)
 
-        # The image must be kept in a Python variable to prevent it from
-        # being garbage-collected.
-        # http://effbot.org/tkinterbook/photoimage.htm
-        self.pilimage = PIL.Image.open(imagepath)
-        self.photoimage = PIL.ImageTk.PhotoImage(self.pilimage)
-
-        # Creating the image inside the canvas...
-        if self.canvasimage is None:
-            self.canvasimage = self.canvas.create_image(0, 0, anchor=NW)
-
-        # Updating to the latest image...
-        self.canvas.itemconfigure(self.canvasimage, image=self.photoimage)
-
-        # http://www.swharden.com/blog/2010-03-03-viewing-large-images-with-scrollbars-using-python-tk-and-pil/
-        width, height = self.pilimage.size
-        self.canvas["scrollregion"] = (0, 0, width, height)

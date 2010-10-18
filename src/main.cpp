@@ -125,35 +125,35 @@ inline void cout_end() {
 struct render_result {
   int xPos, zPos;
   fs::path path;
+  boost::shared_ptr<level_file> level;
+  
   boost::shared_ptr<image_operations> operations;
-  level_file *level;
-
-  ~render_result() {
-    delete level;
-  }
 };
 
 struct render_job {
-  fs::path path;
-  level_file* level;
   int xPos, zPos;
+  fs::path path;
+  boost::shared_ptr<level_file> level;
 };
 
-class Renderer : public threadworker<render_job, render_result*> {
+class Renderer : public threadworker<render_job, render_result> {
 public:
   settings_t& s;
   
-  Renderer(settings_t& s, int n) : threadworker<render_job, render_result*>(n), s(s) {
+  Renderer(settings_t& s, int n) : threadworker<render_job, render_result>(n), s(s) {
   }
   
-  render_result *work(render_job job) {
-    level_file *level = job.level;
+  render_result work(render_job job) {
+    level_file* level = job.level.get();
     
     level->load_file(job.path);
     
-    render_result *p = new render_result;
-    p->path = job.path;
-    p->level = level;
+    render_result p;
+    
+    p.path = job.path;
+    p.level = job.level;
+    p.xPos = job.xPos;
+    p.zPos = job.zPos;
     
     if (level->grammar_error) {
       return p;
@@ -163,14 +163,11 @@ public:
       return p;
     }
     
-    p->xPos = job.xPos;
-    p->zPos = job.zPos;
-    
     switch (s.mode) {
-    case Top:           p->operations = level->get_image(s); break;
-    case Oblique:       p->operations = level->get_oblique_image(s); break;
-    case Isometric:     p->operations = level->get_isometric_image(s); break;
-    case ObliqueAngle:  p->operations = level->get_obliqueangle_image(s); break;
+    case Top:           p.operations = level->get_image(s); break;
+    case Oblique:       p.operations = level->get_oblique_image(s); break;
+    case Isometric:     p.operations = level->get_isometric_image(s); break;
+    case ObliqueAngle:  p.operations = level->get_obliqueangle_image(s); break;
     }
     
     return p;
@@ -386,7 +383,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
   
   for (i = 0; i < world_size; i++) {
     if (lvlq == 0) {
-      for (; lvlq < s.threads && lvlit != world.levels.end(); lvlq++) {
+      for (; lvlq < s.threads * 4 && lvlit != world.levels.end(); lvlq++) {
         level l = *lvlit;
         
         fs::path path = world.get_level_path(l);
@@ -396,7 +393,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         }
         
         render_job job;
-        job.level = new level_file(s);
+        job.level.reset(new level_file(s));
         job.path = path;
         job.xPos = l.xPos;
         job.zPos = l.zPos;
@@ -408,13 +405,13 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     
     --lvlq;
     
-    boost::scoped_ptr<render_result> p(renderer.get());
+    render_result p = renderer.get();
 
-    level_file* level = p->level;
+    boost::shared_ptr<level_file> level(p.level);
     
     if (level->grammar_error) {
       if (s.require_all) {
-        error << "Parser Error: " << p->path.string() << " at (uncompressed) byte " << level->grammar_error_where
+        error << "Parser Error: " << p.path.string() << " at (uncompressed) byte " << level->grammar_error_where
           << " - " << level->grammar_error_why;
         
         // effectively join all worker threads and prepare for exit
@@ -423,14 +420,14 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
       }
       
       if (!s.silent) {
-        cout << "Ignoring unparseable file: " << p->path << " - " << level->grammar_error_why << endl;
+        cout << "Ignoring unparseable file: " << p.path << " - " << level->grammar_error_why << endl;
         continue;
       }
     }
     
     if (!level->islevel) {
       if (s.debug) {
-        cout << "Rejecting file since it is not a level chunk: " << p->path << endl;
+        cout << "Ignoring file not a level chunk: " << p.path << endl;
       }
       
       continue;
@@ -438,13 +435,13 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
     
     if (progress_c != NULL) progress_c(i, world_size);
     
-    if (p->level->markers.size() > 0) {
-      if (s.debug) { cout << "Found " << p->level->markers.size() << " signs"; };
-      light_markers.insert(light_markers.end(), p->level->markers.begin(), p->level->markers.end());
+    if (level->markers.size() > 0) {
+      if (s.debug) { cout << "Found " << level->markers.size() << " signs"; };
+      light_markers.insert(light_markers.end(), level->markers.begin(), level->markers.end());
     }
     
     try {
-      calc_image_partial(s, *p, all, world, i_w, i_h);
+      calc_image_partial(s, p, all, world, i_w, i_h);
     } catch(std::ios::failure& e) {
       error << strerror(errno) << ": " << s.cache_file;
       renderer.join();

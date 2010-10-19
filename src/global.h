@@ -67,10 +67,12 @@ struct settings_t {
   bool cache_use;
   bool write_markers;
   fs::path write_markers_path;
+  bool use_pixelsplit;
+  int pixelsplit;
   
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
-
+    
     for (int i = 0; i < mc::MaterialCount; i++) {
       this->excludes[i] = false;
     }
@@ -121,6 +123,8 @@ struct settings_t {
     this->cache_dir = "cache";
     this->cache_compress = false;
     this->write_markers = false;
+    this->use_pixelsplit = false;
+    this->pixelsplit = 0;
   }
   
   ~settings_t() {

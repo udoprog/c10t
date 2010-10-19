@@ -54,9 +54,10 @@ void memory_image::get_pixel(size_t x, size_t y, color &c){
   c.read(this->colors + get_offset(x, y));
 }
 
-void memory_image::get_line(size_t y, color *c){
+void memory_image::get_line(size_t y, size_t offset, size_t width, color* c) {
   if (!(y < get_height())) { return; }
-  memcpy(c, this->colors + get_offset(0, y), get_width() * sizeof(color));
+  if (!(width + offset < get_width())) { return; }
+  memcpy(c, this->colors + get_offset(offset, y), width * sizeof(color));
 }
 
 void memory_image::blend_pixel(size_t x, size_t y, color &c){
@@ -189,9 +190,7 @@ bool image_base::save_png(const std::string path, const char *title, progress_c 
   
   for (size_t y = 0; y < get_height(); y++) {
     if (progress_c_cb != NULL) progress_c_cb(y, get_height());
-    
     get_line(y, reinterpret_cast<color*>(row));
-    
     png_write_row(png_ptr, row);
   }
   
@@ -234,10 +233,11 @@ void cached_image::get_pixel(size_t x, size_t y, color& c) {
   fs.read(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_line(size_t y, color *c){
+void cached_image::get_line(size_t y, size_t offset, size_t width, color* c) {
   if (!(y < get_height())) { return; }
-  fs.seekg(get_offset(0, y), std::ios::beg);
-  fs.read(reinterpret_cast<char*>(c), sizeof(color) * get_width());
+  if (!(width + offset < get_width())) { return; }
+  fs.seekg(get_offset(offset, y), std::ios::beg);
+  fs.read(reinterpret_cast<char*>(c), sizeof(color) * width);
 }
 
 void cached_image::blend_pixel(size_t x, size_t y, color &c){
@@ -269,6 +269,19 @@ void cached_image::blend_pixel(size_t x, size_t y, color &c){
     ic->x = x;
     ic->y = y;
   }
+}
+
+std::map<point2, image_base*> image_split(image_base* base, int pixels) {
+  std::map<point2, image_base*> map;
+  
+  for (size_t w = 0, px = 0; w < base->get_width(); w += pixels, px++) {
+    for (size_t h = 0, py = 0; h < base->get_height(); h += pixels, py++) {
+      point2 p(px, py);
+      map[p] = new virtual_image(pixels, pixels, base, w, h);
+    }
+  }
+  
+  return map;
 }
 
 /* align the memory cache with the actual image */

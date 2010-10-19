@@ -3,6 +3,7 @@
 #ifndef _IMG_H_
 #define _IMG_H_
 
+#include "2d/cube.h"
 #include "color.h"
 
 #include <limits.h>
@@ -17,6 +18,8 @@
 #include <set>
 
 #include <fstream>
+
+#include <boost/ptr_container/ptr_map.hpp>
 
 struct image_operation {
   color c;
@@ -73,6 +76,8 @@ public:
   }
 };
 
+class virtual_image;
+
 class image_base {
 private:
   size_t w, h;
@@ -103,10 +108,15 @@ public:
   bool save_png(const std::string filename, const char *title, progress_c);
   
   void safe_blend_pixel(size_t x, size_t y, color &c);
+
+  void get_line(size_t y, color *c){
+    get_line(y, 0, get_width(), c);
+  }
+  
   virtual void blend_pixel(size_t x, size_t y, color &c) = 0;
   virtual void set_pixel(size_t x, size_t y, color& c) = 0;
   virtual void get_pixel(size_t x, size_t y, color& c) = 0;
-  virtual void get_line(size_t y, color*) = 0;
+  virtual void get_line(size_t y, size_t offset, size_t w, color*) = 0;
 };
 
 class memory_image : public image_base {
@@ -132,7 +142,32 @@ public:
   void blend_pixel(size_t x, size_t y, color &c);
   void set_pixel(size_t x, size_t y, color&);
   void get_pixel(size_t x, size_t y, color&);
-  void get_line(size_t y, color*);
+  void get_line(size_t y, size_t offset, size_t width, color*);
+};
+
+class virtual_image : public image_base {
+private:
+  image_base* base;
+  int x, y;
+public:
+  virtual_image(int w, int h, image_base* base, int x, int y) : image_base(w, h), base(base), x(x), y(y) {
+  }
+  
+  void blend_pixel(size_t x, size_t y, color &c) {
+    base->blend_pixel(this->x + x, this->y + y, c);
+  }
+  
+  void set_pixel(size_t x, size_t y, color& c) {
+    base->set_pixel(this->x + x, this->y + y, c);
+  }
+  
+  void get_pixel(size_t x, size_t y, color& c) {
+    base->get_pixel(this->x + x, this->y + y, c);
+  }
+  
+  void get_line(size_t y, size_t x, size_t width, color* c) {
+    base->get_line(this->y + y, this->x + x, width, c);
+  }
 };
 
 #include <iostream>
@@ -210,7 +245,9 @@ public:
   void blend_pixel(size_t x, size_t y, color &c);
   void set_pixel(size_t x, size_t y, color&);
   void get_pixel(size_t x, size_t y, color&);
-  void get_line(size_t y, color*);
+  void get_line(size_t y, size_t offset, size_t width, color*);
 };
+
+std::map<point2, image_base*> image_split(image_base* base, int pixels);
 
 #endif /* _IMG_H_ */

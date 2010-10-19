@@ -3,6 +3,8 @@
 #ifndef _CUBE_H_
 #define _CUBE_H_
 
+#include <stdlib.h>
+
 struct point {
   size_t x;
   size_t y;
@@ -11,9 +13,24 @@ struct point {
   inline point(size_t x, size_t y, size_t z) : x(x), y(y), z(z) {}
 };
 
-struct point2 {
-  size_t x;
-  size_t y;
+class point2 {
+public:
+  const size_t x;
+  const size_t y;
+
+  point2(const size_t x, const size_t y) : x(x), y(y) {}
+  
+  bool operator<(const point2& oth) const {
+    if (y < oth.y) {
+      return true;
+    }
+    
+    if (y == oth.y && x < oth.x) {
+      return true;
+    }
+    
+    return false;
+  }
 };
 
 class Cube {

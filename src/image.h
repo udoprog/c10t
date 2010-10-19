@@ -79,7 +79,7 @@ public:
 class virtual_image;
 
 class image_base {
-private:
+protected:
   size_t w, h;
 public:
   typedef void (*progress_c)(int , int);
@@ -148,9 +148,15 @@ public:
 class virtual_image : public image_base {
 private:
   image_base* base;
-  int x, y;
+  size_t x, y;
 public:
-  virtual_image(int w, int h, image_base* base, int x, int y) : image_base(w, h), base(base), x(x), y(y) {
+  virtual_image(size_t w, size_t h, image_base* base, size_t x, size_t y) : image_base(w, h), base(base), x(x), y(y)
+  {
+    if (!(x < base->get_width())) { this->w = 0; }
+    else if (!(w + x < base->get_width())) { this->w = base->get_width() - x; };
+    
+    if (!(y < base->get_height())) { this->h = 0; }
+    else if (!(h + y < base->get_height())) { this->h = base->get_height() - y; };
   }
   
   void blend_pixel(size_t x, size_t y, color &c) {

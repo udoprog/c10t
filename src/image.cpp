@@ -56,7 +56,9 @@ void memory_image::get_pixel(size_t x, size_t y, color &c){
 
 void memory_image::get_line(size_t y, size_t offset, size_t width, color* c) {
   if (!(y < get_height())) { return; }
-  if (!(width + offset < get_width())) { return; }
+  if (!(offset < get_width())) { return; }
+  if (!(width + offset < get_width())) { width = get_width() - offset; }
+  
   memcpy(c, this->colors + get_offset(offset, y), width * sizeof(color));
 }
 
@@ -235,7 +237,9 @@ void cached_image::get_pixel(size_t x, size_t y, color& c) {
 
 void cached_image::get_line(size_t y, size_t offset, size_t width, color* c) {
   if (!(y < get_height())) { return; }
-  if (!(width + offset < get_width())) { return; }
+  if (!(offset < get_width())) { return; }
+  if (!(width + offset < get_width())) { width = get_width() - offset; }
+  
   fs.seekg(get_offset(offset, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(c), sizeof(color) * width);
 }

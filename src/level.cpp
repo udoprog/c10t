@@ -211,6 +211,9 @@ public:
     this->z = z;
   }
   
+  /**
+   * Blocks[ z + ( y * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
+   */
   uint8_t get8(int y) {
     int p = y + (z * mc::MapY) + (x * mc::MapY * mc::MapZ);
     if (!(p >= 0 && p < byte_array->length)) return -1;
@@ -230,9 +233,6 @@ public:
   }
 };
 
-/**
- * Blocks[ z + ( y * ChunkSizeY(=128) + ( x * ChunkSizeY(=128) * ChunkSizeZ(=16) ) ) ]; 
- */
 inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c) {
   // if night, darken all colors not emitting light
   

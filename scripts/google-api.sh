@@ -1,5 +1,9 @@
 #!/bin/bash
 
+C10T=./c10t
+C10T_OPTS=""
+C10T_OUT=c10t.out.txt
+
 set -e
 
 if [[ $# != 2 ]]; then
@@ -11,12 +15,16 @@ current=$(dirname $0)
 world=$1
 target=$2
 
-C10T=./c10t
-C10T_OPTS="-s -w $world --split 16"
+C10T_OPTS="$C10T_OPTS -w $world --split 16"
 
 if [[ -z $world ]] || [[ ! -d $world ]]; then
   echo "Directory does not exist: $world";
   exit 1;
+fi
+
+if [[ ! -x $C10T ]] ; then
+  echo "Not an executable: $C10T"
+  exit 1
 fi
 
 [ ! -d $target ] && mkdir -p $target
@@ -145,18 +153,20 @@ var modes = {
 }
 ENDL
 
+echo "NOTE: if something goes wrong, check out $C10T_OUT"
+
 echo -n "Generating Day... "
-$C10T $C10T_OPTS -o $target/parts/day.%d.%d.png
+$C10T $C10T_OPTS -o $target/parts/day.%d.%d.png &> $C10T_OUT
 echo "done!"
 
 echo -n "Generating Night... "
-$C10T $C10T_OPTS -n -o $target/parts/night.%d.%d.png
+$C10T $C10T_OPTS -n -o $target/parts/night.%d.%d.png &> $C10T_OUT
 echo "done!"
 
 echo -n "Generating Caves... "
-$C10T $C10T_OPTS -c -o $target/parts/caves.%d.%d.png
+$C10T $C10T_OPTS -c -o $target/parts/caves.%d.%d.png &> $C10T_OUT
 echo "done!"
 
 echo -n "Generating Heightmap... "
-$C10T $C10T_OPTS --heightmap -o $target/parts/height.%d.%d.png
+$C10T $C10T_OPTS --heightmap -o $target/parts/height.%d.%d.png &> $C10T_OUT
 echo "done!"

@@ -257,14 +257,22 @@ inline void write_markers(settings_t& s, image_base *all, world_info &world, boo
     
     o["text"] = m.text;
     o["type"] = m.type;
+
+    // the projected coordinates
     o["x"] = x;
     o["y"] = y;
+    
+    // the real coordinates
+    o["X"] = m.x;
+    o["Y"] = m.y;
+    o["Z"] = m.z;
     
     array.push(o);
   }
   
   std::ofstream of(s.write_markers_path.string().c_str());
   of << array;
+  // don't bother to check for errors right now, but could be done using the "fail" accessor.
 }
 
 inline void overlay_markers(settings_t& s, image_base *all, world_info &world, boost::ptr_vector<marker>& markers) {

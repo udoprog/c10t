@@ -77,3 +77,4 @@ Contributions
     frozencow - for fixing boost_thread configuration for cmake
     reportingjsr - for pointing out build issues
     Dim-Dul - for providing a nice map to render
+    vostok4 - for implementing google API support

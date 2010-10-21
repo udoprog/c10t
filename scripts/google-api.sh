@@ -28,7 +28,7 @@ if [[ -z $world ]] || [[ ! -d $world ]]; then
   exit 1;
 fi
 
-if [[ ! -x $C10T ]] ; then
+if ! $C10T -h &> /dev/null; then
   echo "Not an executable: $C10T"
   exit 1
 fi

@@ -11,7 +11,7 @@ SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
 SOURCES+=src/utf8.cpp
 
-EXTRA=README.md
+EXTRA=README.md scripts/google-api.sh
 
 OBJECTS=${SOURCES:.cpp=.o}
 CXXFLAGS+=-I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O3

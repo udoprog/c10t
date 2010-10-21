@@ -13,6 +13,10 @@ CXX=i686-pc-linux-gnu-g++
 include dist/config.mk
 
 local-package:
+	cp LICENSE.txt ${PACKAGE}/LICENSE.txt
+	cp README.md ${PACKAGE}/README
+	cp scripts/google-api.sh ${PACKAGE}/c10t-google-api.sh
+	
 	tar -cvf ${PACKAGE}-${OS}-${ARCH}.tar ${PACKAGE}
 	gzip -f ${PACKAGE}-${OS}-${ARCH}.tar
 	mv ${PACKAGE}-${OS}-${ARCH}.tar.gz ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz

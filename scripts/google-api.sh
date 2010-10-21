@@ -1,6 +1,8 @@
 #!/bin/bash
 
-C10T=./c10t
+C10T=c10t
+[[ -x ./$C10T ]] && C10T=./$C10T
+
 C10T_OPTS="$3"
 C10T_OUT=c10t.out.txt
 
@@ -166,7 +168,12 @@ echo "" > $C10T_OUT
 
 generate() {
   echo -n "$1... "
-  $C10T $C10T_OPTS $2 -o $target/$tiles/$3.%d.%d.png &>> $C10T_OUT
+
+  if ! $C10T $C10T_OPTS $2 -o $target/$tiles/$3.%d.%d.png &> $C10T_OUT; then
+    cat $C10T_OUT
+    exit 1
+  fi
+
   echo "done!"
 }
 

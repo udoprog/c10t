@@ -22,5 +22,8 @@ include dist/config.mk
 all: ${TARGET}
 
 local-package:
+	cp LICENSE.txt ${PACKAGE}/LICENSE.txt
+	cp README.md ${PACKAGE}/README.txt
+	
 	zip -r ${PACKAGE}-${OS}-${ARCH}.zip ${PACKAGE}
 	mv ${PACKAGE}-${OS}-${ARCH}.zip ${BUILD}/${PACKAGE}-${OS}-${ARCH}.zip

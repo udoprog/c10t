@@ -4,6 +4,8 @@ C10T=./c10t
 C10T_OPTS=""
 C10T_OUT=c10t.out.txt
 
+TILE_SIZE=256
+
 set -e
 
 if [[ $# != 2 ]]; then
@@ -14,8 +16,10 @@ fi
 current=$(dirname $0)
 world=$1
 target=$2
+tiles=tiles
+host=""
 
-C10T_OPTS="$C10T_OPTS -w $world --split 16"
+C10T_OPTS="$C10T_OPTS -w $world --pixelsplit $TILE_SIZE"
 
 if [[ -z $world ]] || [[ ! -d $world ]]; then
   echo "Directory does not exist: $world";
@@ -28,7 +32,7 @@ if [[ ! -x $C10T ]] ; then
 fi
 
 [ ! -d $target ] && mkdir -p $target
-[ ! -d $target/parts ] && mkdir -p $target/parts
+[ ! -d $target/$tiles ] && mkdir -p $target/$tiles
 
 cat > $target/index.html << ENDL
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -49,7 +53,7 @@ cat > $target/index.html << ENDL
       }
       
       // The maximum width/height of the grid in regions (must be a power of two)
-      var GRID_WIDTH_IN_REGIONS = 4096;
+      var GRID_WIDTH_IN_REGIONS = 65536;
       // Map from a GRID_WIDTH_IN_REGIONS x GRID_WIDTH_IN_REGIONS square to Lat/Long (0, 0),(-90, 90)
       var SCALE_FACTOR = 90.0 / GRID_WIDTH_IN_REGIONS;
 
@@ -75,7 +79,7 @@ cat > $target/index.html << ENDL
           {
             base: "base",
             getTileUrl: function(c, z) {
-                return o.host + this.base + "." + c.y + "." + -c.x + ".png";
+                return o.host + this.base + "." + c.x + "." + c.y + ".png";
             },
             isPng: true,
             name : "none",
@@ -136,7 +140,7 @@ ENDL
 
 cat > $target/options.js << ENDL
 var options = {
-  host: "parts/",
+  host: "$host$tiles/",
   scaleControl: false,
   navigationControl: false,
   streetViewControl: false,
@@ -146,27 +150,27 @@ var options = {
 }
 
 var modes = {
-  'height': { base: 'height', name: "Heightmap", alt: "Heightmap in Top-Down view", tileSize: new google.maps.Size(256, 256)},
-  'caves': { base: 'caves', name: "Cavemode", alt: "Cavemode in Top-Down view", tileSize: new google.maps.Size(256, 256)},
-  'night': { base: 'night', name: "Night", alt: "Night in Top-Down view", tileSize: new google.maps.Size(256, 256)},
-  'day': { base: 'day', name: "Day", alt: "Day in Top-Down view", tileSize: new google.maps.Size(256, 256)}
+  'height': { base: 'height', name: "Heightmap", alt: "Heightmap in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)},
+  'caves': { base: 'caves', name: "Cavemode", alt: "Cavemode in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)},
+  'night': { base: 'night', name: "Night", alt: "Night in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)},
+  'day': { base: 'day', name: "Day", alt: "Day in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)}
 }
 ENDL
 
 echo "NOTE: if something goes wrong, check out $C10T_OUT"
 
 echo -n "Generating Day... "
-$C10T $C10T_OPTS -o $target/parts/day.%d.%d.png &> $C10T_OUT
+$C10T $C10T_OPTS -o $target/$tiles/day.%d.%d.png &> $C10T_OUT
 echo "done!"
 
 echo -n "Generating Night... "
-$C10T $C10T_OPTS -n -o $target/parts/night.%d.%d.png &> $C10T_OUT
+$C10T $C10T_OPTS -n -o $target/$tiles/night.%d.%d.png &> $C10T_OUT
 echo "done!"
 
 echo -n "Generating Caves... "
-$C10T $C10T_OPTS -c -o $target/parts/caves.%d.%d.png &> $C10T_OUT
+$C10T $C10T_OPTS -c -o $target/$tiles/caves.%d.%d.png &> $C10T_OUT
 echo "done!"
 
 echo -n "Generating Heightmap... "
-$C10T $C10T_OPTS --heightmap -o $target/parts/height.%d.%d.png &> $C10T_OUT
+$C10T $C10T_OPTS --heightmap -o $target/$tiles/height.%d.%d.png &> $C10T_OUT
 echo "done!"

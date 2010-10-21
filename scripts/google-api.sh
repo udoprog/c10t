@@ -115,7 +115,7 @@ cat > $target/index.html << ENDL
         
         map.setMapTypeId(firstMode);
         
-        map.setCenter(new google.maps.LatLng(-10, -10));
+        map.setCenter(new google.maps.LatLng(0, 0));
         map.setZoom(0);
         
         // We can now set the map to use the 'grid' map type

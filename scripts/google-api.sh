@@ -1,14 +1,14 @@
 #!/bin/bash
 
 C10T=./c10t
-C10T_OPTS=""
+C10T_OPTS="$3"
 C10T_OUT=c10t.out.txt
 
 TILE_SIZE=256
 
 set -e
 
-if [[ $# != 2 ]]; then
+if [[ $# < 2 ]]; then
   echo "Usage: $0 <world> <target-path>"
   exit 1
 fi
@@ -53,39 +53,38 @@ cat > $target/index.html << ENDL
       }
       
       // The maximum width/height of the grid in regions (must be a power of two)
-      var GRID_WIDTH_IN_REGIONS = 65536;
+      var GRID_WIDTH_IN_REGIONS = 4096;
       // Map from a GRID_WIDTH_IN_REGIONS x GRID_WIDTH_IN_REGIONS square to Lat/Long (0, 0),(-90, 90)
       var SCALE_FACTOR = 90.0 / GRID_WIDTH_IN_REGIONS;
 
       // Override the default Mercator projection with Euclidean projection
       // (insert oblig. Flatland reference here)
-      function Proj() {};
+      function EuclideanProjection() {};
       
-      Proj.prototype.fromLatLngToPoint = function(latLng, opt_point) {
+      EuclideanProjection.prototype.fromLatLngToPoint = function(latLng, opt_point) {
         var point = opt_point || new google.maps.Point(0, 0);
         point.x = latLng.lng() / SCALE_FACTOR;
         point.y = latLng.lat() / SCALE_FACTOR;
         return point;
       };
       
-      Proj.prototype.fromPointToLatLng = function(point) {
+      EuclideanProjection.prototype.fromPointToLatLng = function(point) {
         var lng = point.x * SCALE_FACTOR;
         var lat = point.y * SCALE_FACTOR;
         return new google.maps.LatLng(lat, lng, true);
       };
       
-      function new_map_type(o, ob) {
+      function new_map_type(m, o, ob) {
         return extend(
           {
-            base: "base",
             getTileUrl: function(c, z) {
-                return o.host + this.base + "." + c.x + "." + c.y + ".png";
+                return o.host + m + "." + c.x + "." + c.y + ".png";
             },
             isPng: true,
             name : "none",
             alt : "none",
             minZoom: 0, maxZoom: 0,
-            projection: new Proj()
+            tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)
           },
           ob
         );
@@ -100,17 +99,21 @@ cat > $target/index.html << ENDL
             style: google.maps.MapTypeControlStyle.DROPDOWN_MENU}});
         
         var map = new google.maps.Map(element, opt);
+
+        var firstMode = null;
         
         for (m in modes) {
-          var imt  = new google.maps.ImageMapType(new_map_type(opt, modes[m]));
+          var imt  = new google.maps.ImageMapType(new_map_type(m, opt, modes[m]));
+          imt.projection = new EuclideanProjection();
           
           // Now attach the grid map type to the map's registry
           map.mapTypes.set(m, imt);
-          map.setMapTypeId(m);
+          if (firstMode == null) firstMode = m;
         }
         
-        // This starting lat/long will center us over the region at 25,23(Spawn)
-        map.setCenter(new google.maps.LatLng(0, 0));
+        map.setMapTypeId(firstMode);
+        
+        map.setCenter(new google.maps.LatLng(-10, -10));
         map.setZoom(0);
         
         // We can now set the map to use the 'grid' map type
@@ -150,27 +153,24 @@ var options = {
 }
 
 var modes = {
-  'height': { base: 'height', name: "Heightmap", alt: "Heightmap in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)},
-  'caves': { base: 'caves', name: "Cavemode", alt: "Cavemode in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)},
-  'night': { base: 'night', name: "Night", alt: "Night in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)},
-  'day': { base: 'day', name: "Day", alt: "Day in Top-Down view", tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)}
+  'day': { name: "Day", alt: "Day in Top-Down view"},
+  'night': { name: "Night", alt: "Night in Top-Down view"},
+  'caves': { name: "Cavemode", alt: "Cavemode in Top-Down view"},
+  'height': { name: "Heightmap", alt: "Heightmap in Top-Down view"},
 }
 ENDL
 
 echo "NOTE: if something goes wrong, check out $C10T_OUT"
 
-echo -n "Generating Day... "
-$C10T $C10T_OPTS -o $target/$tiles/day.%d.%d.png &> $C10T_OUT
-echo "done!"
+echo "" > $C10T_OUT
 
-echo -n "Generating Night... "
-$C10T $C10T_OPTS -n -o $target/$tiles/night.%d.%d.png &> $C10T_OUT
-echo "done!"
+generate() {
+  echo -n "$1... "
+  $C10T $C10T_OPTS $2 -o $target/$tiles/$3.%d.%d.png &>> $C10T_OUT
+  echo "done!"
+}
 
-echo -n "Generating Caves... "
-$C10T $C10T_OPTS -c -o $target/$tiles/caves.%d.%d.png &> $C10T_OUT
-echo "done!"
-
-echo -n "Generating Heightmap... "
-$C10T $C10T_OPTS --heightmap -o $target/$tiles/height.%d.%d.png &> $C10T_OUT
-echo "done!"
+generate "Generating Day" "" "day"
+generate "Generating Night" "-n" "night"
+generate "Generating Caves" "-c" "caves"
+generate "Generating Heightmap" "--heightmap" "height"

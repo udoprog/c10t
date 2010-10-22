@@ -28,9 +28,9 @@ struct image_operation {
 };
 
 struct image_op_key {
-  int x, y;
-
-  image_op_key(int x, int y) : x(x), y(y) {
+  int x, y, order;
+  
+  image_op_key(int x, int y, int order) : x(x), y(y), order(order) {
   }
   
   bool operator<(const image_op_key& rhs) const {
@@ -39,10 +39,6 @@ struct image_op_key {
     return false;
   }
 };
-
-//bool compare_image_operation(image_operation& lhs, image_operation& rhs);
-/*{
-}*/
 
 class image_operations {
 private:

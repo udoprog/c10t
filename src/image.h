@@ -20,6 +20,9 @@
 #include <fstream>
 
 #include <boost/ptr_container/ptr_map.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+
+typedef std::streamsize offs_t;
 
 struct image_operation {
   color c;
@@ -97,7 +100,7 @@ public:
   void composite(int xoffset, int yoffset, image_base& img);
   void safe_composite(int xoffset, int yoffset, image_base& img);
   
-  inline size_t get_offset(int x, int y) {
+  inline std::streamsize get_offset(std::streamsize x, std::streamsize y) {
     return (x * sizeof(color)) + (y * get_width() * sizeof(color));
   }
   
@@ -213,9 +216,9 @@ private:
   static const size_t WRITE_SIZE = 4096 * 8;
   const char *path;
   icache *buffer;
-  int buffer_size;
+  size_t buffer_size;
   std::fstream fs;
-  size_t ppos, gpos;
+  offs_t ppos, gpos;
 public:
   cached_image(const char *path, size_t w, size_t h, size_t buffer_size) :
     image_base(w, h),
@@ -228,7 +231,11 @@ public:
     fs.exceptions(ios::failbit | ios::badbit);
     fs.open(path, ios::in | ios::out | ios::binary | ios::trunc);
     
-    streamsize total = get_width() * get_height() * COLOR_TYPE;
+    streamsize total =
+      boost::numeric_cast<streamsize>(get_width()) *
+      boost::numeric_cast<streamsize>(get_height()) *
+      COLOR_TYPE;
+    
     streamsize write_size = WRITE_SIZE;
     
     uint8_t *nil = new uint8_t[write_size];
@@ -251,7 +258,7 @@ public:
   
   ~cached_image() {
     // flush the memory cache
-    for (int i = 0; i < buffer_size; i++) { 
+    for (size_t i = 0; i < buffer_size; i++) { 
       icache* ic = &buffer[i];
       if (ic->is_set()) {
         set_pixel(ic->x, ic->y, ic->c);

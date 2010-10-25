@@ -218,13 +218,11 @@ private:
   icache *buffer;
   size_t buffer_size;
   std::fstream fs;
-  offs_t ppos, gpos;
 public:
   cached_image(const char *path, size_t w, size_t h, size_t buffer_size) :
     image_base(w, h),
     path(path),
-    buffer_size(buffer_size),
-    ppos(0), gpos(0)
+    buffer_size(buffer_size)
   {
     using namespace std;
     

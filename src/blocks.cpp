@@ -104,6 +104,12 @@ void mc::initialize_constants() {
   mc::MaterialName[mc::Reed] = "Reed";
   mc::MaterialName[mc::Jukebox] = "Jukebox";
   mc::MaterialName[mc::Fence] = "Fence";
+  mc::MaterialName[mc::Pumpkin] = "Pumpkin";
+  mc::MaterialName[mc::Bloodstone] = "Bloodstone";
+  mc::MaterialName[mc::Slowsand] = "Slowsand";
+  mc::MaterialName[mc::Lightstone] = "Lighstone";
+  mc::MaterialName[mc::Portal] = "Portal";
+  mc::MaterialName[mc::Jackolantern] = "Jackolantern";
 
   mc::MaterialColor[mc::Air] = color(255,255,255,0);
   mc::MaterialColor[mc::Stone] = color(0xcd, 0xcd, 0xcd, 0xff);
@@ -191,6 +197,12 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Reed] = color(193,234,150,255);
   mc::MaterialColor[mc::Jukebox] = color();
   mc::MaterialColor[mc::Fence] = color(0x58, 0x36, 0x16, 200);
+  mc::MaterialColor[mc::Pumpkin] = color(0xf9, 0x5d, 0x11, 0xff);
+  mc::MaterialColor[mc::Bloodstone] = color(200,0,0,255);
+  mc::MaterialColor[mc::Slowsand] = color(134,134,67,255);
+  mc::MaterialColor[mc::Lightstone] = color(0xff, 0xed, 0x8c, 0xff);
+  mc::MaterialColor[mc::Portal] = color(0x53, 0x14, 0xd4, 0x55);
+  mc::MaterialColor[mc::Jackolantern] = color(0xf9, 0x5d, 0x11, 0xff);
   
   mc::MaterialSideColor[mc::Air] = color(mc::MaterialColor[mc::Air]);
   mc::MaterialSideColor[mc::Stone] = color(mc::MaterialColor[mc::Stone]);
@@ -278,6 +290,12 @@ void mc::initialize_constants() {
   mc::MaterialSideColor[mc::Reed] = color(mc::MaterialColor[mc::Reed]);
   mc::MaterialSideColor[mc::Jukebox] = color(mc::MaterialColor[mc::Jukebox]);
   mc::MaterialSideColor[mc::Fence] = color(mc::MaterialColor[mc::Fence]);
+  mc::MaterialSideColor[mc::Pumpkin] = color(mc::MaterialColor[mc::Pumpkin]);
+  mc::MaterialSideColor[mc::Bloodstone] = color(mc::MaterialColor[mc::Bloodstone]);
+  mc::MaterialSideColor[mc::Slowsand] = color(mc::MaterialColor[mc::Slowsand]);
+  mc::MaterialSideColor[mc::Lightstone] = color(mc::MaterialColor[mc::Lightstone]);
+  mc::MaterialSideColor[mc::Portal] = color(mc::MaterialColor[mc::Portal]);
+  mc::MaterialSideColor[mc::Jackolantern] = color(mc::MaterialColor[mc::Jackolantern]);
   
   mc::MaterialModes[mc::Air] = Block;
   mc::MaterialModes[mc::Stone] = Block;
@@ -365,7 +383,13 @@ void mc::initialize_constants() {
   mc::MaterialModes[mc::Reed] = Block;
   mc::MaterialModes[mc::Jukebox] = Block;
   mc::MaterialModes[mc::Fence] = Block;
-  
+  mc::MaterialModes[mc::Pumpkin] = Block;
+  mc::MaterialModes[mc::Bloodstone] = Block;
+  mc::MaterialModes[mc::Slowsand] = Block;
+  mc::MaterialModes[mc::Lightstone] = Block;
+  mc::MaterialModes[mc::Portal] = Block;
+  mc::MaterialModes[mc::Jackolantern] = Block;
+
   for (int i = 0; i < mc::MaterialCount; i++) {
     mc::MaterialSideColor[i].darken(50);
   }

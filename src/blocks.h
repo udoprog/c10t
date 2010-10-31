@@ -99,8 +99,14 @@ namespace mc {
     Reed = 0x53,
     Jukebox = 0x54,
     Fence = 0x55,
-    
-    MaterialCount = 0x56
+	Pumpkin = 0x56,
+	Bloodstone = 0x57,
+	Slowsand = 0x58,
+	Lightstone = 0x59,
+	Portal = 0x5A,
+	Jackolantern = 0x5B,
+
+	MaterialCount = 0x5C
   };
 
   void initialize_constants();

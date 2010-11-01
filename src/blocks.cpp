@@ -383,12 +383,12 @@ void mc::initialize_constants() {
   mc::MaterialModes[mc::Reed] = Block;
   mc::MaterialModes[mc::Jukebox] = Block;
   mc::MaterialModes[mc::Fence] = Block;
-  mc::MaterialColor[mc::Pumpkin] = Block;
-  mc::MaterialColor[mc::Bloodstone] = Block;
-  mc::MaterialColor[mc::Slowsand] = Block;
-  mc::MaterialColor[mc::Lightstone] = Block;
-  mc::MaterialColor[mc::Portal] = Block;
-  mc::MaterialColor[mc::Jackolantern] = Block;
+  mc::MaterialModes[mc::Pumpkin] = Block;
+  mc::MaterialModes[mc::Bloodstone] = Block;
+  mc::MaterialModes[mc::Slowsand] = Block;
+  mc::MaterialModes[mc::Lightstone] = Block;
+  mc::MaterialModes[mc::Portal] = Block;
+  mc::MaterialModes[mc::Jackolantern] = Block;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
     mc::MaterialSideColor[i].darken(50);

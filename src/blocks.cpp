@@ -112,15 +112,15 @@ void mc::initialize_constants() {
   mc::MaterialName[mc::Jackolantern] = "Jackolantern";
   
   mc::MaterialColor[mc::Air] = color(255,255,255,0);
-  mc::MaterialColor[mc::Stone] = color(0xcd, 0xcd, 0xcd, 0xff);
-  mc::MaterialColor[mc::Grass] = color(117,176,73,255);
+  mc::MaterialColor[mc::Stone] = color(128,128,128,255);
+  mc::MaterialColor[mc::Grass] = color(120,172,70,255);
   mc::MaterialColor[mc::Dirt] = color(134,96,67,255);
-  mc::MaterialColor[mc::Cobblestone] = color(115,115,115,255);
+  mc::MaterialColor[mc::Cobblestone] = color(100,100,100,255);
   mc::MaterialColor[mc::Wood] = color(157,128,79,255);
   mc::MaterialColor[mc::Sapling] = color(120,120,120,0);
   mc::MaterialColor[mc::Bedrock] = color(84,84,84,255);
-  mc::MaterialColor[mc::Water] = color(0x67, 0x8d, 0xff, 0xd0);
-  mc::MaterialColor[mc::StationaryWater] = color(38,92,255,80);
+  mc::MaterialColor[mc::Water] = color(56,68,127,127);
+  mc::MaterialColor[mc::StationaryWater] = color(56,68,127,127);
   mc::MaterialColor[mc::Lava] = color(255,90,0,255);
   mc::MaterialColor[mc::StationaryLava] = color(255,90,0,255);
   mc::MaterialColor[mc::Sand] = color(218,210,158,255);
@@ -129,7 +129,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::IronOre] = color(136,130,127,255);
   mc::MaterialColor[mc::CoalOre] = color(115,115,115,255);
   mc::MaterialColor[mc::Log] = color(102,81,51,255);
-  mc::MaterialColor[mc::Leaves] = color(0x4a, 0x83, 0x42, 0xb0);//120);
+  mc::MaterialColor[mc::Leaves] = color(58,102,41,0xb0);
   mc::MaterialColor[mc::Sponge] = color();
   mc::MaterialColor[mc::Glass] = color(255,255,255,64);
   mc::MaterialColor[mc::RedCloth] = color();
@@ -156,11 +156,11 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::IronBlock] = color(0xd9, 0xd9, 0xd9, 0xff);
   mc::MaterialColor[mc::DoubleStep] = color(200,200,200,255);
   mc::MaterialColor[mc::Step] = color(200,200,200,255);
-  mc::MaterialColor[mc::Brick] = color(0xf9, 0x5d, 0x11, 0xff);
+  mc::MaterialColor[mc::Brick] = color(139,26,26,255);
   mc::MaterialColor[mc::TNT] = color(0xff, 0x0, 0x0, 0xff);
   mc::MaterialColor[mc::Bookcase] = color(0xbf, 0xa9, 0x74, 0xff);
   mc::MaterialColor[mc::MossyCobblestone] = color(0x7f, 0xae, 0x7d, 0xff);
-  mc::MaterialColor[mc::Obsidian] = color(0x53, 0x14, 0xd4, 0xff);
+  mc::MaterialColor[mc::Obsidian] = color(0,0,50,255);
   mc::MaterialColor[mc::Torch] = color(0xff, 0xe1, 0x60,0xd0);
   mc::MaterialColor[mc::Fire] = color(0xe0, 0xae, 0x15, 0xff);
   mc::MaterialColor[mc::MobSpawner] = color(0xff, 0xff, 0xff, 0x00);
@@ -192,7 +192,7 @@ void mc::initialize_constants() {
   mc::MaterialColor[mc::Snow] = color(255, 255, 255, 255);
   mc::MaterialColor[mc::Ice] = color(120, 120, 255, 120);
   mc::MaterialColor[mc::SnowBlock] = color(255, 255, 255, 255);
-  mc::MaterialColor[mc::Cactus] = color(64, 255, 64, 255);
+  mc::MaterialColor[mc::Cactus] = color(85,107,47,255);
   mc::MaterialColor[mc::Clay] = color();
   mc::MaterialColor[mc::Reed] = color(193,234,150,255);
   mc::MaterialColor[mc::Jukebox] = color();

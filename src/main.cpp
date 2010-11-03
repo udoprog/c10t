@@ -36,6 +36,7 @@
 #include "text.h"
 #include "marker.h"
 #include "json.h"
+#include "warps.h"
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -310,7 +311,7 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
   }
 }
 
-bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const string& output) {
+bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& wdb, const string& output) {
   if (s.debug) {
     cout << "world_info" << endl;
     cout << "  min_x: " << world.min_x << endl;
@@ -456,7 +457,11 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
 
   boost::ptr_vector<marker> markers;
 
-  bool show_markers = s.show_players || s.show_signs || s.show_coordinates;
+  bool show_markers =
+    s.show_players
+    || s.show_signs
+    || s.show_coordinates
+    || s.show_warps;
   
   if (show_markers) {
     fs::path ttf_path(s.ttf_path);
@@ -530,6 +535,29 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, const strin
         std::stringstream ss;
         ss << "(" << l.xPos * mc::MapX << ", " << l.zPos * mc::MapZ << ")";
         marker *m = new marker(ss.str(), "coord", coordinate_font, l.xPos * mc::MapX, 0, l.zPos * mc::MapZ);
+        markers.push_back(m);
+      }
+    }
+    
+    if (s.show_warps) {
+      text::font_face warp_font = font;
+      
+      if (s.has_warp_color) {
+        warp_font.set_color(s.warp_color);
+      }
+      
+      std::vector<warp>::iterator wit = wdb.warps.begin();
+      
+      /* initial code for projecting warps */
+      for (; wit != wdb.warps.end(); wit++) { 
+        warp w = *wit;
+        
+        if (w.zPos / mc::MapZ < s.min_z) continue;
+        if (w.zPos / mc::MapZ > s.max_z) continue;
+        if (w.xPos / mc::MapX < s.min_x) continue;
+        if (w.xPos / mc::MapX > s.max_x) continue;
+        
+        marker *m = new marker(w.name, "warp", warp_font, w.xPos, w.yPos, w.zPos);
         markers.push_back(m);
       }
     }
@@ -613,6 +641,7 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
   }
   
   players_db pdb(s, world_path / "players");
+  warps_db wdb(s);
   
   if (!s.silent) cout << "Working on " << s.threads << " thread(s)... " << endl;
   
@@ -636,7 +665,7 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
   if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
 
   if (!s.use_split) {
-    return do_one_world(s, world, pdb, output);
+    return do_one_world(s, world, pdb, wdb, output);
   }
   
   world_info** worlds = world.split(s.split);
@@ -649,7 +678,7 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
     stringstream ss;
     ss << boost::format(output) % current->chunk_x % current->chunk_y;
     
-    if (!do_one_world(s, *current, pdb, ss.str())) {
+    if (!do_one_world(s, *current, pdb, wdb, ss.str())) {
       return false;
     }
   }
@@ -747,6 +776,8 @@ int do_help() {
     << "  --show-signs[=PREFIX]     - Will draw out signs from all chunks, if PREFIX   " << endl
     << "                              is specified, only signs matching the prefix will" << endl
     << "                              be drawn                                         " << endl
+    << "  --show-warps=<file>       - Will draw out warp positions from the specified  " << endl
+    << "                              warps.txt file, as used by hey0's mod            " << endl
     << "  --show-coordinates        - Will draw out each chunks expected coordinates   " << endl
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
     << "                              file when necessary                              " << endl
@@ -774,6 +805,8 @@ int do_help() {
     << "  --sign-color <color>      - Use the specified color when drawing signs.      " << endl
     << "                              defaults to <ttf-color>                          " << endl
     << "  --player-color <color>    - Use the specified color when showing players.    " << endl
+    << "                              defaults to <ttf-color>                          " << endl
+    << "  --warp-color <color>      - Use the specified color when showing warps.      " << endl
     << "                              defaults to <ttf-color>                          " << endl
     << "  --coordinate-color <color>                                                   " << endl
     << "                            - Use the specified color when drawing coordinates." << endl
@@ -1092,6 +1125,8 @@ int main(int argc, char *argv[]){
      {"striped-terrain",       no_argument, &flag, 15},
      {"write-markers",       required_argument, &flag, 16},
      {"pixelsplit",       required_argument, &flag, 17},
+     {"show-warps",       required_argument, &flag, 18},
+     {"warp-color",       required_argument, &flag, 19},
      {0, 0, 0, 0}
   };
 
@@ -1228,6 +1263,22 @@ int main(int argc, char *argv[]){
 
         s.use_pixelsplit = true;
         
+        break;
+      case 18:
+        s.show_warps = true;
+        s.show_warps_path = fs::system_complete(fs::path(optarg));
+
+        if (!fs::is_regular(s.show_warps_path)) {
+          error << "Not a file: " << optarg;
+          goto exit_error;
+        }
+        break;
+      case 19:
+        if (!parse_color(optarg, s.warp_color)) {
+          goto exit_error;
+        }
+        
+        s.has_warp_color = true;
         break;
       }
       

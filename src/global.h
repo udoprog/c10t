@@ -35,16 +35,19 @@ struct settings_t {
   bool debug;
   bool use_split;
   bool striped_terrain;
-  bool show_players;
   std::set<std::string> show_players_set;
-  bool show_coordinates;
   bool require_all;
   bool pedantic_broad_phase;
-  bool show_signs;
   std::string show_signs_filter;
+  bool show_coordinates;
+  bool show_signs;
+  bool show_players;
+  bool show_warps;
+  fs::path show_warps_path;
   bool has_sign_color;
   bool has_player_color;
   bool has_coordinate_color;
+  bool has_warp_color;
   int split;
   // top/bottom used for slicing
   int top;
@@ -58,6 +61,7 @@ struct settings_t {
   color ttf_color;
   color sign_color;
   color player_color;
+  color warp_color;
   color coordinate_color;
   std::string ttf_path;
   std::string cache_file;
@@ -94,6 +98,8 @@ struct settings_t {
     this->silent = false;
     this->show_players = false;
     this->show_coordinates = false;
+    this->show_signs = false;
+    this->show_warps = false;
     this->require_all = false;
     this->striped_terrain = false;
     this->rotation = 0;
@@ -111,13 +117,14 @@ struct settings_t {
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);
     this->sign_color = color(0, 0, 0, 0xff);
-    this->has_sign_color = false;
     this->player_color = color(0, 0, 0, 0xff);
     this->has_player_color = false;
-    this->coordinate_color = color(0, 0, 0, 0xff);
+    this->has_sign_color = false;
     this->has_coordinate_color = false;
+    this->has_warp_color = false;
+    this->coordinate_color = color(0, 0, 0, 0xff);
+    this->warp_color = color(0, 0, 0, 0xff);
     this->pedantic_broad_phase = false;
-    this->show_signs = false;
     this->cache_use = false;
     this->cache_key = "";
     this->cache_dir = "cache";

@@ -10,9 +10,10 @@ SOURCES+=src/common.cpp
 SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
 SOURCES+=src/utf8.cpp
+SOURCES+=src/warps.cpp
 
 OBJECTS=${SOURCES:.cpp=.o}
-CXXFLAGS+=-I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O3
+CXXFLAGS+=-I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O3 -g
 
 PACKAGE=${DIST}-${VERSION}
 BUILD=./build

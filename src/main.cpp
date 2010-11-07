@@ -141,13 +141,11 @@ class Renderer : public threadworker<render_job, render_result> {
 public:
   settings_t& s;
   
-  Renderer(settings_t& s, int n) : threadworker<render_job, render_result>(n), s(s) {
+  Renderer(settings_t& s, int n, int total) : threadworker<render_job, render_result>(n, total), s(s) {
   }
   
   render_result work(render_job job) {
     level_file* level = job.level.get();
-    
-    level->load_file(job.path);
     
     render_result p;
     
@@ -369,47 +367,50 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     all = new memory_image(i_w, i_h);
   }
   
-  Renderer renderer(s, s.threads);
-  renderer.start();
   unsigned int world_size = world.levels.size();
   
-  std::list<level>::iterator lvlit = world.levels.begin();
+  Renderer renderer(s, s.threads, world_size);
   
-  unsigned int lvlq = 0;
-  unsigned int i;
-
   std::vector<light_marker> light_markers;
   
   if (s.binary) {
     progress_c = cout_progress_b_render;
   }
+
+  std::list<level>::iterator lvlit = world.levels.begin();
   
+  renderer.start();
+  
+  unsigned int lvlq = 0;
+
+  unsigned int i;
   for (i = 0; i < world_size; i++) {
-    if (lvlq == 0) {
-      for (; lvlq < s.threads * 4 && lvlit != world.levels.end(); lvlq++) {
-        level l = *lvlit;
-        
-        fs::path path = world.get_level_path(l);
-        
-        if (s.debug) {
-          cout << "using file: " << path << endl;
-        }
-        
-        render_job job;
-        job.level.reset(new level_file(s));
-        job.path = path;
-        job.xPos = l.xPos;
-        job.zPos = l.zPos;
-        
-        renderer.give(job);
-        lvlit++;
+    for (; lvlq < s.threads && lvlit != world.levels.end(); lvlit++) {
+      level l = *lvlit;
+      
+      fs::path path = world.get_level_path(l);
+      
+      if (s.debug) {
+        cout << "using file: " << path << endl;
       }
+
+      level_file* lf = new level_file(s);
+      
+      lf->load_file(path);
+      
+      render_job job;
+      
+      job.level.reset(lf);
+      job.path = path;
+      job.xPos = l.xPos;
+      job.zPos = l.zPos;
+      
+      renderer.give(job);
+      lvlq++;
     }
     
-    --lvlq;
-    
     render_result p = renderer.get();
-
+    
     boost::shared_ptr<level_file> level(p.level);
     
     if (level->grammar_error) {
@@ -449,6 +450,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       error << strerror(errno) << ": " << s.cache_file;
       renderer.join();
     }
+    
+    --lvlq;
   }
   
   if (progress_c != NULL) progress_c(world_size, world_size);

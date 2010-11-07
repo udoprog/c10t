@@ -16,46 +16,74 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
+template<typename T>
+class sync_queue {
+  private:
+    std::queue<T> q;
+    boost::mutex mutex;
+    boost::condition empty_cond;
+  public:
+    void add(T o) {
+      boost::mutex::scoped_lock lock(mutex);
+      q.push(o);
+      empty_cond.notify_one();
+    }
+    
+    T take() {
+      boost::mutex::scoped_lock lock(mutex);
+      while (q.empty()) {
+        empty_cond.wait(lock);
+      }
+
+      T o = q.front();
+      q.pop();
+      return o;
+    }
+    
+    bool empty() {
+      boost::mutex::scoped_lock lock(mutex);
+      return q.empty();
+    }
+};
+
 template <class I, class O>
 class threadworker
 {
 private:
-  std::queue<I> in;
-  std::queue<O> out;
-  std::list<boost::thread *> threads;
-  boost::condition in_cond;
-  boost::condition out_cond;
+  int total;
+
+  sync_queue<I> in;
+  sync_queue<O> out;
   boost::condition start_cond;
   boost::condition order_cond;
-  boost::mutex in_mutex;
-  boost::mutex out_mutex;
   boost::mutex start_mutex;
   boost::mutex order_mutex;
   
   const int thread_count;
+  
   volatile int running;
   volatile int started;
-  volatile int input;
+  boost::detail::atomic_count input;
   boost::detail::atomic_count output;
+  
+  std::list<boost::thread*> threads;
 public:
-  threadworker(int c) : thread_count(c), running(1), started(0), input(0), output(1) {
+  threadworker(int c, int total) : total(total), thread_count(c), running(1), started(0), input(0), output(1) {
     for (int i = 0; i < c; i++) {
-      boost::thread *t = new boost::thread(boost::bind(&threadworker::run, this, i));
+      boost::thread* t = new boost::thread(boost::bind(&threadworker::run, this, i));
       threads.push_back(t);
     }
   }
   
   virtual ~threadworker() {
-    for (std::list<boost::thread *>::iterator it = threads.begin(); it != threads.end(); it++)
+    for (std::list<boost::thread*>::iterator it = threads.begin(); it != threads.end(); it++)
     {
       delete *it;
     }
   }
   
   void give(I t) {
-    boost::mutex::scoped_lock lock(in_mutex);
-    in.push(t);
-    in_cond.notify_one();
+    in.add(t);
   }
   
   void start() {
@@ -72,73 +100,41 @@ public:
         start_cond.wait(lock);
       }
     }
-    
-    while (running) {
-      I i;
 
-      int qp;
-      
-      {
-        boost::mutex::scoped_lock lock(in_mutex);
-        
-        while (running && in.empty()) {
-          in_cond.wait(lock);
-        }
-        
-        if (!running) {
-          return;
-        }
-        
-        i = in.front();
-        in.pop();
-        qp = ++input;
-      }
+    int qp;
+    
+    while ((qp = ++input) <= total) {
+      I i = in.take();
       
       O o = work(i);
       
       {
         // first, make sure that we output the results in the same order they came in
         // try to make it as lock-free as possible
-        boost::mutex::scoped_lock lock(out_mutex);
+        boost::mutex::scoped_lock lock(order_mutex);
         
         while (qp != output) {
-          order_cond.wait(out_mutex);
+          order_cond.wait(lock);
         }
         
-        out.push(o);
-        out_cond.notify_one();
         ++output;
         order_cond.notify_all();
       }
+      
+      out.add(o);
     }
   }
 
   virtual O work(I) = 0;
   
   O get() {
-    O o;
-    
-    boost::mutex::scoped_lock lock(out_mutex);
-    
-    while (out.empty()) {
-      out_cond.wait(lock);
-    }
-    
-    o = out.front();
-    out.pop();
-    
-    return o;
+    return out.take();
   }
-
+  
   void join() {
     running = 0;
     
-    {
-      boost::mutex::scoped_lock lock(in_mutex);
-      in_cond.notify_all();
-    }
-    
-    for (std::list<boost::thread *>::iterator it = threads.begin(); it != threads.end(); it++)
+    for (std::list<boost::thread*>::iterator it = threads.begin(); it != threads.end(); it++)
     {
       (*it)->join();
     }

@@ -13,7 +13,7 @@ SOURCES+=src/utf8.cpp
 SOURCES+=src/warps.cpp
 
 OBJECTS=${SOURCES:.cpp=.o}
-CXXFLAGS+=-I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O3 -g
+CXXFLAGS+=-I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O2
 
 PACKAGE=${DIST}-${VERSION}
 BUILD=./build

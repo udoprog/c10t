@@ -122,13 +122,12 @@ public:
         
         while (qp != output) {
           order_cond.wait(lock);
-          boost::thread::yield();
         }
         
         out.add(o);
         
         ++output;
-        order_cond.notify_one();
+        order_cond.notify_all();
       }
     }
   }

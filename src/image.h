@@ -275,4 +275,6 @@ public:
 
 std::map<point2, image_base*> image_split(image_base* base, int pixels);
 
+std::string get_png_version();
+
 #endif /* _IMG_H_ */

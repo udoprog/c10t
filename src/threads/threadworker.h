@@ -22,21 +22,25 @@ class sync_queue {
     std::queue<T> q;
     boost::mutex mutex;
     boost::condition empty_cond;
+    volatile int count;
   public:
+    sync_queue() : count(0) {}
+
     void add(T o) {
       boost::mutex::scoped_lock lock(mutex);
       q.push(o);
       empty_cond.notify_one();
     }
     
-    T take() {
+    T take(int& pos) {
       boost::mutex::scoped_lock lock(mutex);
       while (q.empty()) {
         empty_cond.wait(lock);
       }
-
+      
       T o = q.front();
       q.pop();
+      pos = count++;
       return o;
     }
     
@@ -50,11 +54,12 @@ template <class I, class O>
 class threadworker
 {
 private:
-  int total;
-
+  const int total;
+  
   sync_queue<I> in;
   sync_queue<O> out;
   boost::condition start_cond;
+  boost::condition input_cond;
   boost::condition order_cond;
   boost::mutex start_mutex;
   boost::mutex order_mutex;
@@ -68,7 +73,7 @@ private:
   
   std::list<boost::thread*> threads;
 public:
-  threadworker(int c, int total) : total(total), thread_count(c), running(1), started(0), input(0), output(1) {
+  threadworker(int c, int total) : total(total), thread_count(c), running(1), started(0), input(0), output(0) {
     for (int i = 0; i < c; i++) {
       boost::thread* t = new boost::thread(boost::bind(&threadworker::run, this, i));
       threads.push_back(t);
@@ -87,9 +92,12 @@ public:
   }
   
   void start() {
-    started = 1;
     boost::mutex::scoped_lock lock(start_mutex);
+    started = 1;
     start_cond.notify_all();
+  }
+
+  inline void add_result(O o, int &qp) {
   }
   
   void run(int id) {
@@ -100,12 +108,11 @@ public:
         start_cond.wait(lock);
       }
     }
-
+    
     int qp;
     
-    while ((qp = ++input) <= total) {
-      I i = in.take();
-      
+    while (++input <= total) {
+      I i = in.take(qp);
       O o = work(i);
       
       {
@@ -115,20 +122,22 @@ public:
         
         while (qp != output) {
           order_cond.wait(lock);
+          boost::thread::yield();
         }
         
+        out.add(o);
+        
         ++output;
-        order_cond.notify_all();
+        order_cond.notify_one();
       }
-      
-      out.add(o);
     }
   }
 
   virtual O work(I) = 0;
   
   O get() {
-    return out.take();
+    int t;
+    return out.take(t);
   }
   
   void join() {

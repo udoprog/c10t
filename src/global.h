@@ -53,6 +53,7 @@ struct settings_t {
   int top;
   int bottom;
   unsigned int threads;
+  unsigned int prebuffer;
   enum mode mode;
   unsigned int rotation;
   int min_x, max_x, min_z, max_z; // limits to draw
@@ -86,7 +87,8 @@ struct settings_t {
 #   else
       this->threads = 1;
 #   endif
-
+    this->prebuffer = 4;
+    
     this->use_split = false;
     this->split = 1;
     this->cavemode = false;

@@ -384,29 +384,35 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   unsigned int lvlq = 0;
 
   unsigned int i;
-  for (i = 0; i < world_size; i++) {
-    for (; lvlq < s.threads && lvlit != world.levels.end(); lvlit++) {
-      level l = *lvlit;
-      
-      fs::path path = world.get_level_path(l);
-      
-      if (s.debug) {
-        cout << "using file: " << path << endl;
-      }
 
-      level_file* lf = new level_file(s);
-      
-      lf->load_file(path);
-      
-      render_job job;
-      
-      job.level.reset(lf);
-      job.path = path;
-      job.xPos = l.xPos;
-      job.zPos = l.zPos;
-      
-      renderer.give(job);
-      lvlq++;
+  unsigned int prebuffer = s.threads * s.prebuffer;
+  unsigned int filllimit = prebuffer / 2;
+  
+  for (i = 0; i < world_size; i++) {
+    if (lvlq <= filllimit) {
+      for (; lvlq < prebuffer && lvlit != world.levels.end(); lvlit++) {
+        level l = *lvlit;
+        
+        fs::path path = world.get_level_path(l);
+        
+        if (s.debug) {
+          cout << "using file: " << path << endl;
+        }
+
+        level_file* lf = new level_file(s);
+        
+        lf->load_file(path);
+        
+        render_job job;
+        
+        job.level.reset(lf);
+        job.path = path;
+        job.xPos = l.xPos;
+        job.zPos = l.zPos;
+        
+        renderer.give(job);
+        lvlq++;
+      }
     }
     
     render_result p = renderer.get();
@@ -754,6 +760,9 @@ int do_help() {
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores " << endl
     << "                              on your machine                                  " << endl
+    << "      --prebuffer <int>     - Specify how many jobs to prebuffer for each      " << endl
+    << "                              individual thread                                " << endl
+    << "                                                                               " << endl
     << "  -B <set>                  - Specify the base color for a specific block id   " << endl
     << "                              <set> has the format <blockid>=<color>           " << endl
     << "                              <8 digit hex> specifies the RGBA values as       " << endl
@@ -850,6 +859,9 @@ int do_version() {
   cout << "version " << C10T_VERSION << endl;
   cout << "by: " << C10T_CONTACT << endl;
   cout << "site: " << C10T_SITE << endl;
+  cout << endl;
+  cout << "This program uses libpng" << endl;
+  cout << get_png_version() << endl;
   return 0;
 }
 
@@ -1130,6 +1142,7 @@ int main(int argc, char *argv[]){
      {"pixelsplit",       required_argument, &flag, 17},
      {"show-warps",       required_argument, &flag, 18},
      {"warp-color",       required_argument, &flag, 19},
+     {"prebuffer",       required_argument, &flag, 20},
      {0, 0, 0, 0}
   };
 
@@ -1282,6 +1295,15 @@ int main(int argc, char *argv[]){
         }
         
         s.has_warp_color = true;
+        break;
+      case 20:
+        s.prebuffer = atoi(optarg);
+        
+        if (s.prebuffer <= 0) {
+          error << "Number of prebuffered jobs must be more than 0";
+          goto exit_error;
+        }
+        
         break;
       }
       

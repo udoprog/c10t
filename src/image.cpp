@@ -287,6 +287,10 @@ std::map<point2, image_base*> image_split(image_base* base, int pixels) {
   return map;
 }
 
+std::string get_png_version() {
+  return png_get_copyright(NULL);
+}
+
 /* align the memory cache with the actual image */
 /*void cached_image::align(int xp, int yp, int xw, int yw)
 {

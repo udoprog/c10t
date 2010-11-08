@@ -2,15 +2,11 @@ ARCH=x86_64
 OS=windows
 VERSION=SNAPSHOT
 
-#SOURCES+=./contrib/boost_thread/src/win32/thread.cpp
-#SOURCES+=./contrib/boost_thread/src/win32/tss_pe.cpp
-#SOURCES+=./contrib/tss_dummy.cpp
-
+SOURCES=src/win32/tss_cleanup_implemented.cpp
 USR=/usr/x86_64-w64-mingw32/usr
 CXX=x86_64-w64-mingw32-g++
-#CXXFLAGS=-DC10T_DISABLE_THREADS -I./contrib/include
 CXXFLAGS=-m64 -O3 -DBOOST_THREAD_USE_LIB=1 -DBOOST_USE_WINDOWS_H
-LDFLAGS=-static-libgcc -static -lpng -lz -lboost_filesystem -lboost_system -lboost_thread -lfreetype
+LDFLAGS=-static-libgcc -static -lpng -lz -lboost_filesystem -lboost_system -lboost_thread_win32 -lfreetype
 
 TARGET=c10t.exe
 TARGET_DEBUG=c10t-debug.exe

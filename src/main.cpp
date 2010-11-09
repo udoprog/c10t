@@ -28,6 +28,7 @@
 
 #include "global.h"
 #include "level.h"
+#include "cache.h"
 #include "image.h"
 #include "blocks.h"
 #include "fileutils.h"
@@ -146,13 +147,33 @@ public:
   
   render_result work(render_job job) {
     level_file* level = job.level.get();
-    
+
     render_result p;
     
     p.path = job.path;
     p.level = job.level;
     p.xPos = job.xPos;
     p.zPos = job.zPos;
+    
+    cache_file cache(s.cache_dir, s.cache_compress);
+    
+    if (s.cache_use) {
+      cache.set_path(fs::basename(p.path) + ".cmap" );
+      
+      std::time_t level_mod = fs::last_write_time(p.path);
+    
+      if (fs::exists(cache.get_path())) {
+        if (cache.read(job.level->oper.get(), level_mod)) {
+          p.operations = job.level->oper;
+          return p;
+        }
+        
+        fs::remove(cache.get_path());
+      }
+      
+      // in case of future writes, save the modification time
+      cache.set_modification_time(level_mod);
+    }
     
     if (level->grammar_error) {
       return p;
@@ -162,11 +183,12 @@ public:
       return p;
     }
     
-    switch (s.mode) {
-    case Top:           p.operations = level->get_image(s); break;
-    case Oblique:       p.operations = level->get_oblique_image(s); break;
-    case Isometric:     p.operations = level->get_isometric_image(s); break;
-    case ObliqueAngle:  p.operations = level->get_obliqueangle_image(s); break;
+    p.operations = level->get_image();
+    
+    if (s.cache_use) {
+      if (!cache.write(p.operations.get())) {
+        fs::remove(cache.get_path());
+      }
     }
     
     return p;
@@ -399,7 +421,14 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
           cout << "using file: " << path << endl;
         }
 
-        level_file* lf = new level_file(s);
+        level_file* lf;
+        
+        switch (s.mode) {
+        case Top:           lf = new topdown_level_file(s); break;
+        case Oblique:       lf = new oblique_level_file(s); break;
+        case Isometric:     lf = new isometric_level_file(s); break;
+        case ObliqueAngle:  lf = new obliqueangle_level_file(s); break;
+        }
         
         lf->load_file(path);
         

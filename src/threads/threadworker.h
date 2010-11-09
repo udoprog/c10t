@@ -125,7 +125,6 @@ public:
         }
         
         out.add(o);
-        
         ++output;
         order_cond.notify_all();
       }

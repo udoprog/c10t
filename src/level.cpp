@@ -129,6 +129,7 @@ level_file::~level_file(){
 
 level_file::level_file(settings_t& s)
     :
+    s(s),
     islevel(false),
     grammar_error(false),
     grammar_error_where(0),
@@ -136,32 +137,11 @@ level_file::level_file(settings_t& s)
     in_te(false), in_sign(false),
     sign_x(0), sign_y(0), sign_z(0),
     sign_text(""),
-    cache(s.cache_dir, s.cache_compress),
-    cache_use(s.cache_use),
-    cache_hit(false),
     oper(new image_operations)
 { }
 
-void level_file::load_file(const fs::path path) {
-  if (cache_use) {
-    cache.set_path(fs::basename(path) + ".cmap" );
-    
-    std::time_t level_mod = fs::last_write_time(path);
-  
-    if (fs::exists(cache.get_path())) {
-      if (cache.read(oper.get(), level_mod)) {
-        cache_hit = true;
-        islevel = true;
-        return;
-      }
-      
-      fs::remove(cache.get_path());
-    }
-    
-    // in case of future writes, save the modification time
-    cache.set_modification_time(level_mod);
-  }
-  
+void level_file::load_file(const fs::path path)
+{
   nbt::Parser<level_file> parser(this);
   
   parser.register_byte_array = register_byte_array;
@@ -289,26 +269,24 @@ inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
   return true;
 }
 
-boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
-  if (cache_hit) return oper;
-  
+boost::shared_ptr<image_operations>
+topdown_level_file::get_image()
+{
   Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   if (!islevel) {
     return oper;
   }
   
+  size_t iw, ih;
+  c.get_top_limits(iw, ih);
+  
   // block type
   BlockRotation b_r(s, blocks.get());
   BlockRotation bl_r(s, blocklight.get());
   BlockRotation sl_r(s, skylight.get());
   
-  size_t bx;
-  size_t by;
-  
-  c.get_top_limits(bx, by);
-
-  oper->set_limits(bx + 1, by);
+  oper->set_limits(iw, ih);
   
   for (int z = 0; z < mc::MapZ; z++) {
     for (int x = 0; x < mc::MapX; x++) {
@@ -350,38 +328,30 @@ boost::shared_ptr<image_operations> level_file::get_image(settings_t& s) {
     }
   }
   
-  if (cache_use) {
-    if (!cache.write(oper.get())) {
-      fs::remove(cache.get_path());
-    }
-  }
-  
   return oper;
 }
 
-boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
+boost::shared_ptr<image_operations> oblique_level_file::get_image()
 {
-  if (cache_hit) return oper;
-  
   if (!islevel) {
     return oper;
   }
   
   Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
-  // block type
-      
+  size_t iw, ih;
+  c.get_oblique_limits(iw, ih);
+  
   BlockRotation b_r(s, blocks.get());
   BlockRotation bl_r(s, blocklight.get());
   BlockRotation sl_r(s, skylight.get());
   
-  size_t bmx, bmy, bmt;
-  c.get_oblique_limits(bmx, bmy);
-  bmt = bmx * bmy;
-  bool blocked[bmt];
+  size_t bmt = iw * ih;
+  
+  bool* blocked = new bool[bmt];
   memset(blocked, 0x0, sizeof(bool) * bmt);
   
-  oper->set_limits(bmx + 1, bmy);
+  oper->set_limits(iw + 1, ih);
   
   for (int z = mc::MapZ - 1; z >= 0; z--) {
     for (int x = mc::MapX - 1; x >= 0; x--) {
@@ -405,7 +375,7 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
         
         color top = mc::MaterialColor[bt];
         
-        int bp = px + bmx * py;
+        int bp = px + iw * py;
         
         if (blocked[bp]) {
           continue;
@@ -429,38 +399,30 @@ boost::shared_ptr<image_operations> level_file::get_oblique_image(settings_t& s)
     }
   }
   
-  if (cache_use) {
-    if (!cache.write(oper.get())) {
-      fs::remove(cache.get_path());
-    }
-  }
-  
   return oper;
 }
-boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_t& s)
+boost::shared_ptr<image_operations> obliqueangle_level_file::get_image()
 {
-  if (cache_hit) return oper;
-  
   if (!islevel) {
     return oper;
   }
   
   Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
-  // block type
+  size_t iw, ih;
+  c.get_obliqueangle_limits(iw, ih);
   
   BlockRotation b_r(s, blocks.get());
   BlockRotation bl_r(s, blocklight.get());
   BlockRotation sl_r(s, skylight.get());
   BlockRotation hm_r(s, heightmap.get());
 
-  size_t bmx, bmy, bmt;
-  c.get_obliqueangle_limits(bmx, bmy);
-  bmt = bmx * bmy;
-  bool blocked[bmt];
+  size_t bmt = iw * ih;
+  
+  bool* blocked = new bool[bmt];
   memset(blocked, 0x0, sizeof(bool) * bmt);
   
-  oper->set_limits(bmx + 1, bmy);
+  oper->set_limits(iw + 1, ih);
   
   for (int z = mc::MapZ - 1; z >= 0; z--) {
     for (int x = mc::MapX - 1; x >= 0; x--) {
@@ -488,7 +450,7 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
         color top = mc::MaterialColor[bt];
         
         if (mc::MaterialModes[bt] == mc::Block) {
-          int bp = px + bmx * py;
+          int bp = px + iw * py;
           
           if (blocked[bp]) {
             continue;
@@ -538,39 +500,30 @@ boost::shared_ptr<image_operations> level_file::get_obliqueangle_image(settings_
     }
   }
 
-  if (cache_use) {
-    if (!cache.write(oper.get())) {
-      fs::remove(cache.get_path());
-    }
-  }
-  
   return oper;
 }
 
-boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& s)
+boost::shared_ptr<image_operations> isometric_level_file::get_image()
 {
-  if (cache_hit) return oper;
+  if (!islevel) {
+    return oper;
+  }
   
   Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   size_t iw, ih;
   c.get_isometric_limits(iw, ih);
   
-  if (!islevel) {
-    return oper;
-  }
-  
-  // block type
   BlockRotation b_r(s, blocks.get());
   BlockRotation bl_r(s, blocklight.get());
   BlockRotation sl_r(s, skylight.get());
   BlockRotation hm_r(s, heightmap.get());
   
-  int bmt;
-  bmt = iw * ih;
-  bool blocked[bmt];
+  size_t bmt = iw * ih;
+  
+  bool* blocked = new bool[bmt];
   memset(blocked, 0x0, sizeof(bool) * bmt);
-
+  
   oper->set_limits(iw + 1, ih);
   
   for (int z = mc::MapZ - 1; z >= 0; z--) {
@@ -682,12 +635,6 @@ boost::shared_ptr<image_operations> level_file::get_isometric_image(settings_t& 
     }
   }
   
-  if (cache_use) {
-    if (!cache.write(oper.get())) {
-      fs::remove(cache.get_path());
-    }
-  }
-  
   return oper;
 }
 
@@ -749,10 +696,18 @@ fast_level_file::fast_level_file(const fs::path path, bool force_parsing)
     parser.parse_file(path.string().c_str());
     return;
   }
-  
+
   std::vector<std::string> parts;
-  std::string basename = fs::basename(path);
-  boost::split(parts, basename, boost::is_any_of("."));
+  
+  // hackish split
+  {
+    std::stringstream ss(fs::basename(path));
+    std::string item;
+    
+    while(std::getline(ss, item, '.')) {
+      parts.push_back(item);
+    }
+  }
   
   if (parts.size() != 3 || extension.compare(".dat") != 0) {
     grammar_error = true;

@@ -19,6 +19,7 @@
 
 #include <fstream>
 
+#include <boost/shared_array.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
@@ -47,32 +48,23 @@ class image_operations {
 private:
   int maxx, maxy;
 public:
-  bool *lookup;
   int cache_hit_count, cache_miss_count;
-  
   std::vector<image_operation> operations;
+  boost::shared_array<bool> lookup;
   
   //std::set<image_op_key> opaque_set;
   void add_pixel(int x, int y, color &c);
-
+  
   void set_limits(int x, int y) {
     maxx = x;
     maxy = y;
     
-    lookup = new bool[maxx * maxy];
-    memset(lookup, 0x0, sizeof(bool) * maxx * maxy);
+    lookup.reset(new bool[maxx * maxy]);
+    memset(lookup.get(), 0x0, sizeof(bool) * maxx * maxy);
   }
   
-  image_operations() : maxx(0), maxy(0), operations()
-  {
-    lookup = NULL;
-  };
-  
-  ~image_operations() {
-    if (lookup != NULL) {
-      delete [] lookup;
-    }
-  }
+  image_operations() : maxx(0), maxy(0), operations(), lookup(NULL) { };
+  ~image_operations() { }
 };
 
 class virtual_image;

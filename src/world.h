@@ -113,7 +113,7 @@ public:
       max_x = std::max(max_x, l.xPos);
       min_z = std::min(min_z, l.zPos);
       max_z = std::max(max_z, l.zPos);
-
+      
       levels.push_back(l);
     }
 

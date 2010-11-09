@@ -62,7 +62,6 @@ struct color{
     buf[1] = g;
     buf[2] = b;
     buf[3] = a;
-
   }
   
   friend std::ostream& operator<<(std::ostream& out, const color& c) // output

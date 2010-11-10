@@ -42,6 +42,12 @@
 #include "image/memory_image.hpp"
 #include "image/cached_image.hpp"
 
+#include "engine/engine_base.hpp"
+#include "engine/topdown_engine.hpp"
+#include "engine/oblique_engine.hpp"
+#include "engine/obliqueangle_engine.hpp"
+#include "engine/isometric_engine.hpp"
+
 using namespace std;
 namespace fs = boost::filesystem;
 
@@ -130,15 +136,18 @@ inline void cout_end() {
 struct render_result {
   int xPos, zPos;
   fs::path path;
-  boost::shared_ptr<level_file> level;
-  
   boost::shared_ptr<image_operations> operations;
+  bool fatal;
+  std::string fatal_why;
+  std::vector<light_marker> markers;
+
+  render_result() : fatal(false), fatal_why("(no error)") {}
 };
 
 struct render_job {
   int xPos, zPos;
   fs::path path;
-  boost::shared_ptr<level_file> level;
+  boost::shared_ptr<engine_base> engine;
 };
 
 class Renderer : public threadworker<render_job, render_result> {
@@ -149,25 +158,23 @@ public:
   }
   
   render_result work(render_job job) {
-    level_file* level = job.level.get();
-
     render_result p;
     
     p.path = job.path;
-    p.level = job.level;
     p.xPos = job.xPos;
     p.zPos = job.zPos;
     
     cache_file cache(s.cache_dir, s.cache_compress);
+
+    p.operations.reset(new image_operations);
     
     if (s.cache_use) {
       cache.set_path(fs::basename(p.path) + ".cmap" );
       
       std::time_t level_mod = fs::last_write_time(p.path);
-    
+      
       if (fs::exists(cache.get_path())) {
-        if (cache.read(job.level->oper.get(), level_mod)) {
-          p.operations = job.level->oper;
+        if (cache.read(p.operations.get(), level_mod)) {
           return p;
         }
         
@@ -177,16 +184,24 @@ public:
       // in case of future writes, save the modification time
       cache.set_modification_time(level_mod);
     }
+
+    level_file level(job.path);
     
-    if (level->grammar_error) {
+    if (!level.islevel) {
+      p.fatal = true;
+      p.fatal_why = "Not a level file";
       return p;
     }
     
-    if (!level->islevel) {
+    if (level.grammar_error) {
+      p.fatal = true;
+      p.fatal_why = level.grammar_error_why;
       return p;
     }
+
+    p.markers = level.markers;
     
-    p.operations = level->get_image();
+    job.engine->render(level, p.operations);
     
     if (s.cache_use) {
       if (!cache.write(p.operations.get())) {
@@ -412,6 +427,15 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
 
   unsigned int prebuffer = s.threads * s.prebuffer;
   unsigned int filllimit = prebuffer / 2;
+
+  boost::shared_ptr<engine_base> engine;
+
+  switch (s.mode) {
+    case Top: engine.reset(new topdown_engine(s)); break;
+    case Oblique: engine.reset(new oblique_engine(s)); break;
+    case ObliqueAngle: engine.reset(new obliqueangle_engine(s)); break;
+    case Isometric: engine.reset(new isometric_engine(s)); break;
+  }
   
   for (i = 0; i < world_size; i++) {
     if (lvlq <= filllimit) {
@@ -424,20 +448,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
           cout << "using file: " << path << endl;
         }
 
-        level_file* lf;
-        
-        switch (s.mode) {
-        case Top:           lf = new topdown_level_file(s); break;
-        case Oblique:       lf = new oblique_level_file(s); break;
-        case Isometric:     lf = new isometric_level_file(s); break;
-        case ObliqueAngle:  lf = new obliqueangle_level_file(s); break;
-        }
-        
-        lf->load_file(path);
-        
         render_job job;
         
-        job.level.reset(lf);
+        job.engine = engine;
         job.path = path;
         job.xPos = l.xPos;
         job.zPos = l.zPos;
@@ -449,37 +462,18 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     
     render_result p = renderer.get();
     
-    boost::shared_ptr<level_file> level(p.level);
-    
-    if (level->grammar_error) {
-      if (s.require_all) {
-        error << "Parser Error: " << p.path.string() << " at (uncompressed) byte " << level->grammar_error_where
-          << " - " << level->grammar_error_why;
-        
-        // effectively join all worker threads and prepare for exit
-        renderer.join();
-        return false;
-      }
-      
+    if (p.fatal) {
       if (!s.silent) {
-        cout << "Ignoring unparseable file: " << p.path << " - " << level->grammar_error_why << endl;
+        cout << "Ignoring unparseable file: " << p.path << " - " << p.fatal_why << endl;
         continue;
       }
     }
     
-    if (!level->islevel) {
-      if (s.debug) {
-        cout << "Ignoring file not a level chunk: " << p.path << endl;
-      }
-      
-      continue;
-    }
-    
     if (progress_c != NULL) progress_c(i, world_size);
     
-    if (level->markers.size() > 0) {
-      if (s.debug) { cout << "Found " << level->markers.size() << " signs"; };
-      light_markers.insert(light_markers.end(), level->markers.begin(), level->markers.end());
+    if (p.markers.size() > 0) {
+      if (s.debug) { cout << "Found " << p.markers.size() << " signs"; };
+      light_markers.insert(light_markers.end(), p.markers.begin(), p.markers.end());
     }
     
     try {

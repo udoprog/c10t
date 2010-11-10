@@ -9,6 +9,10 @@ set(c10t_SOURCES ${c10t_SOURCES} world.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} fileutils.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} utf8.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} warps.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} engine/topdown_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} engine/oblique_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} engine/obliqueangle_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} engine/isometric_engine.cpp)
 
 set(c10t_LIBRARIES ${c10t_LIBRARIES} c10t-image c10t-nbt)
 

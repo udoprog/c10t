@@ -19,21 +19,16 @@
 #include "nbt/nbt.h"
 
 #include "global.h"
-#include "image/color.hpp"
 #include "blocks.h"
 #include "marker.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/shared_array.hpp>
 
 namespace fs = boost::filesystem;
 
 class level_file
 {
-  protected:
-    settings_t& s;
   public:
     // these must be public for the parser to be able to reach them.
     bool islevel;
@@ -50,38 +45,9 @@ class level_file
     boost::scoped_ptr<nbt::ByteArray> skylight;
     boost::scoped_ptr<nbt::ByteArray> heightmap;
     boost::scoped_ptr<nbt::ByteArray> blocklight;
-    boost::shared_ptr<image_operations> oper;
     
-    level_file(settings_t& s);
+    level_file(const fs::path path);
     ~level_file();
-    
-    void load_file(const fs::path path);
-    
-    virtual boost::shared_ptr<image_operations> get_image() = 0;
-};
-
-class topdown_level_file : public level_file {
-  public:
-    topdown_level_file(settings_t& s) : level_file(s) {}
-    boost::shared_ptr<image_operations> get_image();
-};
-
-class oblique_level_file : public level_file {
-  public:
-    oblique_level_file(settings_t& s) : level_file(s) {}
-    boost::shared_ptr<image_operations> get_image();
-};
-
-class obliqueangle_level_file : public level_file {
-  public:
-    obliqueangle_level_file(settings_t& s) : level_file(s) {}
-    boost::shared_ptr<image_operations> get_image();
-};
-
-class isometric_level_file : public level_file {
-  public:
-    isometric_level_file(settings_t& s) : level_file(s) {}
-    boost::shared_ptr<image_operations> get_image();
 };
 
 class fast_level_file

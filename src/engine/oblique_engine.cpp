@@ -33,6 +33,10 @@ void oblique_engine::render(level_file& level, boost::shared_ptr<image_operation
       for (int y = s.top; y >= s.bottom; y--) {
         int bt = b_r.get8(y);
         
+        if (s.excludes[bt]) {
+          continue;
+        }
+        
         if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
           continue;
         }
@@ -51,10 +55,6 @@ void oblique_engine::render(level_file& level, boost::shared_ptr<image_operation
         }
         
         blocked[bp] = top.is_opaque();
-        
-        if (s.excludes[bt]) {
-          continue;
-        }
         
         int bl = bl_r.get4(y + 1);
         

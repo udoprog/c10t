@@ -6,17 +6,10 @@ void isometric_engine::render(level_file& level, boost::shared_ptr<image_operati
     return;
   }
   
-  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
-  
-  size_t iw, ih;
-  c.get_isometric_limits(iw, ih);
-  
   BlockRotation b_r(s, level.blocks.get());
   BlockRotation bl_r(s, level.blocklight.get());
   BlockRotation sl_r(s, level.skylight.get());
   BlockRotation hm_r(s, level.heightmap.get());
-  
-  size_t bmt = iw * ih;
   
   bool* blocked = new bool[bmt];
   memset(blocked, 0x0, sizeof(bool) * bmt);
@@ -37,6 +30,10 @@ void isometric_engine::render(level_file& level, boost::shared_ptr<image_operati
       for (int y = s.top; y >= s.bottom; y--) {
         int bt = b_r.get8(y);
         
+        if (s.excludes[bt]) {
+          continue;
+        }
+        
         if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
           continue;
         }
@@ -56,10 +53,6 @@ void isometric_engine::render(level_file& level, boost::shared_ptr<image_operati
           }
           
           blocked[bp] = top.is_opaque();
-        }
-        
-        if (s.excludes[bt]) {
-          continue;
         }
         
         color side = mc::MaterialSideColor[bt];

@@ -6,7 +6,7 @@
 #include <boost/filesystem.hpp>
 #include <zlib.h>
 
-#include "image.h"
+#include "image/image_operations.hpp"
 
 namespace fs = boost::filesystem;
 

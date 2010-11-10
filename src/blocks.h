@@ -3,7 +3,7 @@
 #ifndef _BLOCKS_H_
 #define _BLOCKS_H_
 
-#include "color.h"
+#include "image/color.hpp"
 
 namespace mc {
   enum MaterialMode {

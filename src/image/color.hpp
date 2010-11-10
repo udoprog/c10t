@@ -1,15 +1,16 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
-#ifndef _COLOR_H_
-#define _COLOR_H_
+#ifndef COLOR_HPP
+#define COLOR_HPP
 
-#include <boost/lexical_cast.hpp>
 #include <stdint.h>
 #include <assert.h>
 
 #include <string>
 #include <sstream>
 #include <ostream>
+
+#include <boost/lexical_cast.hpp>
 
 struct color{
   uint8_t r;
@@ -73,4 +74,4 @@ struct color{
   }
 };
 
-#endif /* _COLOR_H_ */
+#endif /* COLOR_HPP */

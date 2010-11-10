@@ -29,7 +29,6 @@
 #include "global.h"
 #include "level.h"
 #include "cache.h"
-#include "image.h"
 #include "blocks.h"
 #include "fileutils.h"
 #include "world.h"
@@ -38,6 +37,10 @@
 #include "marker.h"
 #include "json.h"
 #include "warps.h"
+
+#include "image/image_base.hpp"
+#include "image/memory_image.hpp"
+#include "image/cached_image.hpp"
 
 using namespace std;
 namespace fs = boost::filesystem;

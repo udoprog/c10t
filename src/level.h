@@ -19,8 +19,7 @@
 #include "nbt/nbt.h"
 
 #include "global.h"
-#include "color.h"
-#include "image.h"
+#include "image/color.hpp"
 #include "blocks.h"
 #include "marker.h"
 

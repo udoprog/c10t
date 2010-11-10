@@ -1,6 +1,7 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
-#include "color.h"
+#include "image/color.hpp"
+
 #include <sstream>
 #include <string>
 

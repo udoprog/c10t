@@ -6,10 +6,10 @@ void oblique_engine::render(level_file& level, boost::shared_ptr<image_operation
     return;
   }
   
-  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
+  Cube part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   size_t iw, ih;
-  c.get_oblique_limits(iw, ih);
+  part_c.get_oblique_limits(iw, ih);
   
   BlockRotation b_r(s, level.blocks.get());
   BlockRotation bl_r(s, level.blocklight.get());
@@ -44,7 +44,7 @@ void oblique_engine::render(level_file& level, boost::shared_ptr<image_operation
         point p(x, y, z);
         
         size_t px, py;
-        c.project_oblique(p, px, py);
+        part_c.project_oblique(p, px, py);
         
         color top = mc::MaterialColor[bt];
         

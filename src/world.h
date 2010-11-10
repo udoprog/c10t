@@ -49,6 +49,10 @@ public:
   int min_z;
   int max_x;
   int max_z;
+  int diff_x;
+  int diff_z;
+  int min_xp;
+  int min_zp;
   int chunk_x;
   int chunk_y;
   
@@ -119,6 +123,11 @@ public:
 
     levels.sort(compare_levels);
     
+    diff_x = max_x - min_x;
+    diff_z = max_z - min_z;
+    min_xp = min_x * mc::MapX;
+    min_zp = min_z * mc::MapZ;
+    
     if (c_progress != NULL) c_progress(i++, 1);
   }
   
@@ -188,6 +197,8 @@ public:
       w->max_x = (pos.x + 1) * chunk_size;
       w->min_z = (pos.z) * chunk_size;
       w->max_z = (pos.z + 1) * chunk_size;
+      w->min_xp = w->min_x * mc::MapX;
+      w->min_zp = w->min_z * mc::MapZ;
       
       for (; it != levels->end(); it++) {
         level l = *it;

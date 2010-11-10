@@ -150,6 +150,7 @@ struct render_job {
   boost::shared_ptr<engine_base> engine;
 };
 
+
 class Renderer : public threadworker<render_job, render_result> {
 public:
   settings_t& s;
@@ -213,63 +214,7 @@ public:
   }
 };
 
-inline void calc_image_width_height(settings_t& s, world_info& world, size_t &image_width, size_t &image_height) {
-  int diffx = world.max_x - world.min_x;
-  int diffz = world.max_z - world.min_z;
-  
-  Cube c((diffx + 1) * mc::MapX, mc::MapY, (diffz + 1) * mc::MapZ);
-  
-  switch (s.mode) {
-  case Top:
-    c.get_top_limits(image_width, image_height);
-    break;
-  case Oblique:
-    c.get_oblique_limits(image_width, image_height);
-    break;
-  case Isometric:
-    c.get_isometric_limits(image_width, image_height);
-    break;
-  case ObliqueAngle:
-    // yes, these are meant to be flipped
-    c.get_obliqueangle_limits(image_width, image_height);
-    break;
-  }
-}
-
-inline void calc_image_partial(settings_t& s, render_result &p, image_base *all, world_info &world, int image_width, int image_height) {
-  size_t diffx = world.max_x - world.min_x;
-  size_t diffz = world.max_z - world.min_z;
-
-  size_t posx = p.xPos - world.min_x;
-  size_t posz = p.zPos - world.min_z;
-  
-  Cube c(diffx * mc::MapX, mc::MapY, diffz * mc::MapZ);
-  size_t x, y;
-  
-  point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
-  
-  switch (s.mode) {
-    case Top:           c.project_top(pos, x, y);           break;
-    case Oblique:       c.project_oblique(pos, x, y);       break;
-    case ObliqueAngle:  c.project_obliqueangle(pos, x, y);  break;
-    case Isometric:     c.project_isometric(pos, x, y);     break;
-  }
-  
-  /*std::cout << "diff-xy: " << diffx << " " << diffz << std::endl;
-  std::cout << "pos-xy: " << posx << " " << posz << std::endl;
-  std::cout << "xy: " << x << " " << y << std::endl;*/
-  
-  all->composite(x, y, *p.operations);
-}
-
-inline void write_markers(settings_t& s, image_base *all, world_info &world, boost::ptr_vector<marker>& markers) {
-  int diffx = (world.max_x - world.min_x) * mc::MapX;
-  int diffz = (world.max_z - world.min_z) * mc::MapZ;
-  int min_z = world.min_z * mc::MapZ;
-  int min_x = world.min_x * mc::MapX;
-  
-  Cube c(diffx + mc::MapX, mc::MapY, diffz + mc::MapZ);
-  
+inline void write_markers(settings_t& s, image_base *all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
 
   json::array array;
@@ -278,19 +223,11 @@ inline void write_markers(settings_t& s, image_base *all, world_info &world, boo
     marker m = *it;
     
     int p_x = m.x, p_y = m.y, p_z = m.z;
-    
     transform_world_xz(p_x, p_z, s.rotation);
     
-    point pos(p_x - min_x, p_y, p_z - min_z);
-
     size_t x, y;
     
-    switch (s.mode) {
-      case Top:           c.project_top(pos, x, y);           break;
-      case Oblique:       c.project_oblique(pos, x, y);       break;
-      case ObliqueAngle:  c.project_obliqueangle(pos, x, y);  break;
-      case Isometric:     c.project_isometric(pos, x, y);     break;
-    }
+    engine->wp2pt(p_x, p_y, p_z, x, y);
 
     json::object o;
     
@@ -314,14 +251,7 @@ inline void write_markers(settings_t& s, image_base *all, world_info &world, boo
   // don't bother to check for errors right now, but could be done using the "fail" accessor.
 }
 
-inline void overlay_markers(settings_t& s, image_base *all, world_info &world, boost::ptr_vector<marker>& markers) {
-  int diffx = (world.max_x - world.min_x) * mc::MapX;
-  int diffz = (world.max_z - world.min_z) * mc::MapZ;
-  int min_z = world.min_z * mc::MapZ;
-  int min_x = world.min_x * mc::MapX;
-  
-  Cube c(diffx + mc::MapX, mc::MapY, diffz + mc::MapZ);
-  
+inline void overlay_markers(settings_t& s, image_base *all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   memory_image positionmark(5, 5);
   positionmark.fill(s.ttf_color);
   
@@ -329,20 +259,13 @@ inline void overlay_markers(settings_t& s, image_base *all, world_info &world, b
   
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
-
-    int p_x = m.x, p_y = m.y, p_z = m.z;
     
+    int p_x = m.x, p_y = m.y, p_z = m.z;
     transform_world_xz(p_x, p_z, s.rotation);
-    point pos(p_x - min_x, p_y, p_z - min_z);
-
+    
     size_t x, y;
     
-    switch (s.mode) {
-      case Top:           c.project_top(pos, x, y);           break;
-      case Oblique:       c.project_oblique(pos, x, y);       break;
-      case ObliqueAngle:  c.project_obliqueangle(pos, x, y);  break;
-      case Isometric:     c.project_isometric(pos, x, y);     break;
-    }
+    engine->wp2pt(p_x, p_y, p_z, x, y);
     
     m.font.draw(*all, m.text, x + 5, y);
     all->safe_composite(x - 3, y - 3, positionmark);
@@ -369,8 +292,16 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     progress_c = cout_progress_n;
   }
   
-  // calculate i_w / i_h
-  calc_image_width_height(s, world, i_w, i_h);
+  boost::shared_ptr<engine_base> engine;
+  
+  switch (s.mode) {
+    case Top: engine.reset(new topdown_engine(s, world)); break;
+    case Oblique: engine.reset(new oblique_engine(s, world)); break;
+    case ObliqueAngle: engine.reset(new obliqueangle_engine(s, world)); break;
+    case Isometric: engine.reset(new isometric_engine(s, world)); break;
+  }
+  
+  engine->get_boundaries(i_w, i_h);
   
   size_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
   float mem;
@@ -427,15 +358,6 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
 
   unsigned int prebuffer = s.threads * s.prebuffer;
   unsigned int filllimit = prebuffer / 2;
-
-  boost::shared_ptr<engine_base> engine;
-
-  switch (s.mode) {
-    case Top: engine.reset(new topdown_engine(s)); break;
-    case Oblique: engine.reset(new oblique_engine(s)); break;
-    case ObliqueAngle: engine.reset(new obliqueangle_engine(s)); break;
-    case Isometric: engine.reset(new isometric_engine(s)); break;
-  }
   
   for (i = 0; i < world_size; i++) {
     if (lvlq <= filllimit) {
@@ -477,7 +399,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     }
     
     try {
-      calc_image_partial(s, p, all, world, i_w, i_h);
+      size_t x, y;
+      engine->w2pt(p.xPos, p.zPos, x, y);
+      all->composite(x, y, *p.operations);
     } catch(std::ios::failure& e) {
       error << strerror(errno) << ": " << s.cache_file;
       renderer.join();
@@ -599,10 +523,10 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   }
   
   if (s.write_markers) {
-    write_markers(s, all, world, markers);
+    write_markers(s, all, engine, markers);
   }
   else {
-    overlay_markers(s, all, world, markers);
+    overlay_markers(s, all, engine, markers);
   }
   
   if (!s.silent) cout << "Saving image..." << endl;

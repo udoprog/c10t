@@ -2,14 +2,12 @@
 
 void topdown_engine::render(level_file& level, boost::shared_ptr<image_operations> oper)
 {
-  Cube c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
-  
   if (!level.islevel) {
     return;
   }
   
   size_t iw, ih;
-  c.get_top_limits(iw, ih);
+  part_c.get_top_limits(iw, ih);
   
   // block type
   BlockRotation b_r(s, level.blocks.get());
@@ -47,7 +45,7 @@ void topdown_engine::render(level_file& level, boost::shared_ptr<image_operation
         size_t px;
         size_t py;
 
-        c.project_top(p, px, py);
+        part_c.project_top(p, px, py);
         
         oper->add_pixel(px, py, bc);
         

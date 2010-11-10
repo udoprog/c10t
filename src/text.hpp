@@ -14,7 +14,7 @@
 namespace fs = boost::filesystem;
 
 #include "image/image_base.hpp"
-#include "utf8.h"
+#include "utf8.hpp"
 #include <assert.h>
 
 #include <iostream>

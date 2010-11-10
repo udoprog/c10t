@@ -8,7 +8,8 @@ set(C10T_VERSION "SNAPSHOT" CACHE STRING "C10t Version String")
 set(C10T_SITE "http://github.com/udoprog/c10t")
 set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com> et. al (see README)")
 
-configure_file(${CMAKE_SOURCE_DIR}/src/config.h.cmake ${CMAKE_BINARY_DIR}/src/config.h)
+configure_file(${CMAKE_SOURCE_DIR}/src/config.hpp.cmake
+  ${CMAKE_BINARY_DIR}/src/config.hpp)
 include_directories(${CMAKE_BINARY_DIR}/src)
 
 # output the binary to the build directory instead of in src/

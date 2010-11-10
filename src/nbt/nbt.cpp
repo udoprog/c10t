@@ -1,6 +1,6 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
-#include "nbt.h"
+#include "nbt.hpp"
 
 bool nbt::is_big_endian() {
   int32_t i = 1;

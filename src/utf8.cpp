@@ -3,7 +3,7 @@
 * If you find it useful i would like to be given a notice as the original author.
 * Please contact me at: johnjohn.tedro@gmail.com
 */
-#include "utf8.h"
+#include "utf8.hpp"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,6 +1,6 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
-#include "blocks.h"
+#include "blocks.hpp"
 
 const int mc::MapX = 0x10;
 const int mc::MapZ = 0x10;

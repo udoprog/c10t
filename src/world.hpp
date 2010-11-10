@@ -15,10 +15,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 
-#include "fileutils.h"
-#include "global.h"
-#include "common.h"
-#include "level.h"
+#include "fileutils.hpp"
+#include "global.hpp"
+#include "common.hpp"
+#include "level.hpp"
 
 namespace fs = boost::filesystem;
 

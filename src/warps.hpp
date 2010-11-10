@@ -9,8 +9,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem.hpp>
 
-#include "global.h"
-#include "nbt/nbt.h"
+#include "global.hpp"
+#include "nbt/nbt.hpp"
 
 namespace fs = boost::filesystem;
 

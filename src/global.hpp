@@ -12,7 +12,7 @@
 #include <string>
 #include <set>
 
-#include "blocks.h"
+#include "blocks.hpp"
 #include "image/color.hpp"
 
 namespace fs = boost::filesystem;

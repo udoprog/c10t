@@ -1,6 +1,6 @@
-#include "color.h"
-#include "image.h"
-#include "2d/cube.h"
+#include "color.hpp"
+#include "image.hpp"
+#include "2d/cube.hpp"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE c10t_tests

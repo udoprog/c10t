@@ -7,7 +7,7 @@
 
 #include <ostream>
 
-#include "utf8.h"
+#include "utf8.hpp"
 
 namespace json {
   enum object_type {

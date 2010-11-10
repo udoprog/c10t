@@ -1,6 +1,6 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
-#include "players.h"
+#include "players.hpp"
 
 void error_handler(player *p, size_t where, const char* why) {
   p->grammar_error = true;

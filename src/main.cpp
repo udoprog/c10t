@@ -21,22 +21,22 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "config.h"
+#include "config.hpp"
 
-#include "threads/threadworker.h"
-#include "2d/cube.h"
+#include "threads/threadworker.hpp"
+#include "2d/cube.hpp"
 
-#include "global.h"
-#include "level.h"
-#include "cache.h"
-#include "blocks.h"
-#include "fileutils.h"
-#include "world.h"
-#include "players.h"
-#include "text.h"
-#include "marker.h"
-#include "json.h"
-#include "warps.h"
+#include "global.hpp"
+#include "level.hpp"
+#include "cache.hpp"
+#include "blocks.hpp"
+#include "fileutils.hpp"
+#include "world.hpp"
+#include "players.hpp"
+#include "text.hpp"
+#include "marker.hpp"
+#include "json.hpp"
+#include "warps.hpp"
 
 #include "image/image_base.hpp"
 #include "image/memory_image.hpp"

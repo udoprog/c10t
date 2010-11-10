@@ -2,12 +2,12 @@
 // (C) Copyright 2010 John-John Tedro et al.
 #include <assert.h>
 
-#include "global.h"
+#include "global.hpp"
 
-#include "level.h"
-#include "blocks.h"
-#include "2d/cube.h"
-#include "common.h"
+#include "level.hpp"
+#include "blocks.hpp"
+#include "2d/cube.hpp"
+#include "common.hpp"
 #include "algorithm.hpp"
 
 #include <boost/algorithm/string.hpp>

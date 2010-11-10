@@ -3,8 +3,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "level.h"
-#include "world.h"
+#include "level.hpp"
+#include "world.hpp"
 
 class engine_base {
   protected:

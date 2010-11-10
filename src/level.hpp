@@ -3,7 +3,7 @@
 #ifndef _LEVEL_H_
 #define _LEVEL_H_
 
-#include "global.h"
+#include "global.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -16,11 +16,11 @@
 #include <time.h>
 #include <vector>
 
-#include "nbt/nbt.h"
+#include "nbt/nbt.hpp"
 
-#include "global.h"
-#include "blocks.h"
-#include "marker.h"
+#include "global.hpp"
+#include "blocks.hpp"
+#include "marker.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/scoped_ptr.hpp>

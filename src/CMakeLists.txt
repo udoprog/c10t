@@ -2,6 +2,7 @@ add_subdirectory(image)
 add_subdirectory(nbt)
 
 set(c10t_SOURCES level.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} algorithm.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} blocks.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} common.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} players.cpp)

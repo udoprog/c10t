@@ -11,8 +11,12 @@
 #include <limits>
 
 #include <png.h>
+  
+image_operations::image_operations() : maxx(0), maxy(0), lookup(NULL) { };
+image_operations::~image_operations() { }
 
-void image_operations::add_pixel(int x, int y, color &c) {
+void image_operations::add_pixel(int x, int y, color &c)
+{
   if (c.is_invisible()) {
     return;
   }
@@ -42,40 +46,19 @@ void image_operations::add_pixel(int x, int y, color &c) {
   operations.push_back(oper);
 }
 
-void memory_image::set_pixel(size_t x, size_t y, color &c) {
-  if (!(x < get_width())) { return; }
-  if (!(y < get_height())) { return; }
-  c.write(this->colors + get_offset(x, y));
-}
-
-void memory_image::get_pixel(size_t x, size_t y, color &c){
-  if (!(x < get_width())) { return; }
-  if (!(y < get_height())) { return; }
-  c.read(this->colors + get_offset(x, y));
-}
-
-void memory_image::get_line(size_t y, size_t offset, size_t width, color* c) {
-  if (!(y < get_height())) { return; }
-  if (!(offset < get_width())) { return; }
-  if (!(width + offset < get_width())) { width = get_width() - offset; }
+void image_operations::set_limits(int x, int y) 
+{
+  maxx = x;
+  maxy = y;
   
-  memcpy(c, this->colors + get_offset(offset, y), width * sizeof(color));
+  lookup.reset(new bool[maxx * maxy]);
+  memset(lookup.get(), 0x0, sizeof(bool) * maxx * maxy);
+  operations.reserve(maxx * maxy * 2);
 }
 
-void memory_image::blend_pixel(size_t x, size_t y, color &c){
-  color o;
-  get_pixel(x, y, o);
-  
-  if (o.is_invisible()) {
-    set_pixel(x, y, c);
-    return;
-  }
-  
-  o.blend(c);
-  set_pixel(x, y, o);
-}
-
-void image_base::fill(color &q){
+// image_base
+void image_base::fill(color &q)
+{
   for (size_t x = 0; x < get_width(); x++) {
     for (size_t y = 0; y < get_height(); y++) {
       set_pixel(x, y, q);
@@ -83,7 +66,8 @@ void image_base::fill(color &q){
   }
 }
 
-void image_base::composite(int xoffset, int yoffset, image_operations &img) {
+void image_base::composite(int xoffset, int yoffset, image_operations &img)
+{
   std::vector<image_operation>::size_type i = img.operations.size();
   
   while (i--) {
@@ -96,7 +80,8 @@ void image_base::composite(int xoffset, int yoffset, image_operations &img) {
   }
 }
 
-void image_base::composite(int xoffset, int yoffset, image_base &img) {
+void image_base::composite(int xoffset, int yoffset, image_base &img)
+{
   if (!(xoffset >= 0)) { return; }
   if (!(yoffset >= 0)) { return; }
 
@@ -119,7 +104,8 @@ void image_base::composite(int xoffset, int yoffset, image_base &img) {
   }
 }
 
-void image_base::safe_composite(int xoffset, int yoffset, image_base &img) {
+void image_base::safe_composite(int xoffset, int yoffset, image_base &img)
+{
   if (xoffset < 0) return;
   if (xoffset + img.get_width() > w) return;
   if (yoffset < 0) return;
@@ -127,7 +113,8 @@ void image_base::safe_composite(int xoffset, int yoffset, image_base &img) {
   composite(xoffset, yoffset, img);
 }
 
-void image_base::safe_blend_pixel(size_t x, size_t y, color &c) {
+void image_base::safe_blend_pixel(size_t x, size_t y, color &c)
+{
   if (x >= w) return;
   if (y >= h) return;
   blend_pixel(x, y, c);
@@ -220,22 +207,74 @@ finalise:
   return ret;
 }
 
+// memory_image
+memory_image::memory_image(int w, int h) : image_base(w, h)
+{
+  colors = new uint8_t[sizeof(color) * w * h];
+  memset(colors, 0x0, sizeof(color) * w * h);
+}
 
-void cached_image::set_pixel(size_t x, size_t y, color& c) {
+memory_image::~memory_image()
+{
+  delete [] colors;
+}
+
+void memory_image::set_pixel(size_t x, size_t y, color &c)
+{
+  if (!(x < get_width())) { return; }
+  if (!(y < get_height())) { return; }
+  c.write(this->colors + get_offset(x, y));
+}
+
+void memory_image::get_pixel(size_t x, size_t y, color &c)
+{
+  if (!(x < get_width())) { return; }
+  if (!(y < get_height())) { return; }
+  c.read(this->colors + get_offset(x, y));
+}
+
+void memory_image::get_line(size_t y, size_t offset, size_t width, color* c)
+{
+  if (!(y < get_height())) { return; }
+  if (!(offset < get_width())) { return; }
+  if (!(width + offset < get_width())) { width = get_width() - offset; }
+  
+  memcpy(c, this->colors + get_offset(offset, y), width * sizeof(color));
+}
+
+void memory_image::blend_pixel(size_t x, size_t y, color &c)
+{
+  color o;
+  get_pixel(x, y, o);
+  
+  if (o.is_invisible()) {
+    set_pixel(x, y, c);
+    return;
+  }
+  
+  o.blend(c);
+  set_pixel(x, y, o);
+}
+
+// cached_image
+void cached_image::set_pixel(size_t x, size_t y, color& c)
+{
   if (!(x < get_width())) { return; }
   if (!(y < get_height())) { return; }
   fs.seekp(get_offset(x, y), std::ios::beg);
   fs.write(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_pixel(size_t x, size_t y, color& c) {
+void cached_image::get_pixel(size_t x, size_t y, color& c)
+{
   if (!(x < get_width())) { return; }
   if (!(y < get_height())) { return; }
   fs.seekg(get_offset(x, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_line(size_t y, size_t offset, size_t width, color* c) {
+void cached_image::get_line(size_t y, size_t offset, size_t width, color* c)
+{
   if (!(y < get_height())) { return; }
   if (!(offset < get_width())) { return; }
   if (!(width + offset < get_width())) { width = get_width() - offset; }
@@ -243,7 +282,8 @@ void cached_image::get_line(size_t y, size_t offset, size_t width, color* c) {
   fs.read(reinterpret_cast<char*>(c), sizeof(color) * width);
 }
 
-void cached_image::blend_pixel(size_t x, size_t y, color &c){
+void cached_image::blend_pixel(size_t x, size_t y, color &c)
+{
   // do nothing if color is invisible
   if (c.is_invisible()) {
     return;
@@ -274,7 +314,8 @@ void cached_image::blend_pixel(size_t x, size_t y, color &c){
   }
 }
 
-std::map<point2, image_base*> image_split(image_base* base, int pixels) {
+std::map<point2, image_base*> image_split(image_base* base, int pixels)
+{
   std::map<point2, image_base*> map;
   
   for (size_t w = 0, px = 0; w < base->get_width(); w += pixels, px++) {
@@ -287,18 +328,7 @@ std::map<point2, image_base*> image_split(image_base* base, int pixels) {
   return map;
 }
 
-std::string get_png_version() {
+std::string get_png_version()
+{
   return png_get_copyright(NULL);
 }
-
-/* align the memory cache with the actual image */
-/*void cached_image::align(int xp, int yp, int xw, int yw)
-{
-  for (int y = yp; y < yp + yw; y++) {
-    for (int x = xp; x < xp + xw; x++) {
-      size_t s = (x + y * get_width()) % buffer_size;
-      icache ic = buffer[s];
-    }
-  }
-}
-*/

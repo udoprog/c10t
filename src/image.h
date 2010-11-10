@@ -47,24 +47,16 @@ struct image_op_key {
 class image_operations {
 private:
   int maxx, maxy;
-public:
-  int cache_hit_count, cache_miss_count;
-  std::vector<image_operation> operations;
   boost::shared_array<bool> lookup;
+public:
+  std::vector<image_operation> operations;
   
   //std::set<image_op_key> opaque_set;
   void add_pixel(int x, int y, color &c);
+  void set_limits(int x, int y);
   
-  void set_limits(int x, int y) {
-    maxx = x;
-    maxy = y;
-    
-    lookup.reset(new bool[maxx * maxy]);
-    memset(lookup.get(), 0x0, sizeof(bool) * maxx * maxy);
-  }
-  
-  image_operations() : maxx(0), maxy(0), operations(), lookup(NULL) { };
-  ~image_operations() { }
+  image_operations();
+  ~image_operations();
 };
 
 class virtual_image;
@@ -114,22 +106,10 @@ class memory_image : public image_base {
 private:
   uint8_t *colors;
 public:
-  memory_image(int w, int h) : image_base(w, h) {
-    colors = new uint8_t[sizeof(color) * w * h];
-    
-    memset(colors, 0x0, sizeof(color) * w * h);
-    
-    /*for (int x = 0; x < get_width(); x++) {
-      for (int y = 0; y < get_height(); y++) {
-        set_pixel(x, y, blank);
-      }
-    }*/
-  }
+  memory_image(int w, int h);
   
-  ~memory_image() {
-    delete [] colors;
-  }
-
+  ~memory_image();
+  
   void blend_pixel(size_t x, size_t y, color &c);
   void set_pixel(size_t x, size_t y, color&);
   void get_pixel(size_t x, size_t y, color&);

@@ -197,6 +197,8 @@ void utf8_encode(uint32_t v, std::ostream& out) {
     out << (char)(0x80 | (n2 & 0x3F));
     return;
   }
+
+  // intentionally left out 3 and 4 byte encoding routines, these will be ignored
 }
 
 #include <sstream>

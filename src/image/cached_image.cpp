@@ -1,3 +1,5 @@
+// Distributed under the BSD License, see accompanying LICENSE.txt
+// (C) Copyright 2010 John-John Tedro et al.
 #include "image/cached_image.hpp"
 
 void image_operations::add_pixel(int x, int y, color &c)

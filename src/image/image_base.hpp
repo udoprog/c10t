@@ -10,6 +10,10 @@
 #include "image/color.hpp"
 #include "2d/cube.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 class image_base {
 protected:
   size_t w, h;
@@ -44,6 +48,11 @@ public:
   void get_line(size_t y, color *c) {
     get_line(y, 0, get_width(), c);
   }
+
+  template<typename T>
+  bool save(const std::string str, typename T::opt_type opts) {
+    return T::save(this, str, opts);
+  }
   
   virtual void blend_pixel(size_t x, size_t y, color &c) = 0;
   virtual void set_pixel(size_t x, size_t y, color& c) = 0;
@@ -52,6 +61,5 @@ public:
 };
 
 std::map<point2, image_base*> image_split(image_base* base, int pixels);
-std::string get_png_version();
 
 #endif /* IMAGE_BASE */

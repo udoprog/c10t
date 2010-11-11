@@ -2,6 +2,8 @@
 // (C) Copyright 2010 John-John Tedro et al.
 #include "image/image_operations.hpp"
 #include <string.h>
+
+#include <iostream>
   
 image_operations::image_operations() : minx(0), miny(0), maxx(0), maxy(0) { }
 image_operations::~image_operations() { }

@@ -11,6 +11,7 @@
 #include "2d/cube.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -33,7 +34,7 @@ public:
   inline size_t get_width() { return w; };
   inline size_t get_height() { return h; };
   
-  void composite(int xoffset, int yoffset, image_operations& oper);
+  void composite(int xoffset, int yoffset, boost::shared_ptr<image_operations> oper);
   void composite(int xoffset, int yoffset, image_base& img);
   void safe_composite(int xoffset, int yoffset, image_base& img);
   

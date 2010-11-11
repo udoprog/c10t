@@ -151,7 +151,6 @@ struct render_job {
   boost::shared_ptr<engine_base> engine;
 };
 
-
 class Renderer : public threadworker<render_job, render_result> {
 public:
   settings_t& s;
@@ -167,7 +166,7 @@ public:
     p.zPos = job.zPos;
     
     cache_file cache(s.cache_dir, s.cache_compress);
-
+    
     p.operations.reset(new image_operations);
     
     if (s.cache_use) {
@@ -215,7 +214,7 @@ public:
   }
 };
 
-inline void write_markers(settings_t& s, image_base *all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
+inline void write_markers(settings_t& s, boost::shared_ptr<image_base> all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
 
   json::array array;
@@ -252,7 +251,7 @@ inline void write_markers(settings_t& s, image_base *all, boost::shared_ptr<engi
   // don't bother to check for errors right now, but could be done using the "fail" accessor.
 }
 
-inline void overlay_markers(settings_t& s, image_base *all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
+inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   memory_image positionmark(5, 5);
   positionmark.fill(s.ttf_color);
   
@@ -309,7 +308,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   float mem;
   float mem_x_r;
   
-  image_base *all;
+  boost::shared_ptr<image_base> all;
   
   if (mem_x > s.memory_limit) {
     mem = (float)(s.memory_limit) / 1000000.0f; 
@@ -321,7 +320,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     
     try {
       if (!s.silent) cout << "Building cache... " << flush;
-      all = new cached_image(s.cache_file.c_str(), i_w, i_h, mem_x, l_w, l_h);
+      all.reset(new cached_image(s.cache_file.c_str(), i_w, i_h, mem_x, l_w, l_h));
       if (!s.silent) cout << "done!" << endl;
     } catch(std::ios::failure& e) {
       error << strerror(errno) << ": " << s.cache_file;
@@ -333,8 +332,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     if (!s.silent) cout << output << ": "
          << i_w << "x" << i_h << " "
          << "~" << mem << " MB... " << endl;
-
-    all = new memory_image(i_w, i_h);
+    
+    all.reset(new memory_image(i_w, i_h));
   }
   
   unsigned int world_size = world.levels.size();
@@ -400,7 +399,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     try {
       size_t x, y;
       engine->w2pt(p.xPos, p.zPos, x, y);
-      all->composite(x, y, *p.operations);
+      all->composite(x, y, p.operations);
     } catch(std::ios::failure& e) {
       error << strerror(errno) << ": " << s.cache_file;
       renderer.join();
@@ -535,7 +534,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   }
   
   if (s.use_pixelsplit) {
-    std::map<point2, image_base*> parts = image_split(all, s.pixelsplit);
+    std::map<point2, image_base*> parts = image_split(all.get(), s.pixelsplit);
     //boost::ptr_map<point2, image_base> parts;
     
     for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
@@ -552,21 +551,19 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       if (!img->save<png_format>(path, opts)) {
         return false;
       }
+      
+      delete img;
     }
   }
   else {
-    //image_base* img = new virtual_image(100, 100, all, 300, 300);
-    image_base* img = all;
-    
     png_format::opt_type opts;
     
-    if (!img->save<png_format>(output, opts)) {
+    if (!all->save<png_format>(output, opts)) {
       error << strerror(errno);
       return false;
     }
   }
   
-  delete all;
   return true;
 }
 
@@ -1471,7 +1468,7 @@ int main(int argc, char *argv[]){
   else {
     if (!s.silent) cout << argv[0] << ": all done!" << endl;
   }
-  
+
   mc::deinitialize_constants();
   return 0;
 

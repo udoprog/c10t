@@ -19,7 +19,7 @@ private:
   std::fstream fs;
 
   size_t l_total;
-  boost::scoped_array<color> buffer;
+  color* buffer;
   bool buffer_set;
   size_t buffer_s;
   size_t buffer_w;
@@ -56,7 +56,7 @@ public:
     
     buffer_s = memory_limit / sizeof(color);
     buffer_set = false;
-    buffer.reset(new color[buffer_s]);
+    buffer = new color[buffer_s];
   }
   
   ~cached_image() {
@@ -64,7 +64,7 @@ public:
     fs.close();
   }
   
-  void read_buffer(size_t bx, size_t by);
+  void read_buffer();
   void flush_buffer();
   
   void blend_pixel(size_t x, size_t y, color &c);

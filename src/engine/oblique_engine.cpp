@@ -1,5 +1,7 @@
 #include "engine/oblique_engine.hpp"
 
+#include <boost/scoped_array.hpp>
+
 void oblique_engine::render(level_file& level, boost::shared_ptr<image_operations> oper)
 {
   if (!level.islevel) {
@@ -17,8 +19,8 @@ void oblique_engine::render(level_file& level, boost::shared_ptr<image_operation
   
   size_t bmt = iw * ih;
   
-  bool* blocked = new bool[bmt];
-  memset(blocked, 0x0, sizeof(bool) * bmt);
+  boost::scoped_array<bool> blocked(new bool[bmt]);
+  memset(blocked.get(), 0x0, sizeof(bool) * bmt);
   
   oper->set_limits(iw + 1, ih);
   

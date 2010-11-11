@@ -17,17 +17,17 @@ void image_base::fill(color &q)
   }
 }
 
-void image_base::composite(int xoffset, int yoffset, image_operations &img)
+void image_base::composite(int xoffset, int yoffset, boost::shared_ptr<image_operations> img)
 {
   if (!(xoffset >= 0)) { return; }
   if (!(yoffset >= 0)) { return; }
   
-  std::vector<image_operation>::size_type i = img.operations.size();
+  std::vector<image_operation>::size_type i = img->operations.size();
   
-  align(xoffset, yoffset, img.maxx, img.maxy);
+  align(xoffset, yoffset, img->maxx, img->maxy);
   
   while (i--) {
-    image_operation op = img.operations[i];
+    image_operation op = img->operations[i];
     blend_pixel(xoffset + op.x, yoffset + op.y, op.c);
     //base.blend(op.c);
     //set_pixel(xoffset + op.x, yoffset + op.y, base);

@@ -411,9 +411,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   if (progress_c != NULL) progress_c(world_size, world_size);
   
   renderer.join();
-
+  
   boost::ptr_vector<marker> markers;
-
+  
   bool show_markers =
     s.show_players
     || s.show_signs
@@ -547,6 +547,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       png_format::opt_type opts;
 
       std::string path = ss.str();
+
+      opts.center_x = 0;
+      opts.center_y = 0;
       
       if (!img->save<png_format>(path, opts)) {
         return false;
@@ -557,6 +560,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   }
   else {
     png_format::opt_type opts;
+    
+    engine->wp2pt(0, 0, 0, opts.center_x, opts.center_y);
     
     if (!all->save<png_format>(output, opts)) {
       error << strerror(errno);

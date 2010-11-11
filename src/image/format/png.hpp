@@ -5,8 +5,11 @@
 
 #include "image/image_base.hpp"
 
+#include <boost/lexical_cast.hpp>
+
 struct png_config {
   std::string comment;
+  size_t center_x, center_y;
 };
 
 class png_format {
@@ -67,6 +70,24 @@ class png_format {
          png_set_text(png_ptr, info_ptr, &title_text, 1);
       }
 
+      {
+         png_text title_text;
+         title_text.compression = PNG_TEXT_COMPRESSION_NONE;
+         title_text.key = (char *)"center-x";
+         std::string text = boost::lexical_cast<std::string, int>(opts.center_x);
+         title_text.text = const_cast<char*>(text.c_str());
+         png_set_text(png_ptr, info_ptr, &title_text, 1);
+      }
+      
+      {
+         png_text title_text;
+         title_text.compression = PNG_TEXT_COMPRESSION_NONE;
+         title_text.key = (char *)"center-y";
+         std::string text = boost::lexical_cast<std::string, int>(opts.center_y);
+         title_text.text = const_cast<char*>(text.c_str());
+         png_set_text(png_ptr, info_ptr, &title_text, 1);
+      }
+      
       png_write_info(png_ptr, info_ptr);
 
       row = (png_bytep) malloc(4 * image->get_width() * sizeof(png_byte));

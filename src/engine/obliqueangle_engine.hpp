@@ -11,9 +11,13 @@ class obliqueangle_engine : public engine_base {
     void get_boundaries(size_t& width, size_t& height) {
       pos_c.get_obliqueangle_limits(width, height);
     }
+    
+    void get_level_boundaries(size_t& width, size_t& height) {
+      part_c.get_obliqueangle_limits(width, height);
+    }
 
     void w2pt(int xPos, int zPos, size_t& x, size_t& y) {
-      size_t posx = xPos - world.min_x;
+      size_t posx = xPos - world.min_x - 1;
       size_t posz = zPos - world.min_z;
       
       point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);

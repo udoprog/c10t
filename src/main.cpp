@@ -284,9 +284,6 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     cout << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
   }
   
-  size_t i_w = 0;
-  size_t i_h = 0;
-  
   void (*progress_c)(int part, int all) = NULL;
   
   if (!s.silent) {
@@ -302,11 +299,17 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     case Isometric: engine.reset(new isometric_engine(s, world)); break;
   }
   
+  size_t i_w, i_h;
+  size_t l_w, l_h;
+  
   engine->get_boundaries(i_w, i_h);
+  engine->get_level_boundaries(l_w, l_h);
   
   size_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
   float mem;
   float mem_x_r;
+  
+  image_base *all;
   
   if (mem_x > s.memory_limit) {
     mem = (float)(s.memory_limit) / 1000000.0f; 
@@ -315,27 +318,22 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     if (!s.silent) cout << output << ": "
          << i_w << "x" << i_h << " "
          << "~" << mem << " MB (" << mem_x_r << "MB cached at " << s.cache_file << ")... " << endl;
+    
+    try {
+      if (!s.silent) cout << "Building cache... " << flush;
+      all = new cached_image(s.cache_file.c_str(), i_w, i_h, mem_x, l_w, l_h);
+      if (!s.silent) cout << "done!" << endl;
+    } catch(std::ios::failure& e) {
+      error << strerror(errno) << ": " << s.cache_file;
+      return false;
+    }
   } else {
     mem = (float)(i_w * i_h * 4 * sizeof(uint8_t)) / 1000000.0f; 
   
     if (!s.silent) cout << output << ": "
          << i_w << "x" << i_h << " "
          << "~" << mem << " MB... " << endl;
-  }
-  
-  image_base *all;
-  
-  if (mem_x > s.memory_limit) {
-    try {
-      if (!s.silent) cout << "Building cache... " << flush;
-      all = new cached_image(s.cache_file.c_str(), i_w, i_h, s.memory_limit / sizeof(icache));
-      if (!s.silent) cout << "done!" << endl;
-    } catch(std::ios::failure& e) {
-      error << strerror(errno) << ": " << s.cache_file;
-      return false;
-    }
-  }
-  else {
+
     all = new memory_image(i_w, i_h);
   }
   

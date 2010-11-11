@@ -7,7 +7,7 @@ void topdown_engine::render(level_file& level, boost::shared_ptr<image_operation
   }
   
   size_t iw, ih;
-  part_c.get_top_limits(iw, ih);
+  get_level_boundaries(iw, ih);
   
   // block type
   BlockRotation b_r(s, level.blocks.get());

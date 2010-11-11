@@ -58,6 +58,8 @@ public:
   virtual void set_pixel(size_t x, size_t y, color& c) = 0;
   virtual void get_pixel(size_t x, size_t y, color& c) = 0;
   virtual void get_line(size_t y, size_t offset, size_t w, color*) = 0;
+  virtual void set_line(size_t y, size_t offset, size_t w, color*) {};
+  virtual void align(size_t x, size_t y, size_t w, size_t h) {};
 };
 
 std::map<point2, image_base*> image_split(image_base* base, int pixels);

@@ -12,9 +12,13 @@ class oblique_engine : public engine_base {
       pos_c.get_oblique_limits(width, height);
     }
     
+    void get_level_boundaries(size_t& width, size_t& height) {
+      part_c.get_oblique_limits(width, height);
+    }
+    
     void w2pt(int xPos, int zPos, size_t& x, size_t& y) {
       size_t posx = xPos - world.min_x;
-      size_t posz = zPos - world.min_z;
+      size_t posz = zPos - world.min_z + 1;
       
       point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
       

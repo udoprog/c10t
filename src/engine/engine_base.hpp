@@ -15,7 +15,7 @@ class engine_base {
     engine_base(settings_t& s, world_info& world) :
       s(s),
       part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1),
-      pos_c((world.diff_x) * mc::MapX, mc::MapY, (world.diff_z) * mc::MapZ),
+      pos_c((world.diff_x + 1) * mc::MapX, mc::MapY, (world.diff_z + 1) * mc::MapZ),
       mpos_c((world.diff_x + 1) * mc::MapX, mc::MapY, (world.diff_z + 1) * mc::MapZ),
       world(world)
     {
@@ -23,6 +23,7 @@ class engine_base {
     
     virtual void render(level_file& level, boost::shared_ptr<image_operations> oper) = 0;
     virtual void get_boundaries(size_t& width, size_t& height) = 0;
+    virtual void get_level_boundaries(size_t& width, size_t& height) = 0;
     virtual void w2pt(int xPos, int zPos, size_t& x, size_t& y) = 0;
     virtual void wp2pt(int xPos, int yPos, int zPos, size_t& x, size_t& y) = 0;
 };

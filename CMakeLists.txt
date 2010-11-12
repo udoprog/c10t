@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
 set(C10T_VERSION "SNAPSHOT" CACHE STRING "C10t Version String")
 set(C10T_SITE "http://github.com/udoprog/c10t")
 set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com> et. al (see README)")
+set(C10T_COMMENT "Created using c10t (http://github.com/udoprog/c10t)")
 
 configure_file(${CMAKE_SOURCE_DIR}/src/config.hpp.cmake
   ${CMAKE_BINARY_DIR}/src/config.hpp)

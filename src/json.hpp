@@ -10,117 +10,187 @@
 #include "utf8.hpp"
 
 namespace json {
-  enum object_type {
-    Null,
-    Int,
-    String
+  enum json_type {
+    String,
+    Number,
+    Object,
+    Array,
+    None
+  };
+
+  class string;
+  class number;
+  class object;
+  class array;
+  
+  template<typename T>
+  struct Trait {
+    const static json_type type = None;
   };
   
-  static void encode_string(std::ostream& out, std::string s) {
+  template<>
+  struct Trait<string> {
+    const static enum json_type type = String;
+  };
+  
+  template<>
+  struct Trait<number> {
+    const static enum json_type type = Number;
+  };
+
+  template<>
+  struct Trait<object> {
+    const static enum json_type type = Object;
+  };
+  
+  template<>
+  struct Trait<array> {
+    const static enum json_type type = Array;
+  };
+  
+  static void encode_string(std::ostream& os, std::string s) {
     std::vector<uint32_t> str = utf8_decode(s);
 
     std::vector<uint32_t>::iterator it;
     
-    out << "\"";
+    os << "\"";
 
     for (it = str.begin(); it != str.end(); it++) {
       uint32_t c = *it;
       
       switch(c) {
-        case '"': out << "\\\""; break;
-        case '\\': out << "\\\\"; break;
-        case '/': out << "\\/"; break;
-        case '\b': out << "\\b"; break;
-        case '\f': out << "\\f"; break;
-        case '\n': out << "\\n"; break;
-        case '\r': out << "\\r"; break;
-        case '\t': out << "\\t"; break;
+        case '"': os << "\\\""; break;
+        case '\\': os << "\\\\"; break;
+        case '/': os << "\\/"; break;
+        case '\b': os << "\\b"; break;
+        case '\f': os << "\\f"; break;
+        case '\n': os << "\\n"; break;
+        case '\r': os << "\\r"; break;
+        case '\t': os << "\\t"; break;
         default:
-          utf8_encode(c, out);
+          utf8_encode(c, os);
           break;
       }
     }
 
-    out << "\"";
+    os << "\"";
   }
-  
-  class value {
-    private:
-      int int_value;
-      std::string string_value;
+
+  class basic_json {
     public:
-      object_type type;
+      virtual void write(std::ostream& os) = 0;
+      virtual json_type get_type() = 0;
+  };
+  
+  class string : public basic_json {
+    private:
+      std::string s;
+    public:
+      const static json_type type = Trait<string>::type;
+      json_type get_type() { return Trait<string>::type; }
       
-      value() : type(Null) {
+      string(std::string s) : s(s) {}
+      void write(std::ostream& os) {
+        encode_string(os, s);
       }
-      
-      value(int v) : int_value(v), type(Int) {
-      }
-      
-      value(std::string v) : string_value(v), type(String) {
-      }
-      
-      friend std::ostream& operator<<(std::ostream& out, const value& o) {
-        switch(o.type) {
-          case Int: out << o.int_value; break;
-          case String: encode_string(out, o.string_value); break;
-          case Null: out << "null"; break;
-        }
-        
-        return out;
+  };
+
+  class number : public basic_json {
+    private:
+      int v;
+    public:
+      const static json_type type = Trait<number>::type;
+      json_type get_type() { return Trait<number>::type; }
+
+      number(int v) : v(v) {}
+      void write(std::ostream& os) {
+        os << v;
       }
   };
   
-  class object {
+  class object : public basic_json {
     private:
-      std::map<std::string, value> a;
+      std::map<std::string, basic_json*> a;
     public:
-      value& operator[] (const std::string s) {
-        return a[s];
+      const static json_type type = Trait<object>::type;
+      json_type get_type() { return Trait<object>::type; }
+      
+      void put(std::string k, basic_json* o) {
+        a[k] = o;
       }
       
-      friend std::ostream& operator<<(std::ostream& out, object& w) {
-        out << "{";
+      void write(std::ostream& os) {
+        os << "{";
 
         unsigned int i = 0;
         
-        std::map<std::string, value>::iterator it;
+        std::map<std::string, basic_json*>::iterator it;
         
-        for (it = w.a.begin(); it != w.a.end(); it++) {
-          encode_string(out, (*it).first);
-          out << ":";
-          out << (*it).second;
-          if (++i < w.a.size()) out << ",";
+        for (it = a.begin(); it != a.end(); it++) {
+          encode_string(os, (*it).first);
+          os << ":";
+          (*it).second->write(os);
+          if (++i < a.size()) os << ",";
         }
         
-        out << "}";
-        return out;
+        os << "}";
+      }
+      
+      friend std::ostream& operator<<(std::ostream& os, object& w) {
+        w.write(os);
+        return os;
+      }
+      
+      ~object() {
+        std::map<std::string, basic_json*>::iterator it;
+        
+        for (it = a.begin(); it != a.end(); it++) {
+          delete (*it).second;
+        }
       }
   };
   
-  class array {
+  class array : public basic_json {
     private:
-      std::vector<object> a;
+      std::vector<basic_json*> a;
     public:
-      void push(object& o) {
-        a.push_back(o);
-      }
+      const static json_type type = Trait<array>::type;
+      json_type get_type() { return Trait<array>::type; }
       
-      friend std::ostream& operator<<(std::ostream& out, array& a) {
-        out << "[";
+      void push(basic_json* o) { a.push_back(o); }
+      void push(basic_json& o) { a.push_back(&o); }
+      
+      void write(std::ostream& os) {
+        os << "[";
 
         unsigned int i = 0;
         
-        std::vector<object>::iterator it;
+        std::vector<basic_json*>::iterator it;
         
-        for (it = a.a.begin(); it != a.a.end(); it++) {
-          out << *it;
-          if (++i < a.a.size()) out << ",";
+        for (it = a.begin(); it != a.end(); it++) {
+          (*it)->write(os);
+          if (++i < a.size()) os << ",";
         }
         
-        out << "]";
-        return out;
+        os << "]";
       }
+      
+      friend std::ostream& operator<<(std::ostream& os, array& a) {
+        a.write(os);
+        return os;
+      }
+
+      ~array() {
+        std::vector<basic_json*>::iterator it;
+        for (it = a.begin(); it != a.end(); it++) {
+          delete *it;
+        }
+      }
+  };
+  
+  template<typename T>
+  T* cast(basic_json *b) {
+    return reinterpret_cast<T*>(b);
   };
 }
 

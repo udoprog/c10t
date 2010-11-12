@@ -70,8 +70,8 @@ struct settings_t {
   fs::path cache_dir;
   bool cache_compress;
   bool cache_use;
-  bool write_markers;
-  fs::path write_markers_path;
+  bool write_json;
+  fs::path write_json_path;
   bool use_pixelsplit;
   int pixelsplit;
   
@@ -131,7 +131,7 @@ struct settings_t {
     this->cache_key = "";
     this->cache_dir = "cache";
     this->cache_compress = false;
-    this->write_markers = false;
+    this->write_json = false;
     this->use_pixelsplit = false;
     this->pixelsplit = 0;
   }

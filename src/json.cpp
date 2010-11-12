@@ -1,14 +1,15 @@
 #include "json.hpp"
 
-/*#include <iostream>
+/*  
+#include <iostream>
 
 int main() {
-  json::dict w;
-  w["test"] = 12;
-  w["test2\n"] = "wtf\n\"";
+  json::object o;
+  json::number n(12);
+  o["test"] = &n;
+  std::cout << o << std::endl;
   json::array a;
-  a.push(w);
-  a.push(w);
-  a.push(w);
+  a.push(o);
   std::cout << a << std::endl;
-}*/
+}
+*/

@@ -214,10 +214,8 @@ public:
   }
 };
 
-inline void write_markers(settings_t& s, boost::shared_ptr<image_base> all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
+inline void write_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
-
-  json::array array;
   
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
@@ -229,25 +227,22 @@ inline void write_markers(settings_t& s, boost::shared_ptr<image_base> all, boos
     
     engine->wp2pt(p_x, p_y, p_z, x, y);
 
-    json::object o;
+    json::object* o = new json::object;
     
-    o["text"] = m.text;
-    o["type"] = m.type;
-
+    o->put("text", new json::string(m.text));
+    o->put("type", new json::string(m.type));
+    
     // the projected coordinates
-    o["x"] = x;
-    o["y"] = y;
+    o->put("x", new json::number(x));
+    o->put("y", new json::number(y));
     
     // the real coordinates
-    o["X"] = m.x;
-    o["Y"] = m.y;
-    o["Z"] = m.z;
+    o->put("X", new json::number(m.x));
+    o->put("Y", new json::number(m.y));
+    o->put("Z", new json::number(m.z));
     
-    array.push(o);
+    array->push(o);
   }
-  
-  std::ofstream of(s.write_markers_path.string().c_str());
-  of << array;
   // don't bother to check for errors right now, but could be done using the "fail" accessor.
 }
 
@@ -520,8 +515,25 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     }
   }
   
-  if (s.write_markers) {
-    write_markers(s, all, engine, markers);
+  size_t center_x, center_y;
+  engine->wp2pt(0, 0, 0, center_x, center_y);
+    
+  if (s.write_json) {
+    json::object file;
+    json::object* world = new json::object;
+    
+    world->put("center-x", new json::number(center_x));
+    world->put("center-y", new json::number(center_y));
+    
+    file.put("world", world);
+    
+    json::array* markers_array = new json::array;
+    write_markers(s, markers_array, engine, markers);
+    file.put("markers", markers_array);
+    
+    std::ofstream of(s.write_json_path.string().c_str());
+    of << file;
+    of.close();
   }
   else {
     overlay_markers(s, all, engine, markers);
@@ -544,12 +556,13 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       stringstream ss;
       ss << boost::format(output) % p.x % p.y;
       
-      png_format::opt_type opts;
-
       std::string path = ss.str();
 
-      opts.center_x = 0;
-      opts.center_y = 0;
+      png_format::opt_type opts;
+
+      opts.center_x = center_x;
+      opts.center_y = center_y;
+      opts.comment = C10T_COMMENT;
       
       if (!img->save<png_format>(path, opts)) {
         return false;
@@ -561,7 +574,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   else {
     png_format::opt_type opts;
     
-    engine->wp2pt(0, 0, 0, opts.center_x, opts.center_y);
+    opts.center_x = center_x;
+    opts.center_y = center_y;
+    opts.comment = C10T_COMMENT;
     
     if (!all->save<png_format>(output, opts)) {
       error << strerror(errno);
@@ -761,7 +776,7 @@ int do_help() {
     << "  --no-alpha                - Set all colors alpha channel to opaque (solid)   " << endl
     << "  --striped-terrain         - Darken every other block on a vertical basis     " << endl
     << "                              which helps to distinguish heights               " << endl
-    << "  --write-markers <file>    - Write markers to <file> in JSON format instead of" << endl
+    << "  --write-json <file>       - Write markers to <file> in JSON format instead of" << endl
     << "                              printing them on map                             " << endl
     << endl
     << "Font Options:" << endl
@@ -1093,7 +1108,7 @@ int main(int argc, char *argv[]){
      {"cache-compress",       no_argument, &flag, 13},
      {"no-alpha",       no_argument, &flag, 14},
      {"striped-terrain",       no_argument, &flag, 15},
-     {"write-markers",       required_argument, &flag, 16},
+     {"write-json",       required_argument, &flag, 16},
      {"pixelsplit",       required_argument, &flag, 17},
      {"show-warps",       required_argument, &flag, 18},
      {"warp-color",       required_argument, &flag, 19},
@@ -1200,12 +1215,12 @@ int main(int argc, char *argv[]){
         break;
       case 15: s.striped_terrain = true; break;
       case 16:
-        s.write_markers = true;
+        s.write_json = true;
 
-        s.write_markers_path = fs::system_complete(fs::path(optarg));
-
+        s.write_json_path = fs::system_complete(fs::path(optarg));
+        
         {
-          fs::path parent = s.write_markers_path.parent_path();
+          fs::path parent = s.write_json_path.parent_path();
           
           if (!fs::is_directory(parent)) {
             error << "Not a directory: " << parent.string();

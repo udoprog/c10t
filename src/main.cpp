@@ -1118,6 +1118,7 @@ int main(int argc, char *argv[]){
      {"no-alpha",       no_argument, &flag, 14},
      {"striped-terrain",       no_argument, &flag, 15},
      {"write-json",       required_argument, &flag, 16},
+     {"write-markers",       required_argument, &flag, 21},
      {"pixelsplit",       required_argument, &flag, 17},
      {"show-warps",       required_argument, &flag, 18},
      {"warp-color",       required_argument, &flag, 19},
@@ -1223,6 +1224,8 @@ int main(int argc, char *argv[]){
           mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
         break;
       case 15: s.striped_terrain = true; break;
+      case 21:
+        hints.push_back("`--write-markers' has been deprecated in favour of `--write-json' - use that instead and note the new json structure");
       case 16:
         s.write_json = true;
 

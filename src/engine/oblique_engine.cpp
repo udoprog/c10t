@@ -27,22 +27,32 @@ void oblique_engine::render(level_file& level, boost::shared_ptr<image_operation
   for (int z = mc::MapZ - 1; z >= 0; z--) {
     for (int x = mc::MapX - 1; x >= 0; x--) {
       bool cave_initial = true;
+      bool hell_initial = true;
+      bool hell_solid = true;
       
       b_r.set_xz(x, z);
       bl_r.set_xz(x, z);
       sl_r.set_xz(x, z);
+
+      if (s.hellmode) {
+        for (int y = s.top; y >= s.bottom && hell_solid; y--) { hell_solid = !is_open(b_r.get8(y)); }
+      }
       
       for (int y = s.top; y >= s.bottom; y--) {
         int bt = b_r.get8(y);
+        
+        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
+          continue;
+        }
+        
+        if (s.hellmode && !hell_solid && hell_ignore_block(s, y, bt, b_r, hell_initial)) {
+          continue;
+        }
         
         if (s.excludes[bt]) {
           continue;
         }
         
-        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
-          continue;
-        }
-
         point p(x, y, z);
         
         size_t px, py;

@@ -112,7 +112,7 @@ inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c
   }
 }
 
-inline bool cave_isopen(int bt) {
+inline bool is_open(int bt) {
   if (bt == -1) {
     return false;
   }
@@ -126,7 +126,7 @@ inline bool cave_isopen(int bt) {
 
 inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, bool &cave_initial) {
   if (cave_initial) {
-    if (!cave_isopen(bt)) {
+    if (!is_open(bt)) {
       cave_initial = false;
       return true;
     }
@@ -134,11 +134,24 @@ inline bool cave_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
     return true;
   }
   
-  if (!cave_isopen(bt) && cave_isopen(b_r.get8(y + 1))) {
+  if (!is_open(bt) && is_open(b_r.get8(y + 1))) {
     return false;
   }
   
   return true;
+}
+
+inline bool hell_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, bool &hell_initial) {
+  if (hell_initial) {
+    if (is_open(bt)) {
+      hell_initial = false;
+      return false;
+    }
+    
+    return true;
+  }
+  
+  return false;
 }
 
 #endif /* ENGINE_BASE */

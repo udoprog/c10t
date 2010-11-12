@@ -26,6 +26,7 @@ enum mode {
 
 struct settings_t {
   bool cavemode;
+  bool hellmode;
   bool night;
   bool heightmap;
   bool silent;
@@ -93,6 +94,7 @@ struct settings_t {
     this->use_split = false;
     this->split = 1;
     this->cavemode = false;
+    this->hellmode = false;
     this->excludes[mc::Air] = true;
     this->top = 127;
     this->bottom = 0;

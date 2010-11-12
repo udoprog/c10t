@@ -527,6 +527,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     if (!show_markers) {
       hints.push_back("Use `--write-json' in combination with `--show-*' in order to write markers");
     }
+
+    if (!s.silent) cout << "Writing json information: " << s.write_json_path.string() << endl;
     
     json::object file;
     json::object* world = new json::object;
@@ -727,6 +729,8 @@ int do_help() {
     << "  -a, --hide-all            - show no blocks except those specified with '-i'  " << endl
     << "  -c, --cave-mode           - cave mode - top down until solid block found,    " << endl
     << "                              then render bottom outlines only                 " << endl
+    << "      --hell-mode           - hell mode - top down until non-solid block found," << endl
+    << "                              then render normally (a.k.a. nether)             " << endl
     << "  -n, --night               - night-time rendering mode                        " << endl
     << "  -H, --heightmap           - heightmap rendering mode                         " << endl
     << endl
@@ -1123,6 +1127,7 @@ int main(int argc, char *argv[]){
      {"show-warps",       required_argument, &flag, 18},
      {"warp-color",       required_argument, &flag, 19},
      {"prebuffer",       required_argument, &flag, 20},
+     {"hell-mode",        no_argument, &flag, 22},
      {0, 0, 0, 0}
   };
 
@@ -1286,6 +1291,9 @@ int main(int argc, char *argv[]){
           goto exit_error;
         }
         
+        break;
+      case 22:
+        s.hellmode = true;
         break;
       }
       

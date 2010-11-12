@@ -115,7 +115,7 @@ cat > $target/index.html << ENDL
         
         map.setMapTypeId(firstMode);
         
-        map.setCenter(new google.maps.LatLng(0, 0));
+        map.setCenter(new google.maps.LatLng(0.5, 0.5));
         map.setZoom(0);
         
         // We can now set the map to use the 'grid' map type
@@ -143,6 +143,26 @@ cat > $target/index.html << ENDL
 </html>
 ENDL
 
+echo "NOTE: if something goes wrong, check out $C10T_OUT"
+
+echo "" > $C10T_OUT
+
+generate() {
+  echo -n "$1... "
+
+  if ! $C10T $C10T_OPTS $2 -o $target/$tiles/$3.%d.%d.png --write-json="$target/$3.json" &> $C10T_OUT; then
+    cat $C10T_OUT
+    exit 1
+  fi
+
+  echo "done!"
+}
+
+generate "Generating Day" "" "day"
+generate "Generating Night" "-n" "night"
+generate "Generating Caves" "-c" "caves"
+generate "Generating Heightmap" "--heightmap" "height"
+
 cat > $target/options.js << ENDL
 var options = {
   host: "$host$tiles/",
@@ -155,29 +175,9 @@ var options = {
 }
 
 var modes = {
-  'day': { name: "Day", alt: "Day in Top-Down view"},
-  'night': { name: "Night", alt: "Night in Top-Down view"},
-  'caves': { name: "Cavemode", alt: "Cavemode in Top-Down view"},
-  'height': { name: "Heightmap", alt: "Heightmap in Top-Down view"},
+  'day': { name: "Day", alt: "Day in Top-Down view", data: $(cat $target/day.json)},
+  'night': { name: "Night", alt: "Night in Top-Down view", data: $(cat $target/night.json)},
+  'caves': { name: "Cavemode", alt: "Cavemode in Top-Down view", data: $(cat $target/caves.json)},
+  'height': { name: "Heightmap", alt: "Heightmap in Top-Down view", data: $(cat $target/height.json)},
 }
 ENDL
-
-echo "NOTE: if something goes wrong, check out $C10T_OUT"
-
-echo "" > $C10T_OUT
-
-generate() {
-  echo -n "$1... "
-
-  if ! $C10T $C10T_OPTS $2 -o $target/$tiles/$3.%d.%d.png &> $C10T_OUT; then
-    cat $C10T_OUT
-    exit 1
-  fi
-
-  echo "done!"
-}
-
-generate "Generating Day" "" "day"
-generate "Generating Night" "-n" "night"
-generate "Generating Caves" "-c" "caves"
-generate "Generating Heightmap" "--heightmap" "height"

@@ -61,7 +61,7 @@ const uint8_t IMAGE_BYTE = 0x30;
 const uint8_t PARSE_BYTE = 0x40;
 const uint8_t END_BYTE = 0xF0;
 
-void cout_progress_n(int i, int all) {
+void cout_progress_n(size_t i, size_t all) {
   if (i == all) {
     cout << setw(6) << "done!" << endl;
   }
@@ -76,7 +76,7 @@ void cout_progress_n(int i, int all) {
   } 
 }
 
-void cout_progress_ionly_n(int i, int all) {
+void cout_progress_ionly_n(size_t i, size_t all) {
   if (all == 1) {
     cout << setw(6) << "done!" << endl;
   }
@@ -89,7 +89,7 @@ void cout_progress_ionly_n(int i, int all) {
   } 
 }
 
-inline void cout_progress_ionly_b(const uint8_t type, int part, int whole) {
+inline void cout_progress_ionly_b(const uint8_t type, size_t part, size_t whole) {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
   
   if (whole == 1) {
@@ -103,21 +103,21 @@ inline void cout_progress_ionly_b(const uint8_t type, int part, int whole) {
   }
 }
 
-inline void cout_progress_b(const uint8_t type, int part, int whole) {
+inline void cout_progress_b(const uint8_t type, size_t part, size_t whole) {
   uint8_t b = ((part * 0xff) / whole);
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type)
        << hex << std::setw(2) << setfill('0') << static_cast<int>(b) << flush;
 }
 
-void cout_progress_b_parse(int i, int all) {
+void cout_progress_b_parse(size_t i, size_t all) {
   cout_progress_ionly_b(PARSE_BYTE, i, all);
 }
 
-void cout_progress_b_render(int i, int all) {
+void cout_progress_b_render(size_t i, size_t all) {
   cout_progress_b(RENDER_BYTE, i, all);
 }
 
-void cout_progress_b_image(int i, int all) {
+void cout_progress_b_image(size_t i, size_t all) {
   cout_progress_b(IMAGE_BYTE, i, all);
 }
 
@@ -268,6 +268,24 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
   }
 }
 
+template<typename T>
+void cout_dot(T total) {
+  if (total == 0) cout << " done!";
+  else cout << "." << flush;
+}
+
+void cout_uint_endl(unsigned int total) {
+  cout << " " << setw(10) << total << " parts" << endl;
+}
+
+void cout_uintpart_endl(unsigned int progress, unsigned int total) {
+  cout << " " << setw(10) << progress << " parts " << (progress * 100) / total << "%" << endl;
+}
+
+void cout_mb_endl(streamsize progress, streamsize total) {
+  cout << " " << setw(10) << progress / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
+}
+
 bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& wdb, const string& output) {
   if (s.debug) {
     cout << "world_info" << endl;
@@ -277,12 +295,6 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     cout << "  max_z: " << world.max_z << endl;
     cout << "  levels: " << world.levels.size() << endl;
     cout << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
-  }
-  
-  void (*progress_c)(int part, int all) = NULL;
-  
-  if (!s.silent) {
-    progress_c = cout_progress_n;
   }
   
   boost::shared_ptr<engine_base> engine;
@@ -301,8 +313,6 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   engine->get_level_boundaries(l_w, l_h);
   
   size_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
-  float mem;
-  float mem_x_r;
   
   boost::shared_ptr<image_base> all;
   
@@ -311,29 +321,34 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   }
   
   if (mem_x > s.memory_limit) {
-    mem = (float)(s.memory_limit) / 1000000.0f; 
-    mem_x_r = (float)(mem_x) / 1000000.0f; 
+    float mem_x_r = (float)(mem_x) / 1000000.0f; 
+
+    if (!s.silent) cout << "Building cache for "
+                        << output << ": " << mem_x_r
+                        << " MB cache at " << s.cache_file
+                        << "... " << endl;
     
-    if (!s.silent) cout << output << ": "
-         << i_w << "x" << i_h << " "
-         << "~" << mem << " MB (" << mem_x_r << "MB cached at " << s.cache_file << ")... " << endl;
+    nonstd::limited<streamsize> c(1024 * 1024, cout_dot<streamsize>, cout_mb_endl);
     
     try {
-      if (!s.silent) cout << "Building cache... " << flush;
-      all.reset(new cached_image(s.cache_file.c_str(), i_w, i_h, mem_x, l_w, l_h));
-      if (!s.silent) cout << "done!" << endl;
+      all.reset(new cached_image(s.cache_file.c_str(), i_w, i_h, l_w, l_h, c));
     } catch(std::ios::failure& e) {
-      error << strerror(errno) << ": " << s.cache_file;
+      if (errno != 0) {
+        error << s.cache_file << ": " << strerror(errno);
+      } else {
+        error << s.cache_file << ": " << e.what();
+      }
+      
       return false;
     }
   } else {
-    mem = (float)(i_w * i_h * 4 * sizeof(uint8_t)) / 1000000.0f; 
-  
-    if (!s.silent) cout << output << ": "
-         << i_w << "x" << i_h << " "
-         << "~" << mem << " MB... " << endl;
+    float mem = (float)(i_w * i_h * 4 * sizeof(uint8_t)) / 1000000.0f; 
+    if (!s.silent) cout << "Allocating memory for "
+                        << output << ": " << "~" << mem
+                        << " MB... " << flush;
     
     all.reset(new memory_image(i_w, i_h));
+    if (!s.silent) cout << "done!" << endl;
   }
   
   unsigned int world_size = world.levels.size();
@@ -341,11 +356,6 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   Renderer renderer(s, s.threads, world_size);
   
   std::vector<light_marker> light_markers;
-  
-  if (s.binary) {
-    progress_c = cout_progress_b_render;
-  }
-
   std::list<level>::iterator lvlit = world.levels.begin();
   
   renderer.start();
@@ -356,6 +366,11 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
 
   unsigned int prebuffer = s.threads * s.prebuffer;
   unsigned int filllimit = prebuffer / 2;
+  
+  nonstd::limited<unsigned int> c(50, cout_dot<unsigned int>, cout_uintpart_endl);
+  c.set_limit(world_size);
+  
+  if (!s.silent) cout << "Rendering... " << endl;
   
   for (i = 0; i < world_size; i++) {
     if (lvlq <= filllimit) {
@@ -389,7 +404,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       }
     }
     
-    if (progress_c != NULL) progress_c(i, world_size);
+    ///if (progress_c != NULL) progress_c(i, world_size);
     
     if (p.markers.size() > 0) {
       if (s.debug) { cout << "Found " << p.markers.size() << " signs"; };
@@ -405,10 +420,13 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       renderer.join();
     }
     
+    c.add(1);
     --lvlq;
   }
   
-  if (progress_c != NULL) progress_c(world_size, world_size);
+  c.done(0);
+  
+  //if (progress_c != NULL) progress_c(world_size, world_size);
   
   renderer.join();
   
@@ -527,7 +545,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     if (!show_markers) {
       hints.push_back("Use `--write-json' in combination with `--show-*' in order to write markers");
     }
-
+    
     if (!s.silent) cout << "Writing json information: " << s.write_json_path.string() << endl;
     
     json::object file;
@@ -550,13 +568,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     overlay_markers(s, all, engine, markers);
   }
   
-  if (!s.silent) cout << "Saving image..." << endl;
-  
-  if (s.binary) {
-    progress_c = cout_progress_b_image;
-  }
-  
   if (s.use_pixelsplit) {
+    if (!s.silent) cout << "Splitting image on " << s.pixelsplit << "px basis..." << endl;
+    
     std::map<point2, image_base*> parts = image_split(all.get(), s.pixelsplit);
     //boost::ptr_map<point2, image_base> parts;
     
@@ -568,7 +582,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       ss << boost::format(output) % p.x % p.y;
       
       std::string path = ss.str();
-
+      
+      if (!s.silent) cout << "Saving: " << path << "..." << flush;
       png_format::opt_type opts;
 
       opts.center_x = center_x;
@@ -580,9 +595,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       }
       
       delete img;
+      if (!s.silent) cout << " done!" << endl;
     }
   }
   else {
+    if (!s.silent) cout << "Saving image: " << output << "..." << flush;
+    
     png_format::opt_type opts;
     
     opts.center_x = center_x;
@@ -593,6 +611,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       error << strerror(errno);
       return false;
     }
+    
+    if (!s.silent) cout << " done!" << endl;
   }
   
   return true;
@@ -643,17 +663,9 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
     cout << endl;
   }
   
-  void (*progress_c)(int part, int all) = NULL;
-
-  if (s.binary) {
-    progress_c = cout_progress_b_parse;
-  }
-  else if (!s.silent) {
-    progress_c = cout_progress_ionly_n;
-  }
-  
   if (!s.silent) cout << "Performing broad phase scan of world directory... " << endl;
-  world_info world(s, world_path, progress_c);
+  nonstd::continious<unsigned int> c(100, cout_dot<unsigned int>, cout_uint_endl);
+  world_info world(s, world_path, c);
   if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
 
   if (!s.use_split) {
@@ -1364,6 +1376,8 @@ int main(int argc, char *argv[]){
     case 'x':
       s.silent = true;
       s.binary = true;
+      error << "Binary output is not supported in this version of c10t";
+      goto exit_error;
       break;
     case 'r':
       s.rotation = atoi(optarg) % 360;
@@ -1502,7 +1516,7 @@ int main(int argc, char *argv[]){
       goto exit_error;
     }
   }
-
+  
   if (!s.silent && !s.binary && hints.size() > 0) {
     cout << endl;
     

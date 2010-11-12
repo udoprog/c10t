@@ -78,8 +78,7 @@ void cached_image::align(size_t x, size_t y, size_t w, size_t h)
   flush_buffer();
   
   if (!(buffer_s <= w * h)) {
-    delete [] buffer;
-    buffer = new color[w * h];
+    buffer.reset(new color[w * h]);
     buffer_s = w * h;
   }
   

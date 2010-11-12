@@ -19,6 +19,7 @@
 #include "global.hpp"
 #include "common.hpp"
 #include "level.hpp"
+#include "algorithm.hpp"
 
 namespace fs = boost::filesystem;
 
@@ -72,17 +73,15 @@ public:
   world_info() {
   }
   
-  world_info(settings_t& s, fs::path world_path, void (*c_progress)(int, int))
+  world_info(settings_t& s, fs::path world_path, nonstd::reporting<unsigned int>& c)
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)
   {
     dirlist broadlisting(world_path);
     
-    int i = 1;
+    unsigned int parts = 0;
     
     // broad phase listing of all the levels to figure out how they are ordered.
     while (broadlisting.has_next()) {
-      if (c_progress != NULL) c_progress(i++, 0);
-      
       fs::path next = broadlisting.next();
       
       fast_level_file leveldata(next, s.pedantic_broad_phase);
@@ -119,16 +118,18 @@ public:
       max_z = std::max(max_z, l.zPos);
       
       levels.push_back(l);
+      
+      ++parts;
+      c.add(1);
     }
-
+    
+    c.done(0);
     levels.sort(compare_levels);
     
     diff_x = max_x - min_x;
     diff_z = max_z - min_z;
     min_xp = min_x * mc::MapX;
     min_zp = min_z * mc::MapZ;
-    
-    if (c_progress != NULL) c_progress(i++, 1);
   }
   
   fs::path get_level_path(level &l) {

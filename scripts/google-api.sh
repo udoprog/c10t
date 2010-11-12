@@ -115,7 +115,10 @@ cat > $target/index.html << ENDL
         
         map.setMapTypeId(firstMode);
         
-        map.setCenter(new google.maps.LatLng(0.5, 0.5));
+        var world = modes[m].data.world;
+        var center = new google.maps.Point(world["center-x"], world["center-y"]);
+        var latlng = EuclideanProjection.prototype.fromPointToLatLng(center)
+        map.setCenter(latlng);
         map.setZoom(0);
         
         // We can now set the map to use the 'grid' map type

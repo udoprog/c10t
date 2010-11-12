@@ -58,6 +58,7 @@ struct settings_t {
   unsigned int rotation;
   int min_x, max_x, min_z, max_z; // limits to draw
   size_t memory_limit;
+  bool memory_limit_default;
   int ttf_size;
   color ttf_color;
   color sign_color;
@@ -111,6 +112,7 @@ struct settings_t {
     this->debug = false;
     this->cache_file = "cache.dat";
     this->memory_limit = 1024 * 1024 * 1000;
+    this->memory_limit_default = true;
     this->min_x = -10000;
     this->max_x = 10000;
     this->min_z = -10000;

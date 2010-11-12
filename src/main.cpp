@@ -53,6 +53,7 @@ using namespace std;
 namespace fs = boost::filesystem;
 
 stringstream error;
+vector<std::string> hints;
 const uint8_t ERROR_BYTE = 0x01;
 const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
@@ -305,6 +306,10 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   
   boost::shared_ptr<image_base> all;
   
+  if (s.memory_limit_default) {
+    hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
+  }
+  
   if (mem_x > s.memory_limit) {
     mem = (float)(s.memory_limit) / 1000000.0f; 
     mem_x_r = (float)(mem_x) / 1000000.0f; 
@@ -517,8 +522,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   
   size_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
-    
+  
   if (s.write_json) {
+    if (!show_markers) {
+      hints.push_back("Use `--write-json' in combination with `--show-*' in order to write markers");
+    }
+    
     json::object file;
     json::object* world = new json::object;
     
@@ -1387,9 +1396,10 @@ int main(int argc, char *argv[]){
       return do_colors();
     case 'M':
       {
-        int memory = atoi(optarg);
+        int memory = boost::lexical_cast<int>(optarg);
         assert(memory >= 0);
         s.memory_limit = memory * 1024 * 1024;
+        s.memory_limit_default = false;
       }
       break;
     case 'C':
@@ -1480,6 +1490,17 @@ int main(int argc, char *argv[]){
     if (!do_world(s, fs::path(world_path), output_path))  {
       goto exit_error;
     }
+  }
+
+  if (!s.silent && !s.binary && hints.size() > 0) {
+    cout << endl;
+    
+    int i = 1;
+    for (vector<std::string>::iterator it = hints.begin(); it != hints.end(); it++) {
+      cout << "Hint " << i++ << ": " << *it << endl;
+    }
+    
+    cout << endl;
   }
   
   if (s.binary) {

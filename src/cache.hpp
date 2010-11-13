@@ -15,6 +15,7 @@ namespace fs = boost::filesystem;
 struct cache_hdr {
   bool compressed;
   std::time_t mod;
+  uintmax_t filesize;
   size_t minx, miny;
   size_t maxx, maxy;
   size_t size;
@@ -69,6 +70,7 @@ public:
       
     if (hdr.compressed != cache_compress) return false;
     if (hdr.mod != fs::last_write_time(source_path)) return false;
+    if (hdr.filesize != fs::file_size(source_path)) return false;
     
     oper->maxx = hdr.maxx;
     oper->minx = hdr.minx;
@@ -97,6 +99,7 @@ public:
       hdr.maxy = oper->maxy;
       hdr.miny = oper->miny;
       hdr.mod = fs::last_write_time(source_path);
+      hdr.filesize = fs::file_size(source_path);
       hdr.size = oper->operations.size();
       
       fs.write(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));

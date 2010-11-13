@@ -166,25 +166,18 @@ public:
     p.xPos = job.xPos;
     p.zPos = job.zPos;
     
-    cache_file cache(s.cache_dir, s.cache_compress);
+    cache_file cache(s.cache_dir, p.path, s.cache_compress);
     
     p.operations.reset(new image_operations);
     
     if (s.cache_use) {
-      cache.set_path(fs::basename(p.path) + ".cmap" );
-      
-      std::time_t level_mod = fs::last_write_time(p.path);
-      
-      if (fs::exists(cache.get_path())) {
-        if (cache.read(p.operations.get(), level_mod)) {
+      if (cache.exists()) {
+        if (cache.read(p.operations)) {
           return p;
         }
         
-        fs::remove(cache.get_path());
+        cache.clear();
       }
-      
-      // in case of future writes, save the modification time
-      cache.set_modification_time(level_mod);
     }
 
     level_file level(job.path);
@@ -206,8 +199,8 @@ public:
     job.engine->render(level, p.operations);
     
     if (s.cache_use) {
-      if (!cache.write(p.operations.get())) {
-        fs::remove(cache.get_path());
+      if (!cache.write(p.operations)) {
+        cache.clear();
       }
     }
     
@@ -264,7 +257,7 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
     engine->wp2pt(p_x, p_y, p_z, x, y);
     
     m.font.draw(*all, m.text, x + 5, y);
-    all->safe_composite(x - 3, y - 3, positionmark);
+    //all->safe_composite(x - 3, y - 3, positionmark);
   }
 }
 

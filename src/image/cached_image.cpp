@@ -19,23 +19,23 @@ void cached_image::get_pixel(size_t x, size_t y, color& c)
   fs.read(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
-void cached_image::get_line(size_t y, size_t offset, size_t width, color* c)
+void cached_image::get_line(size_t y, size_t x, size_t width, color* c)
 {
   if (!(y < get_height())) { return; }
-  if (!(offset < get_width())) { return; }
-  if (!(width + offset < get_width())) { width = get_width() - offset; }
+  if (!(x < get_width())) { return; }
+  if (!(width + x < get_width())) { width = get_width() - x; }
   
-  fs.seekg(get_offset(offset, y), std::ios::beg);
+  fs.seekg(get_offset(x, y), std::ios::beg);
   fs.read(reinterpret_cast<char*>(c), sizeof(color) * width);
 }
 
-void cached_image::set_line(size_t y, size_t offset, size_t width, color* c)
+void cached_image::set_line(size_t y, size_t x, size_t width, color* c)
 {
   if (!(y < get_height())) { return; }
-  if (!(offset < get_width())) { return; }
-  if (!(width + offset < get_width())) { width = get_width() - offset; }
+  if (!(x < get_width())) { return; }
+  if (!(width + x < get_width())) { width = get_width() - x; }
   
-  fs.seekp(get_offset(offset, y), std::ios::beg);
+  fs.seekp(get_offset(x, y), std::ios::beg);
   fs.write(reinterpret_cast<char*>(c), sizeof(color) * width);
 }
 
@@ -56,18 +56,20 @@ void cached_image::read_buffer()
   }
 }
 
+#include <iostream>
+
 void cached_image::blend_pixel(size_t x, size_t y, color &c)
 {
   // do nothing if color is invisible
-  if (c.is_invisible()) {
-    return;
-  }
+  if (c.is_invisible()) { return; }
   
   size_t bx = x - buffer_x;
   size_t by = y - buffer_y;
   size_t bp = bx + by * buffer_w;
 
-  assert(bp < buffer_s);
+  if (!(bp < buffer_s)) {
+    return;
+  }
   
   buffer[bp].blend(c);
 }

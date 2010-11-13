@@ -35,8 +35,6 @@ public:
   inline size_t get_height() { return h; };
   
   void composite(int xoffset, int yoffset, boost::shared_ptr<image_operations> oper);
-  void composite(int xoffset, int yoffset, image_base& img);
-  void safe_composite(int xoffset, int yoffset, image_base& img);
   
   inline std::streamsize get_offset(std::streamsize x, std::streamsize y) {
     return (x * sizeof(color)) + (y * get_width() * sizeof(color));

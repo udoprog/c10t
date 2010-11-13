@@ -29,42 +29,7 @@ void image_base::composite(int xoffset, int yoffset, boost::shared_ptr<image_ope
   while (i--) {
     image_operation op = img->operations[i];
     blend_pixel(xoffset + op.x, yoffset + op.y, op.c);
-    //base.blend(op.c);
-    //set_pixel(xoffset + op.x, yoffset + op.y, base);
   }
-}
-
-void image_base::composite(int xoffset, int yoffset, image_base &img)
-{
-  if (!(xoffset >= 0)) { return; }
-  if (!(yoffset >= 0)) { return; }
-
-  size_t s_xoffset = boost::numeric_cast<size_t>(xoffset);
-  size_t s_yoffset = boost::numeric_cast<size_t>(yoffset);
-  
-  if (!(s_xoffset + img.get_width() <= w)) { return; }
-  if (!(s_yoffset + img.get_height() <= h)) { return; }
-  
-  color hp;
-  color base;
-  
-  for (size_t x = 0; x < img.get_width(); x++) {
-    for (size_t y = 0; y < img.get_height(); y++) {
-      get_pixel(xoffset + x, s_yoffset + y, base);
-      img.get_pixel(x, y, hp);
-      base.blend(hp);
-      set_pixel(xoffset + x, s_yoffset + y, base);
-    }
-  }
-}
-
-void image_base::safe_composite(int xoffset, int yoffset, image_base &img)
-{
-  if (xoffset < 0) return;
-  if (xoffset + img.get_width() > w) return;
-  if (yoffset < 0) return;
-  if (yoffset + img.get_height() > h) return;
-  composite(xoffset, yoffset, img);
 }
 
 void image_base::safe_blend_pixel(size_t x, size_t y, color &c)

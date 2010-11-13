@@ -10,194 +10,100 @@
 
 namespace fs = boost::filesystem;
 
-struct imop_file {
-  uint16_t x, y;
-  color c;
+#define CACHE_MAGIC "CMap"
+
+struct cache_hdr {
+  bool compressed;
+  std::time_t mod;
+  size_t minx, miny;
+  size_t maxx, maxy;
+  size_t size;
 };
 
 class cache_file {
 private:
-  fs::path cache_dir;
-  bool cache_compress;
-  fs::path path;
-  std::time_t modification_time;
+  const fs::path cache_dir;
+  const fs::path source_path;
+  const std::time_t source_mod;
+  const bool cache_compress;
+  
+  const fs::path cache_path;
+  
   typedef std::vector<image_operation>::size_type v_size_type;
-
-  inline bool gzwriteall(gzFile fp, char* bytes, size_t size) {
-    size_t size_o = 0;
-    
-    while (size_o < size) {
-      size_t size_w = gzwrite(fp, bytes + size_o, size - size_o);
-      if (size_w <= 0) return false;
-      size_o += size_w;
-    }
-    
-    return true;
-  }
-
-  inline bool gzreadall(gzFile fp, char* bytes, size_t size) {
-    size_t size_o = 0;
-    
-    while (size_o < size) {
-      size_t size_w = gzread(fp, bytes + size_o, size - size_o);
-      if (size_w <= 0) return false;
-      size_o += size_w;
-    }
-    
-    return true;
-  }
   
-  bool write_z(image_operations* operations) {
-    gzFile fp = gzopen(path.string().c_str(), "wb");
-    
-    if (fp == Z_NULL) {
-      return false;
-    }
-    
-    if (!gzwriteall(fp, reinterpret_cast<char *>(&modification_time), sizeof(std::time_t))) {
-      gzclose(fp);
-      return false;
-    }
-    
-    v_size_type size = operations->operations.size();
-    if (!gzwriteall(fp, reinterpret_cast<char *>(&size), sizeof(v_size_type))) {
-      gzclose(fp);
-      return false;
-    }
-    
-    for (
-      std::vector<image_operation>::iterator it = operations->operations.begin();
-      it != operations->operations.end(); it++) {
-      image_operation oper = *it;
-      imop_file iof;
-      iof.x = oper.x;
-      iof.y = oper.y;
-      iof.c = oper.c;
-      if (!gzwriteall(fp, reinterpret_cast<char*>(&iof), sizeof(imop_file))) {
-        gzclose(fp);
-        return false;
-      }
-    }
-    
-    gzclose(fp);
-    return true;
-  }
-  
-  bool read_z(image_operations* operations, std::time_t mod) {
-    gzFile fp = gzopen(path.string().c_str(), "rb");
-    
-    if (!gzreadall(fp, reinterpret_cast<char*>(&modification_time), sizeof(std::time_t))) {
-      gzclose(fp);
-      return false;
-    }
-    
-    if (modification_time != mod) {
-      gzclose(fp);
-      return false;
-    }
-    
-    v_size_type size;
-    if (!gzreadall(fp, reinterpret_cast<char*>(&size), sizeof(v_size_type)))
-    {
-      gzclose(fp);
-      return false;
-    }
-    
-    imop_file* oper = new imop_file[size];
-    
-    if (!gzreadall(fp, reinterpret_cast<char*>(oper), sizeof(imop_file) * size)) {
-      gzclose(fp);
-      delete [] oper;
-      return false;
-    }
-
-    for (v_size_type i = 0; i < size; i++) {
-      imop_file iof = oper[i];
-      image_operation operation;
-      operation.x = iof.x;
-      operation.y = iof.y;
-      operation.c = iof.c;
-      operations->operations.push_back(operation);
-    }
-    
-    delete [] oper;
-    gzclose(fp);
-    return true;
-  }
 public:
-  cache_file(const fs::path cache_dir, bool cache_compress) : cache_dir(cache_dir), cache_compress(cache_compress) {
+  cache_file(const fs::path cache_dir, const fs::path source_path, bool cache_compress)
+    : cache_dir(cache_dir), source_path(source_path), source_mod(fs::last_write_time(source_path)),
+      cache_compress(cache_compress),
+      cache_path(cache_dir / (fs::basename(source_path) + ".cmap"))
+  {
   }
   
-  fs::path get_path() {
-    return path;
+  bool exists() {
+    return fs::is_regular(cache_path) && fs::last_write_time(cache_path) >= source_mod;
   }
 
-  void set_path(fs::path path) {
-    this->path = cache_dir / path;
-  }
-
-  std::time_t get_modification_time() {
-    return modification_time;
-  }
-
-  void set_modification_time(std::time_t modification_time) {
-    this->modification_time = modification_time;
+  void clear() {
+    fs::remove(cache_path);
   }
   
-  bool read(image_operations* operations, std::time_t mod) {
-    if (cache_compress) return read_z(operations, mod);
+  bool read(boost::shared_ptr<image_operations> oper) {
+    std::ifstream fs(cache_path.string().c_str());
     
-    std::ifstream fs(path.string().c_str());
-    fs.read(reinterpret_cast<char*>(&modification_time), sizeof(std::time_t));
-    if (fs.fail()) return false;
-    if (modification_time != mod) return false;
+    cache_hdr hdr;
     
-    v_size_type size;
-    fs.read(reinterpret_cast<char*>(&size), sizeof(v_size_type));
-    if (fs.fail()) return false;
-    
-    imop_file* oper = new imop_file[size];
-    fs.read(reinterpret_cast<char*>(oper), sizeof(imop_file) * size);
-    if (fs.fail()) goto exit_error;
-    
-    for (v_size_type i = 0; i < size; i++) {
-      imop_file iof = oper[i];
-      image_operation operation;
-      operation.x = iof.x;
-      operation.y = iof.y;
-      operation.c = iof.c;
-      operations->operations.push_back(operation);
-    }
-    
-    delete [] oper;
-    return true;
-exit_error:
-    delete [] oper;
-    return false;
-  }
-
-  bool write(image_operations* operations) {
-    if (cache_compress) return write_z(operations);
-    
-    std::ofstream fs(path.string().c_str());
-    fs.write(reinterpret_cast<char *>(&modification_time), sizeof(std::time_t));
-    if (fs.fail()) return false;
-    
-    v_size_type size = operations->operations.size();
-    fs.write(reinterpret_cast<char *>(&size), sizeof(v_size_type));
-    if (fs.fail()) return false;
-    
-    for (
-      std::vector<image_operation>::iterator it = operations->operations.begin();
-      it != operations->operations.end(); it++) {
-      image_operation oper = *it;
-      imop_file iof;
-      iof.x = oper.x;
-      iof.y = oper.y;
-      iof.c = oper.c;
-      fs.write(reinterpret_cast<char*>(&iof), sizeof(imop_file));
+    {
+      char m[4];
+      fs.read(m, 4);
       if (fs.fail()) return false;
+
+      if (
+            m[0] != CACHE_MAGIC[0]
+        ||  m[1] != CACHE_MAGIC[1]
+        ||  m[2] != CACHE_MAGIC[2]
+        ||  m[3] != CACHE_MAGIC[3]
+        ) return false;
+      
+      fs.read(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));
     }
+      
+    if (hdr.compressed != cache_compress) return false;
+    if (hdr.mod != source_mod) return false;
+    
+    oper->maxx = hdr.maxx;
+    oper->minx = hdr.minx;
+    oper->maxy = hdr.maxy;
+    oper->miny = hdr.miny;
+    oper->operations.resize(hdr.size);
+    
+    fs.read(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
+    if (fs.fail()) return false;
+    
+    return true;
+  }
+  
+  bool write(boost::shared_ptr<image_operations> oper) {
+    std::ofstream fs(cache_path.string().c_str());
+    
+    cache_hdr hdr;
+    
+    {
+      fs.write(CACHE_MAGIC, 4);
+      if (fs.fail()) return false;
+      
+      hdr.compressed = cache_compress;
+      hdr.maxx = oper->maxx;
+      hdr.minx = oper->minx;
+      hdr.maxy = oper->maxy;
+      hdr.miny = oper->miny;
+      hdr.mod = source_mod;
+      hdr.size = oper->operations.size();
+      
+      fs.write(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));
+    }
+    
+    fs.write(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
+    if (fs.fail()) return false;
     
     return true;
   }

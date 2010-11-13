@@ -12,7 +12,6 @@
 
 struct image_operation {
   color c;
-  int depth;
   uint16_t x, y;
 };
 

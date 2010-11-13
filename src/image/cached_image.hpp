@@ -15,24 +15,24 @@
 
 class cached_image : public image_base {
 private:
-  static const size_t WRITE_SIZE = 4096 * 8;
+  static const pos_t WRITE_SIZE = 4096 * 8;
   const char *path;
   std::fstream fs;
 
-  size_t l_total;
-  size_t buffer_s;
+  pos_t l_total;
+  pos_t buffer_s;
   bool buffer_set;
   boost::shared_array<color> buffer;
   
-  size_t buffer_w;
-  size_t buffer_h;
-  size_t buffer_x;
-  size_t buffer_y;
+  pos_t buffer_w;
+  pos_t buffer_h;
+  pos_t buffer_x;
+  pos_t buffer_y;
   
   void read_buffer();
   void flush_buffer();
 public:
-  cached_image(const char *path, size_t w, size_t h, size_t l_w, size_t l_h, nonstd::reporting<std::streamsize>& reporter) :
+  cached_image(const char *path, pos_t w, pos_t h, pos_t l_w, pos_t l_h, nonstd::reporting<std::streamsize>& reporter) :
     image_base(w, h),
     path(path),
     buffer_s((l_w + 1) * l_h),
@@ -75,8 +75,8 @@ public:
     fs.close();
   }
   
-  void set_pixel(size_t x, size_t y, color&);
-  void get_pixel(size_t x, size_t y, color&);
+  void set_pixel(pos_t x, pos_t y, color&);
+  void get_pixel(pos_t x, pos_t y, color&);
 
   /*
    * This is where you may use caching or whatever mechanism.
@@ -87,7 +87,7 @@ public:
    *
    * @see #align
    **/
-  void blend_pixel(size_t x, size_t y, color &c);
+  void blend_pixel(pos_t x, pos_t y, color &c);
 
   /*
    * Read a list of colors.
@@ -100,18 +100,18 @@ public:
    * This method must assert that the result reflects the same as the backend
    * store, usually means that you actually have to read from it.
    **/
-  void get_line(size_t y, size_t x, size_t width, color*);
+  void get_line(pos_t y, pos_t x, pos_t width, color*);
   
   /*
    * Set a list of colors.
    * @see #get_line
    **/
-  void set_line(size_t y, size_t x, size_t width, color*);
+  void set_line(pos_t y, pos_t x, pos_t width, color*);
   
   /*
    * Align whatever caching mechanism might be used to only expect blend requests for these areas.
    **/
-  void align(size_t x, size_t y, size_t w, size_t h);
+  void align(pos_t x, pos_t y, pos_t w, pos_t h);
 };
 
 #endif /* CACHED_IMAGE */

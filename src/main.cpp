@@ -299,8 +299,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     case Isometric: engine.reset(new isometric_engine(s, world)); break;
   }
   
-  size_t i_w, i_h;
-  size_t l_w, l_h;
+  image_base::pos_t i_w, i_h;
+  image_base::pos_t l_w, l_h;
   
   engine->get_boundaries(i_w, i_h);
   engine->get_level_boundaries(l_w, l_h);
@@ -408,7 +408,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     }
     
     try {
-      size_t x, y;
+      image_base::pos_t x, y;
       engine->w2pt(p.xPos, p.zPos, x, y);
       all->composite(x, y, p.operations);
     } catch(std::ios::failure& e) {

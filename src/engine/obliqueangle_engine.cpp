@@ -8,7 +8,7 @@ void obliqueangle_engine::render(level_file& level, boost::shared_ptr<image_oper
     return;
   }
   
-  size_t iw, ih;
+  pos_t iw, ih;
   part_c.get_obliqueangle_limits(iw, ih);
   
   BlockRotation b_r(s, level.blocks.get());
@@ -16,7 +16,7 @@ void obliqueangle_engine::render(level_file& level, boost::shared_ptr<image_oper
   BlockRotation sl_r(s, level.skylight.get());
   BlockRotation hm_r(s, level.heightmap.get());
 
-  size_t bmt = iw * ih;
+  pos_t bmt = iw * ih;
   
   boost::scoped_array<bool> blocked(new bool[bmt]);
   memset(blocked.get(), 0x0, sizeof(bool) * bmt);
@@ -57,7 +57,7 @@ void obliqueangle_engine::render(level_file& level, boost::shared_ptr<image_oper
         
         point p(x, y, z);
         
-        size_t px, py;
+        pos_t px, py;
         part_c.project_obliqueangle(p, px, py);
         
         color top = mc::MaterialColor[bt];

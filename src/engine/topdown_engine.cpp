@@ -7,7 +7,7 @@ void topdown_engine::render(level_file& level, boost::shared_ptr<image_operation
     return;
   }
   
-  size_t iw, ih;
+  pos_t iw, ih;
   get_level_boundaries(iw, ih);
   
   // block type
@@ -53,8 +53,8 @@ void topdown_engine::render(level_file& level, boost::shared_ptr<image_operation
         
         point p(x, y, z);
         
-        size_t px;
-        size_t py;
+        pos_t px;
+        pos_t py;
 
         part_c.project_top(p, px, py);
         

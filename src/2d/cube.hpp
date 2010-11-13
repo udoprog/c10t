@@ -6,19 +6,23 @@
 #include <stdlib.h>
 
 struct point {
-  size_t x;
-  size_t y;
-  size_t z;
+  typedef uint64_t pos_t;
+  
+  pos_t x;
+  pos_t y;
+  pos_t z;
 
-  inline point(size_t x, size_t y, size_t z) : x(x), y(y), z(z) {}
+  inline point(pos_t x, pos_t y, pos_t z) : x(x), y(y), z(z) {}
 };
 
 class point2 {
 public:
-  const size_t x;
-  const size_t y;
+  typedef uint64_t pos_t;
+  
+  const pos_t x;
+  const pos_t y;
 
-  point2(const size_t x, const size_t y) : x(x), y(y) {}
+  point2(const pos_t x, const pos_t y) : x(x), y(y) {}
   
   bool operator<(const point2& oth) const {
     if (y < oth.y) {
@@ -35,55 +39,57 @@ public:
 
 class Cube {
 public:
-  const size_t x;
-  const size_t y;
-  const size_t z;
+  typedef uint64_t pos_t;
   
-  Cube(const size_t x, const size_t y, const size_t z) : x(x), y(y), z(z) {}
+  const pos_t x;
+  const pos_t y;
+  const pos_t z;
   
-  void project_top(point &p, size_t &rx, size_t &ry) const
+  Cube(const pos_t x, const pos_t y, const pos_t z) : x(x), y(y), z(z) {}
+  
+  void project_top(point &p, pos_t &rx, pos_t &ry) const
   {
     rx = z - p.z - 1;
     ry = p.x;
   }
   
-  void project_oblique(point &p, size_t &rx, size_t &ry) const
+  void project_oblique(point &p, pos_t &rx, pos_t &ry) const
   {
     rx = z - p.z - 1;
     ry = p.x + (y - p.y - 1);
   }
   
-  void project_obliqueangle(point &p, size_t &rx, size_t &ry) const
+  void project_obliqueangle(point &p, pos_t &rx, pos_t &ry) const
   {
     rx = (z - p.z - 1) + p.x;
     ry = (y - p.y - 1) + p.z + p.x;
   }
 
-  void project_isometric(point &p, size_t &rx, size_t &ry) const
+  void project_isometric(point &p, pos_t &rx, pos_t &ry) const
   {
     rx = 2 * ((z - p.z - 1) + p.x);
     ry = 2 * (y - p.y - 1) + p.z + p.x;
   }
   
-  void get_top_limits(size_t &rx, size_t &ry) const
+  void get_top_limits(pos_t &rx, pos_t &ry) const
   {
     rx = z;
     ry = x;
   }
   
-  void get_oblique_limits(size_t &rx, size_t &ry) const
+  void get_oblique_limits(pos_t &rx, pos_t &ry) const
   {
     rx = z;
     ry = x + y;
   }
   
-  void get_obliqueangle_limits(size_t &rx, size_t &ry) const
+  void get_obliqueangle_limits(pos_t &rx, pos_t &ry) const
   {
     rx = z + x;
     ry = y + z + x;
   }
   
-  void get_isometric_limits(size_t &rx, size_t &ry) const
+  void get_isometric_limits(pos_t &rx, pos_t &ry) const
   {
     rx = 2 * (z + x);
     ry = 2 * y + z + x;

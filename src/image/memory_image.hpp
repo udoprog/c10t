@@ -14,10 +14,10 @@ public:
   
   ~memory_image();
   
-  void blend_pixel(size_t x, size_t y, color &c);
-  void set_pixel(size_t x, size_t y, color&);
-  void get_pixel(size_t x, size_t y, color&);
-  void get_line(size_t y, size_t offset, size_t width, color*);
+  void blend_pixel(pos_t x, pos_t y, color &c);
+  void set_pixel(pos_t x, pos_t y, color&);
+  void get_pixel(pos_t x, pos_t y, color&);
+  void get_line(pos_t y, pos_t offset, pos_t width, color*);
 };
 
 #endif /* MEMORY_IMAGE */

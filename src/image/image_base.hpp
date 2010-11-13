@@ -16,14 +16,16 @@
 namespace fs = boost::filesystem;
 
 class image_base {
+public:
+  typedef uint64_t pos_t;
 protected:
-  size_t w, h;
+  pos_t w, h;
 public:
   typedef void (*progress_c)(int , int);
   
   static const short COLOR_TYPE = 4;
   
-  image_base(size_t w, size_t h) : w(w), h(h) {
+  image_base(pos_t w, pos_t h) : w(w), h(h) {
   }
   
   virtual ~image_base() {
@@ -31,20 +33,21 @@ public:
   
   void fill(color& c);
   
-  inline size_t get_width() { return w; };
-  inline size_t get_height() { return h; };
+  inline pos_t get_width() { return w; };
+  inline pos_t get_height() { return h; };
   
   void composite(int xoffset, int yoffset, boost::shared_ptr<image_operations> oper);
   
-  inline std::streamsize get_offset(std::streamsize x, std::streamsize y) {
-    return (x * sizeof(color)) + (y * get_width() * sizeof(color));
+  inline std::streampos get_offset(std::streampos x, std::streampos y) {
+    std::streampos width = get_width();
+    return (x * sizeof(color)) + (y * width * sizeof(color));
   }
   
   bool save_png(const std::string filename, const char *title, progress_c);
   
-  void safe_blend_pixel(size_t x, size_t y, color &c);
+  void safe_blend_pixel(pos_t x, pos_t y, color &c);
 
-  void get_line(size_t y, color *c) {
+  void get_line(pos_t y, color *c) {
     get_line(y, 0, get_width(), c);
   }
 
@@ -53,12 +56,12 @@ public:
     return T::save(this, str, opts);
   }
   
-  virtual void blend_pixel(size_t x, size_t y, color &c) = 0;
-  virtual void set_pixel(size_t x, size_t y, color& c) = 0;
-  virtual void get_pixel(size_t x, size_t y, color& c) = 0;
-  virtual void get_line(size_t y, size_t offset, size_t w, color*) = 0;
-  virtual void set_line(size_t y, size_t offset, size_t w, color*) {};
-  virtual void align(size_t x, size_t y, size_t w, size_t h) {};
+  virtual void blend_pixel(pos_t x, pos_t y, color &c) = 0;
+  virtual void set_pixel(pos_t x, pos_t y, color& c) = 0;
+  virtual void get_pixel(pos_t x, pos_t y, color& c) = 0;
+  virtual void get_line(pos_t y, pos_t offset, pos_t w, color*) = 0;
+  virtual void set_line(pos_t y, pos_t offset, pos_t w, color*) {};
+  virtual void align(pos_t x, pos_t y, pos_t w, pos_t h) {};
 };
 
 std::map<point2, image_base*> image_split(image_base* base, int pixels);

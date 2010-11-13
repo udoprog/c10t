@@ -12,6 +12,8 @@ class engine_base {
     const Cube part_c, pos_c, mpos_c;
     const world_info& world;
   public:
+    typedef uint64_t pos_t;
+    
     engine_base(settings_t& s, world_info& world) :
       s(s),
       part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1),
@@ -22,10 +24,10 @@ class engine_base {
     }
     
     virtual void render(level_file& level, boost::shared_ptr<image_operations> oper) = 0;
-    virtual void get_boundaries(size_t& width, size_t& height) = 0;
-    virtual void get_level_boundaries(size_t& width, size_t& height) = 0;
-    virtual void w2pt(int xPos, int zPos, size_t& x, size_t& y) = 0;
-    virtual void wp2pt(int xPos, int yPos, int zPos, size_t& x, size_t& y) = 0;
+    virtual void get_boundaries(pos_t& width, pos_t& height) = 0;
+    virtual void get_level_boundaries(pos_t& width, pos_t& height) = 0;
+    virtual void w2pt(int xPos, int zPos, pos_t& x, pos_t& y) = 0;
+    virtual void wp2pt(int xPos, int yPos, int zPos, pos_t& x, pos_t& y) = 0;
 };
 
 class BlockRotation {

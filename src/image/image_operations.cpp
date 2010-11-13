@@ -27,7 +27,7 @@ void image_operations::add_pixel(int x, int y, color &c)
   oper.c = c;
   
   if (!oper.c.is_transparent()) {
-    size_t p = oper.x + oper.y * maxx;
+    uint64_t p = oper.x + oper.y * maxx;
     
     if (lookup[p]) {
       return;

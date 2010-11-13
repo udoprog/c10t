@@ -13,10 +13,10 @@ void isometric_engine::render(level_file& level, boost::shared_ptr<image_operati
   BlockRotation sl_r(s, level.skylight.get());
   BlockRotation hm_r(s, level.heightmap.get());
 
-  size_t iw, ih;
+  pos_t iw, ih;
   
   part_c.get_isometric_limits(iw, ih);
-  size_t bmt = iw * ih;
+  pos_t bmt = iw * ih;
   
   boost::scoped_array<bool> blocked(new bool[bmt]);
   memset(blocked.get(), 0x0, sizeof(bool) * bmt);
@@ -57,7 +57,7 @@ void isometric_engine::render(level_file& level, boost::shared_ptr<image_operati
         
         point p(x, y, z);
         
-        size_t px, py;
+        pos_t px, py;
         part_c.project_isometric(p, px, py);
         
         color top = mc::MaterialColor[bt];

@@ -71,16 +71,19 @@ namespace text {
       this->size = size;
     }
     
-    void draw_bitmap(image_base& target, FT_Bitmap* bitmap, size_t pen_x, size_t pen_y) const {
+    void draw_bitmap(image_base& target, FT_Bitmap* bitmap, image_base::pos_t pen_x, image_base::pos_t pen_y) const {
       assert(bitmap->pixel_mode == FT_PIXEL_MODE_GRAY);
       
       uint8_t* buffer = bitmap->buffer;
 
-      size_t s_bitmap_rows = boost::numeric_cast<size_t>(bitmap->rows);
-      size_t s_bitmap_width = boost::numeric_cast<size_t>(bitmap->width);
+      image_base::pos_t s_bitmap_rows =
+        boost::numeric_cast<image_base::pos_t>(bitmap->rows);
       
-      for (size_t y = 0; y < s_bitmap_rows && y < target.get_height() + pen_y; y++) {
-        for (size_t  x = 0; x < s_bitmap_width && x < target.get_width() + pen_x; x++) {
+      image_base::pos_t s_bitmap_width =
+        boost::numeric_cast<image_base::pos_t>(bitmap->width);
+      
+      for (image_base::pos_t y = 0; y < s_bitmap_rows && y < target.get_height() + pen_y; y++) {
+        for (image_base::pos_t x = 0; x < s_bitmap_width && x < target.get_width() + pen_x; x++) {
           color c(base);
           c.a = buffer[x + y * bitmap->width];
           target.safe_blend_pixel(pen_x + x, pen_y + y, c);

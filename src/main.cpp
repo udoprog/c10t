@@ -61,7 +61,7 @@ const uint8_t IMAGE_BYTE = 0x30;
 const uint8_t PARSE_BYTE = 0x40;
 const uint8_t END_BYTE = 0xF0;
 
-void cout_progress_n(size_t i, size_t all) {
+void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
   if (i == all) {
     cout << setw(6) << "done!" << endl;
   }
@@ -76,7 +76,7 @@ void cout_progress_n(size_t i, size_t all) {
   } 
 }
 
-void cout_progress_ionly_n(size_t i, size_t all) {
+void cout_progress_ionly_n(image_base::pos_t i, image_base::pos_t all) {
   if (all == 1) {
     cout << setw(6) << "done!" << endl;
   }
@@ -89,7 +89,7 @@ void cout_progress_ionly_n(size_t i, size_t all) {
   } 
 }
 
-inline void cout_progress_ionly_b(const uint8_t type, size_t part, size_t whole) {
+inline void cout_progress_ionly_b(const uint8_t type, image_base::pos_t part, image_base::pos_t whole) {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
   
   if (whole == 1) {
@@ -103,21 +103,21 @@ inline void cout_progress_ionly_b(const uint8_t type, size_t part, size_t whole)
   }
 }
 
-inline void cout_progress_b(const uint8_t type, size_t part, size_t whole) {
+inline void cout_progress_b(const uint8_t type, image_base::pos_t part, image_base::pos_t whole) {
   uint8_t b = ((part * 0xff) / whole);
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type)
        << hex << std::setw(2) << setfill('0') << static_cast<int>(b) << flush;
 }
 
-void cout_progress_b_parse(size_t i, size_t all) {
+void cout_progress_b_parse(image_base::pos_t i, image_base::pos_t all) {
   cout_progress_ionly_b(PARSE_BYTE, i, all);
 }
 
-void cout_progress_b_render(size_t i, size_t all) {
+void cout_progress_b_render(image_base::pos_t i, image_base::pos_t all) {
   cout_progress_b(RENDER_BYTE, i, all);
 }
 
-void cout_progress_b_image(size_t i, size_t all) {
+void cout_progress_b_image(image_base::pos_t i, image_base::pos_t all) {
   cout_progress_b(IMAGE_BYTE, i, all);
 }
 
@@ -217,7 +217,7 @@ inline void write_markers(settings_t& s, json::array* array, boost::shared_ptr<e
     int p_x = m.x, p_y = m.y, p_z = m.z;
     transform_world_xz(p_x, p_z, s.rotation);
     
-    size_t x, y;
+    image_base::pos_t x, y;
     
     engine->wp2pt(p_x, p_y, p_z, x, y);
 
@@ -252,7 +252,7 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
     int p_x = m.x, p_y = m.y, p_z = m.z;
     transform_world_xz(p_x, p_z, s.rotation);
     
-    size_t x, y;
+    image_base::pos_t x, y;
     
     engine->wp2pt(p_x, p_y, p_z, x, y);
     
@@ -305,7 +305,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   engine->get_boundaries(i_w, i_h);
   engine->get_level_boundaries(l_w, l_h);
   
-  size_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
+  image_base::pos_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
   
   boost::shared_ptr<image_base> all;
   
@@ -531,7 +531,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     }
   }
   
-  size_t center_x, center_y;
+  engine_base::pos_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
   
   if (s.write_json) {

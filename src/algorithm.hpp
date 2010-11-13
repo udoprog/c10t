@@ -20,7 +20,7 @@ namespace nonstd {
   template<typename T>
   class continious : public reporting<T> {
     protected:
-      const static size_t LINE_WIDTH = 30;
+      const static uintmax_t LINE_WIDTH = 30;
     private:
       T chunks;
       T total;
@@ -67,7 +67,7 @@ namespace nonstd {
   template<typename T>
   class limited : public reporting<T> {
     protected:
-      const static size_t LINE_WIDTH = 30;
+      const static uintmax_t LINE_WIDTH = 30;
     private:
       T chunks;
       T total;

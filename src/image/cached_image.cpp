@@ -67,9 +67,7 @@ void cached_image::blend_pixel(size_t x, size_t y, color &c)
   size_t by = y - buffer_y;
   size_t bp = bx + by * buffer_w;
 
-  if (!(bp < buffer_s)) {
-    return;
-  }
+  assert(bp < buffer_s);
   
   buffer[bp].blend(c);
 }

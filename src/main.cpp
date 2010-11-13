@@ -268,15 +268,15 @@ void cout_dot(T total) {
 }
 
 void cout_uint_endl(unsigned int total) {
-  cout << " " << setw(10) << total << " parts" << endl;
+  cout << " " << setw(8) << total << " parts" << endl;
 }
 
 void cout_uintpart_endl(unsigned int progress, unsigned int total) {
-  cout << " " << setw(10) << progress << " parts " << (progress * 100) / total << "%" << endl;
+  cout << " " << setw(8) << progress << " parts " << (progress * 100) / total << "%" << endl;
 }
 
 void cout_mb_endl(streamsize progress, streamsize total) {
-  cout << " " << setw(10) << progress / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
+  cout << " " << setw(8) << progress / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
 bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& wdb, const string& output) {
@@ -353,7 +353,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   
   renderer.start();
   
-  unsigned int lvlq = 0;
+  unsigned int queued = 0;
 
   unsigned int i;
 
@@ -366,8 +366,8 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   if (!s.silent) cout << "Rendering... " << endl;
   
   for (i = 0; i < world_size; i++) {
-    if (lvlq <= filllimit) {
-      for (; lvlq < prebuffer && lvlit != world.levels.end(); lvlit++) {
+    if (queued <= filllimit) {
+      for (; queued < prebuffer && lvlit != world.levels.end(); lvlit++) {
         level l = *lvlit;
         
         fs::path path = world.get_level_path(l);
@@ -384,9 +384,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
         job.zPos = l.zPos;
         
         renderer.give(job);
-        lvlq++;
+        queued++;
       }
     }
+    
+    c.add(1);
+    --queued;
     
     render_result p = renderer.get();
     
@@ -412,9 +415,6 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       error << strerror(errno) << ": " << s.cache_file;
       renderer.join();
     }
-    
-    c.add(1);
-    --lvlq;
   }
   
   c.done(0);

@@ -55,15 +55,11 @@ class fast_level_file
   public:
     // these must be public for the parser to be able to reach them.
     int xPos, zPos;
-    bool has_xPos, has_zPos;
-    bool islevel;
-    bool grammar_error;
-    size_t grammar_error_where;
-    std::string grammar_error_why;
+    bool is_level;
+    std::string is_level_why;
     const fs::path path;
-    nbt::Parser<fast_level_file> parser;
     
-    fast_level_file(const fs::path path, bool filename);
+    fast_level_file(const fs::path path);
 };
 
 #endif /* _LEVEL_H_ */

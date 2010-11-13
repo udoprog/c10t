@@ -152,71 +152,20 @@ level_file::level_file(fs::path path)
   parser.parse_file(path.string().c_str());
 }
 
-void fast_begin_compound(fast_level_file* level, nbt::String name) {
-  if (name.compare("Level") == 0) {
-    level->islevel = true;
-  }
-}
-
-void fast_register_int(fast_level_file* level, nbt::String name, nbt::Int i) {
-  if (!level->islevel) {
-    return;
-  }
-
-  if (name.compare("xPos") == 0) {
-    level->has_xPos = true;
-    level->xPos = i;
-  }
-  else if (name.compare("zPos") == 0) {
-    level->has_zPos = true;
-    level->zPos = i;
-  }
-  
-  if (level->has_xPos && level->has_zPos) {
-    level->parser.stop();
-  }
-}
-
-void fast_error_handler(fast_level_file* level, size_t where, const char *why) {
-  level->grammar_error = true;
-  level->grammar_error_where = where;
-  level->grammar_error_why = why;
-}
-
-fast_level_file::fast_level_file(const fs::path path, bool force_parsing)
+fast_level_file::fast_level_file(const fs::path path)
   :
     xPos(0), zPos(0),
-    has_xPos(false), has_zPos(false),
-    islevel(false),
-    grammar_error(false),
-    grammar_error_where(0),
-    grammar_error_why(""),
-    path(path),
-    parser(this)
+    is_level(false),
+    path(path)
 {
   std::string extension = fs::extension(path);
   
-  if (force_parsing) {
-    if (extension.compare(".dat") != 0) {
-      grammar_error = true;
-      grammar_error_why = "File extension is not .dat";
-      return;
-    }
-
-    parser.register_int = fast_register_int;
-    parser.begin_compound = fast_begin_compound;
-    parser.error_handler = fast_error_handler;
-    
-    parser.parse_file(path.string().c_str());
-    return;
-  }
-
   std::vector<std::string> parts;
   nonstd::split(parts, fs::basename(path), '.');
   
   if (parts.size() != 3 || extension.compare(".dat") != 0) {
-    grammar_error = true;
-    grammar_error_why = "Filename does not match c.<x>.<z>.dat";
+    is_level = false;
+    is_level_why = "Level data file name does not match <x>.<z>.dat";
     return;
   }
   
@@ -227,10 +176,10 @@ fast_level_file::fast_level_file(const fs::path path, bool force_parsing)
     xPos = common::b36decode(x);
     zPos = common::b36decode(z);
   } catch(const common::bad_cast& e) {
-    grammar_error = true;
-    grammar_error_why = "Filename does not match c.<x>.<z>.dat";
+    is_level = false;
+    is_level_why = "Could not decode level name from " + fs::basename(path);
     return;
   }
   
-  islevel = true;
+  is_level = true;
 }

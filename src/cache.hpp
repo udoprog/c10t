@@ -24,7 +24,6 @@ class cache_file {
 private:
   const fs::path cache_dir;
   const fs::path source_path;
-  const std::time_t source_mod;
   const bool cache_compress;
   
   const fs::path cache_path;
@@ -33,14 +32,15 @@ private:
   
 public:
   cache_file(const fs::path cache_dir, const fs::path source_path, bool cache_compress)
-    : cache_dir(cache_dir), source_path(source_path), source_mod(fs::last_write_time(source_path)),
+    : cache_dir(cache_dir), source_path(source_path), 
       cache_compress(cache_compress),
       cache_path(cache_dir / (fs::basename(source_path) + ".cmap"))
   {
   }
   
   bool exists() {
-    return fs::is_regular(cache_path) && fs::last_write_time(cache_path) >= source_mod;
+    return fs::is_regular(cache_path)
+      && fs::last_write_time(cache_path) >= fs::last_write_time(source_path);
   }
 
   void clear() {
@@ -68,7 +68,7 @@ public:
     }
       
     if (hdr.compressed != cache_compress) return false;
-    if (hdr.mod != source_mod) return false;
+    if (hdr.mod != fs::last_write_time(source_path)) return false;
     
     oper->maxx = hdr.maxx;
     oper->minx = hdr.minx;
@@ -96,7 +96,7 @@ public:
       hdr.minx = oper->minx;
       hdr.maxy = oper->maxy;
       hdr.miny = oper->miny;
-      hdr.mod = source_mod;
+      hdr.mod = fs::last_write_time(source_path);
       hdr.size = oper->operations.size();
       
       fs.write(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));

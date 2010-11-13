@@ -41,6 +41,12 @@ struct world_pos {
   }
 };
 
+inline bool directory_filter(const std::string& name) {
+  if (name.compare(0, 3, "DIM") == 0) return true;
+  if (name.compare("players") == 0) return true;
+  return false;
+}
+
 class world_info {
 public:
   fs::path world_path;
@@ -81,12 +87,16 @@ public:
     unsigned int parts = 0;
     
     // broad phase listing of all the levels to figure out how they are ordered.
-    while (broadlisting.has_next()) {
+    while (broadlisting.has_next(directory_filter)) {
       fs::path next = broadlisting.next();
       
-      fast_level_file leveldata(next, s.pedantic_broad_phase);
+      fast_level_file leveldata(next);
       
-      if (!leveldata.islevel || leveldata.grammar_error) {
+      if (!leveldata.is_level) {
+        if (!s.silent && s.debug) {
+          std::cout << leveldata.path << ": " << leveldata.is_level_why << std::endl;
+        }
+        
         continue;
       }
       

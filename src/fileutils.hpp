@@ -22,7 +22,7 @@ public:
       directories.push(path);
   }
   
-  bool has_next() {
+  bool has_next(bool (filter)(const std::string&)) {
     if (!files.empty()) {
       return true;
     }
@@ -37,7 +37,7 @@ public:
       directories.pop();
       
       if (!fs::is_directory(dir_path)) {
-        return false;
+        continue;
       }
       
       fs::directory_iterator end_itr;
@@ -46,6 +46,10 @@ public:
             ++itr )
       {
         if (fs::is_directory(itr->status())) {
+          if (filter(fs::basename(itr->path()))) {
+            continue;
+          }
+          
           directories.push(itr->path());
         }
         else if (fs::is_regular_file(itr->status())) {

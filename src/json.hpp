@@ -191,7 +191,7 @@ namespace json {
   template<typename T>
   T* cast(basic_json *b) {
     return reinterpret_cast<T*>(b);
-  };
+  }
 }
 
 #endif /* _JSON_H_ */

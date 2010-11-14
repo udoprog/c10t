@@ -17,7 +17,7 @@ class engine_base {
     engine_base(settings_t& s, world_info& world) :
       s(s),
       part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1),
-      pos_c((world.diff_x + 1) * mc::MapX, mc::MapY, (world.diff_z + 1) * mc::MapZ),
+      pos_c(world.diff_x * mc::MapX, mc::MapY, world.diff_z * mc::MapZ),
       mpos_c((world.diff_x + 1) * mc::MapX, mc::MapY, (world.diff_z + 1) * mc::MapZ),
       world(world)
     {

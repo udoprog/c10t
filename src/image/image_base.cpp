@@ -19,9 +19,6 @@ void image_base::fill(color &q)
 
 void image_base::composite(int xoffset, int yoffset, boost::shared_ptr<image_operations> img)
 {
-  if (!(xoffset >= 0)) { return; }
-  if (!(yoffset >= 0)) { return; }
-  
   std::vector<image_operation>::size_type i = img->operations.size();
   
   align(xoffset, yoffset, img->maxx, img->maxy);

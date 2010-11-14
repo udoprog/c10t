@@ -9,7 +9,7 @@ class topdown_engine : public engine_base {
     void render(level_file& level, boost::shared_ptr<image_operations> operations);
     
     void get_boundaries(pos_t& width, pos_t& height) {
-      pos_c.get_top_limits(width, height);
+      mpos_c.get_top_limits(width, height);
     }
     
     void get_level_boundaries(pos_t& width, pos_t& height) {
@@ -18,7 +18,7 @@ class topdown_engine : public engine_base {
     
     void w2pt(int xPos, int zPos, pos_t& x, pos_t& y) {
       pos_t posx = xPos - world.min_x;
-      pos_t posz = zPos - world.min_z + 1;
+      pos_t posz = zPos - world.min_z;
       
       point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
       

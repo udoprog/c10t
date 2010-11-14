@@ -1,12 +1,28 @@
 #!/bin/bash
 
+CONVERT=convert
 C10T=c10t
 [[ -x ./$C10T ]] && C10T=./$C10T
 
 C10T_OPTS="$3"
 C10T_OUT=c10t.out.txt
 
-TILE_SIZE=256
+TILE_SIZES="4096 2048 1024 512 256 128"
+SCALE[4096]="6.25%"
+SCALE[2048]="12.5%"
+SCALE[1024]="25%"
+SCALE[512]="50%"
+SCALE[256]="100%"
+SCALE[128]="200%"
+
+ZOOM[4096]=0
+ZOOM[2048]=1
+ZOOM[1024]=2
+ZOOM[512]=3
+ZOOM[256]=4
+ZOOM[128]=5
+
+FACTOR=16
 
 set -e
 
@@ -21,7 +37,7 @@ target=$2
 tiles=tiles
 host=""
 
-C10T_OPTS="$C10T_OPTS -w $world --pixelsplit $TILE_SIZE"
+C10T_OPTS="$C10T_OPTS -w $world"
 
 if [[ -z $world ]] || [[ ! -d $world ]]; then
   echo "Directory does not exist: $world";
@@ -58,7 +74,7 @@ cat > $target/index.html << ENDL
       var GRID_WIDTH_IN_REGIONS = 4096;
       // Map from a GRID_WIDTH_IN_REGIONS x GRID_WIDTH_IN_REGIONS square to Lat/Long (0, 0),(-90, 90)
       var SCALE_FACTOR = 90.0 / GRID_WIDTH_IN_REGIONS;
-
+      
       // Override the default Mercator projection with Euclidean projection
       // (insert oblig. Flatland reference here)
       function EuclideanProjection() {};
@@ -80,13 +96,13 @@ cat > $target/index.html << ENDL
         return extend(
           {
             getTileUrl: function(c, z) {
-                return o.host + m + "." + c.x + "." + c.y + ".png";
+                return o.host + m + "." + c.x + "." + c.y + "." + z + ".png";
             },
             isPng: true,
             name : "none",
             alt : "none",
-            minZoom: 0, maxZoom: 0,
-            tileSize: new google.maps.Size($TILE_SIZE, $TILE_SIZE)
+            minZoom: 0, maxZoom: 5,
+            tileSize: new google.maps.Size(256, 256)
           },
           ob
         );
@@ -114,14 +130,29 @@ cat > $target/index.html << ENDL
         }
         
         map.setMapTypeId(firstMode);
+
+        var globaldata = modes[firstMode].data;
         
-        var world = modes[m].data.world;
-        var center = new google.maps.Point(world["center-x"], world["center-y"]);
-        var latlng = EuclideanProjection.prototype.fromPointToLatLng(center)
-        map.setCenter(latlng);
-        map.setZoom(0);
+        {
+          var world = globaldata.world;
+          var center = new google.maps.Point(world["center-x"] / $FACTOR, world["center-y"] / $FACTOR);
+          var latlng = EuclideanProjection.prototype.fromPointToLatLng(center)
+          map.setCenter(latlng);
+          map.setZoom(0);
+        }
         
-        // We can now set the map to use the 'grid' map type
+        for (var i = 0; i < globaldata.markers.length; i++)
+        {
+          var m = globaldata.markers[i];
+          var point = new google.maps.Point(m.x / $FACTOR, m.y / $FACTOR);
+          var latlng = EuclideanProjection.prototype.fromPointToLatLng(point)
+          
+          new google.maps.Marker({
+              position: latlng, 
+              map: map, 
+              title: m.text
+          });
+        }
         
         if (window.attachEvent) {
           window.attachEvent("onresize", function() {this.map.onResize()} );
@@ -151,20 +182,32 @@ echo "NOTE: if something goes wrong, check out $C10T_OUT"
 echo "" > $C10T_OUT
 
 generate() {
-  echo -n "$1... "
+  zoom=$4
+  scale=$5
+  
+  echo "$1... "
 
-  if ! $C10T $C10T_OPTS $2 -o $target/$tiles/$3.%d.%d.png --write-json="$target/$3.json" &> $C10T_OUT; then
+  src=$target/$tiles/$3.%d.%d.$zoom.src.png
+  echo "$C10T $C10T_OPTS $2 -o $src --write-json=$target/$3.json"
+  if ! $C10T $C10T_OPTS $2 -o $src --write-json="$target/$3.json"; then
     cat $C10T_OUT
     exit 1
   fi
-
+  
+  for file in $target/$tiles/$3.*.*.$zoom.src.png; do
+    tg=${file%%.src.png}.png
+    echo "$CONVERT $file -scale $scale $tg"
+    $CONVERT $file -scale $scale $tg
+  done
+  
   echo "done!"
 }
 
-generate "Generating Day" "" "day"
-generate "Generating Night" "-n" "night"
-generate "Generating Caves" "-c" "caves"
-generate "Generating Heightmap" "--heightmap" "height"
+for t in $TILE_SIZES; do
+  z=${ZOOM[$t]}
+  s=${SCALE[$t]}
+  generate "Generating Day" "--pixelsplit=$t" "day" $z $s
+done
 
 cat > $target/options.js << ENDL
 var options = {
@@ -178,9 +221,10 @@ var options = {
 }
 
 var modes = {
-  'day': { name: "Day", alt: "Day in Top-Down view", data: $(cat $target/day.json)},
-  'night': { name: "Night", alt: "Night in Top-Down view", data: $(cat $target/night.json)},
-  'caves': { name: "Cavemode", alt: "Cavemode in Top-Down view", data: $(cat $target/caves.json)},
-  'height': { name: "Heightmap", alt: "Heightmap in Top-Down view", data: $(cat $target/height.json)},
+  'day': { name: "Day", alt: "Day in Top-Down view", data: $(cat $target/day.json)}
 }
 ENDL
+
+#  'night': { name: "Night", alt: "Night in Top-Down view", data: $(cat $target/night.json)},
+#  'caves': { name: "Cavemode", alt: "Cavemode in Top-Down view", data: $(cat $target/caves.json)},
+#  'height': { name: "Heightmap", alt: "Heightmap in Top-Down view", data: $(cat $target/height.json)},

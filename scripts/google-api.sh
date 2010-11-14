@@ -182,22 +182,25 @@ echo "NOTE: if something goes wrong, check out $C10T_OUT"
 echo "" > $C10T_OUT
 
 generate() {
+  x_opts=$1
+  name=$2
+  pixelsplit=$3
   zoom=$4
   scale=$5
   
-  echo "$1... "
-
-  src=$target/$tiles/$3.%d.%d.$zoom.src.png
-  echo "$C10T $C10T_OPTS $2 -o $src --write-json=$target/$3.json"
-  if ! $C10T $C10T_OPTS $2 -o $src --write-json="$target/$3.json"; then
-    cat $C10T_OUT
+  # generate a set of split files
+  src=$target/$tiles/$name.%d.%d.$zoom.src.png
+  echo "$C10T $C10T_OPTS $x_opts --pixelsplit=$pixelsplit -o $src --write-json=$target/$name.json"
+  if ! $C10T $C10T_OPTS $x_opts --pixelsplit=$pixelsplit -o $src --write-json="$target/$name.json"; then
     exit 1
   fi
   
-  for file in $target/$tiles/$3.*.*.$zoom.src.png; do
+  # convert the files to the appropriate sizes
+  find $target/$tiles -name "$name.*.*.$zoom.src.png" | while read file; do
     tg=${file%%.src.png}.png
     echo "$CONVERT $file -scale $scale $tg"
     $CONVERT $file -scale $scale $tg
+    rm -f $file
   done
   
   echo "done!"
@@ -206,7 +209,8 @@ generate() {
 for t in $TILE_SIZES; do
   z=${ZOOM[$t]}
   s=${SCALE[$t]}
-  generate "Generating Day" "--pixelsplit=$t" "day" $z $s
+  
+  generate "" "tile" $t $z $s
 done
 
 cat > $target/options.js << ENDL
@@ -221,10 +225,6 @@ var options = {
 }
 
 var modes = {
-  'day': { name: "Day", alt: "Day in Top-Down view", data: $(cat $target/day.json)}
+  'tile': { name: "Tile", alt: "Tile Mode", data: $(cat $target/tile.json)},
 }
 ENDL
-
-#  'night': { name: "Night", alt: "Night in Top-Down view", data: $(cat $target/night.json)},
-#  'caves': { name: "Cavemode", alt: "Cavemode in Top-Down view", data: $(cat $target/caves.json)},
-#  'height': { name: "Heightmap", alt: "Heightmap in Top-Down view", data: $(cat $target/height.json)},

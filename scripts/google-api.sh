@@ -210,14 +210,15 @@ for t in $TILE_SIZES; do
   z=${ZOOM[$t]}
   s=${SCALE[$t]}
   
-  generate "" "tile" $t $z $s
+  generate "" "day" $t $z $s
+  generate "-n" "night" $t $z $s
 done
 
 cat > $target/options.js << ENDL
 var options = {
   host: "$host$tiles/",
   scaleControl: false,
-  navigationControl: false,
+  navigationControl: true,
   streetViewControl: false,
   noClear: false,
   backgroundColor: "#000000",
@@ -225,6 +226,7 @@ var options = {
 }
 
 var modes = {
-  'tile': { name: "Tile", alt: "Tile Mode", data: $(cat $target/tile.json)},
+  'day': { name: "Day", alt: "Day Mode", data: $(cat $target/day.json)},
+  'night': { name: "Night", alt: "Night Mode", data: $(cat $target/night.json)},
 }
 ENDL

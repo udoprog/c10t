@@ -35,6 +35,7 @@ struct settings_t {
   bool binary;
   bool debug;
   bool use_split;
+  unsigned int split;
   bool striped_terrain;
   std::set<std::string> show_players_set;
   bool require_all;
@@ -49,7 +50,6 @@ struct settings_t {
   bool has_player_color;
   bool has_coordinate_color;
   bool has_warp_color;
-  int split;
   // top/bottom used for slicing
   int top;
   int bottom;
@@ -74,8 +74,6 @@ struct settings_t {
   bool cache_use;
   bool write_json;
   fs::path write_json_path;
-  bool use_pixelsplit;
-  int pixelsplit;
   
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
@@ -136,8 +134,6 @@ struct settings_t {
     this->cache_dir = "cache";
     this->cache_compress = false;
     this->write_json = false;
-    this->use_pixelsplit = false;
-    this->pixelsplit = 0;
   }
   
   ~settings_t() {

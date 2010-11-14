@@ -151,7 +151,7 @@ public:
     return world_path / b36encode(modx) / b36encode(modz) / ("c." + b36encode(l.xReal) + "." + b36encode(l.zReal) + ".dat");
   }
   
-  world_info** split(int chunk_size) {
+  std::vector<world_info> split(int chunk_size) {
     typedef boost::ptr_map<world_pos, std::vector<level> > world_levels_type;
 
     world_levels_type world_levels;
@@ -184,49 +184,37 @@ public:
       levels->push_back(l);
     }
 
-    world_info** worlds = new world_info*[world_levels.size() + 1];
-
-    int i = 0;
+    std::vector<world_info> worlds;
     
     for (world_levels_type::iterator it = world_levels.begin(); it != world_levels.end(); it++) {
       world_pos pos = (*it).first;
       std::vector<level>* levels = (*it).second;
       
-      world_info *w = worlds[i++] = new world_info();
-      w->min_z = 10000;
-      w->max_z = -10000;
-      w->min_x = 10000;
-      w->max_x = -10000;
-      w->world_path = world_path;
+      world_info w;
+
+      w.min_z = 10000;
+      w.max_z = -10000;
+      w.min_x = 10000;
+      w.max_x = -10000;
+      w.world_path = world_path;
       
-      w->chunk_x = pos.x;
-      w->chunk_y = pos.z;
+      w.chunk_x = pos.x;
+      w.chunk_y = pos.z;
       
       std::vector<level>::iterator it = levels->begin();
 
-      w->min_x = (pos.x) * chunk_size;
-      w->max_x = (pos.x + 1) * chunk_size;
-      w->min_z = (pos.z) * chunk_size;
-      w->max_z = (pos.z + 1) * chunk_size;
-      w->min_xp = w->min_x * mc::MapX;
-      w->min_zp = w->min_z * mc::MapZ;
+      w.min_x = (pos.x) * chunk_size;
+      w.max_x = (pos.x + 1) * chunk_size;
+      w.min_z = (pos.z) * chunk_size;
+      w.max_z = (pos.z + 1) * chunk_size;
+      w.min_xp = w.min_x * mc::MapX;
+      w.min_zp = w.min_z * mc::MapZ;
       
-      for (; it != levels->end(); it++) {
-        level l = *it;
-        
-        /*w->min_x = std::min(w->min_x, l.xPos);
-        w->max_x = std::max(w->max_x, l.xPos);
-        w->min_z = std::min(w->min_z, l.zPos);
-        w->max_z = std::max(w->max_z, l.zPos);*/
-        
-        w->levels.push_back(l);
-      }
-
-      w->max_x -= 1;
-      w->max_z -= 1;
+      w.levels.insert(w.levels.begin(), levels->begin(), levels->end());
+      
+      w.max_x -= 1;
+      w.max_z -= 1;
     }
-    
-    worlds[world_levels.size()] = NULL;
     
     return worlds;
   }

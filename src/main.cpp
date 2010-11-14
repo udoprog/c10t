@@ -532,7 +532,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   
   if (s.write_json) {
     if (!show_markers) {
-      hints.push_back("Use `--write-json' in combination with `--show-*' in order to write markers");
+      hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
     }
     
     if (!s.silent) cout << "Writing json information: " << s.write_json_path.string() << endl;
@@ -557,13 +557,19 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     overlay_markers(s, all, engine, markers);
   }
   
-  if (s.use_pixelsplit) {
-    if (!s.silent) cout << "Splitting image on " << s.pixelsplit << "px basis..." << endl;
-    
-    std::map<point2, image_base*> parts = image_split(all.get(), s.pixelsplit);
+  if (s.use_split) {
     //boost::ptr_map<point2, image_base> parts;
     
-    if (!s.silent) cout << " --- SAVING MULTIPLE IMAGES --- " << endl;
+    if (!s.silent) {
+      cout << " --- SAVING MULTIPLE IMAGES --- " << endl;
+      cout << "splitting on " << s.split << "px basis" << endl;
+    }
+    
+    std::map<point2, image_base*> parts = image_split(all.get(), s.split);
+    
+    if (!s.silent) {
+      cout << "saving " << parts.size() << " images" << endl;
+    }
     
     for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
       const point2 p = it->first;
@@ -601,39 +607,18 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     opts.comment = C10T_COMMENT;
     
     if (!all->save<png_format>(output, opts)) {
+      if (!s.silent) cout << output << ": Could not save image";
       error << strerror(errno);
       return false;
     }
+    
+    if (!s.silent) cout << output << ": OK" << endl;
   }
   
   return true;
 }
 
 bool do_world(settings_t& s, fs::path world_path, string output) {
-  if (output.empty()) {
-    error << "You must specify output file using '-o' to generate map";
-    return false;
-  }
-  
-  if (s.use_split || s.use_pixelsplit) {
-    try {
-      boost::format(output) % 0 % 0;
-    } catch (boost::io::too_many_args& e) {
-      error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
-      return false;
-    }
-  }
-  
-  if (!s.nocheck)
-  {
-    fs::path level_dat = world_path / "level.dat";
-    
-    if (!fs::exists(level_dat)) {
-      error << "Does not exist: " << level_dat;
-      return false;
-    }
-  }
-  
   players_db pdb(world_path / "players", s.show_players_set, !s.show_players);
   
   if (!s.silent) cout << " --- LOOKING FOR DATABASES --- " << endl;
@@ -656,27 +641,7 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
   nonstd::continious<unsigned int> c(100, cout_dot<unsigned int>, cout_uint_endl);
   world_info world(s, world_path, c);
   
-  if (!s.use_split) {
-    return do_one_world(s, world, pdb, wdb, output);
-  }
-  
-  world_info** worlds = world.split(s.split);
-
-  int i = 0;
-  
-  while (worlds[i] != NULL) {
-    world_info* current = worlds[i++];
-    
-    stringstream ss;
-    ss << boost::format(output) % current->chunk_x % current->chunk_y;
-    
-    if (!do_one_world(s, *current, pdb, wdb, ss.str())) {
-      return false;
-    }
-  }
-  
-  delete [] worlds;
-  return true;
+  return do_one_world(s, world, pdb, wdb, output);
 }
 
 int do_help() {
@@ -757,9 +722,9 @@ int do_help() {
     << "  -S <set>                  - Specify the side color for a specific block id   " << endl
     << "                              this uses the same format as '-B' only the color " << endl
     << "                              is applied to the side of the block              " << endl
-    << "  -p, --split <chunks>      - Split the render into chunks, <output> must be a " << endl
-    << "                              name containing two number format specifiers `%d'" << endl
-    << "                              for `x' and `y' coordinates of the chunks        " << endl
+    << "  -p, --split <px>          - Split the render into parts which must be <px>   " << endl
+    << "                              pixels squared. `output' name must contain two   " << endl
+    << "                              format specifiers `%d' for x and y position.     " << endl
     << endl
     << "Other Options:" << endl
     << "  -x, --binary              - Will output progress information in binary form, " << endl
@@ -1090,7 +1055,6 @@ int main(int argc, char *argv[]){
      {"include",          required_argument, 0, 'i'},
      {"rotate",           required_argument, 0, 'r'},
      {"threads",          required_argument, 0, 'm'},
-     {"split",            required_argument, 0, 'p'},
      {"help",             no_argument, 0, 'h'},
      {"silent",           no_argument, 0, 's'},
      {"version",          no_argument, 0, 'v'},
@@ -1123,6 +1087,7 @@ int main(int argc, char *argv[]){
      {"striped-terrain",       no_argument, &flag, 15},
      {"write-json",       required_argument, &flag, 16},
      {"write-markers",       required_argument, &flag, 21},
+     {"split",            required_argument, &flag, 17},
      {"pixelsplit",       required_argument, &flag, 17},
      {"show-warps",       required_argument, &flag, 18},
      {"warp-color",       required_argument, &flag, 19},
@@ -1247,25 +1212,19 @@ int main(int argc, char *argv[]){
         
         break;
       case 17:
-        if (s.use_split) {
-          error << "Both `split' and `pixelsplit' cannot be used at the same time";
-          goto exit_error;
-        }
-        
         try {
-          s.pixelsplit = boost::lexical_cast<int>(optarg);
+          s.split = boost::lexical_cast<int>(optarg);
         } catch(boost::bad_lexical_cast& e) {
           error << "Cannot be converted to number: " << optarg;
           goto exit_error;
         }
         
-        if (!(s.pixelsplit >= 1)) {
-          error << "pixelsplit argument must be greater or equal to one";
+        if (!(s.split >= 1)) {
+          error << "split argument must be greater or equal to one";
           goto exit_error;
         }
-
-        s.use_pixelsplit = true;
         
+        s.use_split = true;
         break;
       case 18:
         s.show_warps = true;
@@ -1313,26 +1272,6 @@ int main(int argc, char *argv[]){
         goto exit_error;
       }
       
-      break;
-    case 'p':
-      if (s.use_pixelsplit) {
-        error << "Both `split' and `pixelsplit' cannot be used at the same time";
-        goto exit_error;
-      }
-      
-      try {
-        s.split = boost::lexical_cast<int>(optarg);
-      } catch(boost::bad_lexical_cast& e) {
-        error << "Cannot be converted to number: " << optarg;
-        goto exit_error;
-      }
-      
-      if (!(s.split >= 1)) {
-        error << "split argument must be greater or equal to one";
-        goto exit_error;
-      }
-      
-      s.use_split = true;
       break;
     case 'q':
       s.mode = Oblique;
@@ -1497,6 +1436,30 @@ int main(int argc, char *argv[]){
     if (!fs::is_directory(parent_path)) {
       error << "Output directory does not exist: " << parent_path.string();
       goto exit_error;
+    }
+
+    if (output.empty()) {
+      error << "You must specify output file using '-o' to generate map";
+      goto exit_error;
+    }
+    
+    if (s.use_split) {
+      try {
+        boost::format(output) % 0 % 0;
+      } catch (boost::io::too_many_args& e) {
+        error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
+        goto exit_error;
+      }
+    }
+    
+    if (!s.nocheck)
+    {
+      fs::path level_dat = fs::path(world_path) / "level.dat";
+      
+      if (!fs::exists(level_dat)) {
+        error << "Does not exist: " << level_dat;
+        goto exit_error;
+      }
     }
     
     if (!do_world(s, fs::path(world_path), output))  {

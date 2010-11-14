@@ -48,5 +48,6 @@ warps_db::warps_db(settings_t& s)
     
     warps.push_back(w);
   }
+  
   fp.close();
 }

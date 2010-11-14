@@ -16,6 +16,8 @@
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
+class interrupted_exception : public std::exception {};
+
 template<typename T>
 class sync_queue {
   private:
@@ -23,8 +25,9 @@ class sync_queue {
     boost::mutex mutex;
     boost::condition empty_cond;
     volatile int count;
+    volatile bool interrupted;
   public:
-    sync_queue() : count(0) {}
+    sync_queue() : count(0), interrupted(false) {}
 
     void add(T o) {
       boost::mutex::scoped_lock lock(mutex);
@@ -32,10 +35,14 @@ class sync_queue {
       empty_cond.notify_one();
     }
     
-    T take(int& pos) {
+    T take(int& pos) throw(interrupted_exception) {
       boost::mutex::scoped_lock lock(mutex);
-      while (q.empty()) {
+      while (!interrupted && q.empty()) {
         empty_cond.wait(lock);
+      }
+      
+      if (interrupted) {
+        throw interrupted_exception();
       }
       
       T o = q.front();
@@ -47,6 +54,12 @@ class sync_queue {
     bool empty() {
       boost::mutex::scoped_lock lock(mutex);
       return q.empty();
+    }
+    
+    void interrupt() {
+      boost::mutex::scoped_lock lock(mutex);
+      interrupted = true;
+      empty_cond.notify_all();
     }
 };
 
@@ -66,24 +79,40 @@ private:
   
   const int thread_count;
   
-  volatile int running;
-  volatile int started;
   boost::detail::atomic_count input;
   boost::detail::atomic_count output;
+  volatile bool started;
+  volatile bool interrupted;
   
-  std::list<boost::thread*> threads;
+  boost::scoped_array<boost::thread> threads;
 public:
-  threadworker(int c, int total) : total(total), thread_count(c), running(1), started(0), input(0), output(0) {
-    for (int i = 0; i < c; i++) {
-      boost::thread* t = new boost::thread(boost::bind(&threadworker::run, this, i));
-      threads.push_back(t);
+  threadworker(int c, int total) : total(total), thread_count(c),
+    input(0), output(0), started(false), interrupted(false),
+    threads(new boost::thread[thread_count])
+  {
+    for (int i = 0; i < thread_count; i++) {
+      threads[i] = boost::thread(boost::bind(&threadworker::run, this, i));
     }
   }
   
   virtual ~threadworker() {
-    for (std::list<boost::thread*>::iterator it = threads.begin(); it != threads.end(); it++)
+    in.interrupt();
+    out.interrupt();
+    
+    interrupted = true;
+    
     {
-      delete *it;
+      boost::mutex::scoped_lock lock(order_mutex);
+      order_cond.notify_all();
+    }
+    
+    {
+      boost::mutex::scoped_lock lock(start_mutex);
+      start_cond.notify_all();
+    }
+    
+    for (int i = 0; i < thread_count; i++) {
+      threads[i].join();
     }
   }
   
@@ -93,40 +122,54 @@ public:
   
   void start() {
     boost::mutex::scoped_lock lock(start_mutex);
-    started = 1;
+    started = true;
     start_cond.notify_all();
   }
 
-  inline void add_result(O o, int &qp) {
+  void internal_work() throw(interrupted_exception) {
+    int qp;
+    
+    I i = in.take(qp);
+    
+    O o = work(i);
+    
+    {
+      // first, make sure that we output the results in the same order they came in
+      // try to make it as lock-free as possible
+      boost::mutex::scoped_lock lock(order_mutex);
+      
+      while (!interrupted && qp != output) {
+        order_cond.wait(lock);
+      }
+      
+      if (interrupted) {
+        throw interrupted_exception();
+      }
+      
+      out.add(o);
+      ++output;
+      order_cond.notify_all();
+    }
   }
   
   void run(int id) {
     {
       boost::mutex::scoped_lock lock(start_mutex);
       
-      while (!started) {
+      while (!interrupted && !started) {
         start_cond.wait(lock);
       }
     }
     
-    int qp;
+    if (interrupted) {
+      return;
+    }
     
     while (++input <= total) {
-      I i = in.take(qp);
-      O o = work(i);
-      
-      {
-        // first, make sure that we output the results in the same order they came in
-        // try to make it as lock-free as possible
-        boost::mutex::scoped_lock lock(order_mutex);
-        
-        while (qp != output) {
-          order_cond.wait(lock);
-        }
-        
-        out.add(o);
-        ++output;
-        order_cond.notify_all();
+      try {
+        internal_work();
+      } catch(interrupted_exception& e) {
+        break;
       }
     }
   }
@@ -139,12 +182,6 @@ public:
   }
   
   void join() {
-    running = 0;
-    
-    for (std::list<boost::thread*>::iterator it = threads.begin(); it != threads.end(); it++)
-    {
-      (*it)->join();
-    }
   }
 };
 #else

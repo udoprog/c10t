@@ -152,11 +152,11 @@ struct render_job {
   boost::shared_ptr<engine_base> engine;
 };
 
-class Renderer : public threadworker<render_job, render_result> {
+class renderer : public threadworker<render_job, render_result> {
 public:
   settings_t& s;
   
-  Renderer(settings_t& s, int n, int total) : threadworker<render_job, render_result>(n, total), s(s) {
+  renderer(settings_t& s, int n, int total) : threadworker<render_job, render_result>(n, total), s(s) {
   }
   
   render_result work(render_job job) {
@@ -346,7 +346,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   
   unsigned int world_size = world.levels.size();
   
-  Renderer renderer(s, s.threads, world_size);
+  renderer renderer(s, s.threads, world_size);
   
   std::vector<light_marker> light_markers;
   std::list<level>::iterator lvlit = world.levels.begin();
@@ -412,16 +412,14 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       engine->w2pt(p.xPos, p.zPos, x, y);
       all->composite(x, y, p.operations);
     } catch(std::ios::failure& e) {
-      error << strerror(errno) << ": " << s.cache_file;
-      renderer.join();
+      if (!s.silent) std::cout << s.cache_file  << ": " << strerror(errno);
+      return false;
     }
   }
   
   c.done(0);
   
   //if (progress_c != NULL) progress_c(world_size, world_size);
-  
-  renderer.join();
   
   boost::ptr_vector<marker> markers;
   

@@ -23,9 +23,12 @@ public:
 
 class warps_db {
 public:
+  fs::path path;
+  bool fatal;
+  std::string fatal_why;
   std::vector<warp> warps;
-
-  warps_db(settings_t& s);
+  
+  warps_db(fs::path path, bool disable);
 };
 
 #endif /* _WARPS_H_ */

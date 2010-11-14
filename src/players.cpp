@@ -42,3 +42,40 @@ player::player(const fs::path path) :
   parser.register_double = register_double;
   parser.parse_file(path.string().c_str());
 }
+
+players_db::players_db(const fs::path path, std::set<std::string>& match_set, bool disable) : path(path), fatal(false)
+{
+  if (disable) {
+    return;
+  }
+  
+  fs::path full_path = fs::system_complete( path );
+  
+  if (!fs::is_directory(full_path)) {
+    fatal_why = "directory does not exists";
+    fatal = true;
+    return;
+  }
+  
+  fs::directory_iterator end_iter;
+  
+  for ( fs::directory_iterator dir_itr( full_path );
+        dir_itr != end_iter;
+        ++dir_itr )
+  {
+    player p(dir_itr->path());
+    
+    if (p.grammar_error) {
+      // silently ignore bad player files
+      continue;
+    }
+    
+    if (match_set.size() > 0) {
+      if (match_set.find(p.name) == match_set.end()) {
+        continue;
+      }
+    }
+    
+    players.push_back(p);
+  }
+}

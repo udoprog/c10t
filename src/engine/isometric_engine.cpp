@@ -69,7 +69,7 @@ void isometric_engine::render(level_file& level, boost::shared_ptr<image_operati
             continue;
           }
           
-          blocked[bp] = top.is_opaque();
+          blocked[bp] = top.is_opaque() && bt != mc::Fence;
         }
         
         color side = mc::MaterialSideColor[bt];
@@ -87,17 +87,22 @@ void isometric_engine::render(level_file& level, boost::shared_ptr<image_operati
           oper->add_pixel(px - 1, py, top);
           
           oper->add_pixel(px - 2, py + 1, side);
-          oper->add_pixel(px - 1, py + 1, side);
+          
+          if (bt != mc::Fence) {
+            oper->add_pixel(px - 1, py + 1, side);
+            oper->add_pixel(px - 1, py + 2, side);
+          }
           
           oper->add_pixel(px - 2, py + 2, side);
-          oper->add_pixel(px - 1, py + 2, side);
           
           side.lighten(0x20);
           
-          oper->add_pixel(px, py + 1, side);
-          oper->add_pixel(px + 1, py + 1, side);
+          if (bt != mc::Fence) {
+            oper->add_pixel(px, py + 1, side);
+            oper->add_pixel(px, py + 2, side);
+          }
           
-          oper->add_pixel(px, py + 2, side);
+          oper->add_pixel(px + 1, py + 1, side);
           oper->add_pixel(px + 1, py + 2, side);
           break;
         case mc::HalfBlock:

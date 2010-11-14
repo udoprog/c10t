@@ -4,47 +4,50 @@
 #include <boost/algorithm/string.hpp>
 using namespace std;
 
-warps_db::warps_db(settings_t& s)
+warps_db::warps_db(fs::path path, bool disable) : path(path), fatal(false)
 {
-  if (!s.show_warps)
-    return;
-  
-  if (!fs::is_regular_file(s.show_warps_path)) {
-    cerr << "Can't find warps file: " << s.show_warps_path.string() << endl;
+  if (disable) {
     return;
   }
   
-  ifstream fp;
-  fp.open(s.show_warps_path.string().c_str());
+  if (!fs::is_regular_file(path)) {
+    fatal = true;
+    fatal_why = "file does not exist";
+    return;
+  }
+  
+  ifstream fp(path.string().c_str());
+  
   if (!fp.good())
   {
-    cerr << "Error opening " << s.show_warps_path.string() << endl;
+    fatal = true;
+    fatal_why = "error opening file";
     return;
   }
   
   while (!fp.eof())
   {
-    string str;
-    getline(fp, str);
-    if (str.empty()) continue;
+    string line;
+    getline(fp, line);
     
-    vector<string> bits;
-    boost::split(bits, str, boost::is_any_of(":"));
-    if (bits.size() < 4) continue;
+    if (line.empty()) continue;
+    
+    vector<string> parts;
+    boost::split(parts, line, boost::is_any_of(":"));
+    
+    if (parts.size() < 4) continue;
     
     warp w;
     
-    w.name = bits[0];
-    char *p;
-    w.xPos = int(strtod(bits[1].c_str(), &p));
-    while (p && *p != '\0' && isspace(*p)) p++;
-    if (!p || *p != '\0') { cerr << "Bad number: " << bits[1] << endl; continue; }
-    w.yPos = int(strtod(bits[2].c_str(), &p));
-    while (p && *p != '\0' && isspace(*p)) p++;
-    if (!p || *p != '\0') { cerr << "Bad number: " << bits[2] << endl; continue; }
-    w.zPos = int(strtod(bits[3].c_str(), &p));
-    while (p && *p != '\0' && isspace(*p)) p++;
-    if (!p || *p != '\0') { cerr << "Bad number: " << bits[3] << endl; continue; }
+    w.name = parts[0];
+    
+    try {
+      w.xPos = boost::lexical_cast<int>(parts[1]);
+      w.yPos = boost::lexical_cast<int>(parts[2]);
+      w.zPos = boost::lexical_cast<int>(parts[3]);
+    } catch(...) {
+      continue;
+    }
     
     warps.push_back(w);
   }

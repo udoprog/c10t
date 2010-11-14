@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 #include <iostream>
 
 #include <boost/filesystem/operations.hpp>
@@ -31,36 +32,13 @@ public:
 
 class players_db {
 public:
+  fs::path path;
+  bool fatal;
+  std::string fatal_why;
+  
   std::vector<player> players;
-
-  players_db(settings_t& s, const fs::path path) {
-    fs::path full_path = fs::system_complete( path );
-    
-    if (!fs::is_directory(full_path)) {
-      return;
-    }
-
-    fs::directory_iterator end_iter;
-    
-    for ( fs::directory_iterator dir_itr( full_path );
-          dir_itr != end_iter;
-          ++dir_itr )
-    {
-      player p(dir_itr->path());
-      
-      if (p.grammar_error) {
-        continue;
-      }
-
-      if (s.show_players_set.size() > 0) {
-        if (s.show_players_set.find(p.name) == s.show_players_set.end()) {
-          continue;
-        }
-      }
-      
-      players.push_back(p);
-    }
-  }
+  
+  players_db(const fs::path path, std::set<std::string>& match_set, bool disable);
 };
 
 #endif /* _PLAYERS_H_ */

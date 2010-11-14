@@ -281,6 +281,7 @@ void cout_mb_endl(streamsize progress, streamsize total) {
 
 bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& wdb, const string& output) {
   if (s.debug) {
+    cout << " --- DEBUG WORLD INFO --- " << endl;
     cout << "world_info" << endl;
     cout << "  min_x: " << world.min_x << endl;
     cout << "  max_x: " << world.max_x << endl;
@@ -306,20 +307,19 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   engine->get_level_boundaries(l_w, l_h);
   
   image_base::pos_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
+  float memory_usage_mb = float(mem_x) / 1000000.0f; 
+  float memory_limit_mb = float(s.memory_limit) / 1000000.0f;
   
   boost::shared_ptr<image_base> all;
   
-  if (s.memory_limit_default) {
-    hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
-  }
-  
   if (mem_x > s.memory_limit) {
-    float mem_x_r = (float)(mem_x) / 1000000.0f; 
-
-    if (!s.silent) cout << "Building cache for "
-                        << output << ": " << mem_x_r
-                        << " MB cache at " << s.cache_file
-                        << "... " << endl;
+    if (!s.silent) {
+      cout << " --- BUILDING SWAP --- " << endl;
+      cout << "swap file: " << s.cache_file << endl;
+      cout << "swap size: " << memory_usage_mb << endl;
+      cout << "memory limit: " << memory_limit_mb << endl;
+      cout << "NOTE: A swap file is being built to acommodate high memory usage" << endl;
+    }
     
     nonstd::limited<streamsize> c(1024 * 1024, cout_dot<streamsize>, cout_mb_endl);
     
@@ -335,13 +335,13 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       return false;
     }
   } else {
-    float mem = (float)(i_w * i_h * 4 * sizeof(uint8_t)) / 1000000.0f; 
-    if (!s.silent) cout << "Allocating memory for "
-                        << output << ": " << "~" << mem
-                        << " MB... " << flush;
+    if (!s.silent) {
+      cout << " --- ALLOCATING MEMORY --- " << endl;
+      cout << "memory usage: " << memory_usage_mb << " MB" << endl;
+      cout << "memory limit: " << memory_limit_mb << " MB" << endl;
+    }
     
     all.reset(new memory_image(i_w, i_h));
-    if (!s.silent) cout << "done!" << endl;
   }
   
   unsigned int world_size = world.levels.size();
@@ -363,7 +363,9 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   nonstd::limited<unsigned int> c(50, cout_dot<unsigned int>, cout_uintpart_endl);
   c.set_limit(world_size);
   
-  if (!s.silent) cout << "Rendering... " << endl;
+  if (!s.silent) {
+    cout << " --- RENDERING --- " << endl;
+  }
   
   for (i = 0; i < world_size; i++) {
     if (queued <= filllimit) {
@@ -371,11 +373,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
         level l = *lvlit;
         
         fs::path path = world.get_level_path(l);
-        
-        if (s.debug) {
-          cout << "using file: " << path << endl;
-        }
-
+        if (s.debug) { cout << path << ": queued OK" << endl; }
         render_job job;
         
         job.engine = engine;
@@ -395,7 +393,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     
     if (p.fatal) {
       if (!s.silent) {
-        cout << "Ignoring unparseable file: " << p.path << " - " << p.fatal_why << endl;
+        cout << p.path << ": " << p.fatal_why << endl;
         continue;
       }
     }
@@ -565,16 +563,17 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     std::map<point2, image_base*> parts = image_split(all.get(), s.pixelsplit);
     //boost::ptr_map<point2, image_base> parts;
     
+    if (!s.silent) cout << " --- SAVING MULTIPLE IMAGES --- " << endl;
+    
     for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
       const point2 p = it->first;
-      image_base* img = it->second;
+      boost::scoped_ptr<image_base> img(it->second);
       
       stringstream ss;
       ss << boost::format(output) % p.x % p.y;
       
       std::string path = ss.str();
       
-      if (!s.silent) cout << "Saving: " << path << "..." << flush;
       png_format::opt_type opts;
 
       opts.center_x = center_x;
@@ -582,15 +581,18 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       opts.comment = C10T_COMMENT;
       
       if (!img->save<png_format>(path, opts)) {
-        return false;
+        if (!s.silent) cout << path << ": Could not save image";
+        continue;
       }
       
-      delete img;
-      if (!s.silent) cout << " done!" << endl;
+      if (!s.silent) cout << path << ": OK" << endl;
     }
   }
   else {
-    if (!s.silent) cout << "Saving image: " << output << "..." << flush;
+    if (!s.silent) {
+      cout << " --- SAVING IMAGE --- " << endl;
+      cout << "path: " << output;
+    }
     
     png_format::opt_type opts;
     
@@ -602,8 +604,6 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       error << strerror(errno);
       return false;
     }
-    
-    if (!s.silent) cout << " done!" << endl;
   }
   
   return true;
@@ -632,33 +632,30 @@ bool do_world(settings_t& s, fs::path world_path, string output) {
       error << "Does not exist: " << level_dat;
       return false;
     }
-
-    fs::path output_path = fs::system_complete(fs::path(output));
-
-    fs::path output_parent = output_path.parent_path();
-    
-    if (!fs::is_directory(output_parent)) {
-      error << "Output directory does not exist: " << output_parent.string();
-      return false;
-    }
   }
   
-  players_db pdb(s, world_path / "players");
-  warps_db wdb(s);
+  players_db pdb(world_path / "players", s.show_players_set, !s.show_players);
   
-  if (!s.silent) cout << "Working on " << s.threads << " thread(s)... " << endl;
+  if (!s.silent) cout << " --- LOOKING FOR DATABASES --- " << endl;
+  
+  if (s.show_players) {
+    cout << "players: " << pdb.path.string() << " " << (pdb.fatal ? pdb.fatal_why : "OK") << endl;
+  }
+  
+  warps_db wdb(s.show_warps_path, !s.show_warps);
+  
+  if (s.show_warps) {
+    if (!s.silent) cout << "warps: " << wdb.path.string() << " " << (wdb.fatal ? wdb.fatal_why : "OK") << endl;
+  }
   
   if (!s.silent) {
-    cout << "world:  " << world_path << " " << endl;
-    cout << "output: " << output << " " << endl;
-    cout << endl;
+    cout << " --- SCANNING WORLD DIRECTORY --- " << endl;
+    cout << "world: " << world_path.string() << endl;
   }
   
-  if (!s.silent) cout << "Performing broad phase scan of world directory... " << endl;
   nonstd::continious<unsigned int> c(100, cout_dot<unsigned int>, cout_uint_endl);
   world_info world(s, world_path, c);
-  if (!s.silent) cout << "found " << world.levels.size() << " files!" << endl;
-
+  
   if (!s.use_split) {
     return do_one_world(s, world, pdb, wdb, output);
   }
@@ -1071,7 +1068,7 @@ int main(int argc, char *argv[]){
   settings_t s;
   
   string world_path;
-  string output_path("out.png");
+  string output("out.png");
   string palette_write_path, palette_read_path;
   
   int c, blockid;
@@ -1273,11 +1270,6 @@ int main(int argc, char *argv[]){
       case 18:
         s.show_warps = true;
         s.show_warps_path = fs::system_complete(fs::path(optarg));
-
-        if (!fs::is_regular(s.show_warps_path)) {
-          error << "Not a file: " << optarg;
-          goto exit_error;
-        }
         break;
       case 19:
         if (!parse_color(optarg, s.warp_color)) {
@@ -1362,7 +1354,7 @@ int main(int argc, char *argv[]){
       includes[blockid] = true;
       break;
     case 'w': world_path = optarg; break;
-    case 'o': output_path = optarg; break;
+    case 'o': output = optarg; break;
     case 's': s.silent = true; break;
     case 'x':
       s.silent = true;
@@ -1451,6 +1443,10 @@ int main(int argc, char *argv[]){
 
     s.cache_dir = s.cache_dir / s.cache_key;
   }
+  
+  if (s.memory_limit_default) {
+    hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
+  }
 
   if (exclude_all) {
     for (int i = 0; i < mc::MaterialCount; i++) {
@@ -1468,14 +1464,6 @@ int main(int argc, char *argv[]){
     }
   }
   
-  if (output_path.compare("-") == 0) {
-    s.silent = true;
-  }
-  
-  if (!s.silent) {
-    cout << "Type `-h' for help" << endl;
-  }
-  
   if (s.cache_use) {
     if (!fs::is_directory(s.cache_dir)) {
       if (!s.silent) cout << "Creating directory for caching: " << s.cache_dir.string() << endl;
@@ -1483,10 +1471,10 @@ int main(int argc, char *argv[]){
     }
     
     if (s.cache_compress) {
-      if (!s.silent) cout << "Cache compression is ON" << std::endl;
+      if (!s.silent) cout << "Cache compression: ON" << std::endl;
     }
     else {
-      if (!s.silent) cout << "Cache compression is OFF" << std::endl;
+      if (!s.silent) cout << "Cache compression: OFF" << std::endl;
     }
   }
   
@@ -1503,9 +1491,21 @@ int main(int argc, char *argv[]){
   }
 
   if (!world_path.empty()) {
-    if (!do_world(s, fs::path(world_path), output_path))  {
+    fs::path output_path = fs::system_complete(fs::path(output));
+    fs::path parent_path = output_path.parent_path();
+    
+    if (!fs::is_directory(parent_path)) {
+      error << "Output directory does not exist: " << parent_path.string();
       goto exit_error;
     }
+    
+    if (!do_world(s, fs::path(world_path), output))  {
+      goto exit_error;
+    }
+  }
+  else {
+    error << "No action has been specified";
+    goto exit_error;
   }
   
   if (!s.silent && !s.binary && hints.size() > 0) {
@@ -1534,6 +1534,10 @@ exit_error:
     cout_error(error.str());
   }
   else {
+    if (!s.silent) {
+      cout << "Type `-h' for help" << endl;
+    }
+    
     if (!s.silent) cout << argv[0] << ": " << error.str() << endl;
   }
 

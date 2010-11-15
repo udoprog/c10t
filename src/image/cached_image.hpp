@@ -4,25 +4,27 @@
 #define CACHED_IMAGE
 
 #include <fstream>
-#include <string.h>
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/filesystem.hpp>
 
 #include "image/image_base.hpp"
 #include "image/color.hpp"
+
 #include "algorithm.hpp"
+
+namespace fs = boost::filesystem;
 
 class cached_image : public image_base {
 private:
   static const pos_t WRITE_SIZE = 4096 * 8;
-  const char *path;
+  const fs::path path;
   std::fstream fs;
-
+  
   pos_t l_total;
   pos_t buffer_s;
   bool buffer_set;
-  boost::shared_array<color> buffer;
+  boost::scoped_array<color> buffer;
   
   pos_t buffer_w;
   pos_t buffer_h;
@@ -32,52 +34,18 @@ private:
   void read_buffer();
   void flush_buffer();
 public:
-  cached_image(const char *path, pos_t w, pos_t h, pos_t l_w, pos_t l_h, nonstd::reporting<std::streamsize>& reporter) :
-    image_base(w, h),
-    path(path),
-    buffer_s((l_w + 1) * l_h),
-    buffer_set(false),
-    buffer(new color[buffer_s])
-  {
-    using namespace std;
-    
-    fs.exceptions(ios::failbit | ios::badbit);
-    fs.open(path, ios::in | ios::out | ios::binary | ios::trunc);
-    
-    streamsize total =
-      boost::numeric_cast<streamsize>(get_width()) *
-      boost::numeric_cast<streamsize>(get_height()) *
-      COLOR_TYPE;
-    
-    streamsize written = 0;
-    
-    streamsize write_size = WRITE_SIZE;
-    
-    uint8_t *nil = new uint8_t[write_size];
-    memset(nil, 0x0, WRITE_SIZE);
-    
-    reporter.set_limit(total);
-    
-    while (written < total) {
-      streamsize write = min(total, write_size);
-      fs.write(reinterpret_cast<char*>(nil), write);
-      reporter.add(write);
-      written += write;
-    }
-    
-    reporter.done(0);
-    
-    delete [] nil;
-  }
+  cached_image(const fs::path path, pos_t w, pos_t h, pos_t l_w, pos_t l_h);
+  ~cached_image();
   
-  ~cached_image() {
-    flush_buffer();
-    fs.close();
-  }
+  /**
+   * Will build the cache from scratch, filling it with null, which coneniently fits
+   * with black transparent colors.
+   */
+  void build(nonstd::reporting<std::streamsize>& reporter);
   
   void set_pixel(pos_t x, pos_t y, color&);
   void get_pixel(pos_t x, pos_t y, color&);
-
+  
   /*
    * This is where you may use caching or whatever mechanism.
    *

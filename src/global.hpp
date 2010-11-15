@@ -66,8 +66,8 @@ struct settings_t {
   color player_color;
   color warp_color;
   color coordinate_color;
-  std::string ttf_path;
-  std::string swap_file;
+  fs::path ttf_path;
+  fs::path swap_file;
   std::string cache_key;
   fs::path cache_dir;
   bool cache_compress;
@@ -117,7 +117,7 @@ struct settings_t {
     this->max_x = 10000;
     this->min_z = -10000;
     this->max_z = 10000;
-    this->ttf_path = "font.ttf";
+    this->ttf_path = fs::path("font.ttf");
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);
     this->sign_color = color(0, 0, 0, 0xff);

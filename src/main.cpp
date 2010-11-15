@@ -276,7 +276,7 @@ void cout_uintpart_endl(unsigned int progress, unsigned int total) {
 }
 
 void cout_mb_endl(streamsize progress, streamsize total) {
-  cout << " " << setw(8) << progress / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
+  cout << " " << setw(8) << fixed << float(progress) / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
 bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
@@ -369,24 +369,41 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   boost::shared_ptr<image_base> all;
   
-  if (mem_x > s.memory_limit) {
+  if (mem_x >= s.memory_limit) {
     if (!s.silent) {
       cout << " --- BUILDING SWAP --- " << endl;
-      cout << "swap file: " << s.swap_file << endl;
-      cout << "swap size: " << memory_usage_mb << endl;
-      cout << "memory limit: " << memory_limit_mb << endl;
       cout << "NOTE: A swap file is being built to acommodate high memory usage" << endl;
+      cout << "swap file: " << s.swap_file << endl;
+
+      cout << "swap size: " << memory_usage_mb << " MB" << endl;
+      cout << "memory limit: " << memory_limit_mb << endl;
     }
     
-    nonstd::limited<streamsize> c(1024 * 1024, cout_dot<streamsize>, cout_mb_endl);
+    cached_image* image;
     
     try {
-      all.reset(new cached_image(s.swap_file.c_str(), i_w, i_h, l_w, l_h, c));
+      image = new cached_image(s.swap_file, i_w, i_h, l_w, l_h);
     } catch(std::ios::failure& e) {
       if (errno != 0) {
         error << s.swap_file << ": " << strerror(errno);
       } else {
-        error << s.swap_file << ": " << e.what();
+        error << s.swap_file << ": " << e.what() << ": could not open file";
+      }
+      
+      return false;
+    }
+    
+    all.reset(image);
+    
+    nonstd::limited<streamsize> c(1024 * 1024, cout_dot<streamsize>, cout_mb_endl);
+    
+    try {
+      image->build(c);
+    } catch(std::ios::failure& e) {
+      if (errno != 0) {
+        error << s.swap_file << ": could not build cache: " << strerror(errno);
+      } else {
+        error << s.swap_file << ": could not build cache: " << e.what();
       }
       
       return false;
@@ -768,7 +785,8 @@ int do_help() {
     << "  --show-coordinates        - Will draw out each chunks expected coordinates   " << endl
     << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
     << "                              file when necessary                              " << endl
-    << "  -C, --cache-file <file>   - Cache file to use when memory usage is reached   " << endl
+    << "  -C, --swap-file <file>    - Swap file to use when memory limit `-M' is       " << endl
+    << "                              reached                                          " << endl
     << "  -P <file>                 - use <file> as palette, each line should take the " << endl
     << "                              form: <block-id> ' ' <color> ' ' <color>         " << endl
     << "  -W <file>                 - write the default color palette to <file>, this  " << endl
@@ -1053,6 +1071,9 @@ bool do_read_palette(settings_t& s, string& path) {
 }
 
 int main(int argc, char *argv[]){
+  cout.precision(2);
+  cout.setf(ios_base::fixed);
+  
   mc::initialize_constants();
 
   settings_t s;
@@ -1076,6 +1097,7 @@ int main(int argc, char *argv[]){
      {"limits",           required_argument, 0, 'L'},
      {"memory-limit",     required_argument, 0, 'M'},
      {"cache-file",       required_argument, 0, 'C'},
+     {"swap-file",        required_argument, 0, 'C'},
      {"exclude",          required_argument, 0, 'e'},
      {"include",          required_argument, 0, 'i'},
      {"rotate",           required_argument, 0, 'r'},
@@ -1375,7 +1397,7 @@ int main(int argc, char *argv[]){
       }
       break;
     case 'C':
-      s.swap_file = optarg;
+      s.swap_file = fs::system_complete(fs::path(optarg));
       break;
     case 'W': palette_write_path = optarg; break;
     case 'P': palette_read_path = optarg; break;

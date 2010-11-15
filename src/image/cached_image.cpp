@@ -1,6 +1,58 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
+#include <boost/numeric/conversion/cast.hpp>
+
 #include "image/cached_image.hpp"
+
+#include "algorithm.hpp"
+
+#include <string.h>
+
+cached_image::cached_image(const fs::path path, pos_t w, pos_t h, pos_t l_w, pos_t l_h) :
+  image_base(w, h),
+  path(path),
+  buffer_s((l_w + 1) * l_h),
+  buffer_set(false),
+  buffer(new color[buffer_s])
+{
+  using namespace ::std;
+  fs.exceptions(ios::failbit | ios::badbit);
+  fs.open(path.string().c_str(), ios::in | ios::out | ios::app);
+}
+
+void cached_image::build(nonstd::reporting<std::streamsize>& reporter)
+{
+  using namespace ::std;
+  
+  streamsize total =
+    boost::numeric_cast<streamsize>(get_width()) *
+    boost::numeric_cast<streamsize>(get_height()) *
+    COLOR_TYPE;
+  
+  streamsize written = 0;
+  
+  streamsize write_size = WRITE_SIZE * sizeof(uint8_t);
+  
+  boost::scoped_array<char> nil(new char[write_size]);
+  memset(nil.get(), 0x0, write_size);
+  
+  reporter.set_limit(total);
+  
+  while (written < total) {
+    streamsize write = min(total, write_size);
+    fs.write(nil.get(), write);
+    written += write;
+    
+    reporter.add(write);
+  }
+  
+  reporter.done(0);
+}
+
+cached_image::~cached_image() {
+  flush_buffer();
+  fs.close();
+}
 
 // cached_image
 void cached_image::set_pixel(pos_t x, pos_t y, color& c)

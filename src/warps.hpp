@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <exception>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -14,21 +15,29 @@
 
 namespace fs = boost::filesystem;
 
+class warps_db_exception : public std::exception {
+  private:
+    const char* why;
+  public:
+    warps_db_exception(const char* why) : why(why) { }
+    
+    const char* what() throw() {
+      return this->why;
+    }
+};
+
 class warp {
 public:
   std::string name;
-
   nbt::Int xPos, yPos, zPos;
 };
 
 class warps_db {
 public:
-  fs::path path;
-  bool fatal;
-  std::string fatal_why;
-  std::vector<warp> warps;
+  const fs::path path;
   
-  warps_db(fs::path path, bool disable);
+  warps_db(const fs::path path) : path(path) {}
+  std::vector<warp> read();
 };
 
 #endif /* _WARPS_H_ */

@@ -41,6 +41,7 @@ public:
       }
       
       fs::directory_iterator end_itr;
+      
       for ( fs::directory_iterator itr( dir_path );
             itr != end_itr;
             ++itr )

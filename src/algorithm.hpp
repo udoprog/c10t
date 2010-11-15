@@ -59,7 +59,7 @@ namespace nonstd {
       }
       
       void done(T last_part) {
-        total += last_part;
+        total += chunks + last_part;
         endline_f(total);
       }
   };

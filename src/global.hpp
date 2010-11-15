@@ -67,7 +67,7 @@ struct settings_t {
   color warp_color;
   color coordinate_color;
   std::string ttf_path;
-  std::string cache_file;
+  std::string swap_file;
   std::string cache_key;
   fs::path cache_dir;
   bool cache_compress;
@@ -110,7 +110,7 @@ struct settings_t {
     this->night = false;
     this->heightmap = false;
     this->debug = false;
-    this->cache_file = "cache.dat";
+    this->swap_file = "cache.dat";
     this->memory_limit = 1024 * 1024 * 1000;
     this->memory_limit_default = true;
     this->min_x = -10000;

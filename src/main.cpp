@@ -279,7 +279,64 @@ void cout_mb_endl(streamsize progress, streamsize total) {
   cout << " " << setw(8) << progress / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
-bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& wdb, const string& output) {
+bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
+  std::vector<player> players;
+  std::vector<warp> warps;
+
+  bool any_db =
+    s.show_players
+    || s.show_signs
+    || s.show_coordinates
+    || s.show_warps;
+  
+  if (any_db) {
+    if (!s.silent) cout << " --- LOOKING FOR DATABASES --- " << endl;
+    
+    if (s.show_warps) {
+      if (!s.silent) cout << "warps: " << s.show_warps_path << ": " << flush;
+      
+      warps_db wdb(s.show_warps_path);
+      
+      try {
+        warps = wdb.read();
+        if (!s.silent) cout << warps.size() << " warp(s) OK" << endl;
+      } catch(warps_db_exception& e) {
+        if (!s.silent) cout << e.what() << endl;
+      }
+    }
+    
+    if (s.show_players) {
+      fs::path show_players_path = world_path / "players";
+
+      if (!s.silent) cout << "players: " << show_players_path << ": " << flush;
+      
+      players_db pdb(show_players_path, s.show_players_set);
+      
+      try {
+        players = pdb.read();
+        if (!s.silent) cout << players.size() << " player(s) OK" << endl;
+      } catch(players_db_exception& e) {
+        if (!s.silent) cout << " " << e.what() << endl;
+      }
+    }
+
+    if (s.show_signs) {
+      if (!s.silent) cout << "will look for signs in levels";
+    }
+
+    if (s.show_coordinates) {
+      if (!s.silent) cout << "will store shunk coordinates";
+    }
+  }
+  
+  if (!s.silent) {
+    cout << " --- SCANNING WORLD DIRECTORY --- " << endl;
+    cout << "world: " << world_path.string() << endl;
+  }
+
+  nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
+  world_info world(s, world_path, reporter);
+  
   if (s.debug) {
     cout << " --- DEBUG WORLD INFO --- " << endl;
     cout << "world_info" << endl;
@@ -315,7 +372,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   if (mem_x > s.memory_limit) {
     if (!s.silent) {
       cout << " --- BUILDING SWAP --- " << endl;
-      cout << "swap file: " << s.cache_file << endl;
+      cout << "swap file: " << s.swap_file << endl;
       cout << "swap size: " << memory_usage_mb << endl;
       cout << "memory limit: " << memory_limit_mb << endl;
       cout << "NOTE: A swap file is being built to acommodate high memory usage" << endl;
@@ -324,12 +381,12 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     nonstd::limited<streamsize> c(1024 * 1024, cout_dot<streamsize>, cout_mb_endl);
     
     try {
-      all.reset(new cached_image(s.cache_file.c_str(), i_w, i_h, l_w, l_h, c));
+      all.reset(new cached_image(s.swap_file.c_str(), i_w, i_h, l_w, l_h, c));
     } catch(std::ios::failure& e) {
       if (errno != 0) {
-        error << s.cache_file << ": " << strerror(errno);
+        error << s.swap_file << ": " << strerror(errno);
       } else {
-        error << s.cache_file << ": " << e.what();
+        error << s.swap_file << ": " << e.what();
       }
       
       return false;
@@ -410,7 +467,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       engine->w2pt(p.xPos, p.zPos, x, y);
       all->composite(x, y, p.operations);
     } catch(std::ios::failure& e) {
-      if (!s.silent) std::cout << s.cache_file  << ": " << strerror(errno);
+      if (!s.silent) std::cout << s.swap_file << ": " << strerror(errno);
       return false;
     }
   }
@@ -421,13 +478,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   
   boost::ptr_vector<marker> markers;
   
-  bool show_markers =
-    s.show_players
-    || s.show_signs
-    || s.show_coordinates
-    || s.show_warps;
-  
-  if (show_markers) {
+  if (any_db) {
     fs::path ttf_path(s.ttf_path);
     
     if (!fs::is_regular_file(ttf_path)) {
@@ -444,10 +495,10 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
         player_font.set_color(s.player_color);
       }
       
-      std::vector<player>::iterator plit = pdb.players.begin();
+      std::vector<player>::iterator plit = players.begin();
       
       /* initial code for projecting players */
-      for (; plit != pdb.players.end(); plit++) { 
+      for (; plit != players.end(); plit++) { 
         player p = *plit;
         
         if (p.zPos / mc::MapZ < s.min_z) continue;
@@ -510,10 +561,10 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
         warp_font.set_color(s.warp_color);
       }
       
-      std::vector<warp>::iterator wit = wdb.warps.begin();
+      std::vector<warp>::iterator wit = warps.begin();
       
       /* initial code for projecting warps */
-      for (; wit != wdb.warps.end(); wit++) { 
+      for (; wit != warps.end(); wit++) { 
         warp w = *wit;
         
         if (w.zPos / mc::MapZ < s.min_z) continue;
@@ -531,7 +582,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   engine->wp2pt(0, 0, 0, center_x, center_y);
   
   if (s.write_json) {
-    if (!show_markers) {
+    if (!any_db) {
       hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
     }
     
@@ -576,7 +627,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
       boost::scoped_ptr<image_base> img(it->second);
       
       stringstream ss;
-      ss << boost::format(output) % p.x % p.y;
+      ss << boost::format(output_path.string()) % p.x % p.y;
       
       std::string path = ss.str();
       
@@ -597,7 +648,7 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
   else {
     if (!s.silent) {
       cout << " --- SAVING IMAGE --- " << endl;
-      cout << "path: " << output;
+      cout << "path: " << output_path << endl;
     }
     
     png_format::opt_type opts;
@@ -606,42 +657,16 @@ bool do_one_world(settings_t &s, world_info& world, players_db& pdb, warps_db& w
     opts.center_y = center_y;
     opts.comment = C10T_COMMENT;
     
-    if (!all->save<png_format>(output, opts)) {
-      if (!s.silent) cout << output << ": Could not save image";
+    if (!all->save<png_format>(output_path.string(), opts)) {
+      if (!s.silent) cout << output_path << ": Could not save image";
       error << strerror(errno);
       return false;
     }
     
-    if (!s.silent) cout << output << ": OK" << endl;
+    if (!s.silent) cout << output_path << ": OK" << endl;
   }
   
   return true;
-}
-
-bool do_world(settings_t& s, fs::path world_path, string output) {
-  players_db pdb(world_path / "players", s.show_players_set, !s.show_players);
-  
-  if (!s.silent) cout << " --- LOOKING FOR DATABASES --- " << endl;
-  
-  if (s.show_players) {
-    cout << "players: " << pdb.path.string() << " " << (pdb.fatal ? pdb.fatal_why : "OK") << endl;
-  }
-  
-  warps_db wdb(s.show_warps_path, !s.show_warps);
-  
-  if (s.show_warps) {
-    if (!s.silent) cout << "warps: " << wdb.path.string() << " " << (wdb.fatal ? wdb.fatal_why : "OK") << endl;
-  }
-  
-  if (!s.silent) {
-    cout << " --- SCANNING WORLD DIRECTORY --- " << endl;
-    cout << "world: " << world_path.string() << endl;
-  }
-  
-  nonstd::continious<unsigned int> c(100, cout_dot<unsigned int>, cout_uint_endl);
-  world_info world(s, world_path, c);
-  
-  return do_one_world(s, world, pdb, wdb, output);
 }
 
 int do_help() {
@@ -1032,8 +1057,8 @@ int main(int argc, char *argv[]){
 
   settings_t s;
   
-  string world_path;
-  string output("out.png");
+  fs::path world_path;
+  fs::path output_path = fs::system_complete(fs::path("out.png"));
   string palette_write_path, palette_read_path;
   
   int c, blockid;
@@ -1292,8 +1317,8 @@ int main(int argc, char *argv[]){
       if (!get_blockid(optarg, blockid)) goto exit_error;
       includes[blockid] = true;
       break;
-    case 'w': world_path = optarg; break;
-    case 'o': output = optarg; break;
+    case 'w': world_path = fs::system_complete(fs::path(optarg)); break;
+    case 'o': output_path = fs::system_complete(fs::path(optarg)); break;
     case 's': s.silent = true; break;
     case 'x':
       s.silent = true;
@@ -1350,7 +1375,7 @@ int main(int argc, char *argv[]){
       }
       break;
     case 'C':
-      s.cache_file = optarg;
+      s.swap_file = optarg;
       break;
     case 'W': palette_write_path = optarg; break;
     case 'P': palette_read_path = optarg; break;
@@ -1374,15 +1399,6 @@ int main(int argc, char *argv[]){
     }
   }
 
-  if (!s.cache_key.empty()) {
-    if (!fs::is_directory(s.cache_dir)) {
-      error << "Directory required for caching: " << s.cache_dir.string();
-      goto exit_error;
-    }
-
-    s.cache_dir = s.cache_dir / s.cache_key;
-  }
-  
   if (s.memory_limit_default) {
     hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
   }
@@ -1405,17 +1421,25 @@ int main(int argc, char *argv[]){
   
   if (s.cache_use) {
     if (!fs::is_directory(s.cache_dir)) {
+      error << "Directory required for caching: " << s.cache_dir.string();
+      goto exit_error;
+    }
+    
+    // then create the subdirectory using cache_key
+    s.cache_dir = s.cache_dir / s.cache_key;
+    
+    if (!fs::is_directory(s.cache_dir)) {
       if (!s.silent) cout << "Creating directory for caching: " << s.cache_dir.string() << endl;
       fs::create_directory(s.cache_dir);
     }
     
-    if (s.cache_compress) {
-      if (!s.silent) cout << "Cache compression: ON" << std::endl;
-    }
-    else {
-      if (!s.silent) cout << "Cache compression: OFF" << std::endl;
+    if (!s.silent) {
+      cout << "Caching to directory: " << s.cache_dir << std::endl;
+      cout << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")  << std::endl;
     }
   }
+  
+  if (!s.silent) cout << "Threads: " << s.threads << std::endl;
   
   if (!palette_write_path.empty()) {
     if (!do_write_palette(s, palette_write_path)) {
@@ -1428,46 +1452,43 @@ int main(int argc, char *argv[]){
       goto exit_error;
     }
   }
-
-  if (!world_path.empty()) {
-    fs::path output_path = fs::system_complete(fs::path(output));
-    fs::path parent_path = output_path.parent_path();
-    
-    if (!fs::is_directory(parent_path)) {
-      error << "Output directory does not exist: " << parent_path.string();
-      goto exit_error;
-    }
-
-    if (output.empty()) {
-      error << "You must specify output file using '-o' to generate map";
-      goto exit_error;
-    }
-    
-    if (s.use_split) {
-      try {
-        boost::format(output) % 0 % 0;
-      } catch (boost::io::too_many_args& e) {
-        error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
-        goto exit_error;
-      }
-    }
-    
-    if (!s.nocheck)
-    {
-      fs::path level_dat = fs::path(world_path) / "level.dat";
-      
-      if (!fs::exists(level_dat)) {
-        error << "Does not exist: " << level_dat;
-        goto exit_error;
-      }
-    }
-    
-    if (!do_world(s, fs::path(world_path), output))  {
+  
+  if (world_path.empty())
+  {
+    error << "You must specify a world to render using `-w <directory>'";
+    goto exit_error;
+  }
+  
+  if (output_path.empty()) {
+    error << "You must specify output file using `-o <file>'";
+    goto exit_error;
+  }
+  
+  if (!fs::is_directory(output_path.parent_path())) {
+    error << "Output directory does not exist: " << output_path;
+    goto exit_error;
+  }
+  
+  if (s.use_split) {
+    try {
+      boost::format(fs::basename(output_path)) % 0 % 0;
+    } catch (boost::io::too_many_args& e) {
+      error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
       goto exit_error;
     }
   }
-  else {
-    error << "No action has been specified";
+  
+  if (!s.nocheck)
+  {
+    fs::path level_dat = world_path / "level.dat";
+    
+    if (!fs::exists(level_dat)) {
+      error << "Does not exist: " << level_dat.string();
+      goto exit_error;
+    }
+  }
+  
+  if (!do_world(s, world_path, output_path))  {
     goto exit_error;
   }
   

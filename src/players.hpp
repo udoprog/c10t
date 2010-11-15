@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 #include <iostream>
+#include <exception>
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -17,11 +18,21 @@
 
 namespace fs = boost::filesystem;
 
+class players_db_exception : public std::exception {
+  private:
+    const char* message;
+  public:
+    players_db_exception(const char* message) : message(message) { }
+    const char* what() throw() {
+      return message;
+    }
+};
+
 class player {
 public:
   fs::path path;
   std::string name;
-
+  
   bool grammar_error;
   bool in_pos;
   int pos_c;
@@ -31,14 +42,12 @@ public:
 };
 
 class players_db {
-public:
-  fs::path path;
-  bool fatal;
-  std::string fatal_why;
-  
-  std::vector<player> players;
-  
-  players_db(const fs::path path, std::set<std::string>& match_set, bool disable);
+  private:
+    const fs::path path;
+    const std::set<std::string> filter_set;
+  public:
+    players_db(const fs::path path, std::set<std::string> set) : path(path), filter_set(set) {}
+    std::vector<player> read() throw(players_db_exception);
 };
 
 #endif /* _PLAYERS_H_ */

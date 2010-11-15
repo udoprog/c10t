@@ -4,26 +4,20 @@
 #include <boost/algorithm/string.hpp>
 using namespace std;
 
-warps_db::warps_db(fs::path path, bool disable) : path(path), fatal(false)
+std::vector<warp> warps_db::read()
 {
-  if (disable) {
-    return;
-  }
-  
   if (!fs::is_regular_file(path)) {
-    fatal = true;
-    fatal_why = "file does not exist";
-    return;
+    throw warps_db_exception("database does not exist");
   }
   
   ifstream fp(path.string().c_str());
   
   if (!fp.good())
   {
-    fatal = true;
-    fatal_why = "error opening file";
-    return;
+    throw warps_db_exception("could not open file");
   }
+
+  std::vector<warp> warps;
   
   while (!fp.eof())
   {
@@ -53,4 +47,5 @@ warps_db::warps_db(fs::path path, bool disable) : path(path), fatal(false)
   }
   
   fp.close();
+  return warps;
 }

@@ -43,18 +43,14 @@ player::player(const fs::path path) :
   parser.parse_file(path.string().c_str());
 }
 
-players_db::players_db(const fs::path path, std::set<std::string>& match_set, bool disable) : path(path), fatal(false)
+std::vector<player> players_db::read() throw(players_db_exception)
 {
-  if (disable) {
-    return;
-  }
-  
+  std::vector<player> players;
+
   fs::path full_path = fs::system_complete( path );
   
   if (!fs::is_directory(full_path)) {
-    fatal_why = "directory does not exists";
-    fatal = true;
-    return;
+    throw players_db_exception("database does not exist");
   }
   
   fs::directory_iterator end_iter;
@@ -70,12 +66,14 @@ players_db::players_db(const fs::path path, std::set<std::string>& match_set, bo
       continue;
     }
     
-    if (match_set.size() > 0) {
-      if (match_set.find(p.name) == match_set.end()) {
+    if (filter_set.size() > 0) {
+      if (filter_set.find(p.name) == filter_set.end()) {
         continue;
       }
     }
     
     players.push_back(p);
   }
+
+  return players;
 }

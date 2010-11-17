@@ -37,7 +37,7 @@ public:
   const fs::path path;
   
   warps_db(const fs::path path) : path(path) {}
-  std::vector<warp> read();
+  void read(std::vector<warp>&);
 };
 
 #endif /* _WARPS_H_ */

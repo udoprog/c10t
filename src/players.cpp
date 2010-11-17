@@ -43,10 +43,8 @@ player::player(const fs::path path) :
   parser.parse_file(path.string().c_str());
 }
 
-std::vector<player> players_db::read() throw(players_db_exception)
+void players_db::read(std::vector<player>& players) const throw(players_db_exception)
 {
-  std::vector<player> players;
-
   fs::path full_path = fs::system_complete( path );
   
   if (!fs::is_directory(full_path)) {
@@ -74,6 +72,4 @@ std::vector<player> players_db::read() throw(players_db_exception)
     
     players.push_back(p);
   }
-
-  return players;
 }

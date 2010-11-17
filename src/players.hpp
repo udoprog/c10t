@@ -47,7 +47,7 @@ class players_db {
     const std::set<std::string> filter_set;
   public:
     players_db(const fs::path path, std::set<std::string> set) : path(path), filter_set(set) {}
-    std::vector<player> read() throw(players_db_exception);
+    void read(std::vector<player>&) const throw(players_db_exception);
 };
 
 #endif /* _PLAYERS_H_ */

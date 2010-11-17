@@ -4,8 +4,11 @@
 #include <boost/algorithm/string.hpp>
 using namespace std;
 
-std::vector<warp> warps_db::read()
+void warps_db::read(std::vector<warp>& warps)
 {
+  using ::boost::lexical_cast;
+  using ::boost::split;
+  
   if (!fs::is_regular_file(path)) {
     throw warps_db_exception("database does not exist");
   }
@@ -16,8 +19,6 @@ std::vector<warp> warps_db::read()
   {
     throw warps_db_exception("could not open file");
   }
-
-  std::vector<warp> warps;
   
   while (!fp.eof())
   {
@@ -27,7 +28,7 @@ std::vector<warp> warps_db::read()
     if (line.empty()) continue;
     
     vector<string> parts;
-    boost::split(parts, line, boost::is_any_of(":"));
+    split(parts, line, boost::is_any_of(":"));
     
     if (parts.size() < 4) continue;
     
@@ -36,10 +37,11 @@ std::vector<warp> warps_db::read()
     w.name = parts[0];
     
     try {
-      w.xPos = boost::lexical_cast<int>(parts[1]);
-      w.yPos = boost::lexical_cast<int>(parts[2]);
-      w.zPos = boost::lexical_cast<int>(parts[3]);
+      w.xPos = lexical_cast<int>(parts[1]);
+      w.yPos = lexical_cast<int>(parts[2]);
+      w.zPos = lexical_cast<int>(parts[3]);
     } catch(...) {
+      // silently ignore
       continue;
     }
     
@@ -47,5 +49,4 @@ std::vector<warp> warps_db::read()
   }
   
   fp.close();
-  return warps;
 }

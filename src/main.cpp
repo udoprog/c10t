@@ -298,7 +298,7 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
       warps_db wdb(s.show_warps_path);
       
       try {
-        warps = wdb.read();
+        wdb.read(warps);
         if (!s.silent) cout << warps.size() << " warp(s) OK" << endl;
       } catch(warps_db_exception& e) {
         if (!s.silent) cout << e.what() << endl;
@@ -307,13 +307,13 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     
     if (s.show_players) {
       fs::path show_players_path = world_path / "players";
-
+      
       if (!s.silent) cout << "players: " << show_players_path << ": " << flush;
       
       players_db pdb(show_players_path, s.show_players_set);
       
       try {
-        players = pdb.read();
+        pdb.read(players);
         if (!s.silent) cout << players.size() << " player(s) OK" << endl;
       } catch(players_db_exception& e) {
         if (!s.silent) cout << " " << e.what() << endl;

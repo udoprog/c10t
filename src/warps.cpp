@@ -37,9 +37,9 @@ void warps_db::read(std::vector<warp>& warps)
     w.name = parts[0];
     
     try {
-      w.xPos = lexical_cast<int>(parts[1]);
-      w.yPos = lexical_cast<int>(parts[2]);
-      w.zPos = lexical_cast<int>(parts[3]);
+      w.xPos = int(lexical_cast<double>(parts[1]));
+      w.yPos = int(lexical_cast<double>(parts[2]));
+      w.zPos = int(lexical_cast<double>(parts[3]));
     } catch(...) {
       // silently ignore
       continue;

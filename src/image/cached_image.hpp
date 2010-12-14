@@ -17,7 +17,6 @@ namespace fs = boost::filesystem;
 
 class cached_image : public image_base {
 private:
-  static const pos_t WRITE_SIZE = 4096 * 8;
   const fs::path path;
   std::fstream fs;
   
@@ -34,6 +33,8 @@ private:
   void read_buffer();
   void flush_buffer();
 public:
+  static const pos_t WRITE_SIZE = 4096 * 8;
+  
   cached_image(const fs::path path, pos_t w, pos_t h, pos_t l_w, pos_t l_h);
   ~cached_image();
   
@@ -41,7 +42,7 @@ public:
    * Will build the cache from scratch, filling it with null, which coneniently fits
    * with black transparent colors.
    */
-  void build(nonstd::reporting<std::streamsize>& reporter);
+  void build(nonstd::reporting<std::streampos>& reporter);
   
   void set_pixel(pos_t x, pos_t y, color&);
   void get_pixel(pos_t x, pos_t y, color&);

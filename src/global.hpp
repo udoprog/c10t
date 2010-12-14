@@ -110,7 +110,7 @@ struct settings_t {
     this->night = false;
     this->heightmap = false;
     this->debug = false;
-    this->swap_file = "cache.dat";
+    this->swap_file = "swap.bin";
     this->memory_limit = 1024 * 1024 * 1000;
     this->memory_limit_default = true;
     this->min_x = -10000;

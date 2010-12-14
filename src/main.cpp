@@ -275,7 +275,7 @@ void cout_uintpart_endl(unsigned int progress, unsigned int total) {
   cout << " " << setw(8) << progress << " parts " << (progress * 100) / total << "%" << endl;
 }
 
-void cout_mb_endl(streamsize progress, streamsize total) {
+void cout_mb_endl(streampos progress, streampos total) {
   cout << " " << setw(8) << fixed << float(progress) / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
@@ -372,7 +372,7 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   if (mem_x >= s.memory_limit) {
     if (!s.silent) {
       cout << " --- BUILDING SWAP --- " << endl;
-      cout << "NOTE: A swap file is being built to acommodate high memory usage" << endl;
+      cout << "NOTE: A swap file is being built to accommodate high memory usage" << endl;
       cout << "swap file: " << s.swap_file << endl;
 
       cout << "swap size: " << memory_usage_mb << " MB" << endl;
@@ -395,7 +395,7 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     
     all.reset(image);
     
-    nonstd::limited<streamsize> c(1024 * 1024, cout_dot<streamsize>, cout_mb_endl);
+    nonstd::limited<streampos> c(1024 * 1024, cout_dot<streampos>, cout_mb_endl);
     
     try {
       image->build(c);

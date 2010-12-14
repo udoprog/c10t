@@ -17,21 +17,21 @@ cached_image::cached_image(const fs::path path, pos_t w, pos_t h, pos_t l_w, pos
 {
   using namespace ::std;
   fs.exceptions(ios::failbit | ios::badbit);
-  fs.open(path.string().c_str(), ios::in | ios::out | ios::app);
+  fs.open(path.string().c_str(), ios::in | ios::out | ios::trunc);
 }
 
-void cached_image::build(nonstd::reporting<std::streamsize>& reporter)
+void cached_image::build(nonstd::reporting<std::streampos>& reporter)
 {
   using namespace ::std;
   
-  streamsize total =
-    boost::numeric_cast<streamsize>(get_width()) *
-    boost::numeric_cast<streamsize>(get_height()) *
+  streampos total =
+    boost::numeric_cast<streampos>(get_width()) *
+    boost::numeric_cast<streampos>(get_height()) *
     COLOR_TYPE;
   
-  streamsize written = 0;
+  streampos written = 0;
   
-  streamsize write_size = WRITE_SIZE * sizeof(uint8_t);
+  streampos write_size = WRITE_SIZE;
   
   boost::scoped_array<char> nil(new char[write_size]);
   memset(nil.get(), 0x0, write_size);
@@ -39,7 +39,7 @@ void cached_image::build(nonstd::reporting<std::streamsize>& reporter)
   reporter.set_limit(total);
   
   while (written < total) {
-    streamsize write = min(total, write_size);
+    streampos write = min(total, write_size);
     fs.write(nil.get(), write);
     written += write;
     

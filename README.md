@@ -1,10 +1,15 @@
 c10t - a cartography tool for Minecraft
 =======================================
 
-I wrote c10t entirely because i liked the tool Cartograph by ZomBuster, but i
-wasn't too fond of a couple of aspects about how rendering was performed.
+I wrote c10t entirely because i liked the tool Cartograph by ZomBuster, but I wasn't too fond of a couple of aspects about how rendering was performed.
 
 -- Udoprog <johnjohn.tedro@gmail.com>
+
+Donations
+---------
+People asked where they could submit donations, so here it is; Paypal via my email address johnjohn.tedro@gmail.com
+
+If ever I make enough to take a day or two off I might spend those implementing new features ; ).
 
 Requirements
 ------------
@@ -13,6 +18,8 @@ Requirements
   * libpng (>= 1.2)
   * libfreetype (>= 2)
   * libboost (thread, filesystem, system and test) (>= 1.40)
+
+Note: People have reported problem with boost 1.45, I personally have not been able to confirm this, if you ever encounter it, please report the bug as thorough as possible.
 
 Features
 --------

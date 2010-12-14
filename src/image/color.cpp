@@ -11,10 +11,7 @@ uint8_t alpha_over_c(uint8_t u, uint8_t o, uint8_t ua, uint8_t oa);
  * Takes two color values and does an alpha over blending without using floats.
  */
 inline uint8_t alpha_over_c(uint8_t ac, uint8_t aa, uint8_t bc, uint8_t ba) {
-  uint16_t caa = (ac * aa);
-  uint16_t cba = (bc * ba);
-  uint16_t rhs = (0xff - aa) * (cba >> 8);
-  return (caa + rhs) >> 8;
+  return ((ac * aa) + ((0xff * (bc * ba) - aa * (bc * ba)) / 0xff)) / 0xff;
 }
 
 void color::overlay(const color &other) {

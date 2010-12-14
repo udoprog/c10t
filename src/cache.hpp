@@ -78,6 +78,10 @@ public:
     oper->miny = hdr.miny;
     oper->operations.resize(hdr.size);
     
+    size_t size = sizeof(image_operation) * hdr.size;
+    boost::scoped_array<char> source(new char[size]);
+    boost::scoped_array<char> target(new char[compressBound(size)]);
+    
     fs.read(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
     if (fs.fail()) return false;
     

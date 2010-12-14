@@ -5,11 +5,11 @@ I wrote c10t entirely because i liked the tool Cartograph by ZomBuster, but I wa
 
 -- Udoprog <johnjohn.tedro@gmail.com>
 
+More Info: http://toolchain.eu/minecraft/c10t/
+
 Donations
 ---------
-People asked where they could submit donations, so here it is; Paypal via my email address johnjohn.tedro@gmail.com
-
-If ever I make enough to take a day or two off I might spend those implementing new features ; ).
+People asked where they could submit donations, you can do it at the "More Info" page (look at the bottom).
 
 Requirements
 ------------

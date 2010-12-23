@@ -727,6 +727,9 @@ int do_help() {
     << "                              north-south direction and between -10 and 20 in  " << endl
     << "                              the east-west direction.                         " << endl
     << "                              Note: South and West are the positive directions." << endl
+    << "  -R, --radius <int>        - limit render to a specific radius, useful when   " << endl
+    << "                              your map is absurdly large and you want a 'fast' " << endl
+    << "                              limit option.                                    " << endl
     << endl
     << "Filtering options:" << endl
     << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences" << endl
@@ -1095,6 +1098,7 @@ int main(int argc, char *argv[]){
      {"top",              required_argument, 0, 't'},
      {"bottom",           required_argument, 0, 'b'},
      {"limits",           required_argument, 0, 'L'},
+     {"radius",           required_argument, 0, 'R'},
      {"memory-limit",     required_argument, 0, 'M'},
      {"cache-file",       required_argument, 0, 'C'},
      {"swap-file",        required_argument, 0, 'C'},
@@ -1152,7 +1156,7 @@ int main(int argc, char *argv[]){
     includes[i] = false;
   }
   
-  while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -1374,6 +1378,14 @@ int main(int argc, char *argv[]){
       break;
     case 'L':
       if (!parse_limits(optarg, s)) {
+        goto exit_error;
+      }
+      break;
+    case 'R':
+      s.max_radius = boost::lexical_cast<int>(optarg);
+      
+      if (s.max_radius < 0) {
+        error << "Radius must be greater than zero";
         goto exit_error;
       }
       break;

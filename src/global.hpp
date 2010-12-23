@@ -58,6 +58,7 @@ struct settings_t {
   enum mode mode;
   unsigned int rotation;
   int min_x, max_x, min_z, max_z; // limits to draw
+  int max_radius;
   size_t memory_limit;
   bool memory_limit_default;
   int ttf_size;
@@ -117,6 +118,7 @@ struct settings_t {
     this->max_x = 10000;
     this->min_z = -10000;
     this->max_z = 10000;
+    this->max_radius = 1000;
     this->ttf_path = fs::path("font.ttf");
     this->ttf_size = 12;
     this->ttf_color = color(0, 0, 0, 0xff);

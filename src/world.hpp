@@ -112,6 +112,18 @@ public:
         continue;
       }
 
+      uint64_t x2 = leveldata.xPos * leveldata.xPos;
+      uint64_t z2 = leveldata.zPos * leveldata.zPos;
+      uint64_t r2 = s.max_radius * s.max_radius;
+      
+      if (x2 + z2 >= r2) {
+        if (!s.silent && s.debug) {
+          std::cout << "Ignoring block out of limit range: " << leveldata.xPos << "," << leveldata.zPos << " - " << leveldata.path << std::endl;
+        }
+        
+        continue;
+      }
+
       level l;
 
       l.xReal = leveldata.xPos;

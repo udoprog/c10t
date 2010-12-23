@@ -52,16 +52,81 @@ public:
     fs::remove(cache_path);
   }
   
+  bool gzreadall(gzFile gzf, char* buf, unsigned int len) {
+    unsigned int read = 0;
+    while (read < len) {
+      int have = gzread(gzf, buf + read, len - read);
+
+      if (have == 0) {
+        int errnum;
+        const char* errorstr = gzerror(gzf, &errnum);
+        
+        if (errnum != 0) {
+          std::cerr << errorstr << std::endl;
+          gzclose(gzf);
+          return false;
+        }
+        
+        if (gzeof(gzf)) {
+          gzclose(gzf);
+          return false;
+        }
+      }
+      
+      if (have < 0) {
+        gzclose(gzf);
+        return false;
+      }
+      
+      read += have;
+    }
+    return true;
+  }
+  
+  bool gzwriteall(gzFile gzf, const char* buf, unsigned int len) {
+    unsigned int written = 0;
+    while (written < len) {
+      int have = gzwrite(gzf, buf + written, len - written);
+      
+      if (have <= 0) {
+        int errnum;
+        const char* errorstr = gzerror(gzf, &errnum);
+        
+        if (errnum != 0) {
+          std::cerr << errorstr << std::endl;
+          gzclose(gzf);
+          return false;
+        }
+        
+        gzclose(gzf);
+        return false;
+      }
+      
+      written += have;
+    }
+    return true;
+  }
+  
   bool read(boost::shared_ptr<image_operations> oper) {
-    std::ifstream fs(cache_path.string().c_str());
+    gzFile gzf = gzopen(cache_path.string().c_str(), "r");
+
+    if (gzf == Z_NULL) {
+      return false;
+    }
+
+    //std::ifstream fs(cache_path.string().c_str());
     
     cache_hdr hdr;
     
     {
       char m[4];
-      fs.read(m, 4);
-      if (fs.fail()) return false;
-
+      //fs.read(m, 4);
+      //if (fs.fail()) return false;
+      
+      if (!gzreadall(gzf, m, 4)) {
+        return false;
+      }
+      
       if (
             m[0] != CACHE_MAGIC[0]
         ||  m[1] != CACHE_MAGIC[1]
@@ -69,7 +134,12 @@ public:
         ||  m[3] != CACHE_MAGIC[3]
         ) return false;
       
-      fs.read(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));
+      //fs.read(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));
+      //if (fs.fail()) return false;
+      
+      if (!gzreadall(gzf, reinterpret_cast<char*>(&hdr), sizeof(cache_hdr))) {
+        return false;
+      }
     }
       
     if (hdr.compressed != cache_compress) return false;
@@ -82,24 +152,33 @@ public:
     oper->miny = hdr.miny;
     oper->operations.resize(hdr.size);
     
-    size_t size = sizeof(image_operation) * hdr.size;
-    boost::scoped_array<char> source(new char[size]);
-    boost::scoped_array<char> target(new char[compressBound(size)]);
+    //fs.read(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
+    //if (fs.fail()) return false;
     
-    fs.read(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
-    if (fs.fail()) return false;
+    if (!gzreadall(gzf, reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size)) {
+      return false;
+    }
     
+    gzclose(gzf);
     return true;
   }
   
   bool write(boost::shared_ptr<image_operations> oper) {
-    std::ofstream fs(cache_path.string().c_str());
+    //std::ofstream fs(cache_path.string().c_str());
+    gzFile gzf = gzopen(cache_path.string().c_str(), "w");
+    
+    if (gzf == Z_NULL) {
+      return false;
+    }
     
     cache_hdr hdr;
     
     {
-      fs.write(CACHE_MAGIC, 4);
-      if (fs.fail()) return false;
+      //fs.write(CACHE_MAGIC, 4);
+      //if (fs.fail()) return false;
+      if (!gzwriteall(gzf, CACHE_MAGIC, 4)) {
+        return false;
+      }
       
       hdr.compressed = cache_compress;
       hdr.maxx = oper->maxx;
@@ -110,12 +189,21 @@ public:
       hdr.filesize = fs::file_size(source_path);
       hdr.size = oper->operations.size();
       
-      fs.write(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));
+      //fs.write(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));
+      //if (fs.fail()) return false;
+      if (!gzwriteall(gzf, reinterpret_cast<char*>(&hdr), sizeof(cache_hdr))) {
+        return false;
+      }
     }
     
-    fs.write(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
-    if (fs.fail()) return false;
+    //fs.write(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
+    //if (fs.fail()) return false;
     
+    if (!gzwriteall(gzf, reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size)) {
+      return false;
+    }
+    
+    gzclose(gzf);
     return true;
   }
 };

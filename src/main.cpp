@@ -175,8 +175,6 @@ public:
     p.operations.reset(new image_operations);
     
     if (s.cache_use) {
-      cache.create_directories();
-      
       if (cache.exists()) {
         if (cache.read(p.operations)) {
           p.cache_hit = true;
@@ -206,7 +204,12 @@ public:
     job.engine->render(level, p.operations);
     
     if (s.cache_use) {
+      // create the necessary directories required when caching
+      cache.create_directories();
+      
+      // ignore failure while writing the operations to cache
       if (!cache.write(p.operations)) {
+        // on failure, remove the cache file - this will prompt c10t to regenerate it next time
         cache.clear();
       }
     }

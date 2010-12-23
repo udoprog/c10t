@@ -39,6 +39,10 @@ public:
   {
   }
   
+  bool create_directories() {
+    return fs::create_directories(cache_dir);
+  }
+  
   bool exists() {
     return fs::is_regular(cache_path)
       && fs::last_write_time(cache_path) >= fs::last_write_time(source_path);

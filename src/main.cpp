@@ -42,6 +42,7 @@
 #include "marker.hpp"
 #include "json.hpp"
 #include "warps.hpp"
+#include "mcutils.hpp"
 
 #include "engine/engine_base.hpp"
 #include "engine/topdown_engine.hpp"
@@ -142,12 +143,14 @@ struct render_result {
   bool fatal;
   std::string fatal_why;
   std::vector<light_marker> markers;
-
+  bool cache_hit;
+  
   render_result() : fatal(false), fatal_why("(no error)") {}
 };
 
 struct render_job {
   int xPos, zPos;
+  int xReal, zReal;
   fs::path path;
   boost::shared_ptr<engine_base> engine;
 };
@@ -165,14 +168,18 @@ public:
     p.path = job.path;
     p.xPos = job.xPos;
     p.zPos = job.zPos;
+    p.cache_hit = false;
     
-    cache_file cache(s.cache_dir, p.path, s.cache_compress);
+    cache_file cache(mcutils::level_dir(s.cache_dir, job.xReal, job.zReal), p.path, s.cache_compress);
     
     p.operations.reset(new image_operations);
     
     if (s.cache_use) {
+      cache.create_directories();
+      
       if (cache.exists()) {
         if (cache.read(p.operations)) {
+          p.cache_hit = true;
           return p;
         }
         
@@ -441,6 +448,8 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     cout << " --- RENDERING --- " << endl;
   }
   
+  int cache_hits = 0;
+  
   for (i = 0; i < world_size; i++) {
     if (queued <= filllimit) {
       for (; queued < prebuffer && lvlit != world.levels.end(); lvlit++) {
@@ -454,6 +463,8 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
         job.path = path;
         job.xPos = l.xPos;
         job.zPos = l.zPos;
+        job.xReal= l.xReal;
+        job.zReal = l.zReal;
         
         renderer.give(job);
         queued++;
@@ -470,6 +481,10 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
         cout << p.path << ": " << p.fatal_why << endl;
         continue;
       }
+    }
+
+    if (p.cache_hit) {
+      ++cache_hits;
     }
     
     ///if (progress_c != NULL) progress_c(i, world_size);
@@ -490,6 +505,10 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   }
   
   c.done(0);
+  
+  if (s.cache_use && !s.silent) {
+    cout << "cache_hits: " << cache_hits << "/" << world_size << endl;
+  }
   
   //if (progress_c != NULL) progress_c(world_size, world_size);
   

@@ -17,11 +17,11 @@ struct image_operation {
 
 class image_operations {
 private:
-  boost::shared_array<bool> lookup;
+  boost::shared_array<uint8_t> lookup;
 public:
   int minx, miny;
   int maxx, maxy;
-
+  
   std::vector<image_operation> operations;
   
   void add_pixel(int x, int y, color &c);

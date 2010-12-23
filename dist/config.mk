@@ -10,6 +10,7 @@ SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
 SOURCES+=src/utf8.cpp
 SOURCES+=src/warps.cpp
+SOURCES+=src/mcutils.cpp
 SOURCES+=src/engine/isometric_engine.cpp
 SOURCES+=src/engine/oblique_engine.cpp
 SOURCES+=src/engine/obliqueangle_engine.cpp

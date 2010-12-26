@@ -16,14 +16,34 @@
 
 #include <ctime>
 
-void begin_compound(level_file* level, nbt::String name) {
+struct level_file_context {
+  bool islevel;
+  bool in_te, in_sign;
+  nbt::Int sign_x, sign_y, sign_z;
+  std::string sign_text;
+  std::vector<light_marker> markers;
+  
+  boost::shared_ptr<nbt::ByteArray> blocks;
+  boost::shared_ptr<nbt::ByteArray> skylight;
+  boost::shared_ptr<nbt::ByteArray> heightmap;
+  boost::shared_ptr<nbt::ByteArray> blocklight;
+  
+  bool grammar_error;
+  size_t grammar_error_where;
+  const char* grammar_error_why;
+
+  level_file_context() : grammar_error(false), grammar_error_where(0), grammar_error_why("") {
+  }
+};
+
+void begin_compound(level_file_context* level, nbt::String name) {
   if (name.compare("Level") == 0) {
     level->islevel = true;
     return;
   }
 }
 
-void register_string(level_file* level, nbt::String name, nbt::String value) {
+void register_string(level_file_context* level, nbt::String name, nbt::String value) {
   if (!level->in_te) {
     return;
   }
@@ -44,7 +64,7 @@ void register_string(level_file* level, nbt::String name, nbt::String value) {
   }
 }
 
-void register_int(level_file* level, nbt::String name, nbt::Int i) {
+void register_int(level_file_context* level, nbt::String name, nbt::Int i) {
   if (level->in_te) {
     if (level->in_sign) {
       if (name.compare("x") == 0) {
@@ -62,7 +82,7 @@ void register_int(level_file* level, nbt::String name, nbt::Int i) {
   }
 }
 
-void register_byte_array(level_file* level, nbt::String name, nbt::ByteArray* byte_array) {
+void register_byte_array(level_file_context* level, nbt::String name, nbt::ByteArray* byte_array) {
   if (!level->islevel) {
     delete byte_array;
     return;
@@ -91,19 +111,19 @@ void register_byte_array(level_file* level, nbt::String name, nbt::ByteArray* by
   delete byte_array;
 }
 
-void begin_list(level_file* level, nbt::String name, nbt::Byte type, nbt::Int count) {
+void begin_list(level_file_context* level, nbt::String name, nbt::Byte type, nbt::Int count) {
   if (name.compare("TileEntities") == 0) {
     level->in_te = true;
   }
 }
 
-void end_list(level_file* level, nbt::String name) {
+void end_list(level_file_context* level, nbt::String name) {
   if (name.compare("TileEntities") == 0) {
     level->in_te = false;
   }
 }
 
-void end_compound(level_file* level, nbt::String name) {
+void end_compound(level_file_context* level, nbt::String name) {
   if (level->in_te) {
     if (level->in_sign) {
       level->in_sign = false;
@@ -117,7 +137,7 @@ void end_compound(level_file* level, nbt::String name) {
   }
 }
 
-void error_handler(level_file* level, size_t where, const char *why) {
+void error_handler(level_file_context* level, size_t where, const char *why) {
   level->grammar_error = true;
   level->grammar_error_where = where;
   level->grammar_error_why = why;
@@ -128,17 +148,12 @@ void error_handler(level_file* level, size_t where, const char *why) {
 level_file::~level_file(){
 }
 
-level_file::level_file(fs::path path)
-    :
-    islevel(false),
-    grammar_error(false),
-    grammar_error_where(0),
-    grammar_error_why(""),
-    in_te(false), in_sign(false),
-    sign_x(0), sign_y(0), sign_z(0),
-    sign_text("")
-{
-  nbt::Parser<level_file> parser(this);
+level_file::level_file(fs::path path) : path(path) {}
+
+void level_file::read() {
+  level_file_context context;
+  
+  nbt::Parser<level_file_context> parser(&context);
   
   parser.register_byte_array = register_byte_array;
   parser.register_string = register_string;
@@ -150,36 +165,20 @@ level_file::level_file(fs::path path)
   parser.error_handler = error_handler;
   
   parser.parse_file(path.string().c_str());
-}
-
-fast_level_file::fast_level_file(const fs::path path)
-  :
-    xPos(0), zPos(0),
-    is_level(false),
-    path(path)
-{
-  std::string extension = fs::extension(path);
   
-  std::vector<std::string> parts;
-  nonstd::split(parts, fs::basename(path), '.');
-  
-  if (parts.size() != 3 || extension.compare(".dat") != 0) {
-    is_level = false;
-    is_level_why = "Level data file name does not match <x>.<z>.dat";
-    return;
+  if (context.grammar_error) {
+    throw invalid_file("not a valid nbt file");
   }
   
-  std::string x = parts.at(1);
-  std::string z = parts.at(2);
-  
-  try {
-    xPos = common::b36decode(x);
-    zPos = common::b36decode(z);
-  } catch(const common::bad_cast& e) {
-    is_level = false;
-    is_level_why = "Could not decode level name from " + fs::basename(path);
-    return;
+  if (!context.islevel) {
+    throw invalid_file("not a level data file");
   }
   
-  is_level = true;
+  markers = context.markers;
+  blocks = context.blocks;
+  skylight = context.skylight;
+  heightmap = context.heightmap;
+  blocklight = context.blocklight;
+  
+  complete = true;
 }

@@ -50,52 +50,49 @@ bool compare_levels(level first, level second)
   
   // broad phase listing of all the levels to figure out how they are ordered.
   while (broadlisting.has_next(directory_filter)) {
-    fs::path next = broadlisting.next();
+    const fs::path next = broadlisting.next();
     
-    fast_level_file leveldata(next);
+    mcutils::level_coord coord;
     
-    if (!leveldata.is_level) {
+    try {
+      mcutils::path_to_level_coord(next, coord);
+    } catch(invalid_argument& e) {
       if (!s.silent && s.debug) {
-        std::cout << leveldata.path << ": " << leveldata.is_level_why << std::endl;
+        std::cout << next << ": " << e.what() << std::endl;
       }
       
       continue;
     }
     
-    if (leveldata.xPos < s.min_x ||
-        leveldata.xPos > s.max_x ||
-        leveldata.zPos < s.min_z ||
-        leveldata.zPos > s.max_z) {
-      
-      if (!s.silent && s.debug) {
-        std::cout << "Ignoring block out of limit range: " << leveldata.xPos << "," << leveldata.zPos << " - " << leveldata.path << std::endl;
-      }
-    
-      continue;
-    }
-
-    uint64_t x2 = leveldata.xPos * leveldata.xPos;
-    uint64_t z2 = leveldata.zPos * leveldata.zPos;
+    uint64_t x2 = coord.x * coord.x;
+    uint64_t z2 = coord.z * coord.z;
     uint64_t r2 = s.max_radius * s.max_radius;
     
-    if (x2 + z2 >= r2) {
+    bool out_of_range = 
+        coord.x < s.min_x
+        || coord.x > s.max_x
+        || coord.z < s.min_z
+        || coord.z > s.max_z
+        || x2 + z2 >= r2;
+    
+    if (out_of_range) {
       if (!s.silent && s.debug) {
-        std::cout << "Ignoring block out of limit range: " << leveldata.xPos << "," << leveldata.zPos << " - " << leveldata.path << std::endl;
+        std::cout << next << ": position out of limit (" << coord.x << "," << coord.z << ")" << std::endl;
       }
       
       continue;
     }
-
+    
     level l;
 
-    l.xReal = leveldata.xPos;
-    l.zReal = leveldata.zPos;
-
-    l.xPos = leveldata.xPos;
-    l.zPos = leveldata.zPos;
+    l.xReal = coord.x;
+    l.zReal = coord.z;
+    
+    l.xPos = coord.x;
+    l.zPos = coord.z;
     
     transform_world_xz(l.xPos, l.zPos, s.rotation);
-
+    
     min_x = std::min(min_x, l.xPos);
     max_x = std::max(max_x, l.xPos);
     min_z = std::min(min_z, l.zPos);

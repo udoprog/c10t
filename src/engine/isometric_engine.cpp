@@ -4,14 +4,14 @@
 
 void isometric_engine::render(level_file& level, boost::shared_ptr<image_operations> oper)
 {
-  if (!level.islevel) {
+  if (!level.is_read()) {
     return;
   }
   
-  BlockRotation b_r(s, level.blocks.get());
-  BlockRotation bl_r(s, level.blocklight.get());
-  BlockRotation sl_r(s, level.skylight.get());
-  BlockRotation hm_r(s, level.heightmap.get());
+  BlockRotation b_r(s, level.get_blocks());
+  BlockRotation bl_r(s, level.get_blocklight());
+  BlockRotation sl_r(s, level.get_skylight());
+  BlockRotation hm_r(s, level.get_heightmap());
 
   pos_t iw, ih;
   

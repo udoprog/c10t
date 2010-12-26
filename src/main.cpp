@@ -187,19 +187,15 @@ public:
 
     level_file level(job.path);
     
-    if (!level.islevel) {
+    try {
+      level.read();
+    } catch(invalid_file& e) {
       p.fatal = true;
-      p.fatal_why = "Not a level file";
+      p.fatal_why = e.what();
       return p;
     }
     
-    if (level.grammar_error) {
-      p.fatal = true;
-      p.fatal_why = level.grammar_error_why;
-      return p;
-    }
-
-    p.markers = level.markers;
+    p.markers = level.get_markers();
     
     job.engine->render(level, p.operations);
     

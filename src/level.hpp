@@ -1,7 +1,7 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
-#ifndef _LEVEL_H_
-#define _LEVEL_H_
+#ifndef _LEVEL_HPP_
+#define _LEVEL_HPP_
 
 #include "global.hpp"
 
@@ -15,6 +15,7 @@
 #include <zlib.h>
 #include <time.h>
 #include <vector>
+#include <exception>
 
 #include "nbt/nbt.hpp"
 
@@ -27,39 +28,67 @@
 
 namespace fs = boost::filesystem;
 
+class invalid_file : std::exception {
+  private:
+    const char* message;
+  public:
+    invalid_file(const char* message) : message(message) {}
+
+    const char* what() const throw() {
+      return message;
+    }
+};
+
 class level_file
 {
-  public:
-    // these must be public for the parser to be able to reach them.
-    bool islevel;
-    bool grammar_error;
-    size_t grammar_error_where;
-    std::string grammar_error_why;
-    bool ignore_blocks;
-    bool in_te, in_sign;
-    nbt::Int sign_x, sign_y, sign_z;
-    std::string sign_text;
-    std::vector<light_marker> markers;
-    
-    boost::scoped_ptr<nbt::ByteArray> blocks;
-    boost::scoped_ptr<nbt::ByteArray> skylight;
-    boost::scoped_ptr<nbt::ByteArray> heightmap;
-    boost::scoped_ptr<nbt::ByteArray> blocklight;
-    
-    level_file(const fs::path path);
-    ~level_file();
-};
-
-class fast_level_file
-{
-  public:
-    // these must be public for the parser to be able to reach them.
-    int xPos, zPos;
-    bool is_level;
-    std::string is_level_why;
+  private:
+    bool complete;
+    int x, z;
     const fs::path path;
     
-    fast_level_file(const fs::path path);
+    // these must be public for the parser to be able to reach them.
+    std::vector<light_marker> markers;
+    
+    boost::shared_ptr<nbt::ByteArray> blocks;
+    boost::shared_ptr<nbt::ByteArray> skylight;
+    boost::shared_ptr<nbt::ByteArray> heightmap;
+    boost::shared_ptr<nbt::ByteArray> blocklight;
+  public:
+    level_file(const fs::path path);
+    ~level_file();
+
+    std::vector<light_marker> get_markers() {
+      return markers;
+    }
+    
+    /*
+     * might throw invalid_file if the file is not gramatically correct
+     */
+    void read();
+    
+    bool is_read() {
+      return complete;
+    }
+    
+    boost::shared_ptr<nbt::ByteArray>
+    get_blocks() {
+      return blocks;
+    }
+
+    boost::shared_ptr<nbt::ByteArray>
+    get_skylight() {
+      return skylight;
+    }
+    
+    boost::shared_ptr<nbt::ByteArray>
+    get_heightmap() {
+      return heightmap;
+    }
+    
+    boost::shared_ptr<nbt::ByteArray>
+    get_blocklight() {
+      return blocklight;
+    }
 };
 
-#endif /* _LEVEL_H_ */
+#endif /* _LEVEL_HPP_ */

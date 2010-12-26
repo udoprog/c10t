@@ -33,8 +33,8 @@ class engine_base {
 class BlockRotation {
 private:
   settings_t& s;
-  nbt::ByteArray *byte_array;
-
+  boost::shared_ptr<nbt::ByteArray> byte_array;
+  
   int x, z;
 
   void transform_xz(int& x, int& z) {
@@ -56,7 +56,7 @@ private:
   }
 
 public:
-  BlockRotation(settings_t& s, nbt::ByteArray *byte_array)
+  BlockRotation(settings_t& s, boost::shared_ptr<nbt::ByteArray> byte_array)
     : s(s), byte_array(byte_array) {}
 
   void set_xz(int x, int z) {

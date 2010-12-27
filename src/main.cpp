@@ -50,6 +50,13 @@
 #include "engine/obliqueangle_engine.hpp"
 #include "engine/isometric_engine.hpp"
 
+struct nullstream: std::ostream {
+  nullstream(): std::ios(0), std::ostream(0) {}
+};
+
+nullstream nil;
+std::ostream out(std::cout.rdbuf());
+
 using namespace std;
 namespace fs = boost::filesystem;
 
@@ -64,14 +71,14 @@ const uint8_t END_BYTE = 0xF0;
 
 void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
   if (i == all) {
-    cout << setw(6) << "done!" << endl;
+    out << setw(6) << "done!" << endl;
   }
   else {
     if (i % 50 == 0 && i > 0) {
-      cout << "." << flush;
+      out << "." << flush;
       
       if (i % 1000 == 0) {
-        cout << setw(8) << i << " " << (i * 100) / all << "%" << endl;
+        out << setw(8) << i << " " << (i * 100) / all << "%" << endl;
       }
     }
   } 
@@ -79,34 +86,34 @@ void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
 
 void cout_progress_ionly_n(image_base::pos_t i, image_base::pos_t all) {
   if (all == 1) {
-    cout << setw(6) << "done!" << endl;
+    out << setw(6) << "done!" << endl;
   }
   else if (i % 50 == 0 && i > 0) {
-    cout << "." << flush;
+    out << "." << flush;
     
     if (i % 1000 == 0) {
-      cout << setw(8) << i << " ?%" << endl;
+      out << setw(8) << i << " ?%" << endl;
     }
   } 
 }
 
 inline void cout_progress_ionly_b(const uint8_t type, image_base::pos_t part, image_base::pos_t whole) {
-  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
+  out << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
   
   if (whole == 1) {
-    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(2) << flush;
+    out << hex << std::setw(2) << setfill('0') << static_cast<int>(2) << flush;
   }
   else if (part % 1000 == 0) {
-    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(1) << flush;
+    out << hex << std::setw(2) << setfill('0') << static_cast<int>(1) << flush;
   }
   else {
-    cout << hex << std::setw(2) << setfill('0') << static_cast<int>(0) << flush;
+    out << hex << std::setw(2) << setfill('0') << static_cast<int>(0) << flush;
   }
 }
 
 inline void cout_progress_b(const uint8_t type, image_base::pos_t part, image_base::pos_t whole) {
   uint8_t b = ((part * 0xff) / whole);
-  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(type)
+  out << hex << std::setw(2) << setfill('0') << static_cast<int>(type)
        << hex << std::setw(2) << setfill('0') << static_cast<int>(b) << flush;
 }
 
@@ -123,12 +130,12 @@ void cout_progress_b_image(image_base::pos_t i, image_base::pos_t all) {
 }
 
 inline void cout_error(const string& message) {
-  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE)
+  out << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE)
        << hex << message << flush;
 }
 
 inline void cout_end() {
-  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
+  out << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
 }
 
 /*
@@ -269,20 +276,20 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
 
 template<typename T>
 void cout_dot(T total) {
-  if (total == 0) cout << " done!";
-  else cout << "." << flush;
+  if (total == 0) out << " done!";
+  else out << "." << flush;
 }
 
 void cout_uint_endl(unsigned int total) {
-  cout << " " << setw(8) << total << " parts" << endl;
+  out << " " << setw(8) << total << " parts" << endl;
 }
 
 void cout_uintpart_endl(unsigned int progress, unsigned int total) {
-  cout << " " << setw(8) << progress << " parts " << (progress * 100) / total << "%" << endl;
+  out << " " << setw(8) << progress << " parts " << (progress * 100) / total << "%" << endl;
 }
 
 void cout_mb_endl(streampos progress, streampos total) {
-  cout << " " << setw(8) << fixed << float(progress) / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
+  out << " " << setw(8) << fixed << float(progress) / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
 bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
@@ -296,62 +303,62 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     || s.show_warps;
   
   if (any_db) {
-    if (!s.silent) cout << " --- LOOKING FOR DATABASES --- " << endl;
+    out << " --- LOOKING FOR DATABASES --- " << endl;
     
     if (s.show_warps) {
-      if (!s.silent) cout << "warps: " << s.show_warps_path << ": " << flush;
+      out << "warps: " << s.show_warps_path << ": " << flush;
       
       warps_db wdb(s.show_warps_path);
       
       try {
         wdb.read(warps);
-        if (!s.silent) cout << warps.size() << " warp(s) OK" << endl;
+        out << warps.size() << " warp(s) OK" << endl;
       } catch(warps_db_exception& e) {
-        if (!s.silent) cout << e.what() << endl;
+        out << e.what() << endl;
       }
     }
     
     if (s.show_players) {
       fs::path show_players_path = world_path / "players";
       
-      if (!s.silent) cout << "players: " << show_players_path << ": " << flush;
+      out << "players: " << show_players_path << ": " << flush;
       
       players_db pdb(show_players_path, s.show_players_set);
       
       try {
         pdb.read(players);
-        if (!s.silent) cout << players.size() << " player(s) OK" << endl;
+        out << players.size() << " player(s) OK" << endl;
       } catch(players_db_exception& e) {
-        if (!s.silent) cout << " " << e.what() << endl;
+        out << " " << e.what() << endl;
       }
     }
 
     if (s.show_signs) {
-      if (!s.silent) cout << "will look for signs in levels";
+      out << "will look for signs in levels";
     }
 
     if (s.show_coordinates) {
-      if (!s.silent) cout << "will store shunk coordinates";
+      out << "will store shunk coordinates";
     }
   }
   
-  if (!s.silent) {
-    cout << " --- SCANNING WORLD DIRECTORY --- " << endl;
-    cout << "world: " << world_path.string() << endl;
+  {
+    out << " --- SCANNING WORLD DIRECTORY --- " << endl;
+    out << "world: " << world_path.string() << endl;
   }
 
   nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
   world_info world(s, world_path, reporter);
   
   if (s.debug) {
-    cout << " --- DEBUG WORLD INFO --- " << endl;
-    cout << "world_info" << endl;
-    cout << "  min_x: " << world.min_x << endl;
-    cout << "  max_x: " << world.max_x << endl;
-    cout << "  min_z: " << world.min_z << endl;
-    cout << "  max_z: " << world.max_z << endl;
-    cout << "  levels: " << world.levels.size() << endl;
-    cout << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
+    out << " --- DEBUG WORLD INFO --- " << endl;
+    out << "world_info" << endl;
+    out << "  min_x: " << world.min_x << endl;
+    out << "  max_x: " << world.max_x << endl;
+    out << "  min_z: " << world.min_z << endl;
+    out << "  max_z: " << world.max_z << endl;
+    out << "  levels: " << world.levels.size() << endl;
+    out << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
   }
   
   boost::shared_ptr<engine_base> engine;
@@ -376,13 +383,13 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   boost::shared_ptr<image_base> all;
   
   if (mem_x >= s.memory_limit) {
-    if (!s.silent) {
-      cout << " --- BUILDING SWAP --- " << endl;
-      cout << "NOTE: A swap file is being built to accommodate high memory usage" << endl;
-      cout << "swap file: " << s.swap_file << endl;
+    {
+      out << " --- BUILDING SWAP --- " << endl;
+      out << "NOTE: A swap file is being built to accommodate high memory usage" << endl;
+      out << "swap file: " << s.swap_file << endl;
 
-      cout << "swap size: " << memory_usage_mb << " MB" << endl;
-      cout << "memory limit: " << memory_limit_mb << endl;
+      out << "swap size: " << memory_usage_mb << " MB" << endl;
+      out << "memory limit: " << memory_limit_mb << endl;
     }
     
     cached_image* image;
@@ -415,10 +422,10 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
       return false;
     }
   } else {
-    if (!s.silent) {
-      cout << " --- ALLOCATING MEMORY --- " << endl;
-      cout << "memory usage: " << memory_usage_mb << " MB" << endl;
-      cout << "memory limit: " << memory_limit_mb << " MB" << endl;
+    {
+      out << " --- ALLOCATING MEMORY --- " << endl;
+      out << "memory usage: " << memory_usage_mb << " MB" << endl;
+      out << "memory limit: " << memory_limit_mb << " MB" << endl;
     }
     
     all.reset(new memory_image(i_w, i_h));
@@ -443,8 +450,8 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   nonstd::limited<unsigned int> c(50, cout_dot<unsigned int>, cout_uintpart_endl);
   c.set_limit(world_size);
   
-  if (!s.silent) {
-    cout << " --- RENDERING --- " << endl;
+  {
+    out << " --- RENDERING --- " << endl;
   }
   
   int cache_hits = 0;
@@ -455,7 +462,7 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
         level l = *lvlit;
         
         fs::path path = world.get_level_path(l);
-        if (s.debug) { cout << path << ": queued OK" << endl; }
+        if (s.debug) { out << path << ": queued OK" << endl; }
         render_job job;
         
         job.engine = engine;
@@ -476,8 +483,8 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     render_result p = renderer.get();
     
     if (p.fatal) {
-      if (!s.silent) {
-        cout << p.path << ": " << p.fatal_why << endl;
+      {
+        out << p.path << ": " << p.fatal_why << endl;
         continue;
       }
     }
@@ -489,7 +496,7 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     ///if (progress_c != NULL) progress_c(i, world_size);
     
     if (p.markers.size() > 0) {
-      if (s.debug) { cout << "Found " << p.markers.size() << " signs"; };
+      if (s.debug) { out << "Found " << p.markers.size() << " signs"; };
       light_markers.insert(light_markers.end(), p.markers.begin(), p.markers.end());
     }
     
@@ -498,15 +505,15 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
       engine->w2pt(p.xPos, p.zPos, x, y);
       all->composite(x, y, p.operations);
     } catch(std::ios::failure& e) {
-      if (!s.silent) std::cout << s.swap_file << ": " << strerror(errno);
+      out << s.swap_file << ": " << strerror(errno);
       return false;
     }
   }
   
   c.done(0);
   
-  if (s.cache_use && !s.silent) {
-    cout << "cache_hits: " << cache_hits << "/" << world_size << endl;
+  if (s.cache_use) {
+    out << "cache_hits: " << cache_hits << "/" << world_size << endl;
   }
   
   //if (progress_c != NULL) progress_c(world_size, world_size);
@@ -621,7 +628,7 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
       hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
     }
     
-    if (!s.silent) cout << "Writing json information: " << s.write_json_path.string() << endl;
+    out << "Writing json information: " << s.write_json_path.string() << endl;
     
     json::object file;
     json::object* world = new json::object;
@@ -646,15 +653,15 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   if (s.use_split) {
     //boost::ptr_map<point2, image_base> parts;
     
-    if (!s.silent) {
-      cout << " --- SAVING MULTIPLE IMAGES --- " << endl;
-      cout << "splitting on " << s.split << "px basis" << endl;
+    {
+      out << " --- SAVING MULTIPLE IMAGES --- " << endl;
+      out << "splitting on " << s.split << "px basis" << endl;
     }
     
     std::map<point2, image_base*> parts = image_split(all.get(), s.split);
     
-    if (!s.silent) {
-      cout << "saving " << parts.size() << " images" << endl;
+    {
+      out << "saving " << parts.size() << " images" << endl;
     }
     
     for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
@@ -673,17 +680,17 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
       opts.comment = C10T_COMMENT;
       
       if (!img->save<png_format>(path, opts)) {
-        if (!s.silent) cout << path << ": Could not save image";
+        out << path << ": Could not save image";
         continue;
       }
       
-      if (!s.silent) cout << path << ": OK" << endl;
+      out << path << ": OK" << endl;
     }
   }
   else {
-    if (!s.silent) {
-      cout << " --- SAVING IMAGE --- " << endl;
-      cout << "path: " << output_path << endl;
+    {
+      out << " --- SAVING IMAGE --- " << endl;
+      out << "path: " << output_path << endl;
     }
     
     png_format::opt_type opts;
@@ -693,23 +700,23 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     opts.comment = C10T_COMMENT;
     
     if (!all->save<png_format>(output_path.string(), opts)) {
-      if (!s.silent) cout << output_path << ": Could not save image";
+      out << output_path << ": Could not save image";
       error << strerror(errno);
       return false;
     }
     
-    if (!s.silent) cout << output_path << ": OK" << endl;
+    out << output_path << ": OK" << endl;
   }
   
   return true;
 }
 
 int do_help() {
-  cout << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
-  cout << "" << endl;
-  cout << "Written by Udoprog et al." << endl;
-  cout << "" << endl;
-  cout << "The following libraries are in use for this program:" << endl
+  out << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
+  out << "" << endl;
+  out << "Written by Udoprog et al." << endl;
+  out << "" << endl;
+  out << "The following libraries are in use for this program:" << endl
        << "  zlib (compression)"                  << endl
        << "    http://www.zlib.net"               << endl
        << "  boost (thread, filesystem)"          << endl
@@ -720,12 +727,12 @@ int do_help() {
        << "    http://www.freetype.org"           << endl
        << "" << endl;
 # if defined(C10T_DISABLE_THREADS)
-  cout << endl;
-  cout << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
+  out << endl;
+  out << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
 # endif
-  cout << endl;
-  cout << "Usage: c10t [options]" << endl;
-  cout << "Options:" << endl
+  out << endl;
+  out << "Usage: c10t [options]" << endl;
+  out << "Options:" << endl
        /*******************************************************************************/
     << "  -w, --world <world>       - use this world directory as input                " << endl
     << "  -o, --output <output>     - use this file as output file for generated png   " << endl
@@ -847,41 +854,41 @@ int do_help() {
     << "  --cache-compress          - Compress the cache files using zlib compression  " << endl
        /*******************************************************************************/
     << endl;
-  cout << endl;
-  cout << "Typical usage:" << endl;
-  cout << "    c10t -w /path/to/world -o /path/to/png.png" << endl;
-  cout << endl;
-  cout << "  Utilize render cache and apply a 256 MB memory restriction (rest will be written to image.dat):" << endl;
-  cout << "    c10t -w /path/to/world -o /path/to/png.png --cache-key='compressed' --cache-compress -M 256 -C image.dat" << endl;
-  cout << endl;
-  cout << "  Print out player positions using the font `example.ttf'" << endl;
-  cout << "    c10t -w /path/to/world -o /path/to/png.png --show-players --ttf-font example.ttf" << endl;
-  cout << endl;
-  cout << "  Split the result into multiple files, using 10 chunks across in each file, the two number formatters will be replaced with the x/z positions of the chunks" << endl;
-  cout << "    c10t -w /path/to/world -o /path/to/png.%d.%d.png --split 10" << endl;
-  cout << endl;
+  out << endl;
+  out << "Typical usage:" << endl;
+  out << "    c10t -w /path/to/world -o /path/to/png.png" << endl;
+  out << endl;
+  out << "  Utilize render cache and apply a 256 MB memory restriction (rest will be written to image.dat):" << endl;
+  out << "    c10t -w /path/to/world -o /path/to/png.png --cache-key='compressed' --cache-compress -M 256 -C image.dat" << endl;
+  out << endl;
+  out << "  Print out player positions using the font `example.ttf'" << endl;
+  out << "    c10t -w /path/to/world -o /path/to/png.png --show-players --ttf-font example.ttf" << endl;
+  out << endl;
+  out << "  Split the result into multiple files, using 10 chunks across in each file, the two number formatters will be replaced with the x/z positions of the chunks" << endl;
+  out << "    c10t -w /path/to/world -o /path/to/png.%d.%d.png --split 10" << endl;
+  out << endl;
   return 0;
 }
 
 int do_version() {
-  cout << "c10t - a cartography tool for minecraft" << endl;
+  out << "c10t - a cartography tool for minecraft" << endl;
 # if defined(C10T_DISABLE_THREADS)
-  cout << endl;
-  cout << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
-  cout << endl;
+  out << endl;
+  out << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
+  out << endl;
 # endif
-  cout << "version " << C10T_VERSION << endl;
-  cout << "by: " << C10T_CONTACT << endl;
-  cout << "site: " << C10T_SITE << endl;
-  cout << endl;
+  out << "version " << C10T_VERSION << endl;
+  out << "by: " << C10T_CONTACT << endl;
+  out << "site: " << C10T_SITE << endl;
+  out << endl;
   return 0;
 }
 
 int do_colors() {
-  cout << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
+  out << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
-    cout << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i] << endl;
+    out << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i] << endl;
   }
   
   return 0;
@@ -1031,7 +1038,7 @@ bool do_write_palette(settings_t& s, string& path) {
     return false;
   }
   
-  if (!s.silent) cout << "Sucessfully wrote palette to " << path << endl;
+  out << "Sucessfully wrote palette to " << path << endl;
   
   return true;
 }
@@ -1087,13 +1094,15 @@ bool do_read_palette(settings_t& s, string& path) {
     }
   }
   
-  if (!s.silent) cout << "Sucessfully read palette from " << path << endl;
+  out << "Sucessfully read palette from " << path << endl;
   return true;
 }
 
 int main(int argc, char *argv[]){
-  cout.precision(2);
-  cout.setf(ios_base::fixed);
+  nullstream nil;
+  
+  out.precision(2);
+  out.setf(ios_base::fixed);
   
   mc::initialize_constants();
 
@@ -1363,9 +1372,10 @@ int main(int argc, char *argv[]){
       break;
     case 'w': world_path = fs::system_complete(fs::path(optarg)); break;
     case 'o': output_path = fs::system_complete(fs::path(optarg)); break;
-    case 's': s.silent = true; break;
+    case 's': 
+      out.rdbuf(nil.rdbuf());
+      break;
     case 'x':
-      s.silent = true;
       s.binary = true;
       error << "Binary output is not supported in this version of c10t";
       goto exit_error;
@@ -1481,17 +1491,17 @@ int main(int argc, char *argv[]){
     s.cache_dir = s.cache_dir / s.cache_key;
     
     if (!fs::is_directory(s.cache_dir)) {
-      if (!s.silent) cout << "Creating directory for caching: " << s.cache_dir.string() << endl;
+      out << "Creating directory for caching: " << s.cache_dir.string() << endl;
       fs::create_directory(s.cache_dir);
     }
     
-    if (!s.silent) {
-      cout << "Caching to directory: " << s.cache_dir << std::endl;
-      cout << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")  << std::endl;
+    {
+      out << "Caching to directory: " << s.cache_dir << std::endl;
+      out << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")  << std::endl;
     }
   }
   
-  if (!s.silent) cout << "Threads: " << s.threads << std::endl;
+  out << "Threads: " << s.threads << std::endl;
   
   if (!palette_write_path.empty()) {
     if (!do_write_palette(s, palette_write_path)) {
@@ -1544,24 +1554,24 @@ int main(int argc, char *argv[]){
     goto exit_error;
   }
   
-  if (!s.silent && !s.binary && hints.size() > 0) {
-    cout << endl;
+  if (!s.binary && hints.size() > 0) {
+    out << endl;
     
     int i = 1;
     for (vector<std::string>::iterator it = hints.begin(); it != hints.end(); it++) {
-      cout << "Hint " << i++ << ": " << *it << endl;
+      out << "Hint " << i++ << ": " << *it << endl;
     }
     
-    cout << endl;
+    out << endl;
   }
   
   if (s.binary) {
     cout_end();
   }
   else {
-    if (!s.silent) cout << argv[0] << ": all done!" << endl;
+    out << argv[0] << ": all done!" << endl;
   }
-
+  
   mc::deinitialize_constants();
   return 0;
 
@@ -1570,13 +1580,13 @@ exit_error:
     cout_error(error.str());
   }
   else {
-    if (!s.silent) {
-      cout << "Type `-h' for help" << endl;
+    {
+      out << "Type `-h' for help" << endl;
     }
     
-    if (!s.silent) cout << argv[0] << ": " << error.str() << endl;
+    out << argv[0] << ": " << error.str() << endl;
   }
-
+  
   mc::deinitialize_constants();
   return 1;
 }

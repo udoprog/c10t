@@ -60,7 +60,7 @@ bool compare_levels(level first, level second)
       mc::utils::path_to_level_coord(next, coord);
     } catch(mc::utils::invalid_argument& e) {
       if (!s.silent && s.debug) {
-        std::cout << next << ": " << e.what() << std::endl;
+        std::cerr << next << ": " << e.what() << std::endl;
       }
       
       continue;
@@ -79,7 +79,7 @@ bool compare_levels(level first, level second)
     
     if (out_of_range) {
       if (!s.silent && s.debug) {
-        std::cout << next << ": position out of limit (" << coord.x << "," << coord.z << ")" << std::endl;
+        std::cerr << next << ": position out of limit (" << coord.x << "," << coord.z << ")" << std::endl;
       }
       
       continue;

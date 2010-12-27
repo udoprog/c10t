@@ -108,9 +108,11 @@ inline void apply_shading(settings_t& s, int bl, int sl, int hm, int y, color &c
     c.r = y*2;
     c.a = 0xff;
   }
-  
-  if (s.striped_terrain && y % 2 == 0) {
+  else if (s.striped_terrain && y % 2 == 0) {
     c.darken(0xf);
+  }
+  else {
+    c.darken((mc::MapY - y));
   }
 }
 

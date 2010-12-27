@@ -42,7 +42,7 @@
 #include "marker.hpp"
 #include "json.hpp"
 #include "warps.hpp"
-#include "mcutils.hpp"
+#include "mc/utils.hpp"
 
 #include "engine/engine_base.hpp"
 #include "engine/topdown_engine.hpp"
@@ -170,7 +170,7 @@ public:
     p.zPos = job.zPos;
     p.cache_hit = false;
     
-    cache_file cache(mcutils::level_dir(s.cache_dir, job.xReal, job.zReal), p.path, s.cache_compress);
+    cache_file cache(mc::utils::level_dir(s.cache_dir, job.xReal, job.zReal), p.path, s.cache_compress);
     
     p.operations.reset(new image_operations);
     

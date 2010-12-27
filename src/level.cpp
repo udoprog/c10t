@@ -7,7 +7,6 @@
 #include "level.hpp"
 #include "blocks.hpp"
 #include "2d/cube.hpp"
-#include "common.hpp"
 #include "algorithm.hpp"
 
 #include <boost/algorithm/string.hpp>

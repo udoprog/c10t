@@ -17,10 +17,8 @@
 
 #include "fileutils.hpp"
 #include "global.hpp"
-#include "common.hpp"
 #include "level.hpp"
 #include "algorithm.hpp"
-#include "mcutils.hpp"
 
 namespace fs = boost::filesystem;
 
@@ -59,7 +57,7 @@ public:
   int chunk_x, chunk_y;
   
   world_info(settings_t& s, fs::path world_path, nonstd::reporting<unsigned int>& c);
-
+  
   /**
    * Sugar function, uses mcutils::level_path with world_path as base
    */

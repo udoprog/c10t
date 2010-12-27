@@ -2,6 +2,8 @@
 // (C) Copyright 2010 John-John Tedro et al.
 #include "world.hpp"
 
+#include <mc/utils.hpp>
+
 void transform_world_xz(int& x, int& z, int rotation)
 {
   int t = x;
@@ -52,11 +54,11 @@ bool compare_levels(level first, level second)
   while (broadlisting.has_next(directory_filter)) {
     const fs::path next = broadlisting.next();
     
-    mcutils::level_coord coord;
+    mc::utils::level_coord coord;
     
     try {
-      mcutils::path_to_level_coord(next, coord);
-    } catch(invalid_argument& e) {
+      mc::utils::path_to_level_coord(next, coord);
+    } catch(mc::utils::invalid_argument& e) {
       if (!s.silent && s.debug) {
         std::cout << next << ": " << e.what() << std::endl;
       }
@@ -114,78 +116,5 @@ bool compare_levels(level first, level second)
 }
 
 fs::path world_info::get_level_path(level &l) {
-  return mcutils::level_path(world_path, l.xReal, l.zReal, "c", "dat");
-}
-
-// this method is so complex, broken, whatever...
-// I'm just keeping it as a reminder of how not to do this.
-std::vector<world_info> world_info::split(int chunk_size)
-{
-  typedef boost::ptr_map<world_pos, std::vector<level> > world_levels_type;
-
-  world_levels_type world_levels;
-  
-  for (std::list<level>::iterator it = levels.begin(); it != levels.end(); it++) {
-    level l = *it;
-    
-    div_t d_x = div(l.xPos, chunk_size);
-    div_t d_z = div(l.zPos, chunk_size);
-
-    if (d_x.rem < 0) { d_x.rem = chunk_size + d_x.rem, --d_x.quot; }
-    if (d_z.rem < 0) { d_z.rem = chunk_size + d_z.rem, --d_z.quot; }
-
-    world_pos pos;
-    pos.x = d_x.quot;
-    pos.z = d_z.quot;
-    
-    std::vector<level>* levels;
-    
-    world_levels_type::iterator it = world_levels.find(pos);
-    
-    if (it == world_levels.end()) {
-      levels = new std::vector<level>();
-      world_levels.insert(pos, levels);
-    }
-    else {
-      levels = (*it).second;
-    }
-    
-    levels->push_back(l);
-  }
-
-  std::vector<world_info> worlds;
-  
-  /*
-  for (world_levels_type::iterator it = world_levels.begin(); it != world_levels.end(); it++) {
-    world_pos pos = (*it).first;
-    std::vector<level>* levels = (*it).second;
-    
-    world_info w;
-
-    w.min_z = 10000;
-    w.max_z = -10000;
-    w.min_x = 10000;
-    w.max_x = -10000;
-    w.world_path = world_path;
-    
-    w.chunk_x = pos.x;
-    w.chunk_y = pos.z;
-    
-    std::vector<level>::iterator it = levels->begin();
-
-    w.min_x = (pos.x) * chunk_size;
-    w.max_x = (pos.x + 1) * chunk_size;
-    w.min_z = (pos.z) * chunk_size;
-    w.max_z = (pos.z + 1) * chunk_size;
-    w.min_xp = w.min_x * mc::MapX;
-    w.min_zp = w.min_z * mc::MapZ;
-    
-    w.levels.insert(w.levels.begin(), levels->begin(), levels->end());
-    
-    w.max_x -= 1;
-    w.max_z -= 1;
-  }
-  */
-  
-  return worlds;
+  return mc::utils::level_path(world_path, l.xReal, l.zReal, "c", "dat");
 }

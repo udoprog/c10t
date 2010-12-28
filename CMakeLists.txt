@@ -4,7 +4,10 @@ project(c10t)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
 
 # attempt to find out which revision we are building from
-set(C10T_VERSION "SNAPSHOT" CACHE STRING "C10t Version String")
+execute_process(COMMAND git rev-list HEAD -n1 --abbrev-commit
+				OUTPUT_STRIP_TRAILING_WHITESPACE
+				OUTPUT_VARIABLE C10T_REVISION)
+set(C10T_VERSION "git ${C10T_REVISION}")
 set(C10T_SITE "http://github.com/udoprog/c10t")
 set(C10T_CONTACT "Udoprog <johnjohn.tedro@gmail.com> et. al (see README)")
 set(C10T_COMMENT "Created using c10t (http://github.com/udoprog/c10t)")

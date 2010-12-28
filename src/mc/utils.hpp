@@ -48,7 +48,7 @@ namespace mc {
      * Indicate that no coordinates are viable by throwing invalid_argument
      **/
     void path_to_level_coord(const fs::path path, level_coord& coord);
-  };
-};
+  }
+}
 
 #endif /* __MCUTILS_HPP__ */

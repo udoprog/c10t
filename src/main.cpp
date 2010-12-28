@@ -874,13 +874,12 @@ int do_version() {
   out << "c10t - a cartography tool for minecraft" << endl;
 # if defined(C10T_DISABLE_THREADS)
   out << endl;
-  out << "C10T_DISABLE_THREADS: Threads has been disabled for this build" << endl;
+  out << "C10T_DISABLE_THREADS: Threads have been disabled for this build" << endl;
   out << endl;
 # endif
-  out << "version " << C10T_VERSION << endl;
+  out << "version: " << C10T_VERSION << ", built on " << __DATE__ << endl;
   out << "by: " << C10T_CONTACT << endl;
   out << "site: " << C10T_SITE << endl;
-  out << endl;
   return 0;
 }
 

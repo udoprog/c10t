@@ -47,7 +47,9 @@ Building from Source (using cmake)
 
   2. Run:
 
-    $ cmake .
+    $ mkdir build
+    $ cd build
+    $ cmake ..
     $ make c10t
 
  * CMake should generate a file called src/config.h from the input file src/config.h.cmake

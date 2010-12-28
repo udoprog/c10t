@@ -16,8 +16,9 @@ namespace mc {
   }
   
   bool file_filter(const std::string& name) {
-    if (name.length() <= 4) return false;
-    if (name.compare(name.length() - 4, 4, ".dat") == 0) return false;
+    if (name.length() < 8) return false;
+    if (name.compare(name.length() - 4, 4, ".dat") != 0) return false;
+    if (name.compare(0, 2, "c.") != 0) return false;
     return true;
   }
 

@@ -54,7 +54,7 @@ public:
           directories.push(itr->path());
         }
         else if (fs::is_regular_file(itr->status())) {
-          if (!file_filter(fs::basename(itr->path()))) {
+          if (!file_filter(itr->path().filename())) {
             continue;
           }
           

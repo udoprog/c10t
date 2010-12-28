@@ -5,7 +5,7 @@
 
 class oblique_engine : public engine_base {
   public:
-    oblique_engine(settings_t& s, world_info& world) : engine_base(s, world) {}
+    oblique_engine(settings_t& s, mc::world& world) : engine_base(s, world) {}
     void render(mc::level& level, boost::shared_ptr<image_operations> operations);
     
     void get_boundaries(pos_t& width, pos_t& height) {

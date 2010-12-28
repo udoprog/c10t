@@ -6,17 +6,19 @@
 #include "2d/cube.hpp"
 #include "mc/level.hpp"
 #include "image/image_operations.hpp"
-#include "world.hpp"
+#include "mc/world.hpp"
+
+#include "global.hpp"
 
 class engine_base {
   protected:
     settings_t& s;
     const Cube part_c, pos_c, mpos_c;
-    const world_info& world;
+    const mc::world& world;
   public:
     typedef uint64_t pos_t;
     
-    engine_base(settings_t& s, world_info& world) :
+    engine_base(settings_t& s, mc::world& world) :
       s(s),
       part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1),
       pos_c(world.diff_x * mc::MapX, mc::MapY, world.diff_z * mc::MapZ),

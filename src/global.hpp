@@ -75,6 +75,7 @@ struct settings_t {
   bool cache_use;
   bool write_json;
   fs::path write_json_path;
+  bool no_log;
   
   settings_t() {
     this->excludes = new bool[mc::MaterialCount];
@@ -136,6 +137,7 @@ struct settings_t {
     this->cache_dir = "cache";
     this->cache_compress = false;
     this->write_json = false;
+    this->no_log = false;
   }
   
   ~settings_t() {

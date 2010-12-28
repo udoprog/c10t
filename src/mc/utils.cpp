@@ -1,3 +1,5 @@
+// Distributed under the BSD License, see accompanying LICENSE.txt
+// (C) Copyright 2010 John-John Tedro et al.
 #include "mc/utils.hpp"
 
 #include <sstream>
@@ -69,9 +71,9 @@ namespace mc {
       return level_dir(base, x, z) / ((prefix + ".") + b36encode(x) + "." + b36encode(z) + ("." + suffix));
     }
 
-    void path_to_level_coord(const fs::path path, level_coord& coord) {
+    level_coord path_to_level_coord(const fs::path path) {
       if (!fs::is_regular_file(path)) {
-        throw invalid_argument("is not a regular file");
+        throw invalid_argument("not a regular file");
       }
       
       string extension = fs::extension(path);
@@ -84,8 +86,7 @@ namespace mc {
       }
       
       try {
-        coord.x = b36decode(parts.at(1));
-        coord.z = b36decode(parts.at(2));
+        return level_coord(b36decode(parts.at(1)), b36decode(parts.at(2)));
       } catch(const bad_cast& e) {
         throw invalid_argument("could not decode coordinates from file name");
       }

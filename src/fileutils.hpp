@@ -22,7 +22,7 @@ public:
       directories.push(path);
   }
   
-  bool has_next(bool (filter)(const std::string&)) {
+  bool has_next(bool (filter)(const std::string&), bool (file_filter)(const std::string&)) {
     if (!files.empty()) {
       return true;
     }
@@ -47,13 +47,17 @@ public:
             ++itr )
       {
         if (fs::is_directory(itr->status())) {
-          if (filter(fs::basename(itr->path()))) {
+          if (!filter(fs::basename(itr->path()))) {
             continue;
           }
           
           directories.push(itr->path());
         }
         else if (fs::is_regular_file(itr->status())) {
+          if (!file_filter(fs::basename(itr->path()))) {
+            continue;
+          }
+          
           files.push(itr->path());
         }
       }

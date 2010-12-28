@@ -5,7 +5,7 @@
 
 class isometric_engine : public engine_base {
   public:
-    isometric_engine(settings_t& s, world_info& world) : engine_base(s, world) {}
+    isometric_engine(settings_t& s, mc::world& world) : engine_base(s, world) {}
     
     void render(mc::level& level, boost::shared_ptr<image_operations> operations);
     

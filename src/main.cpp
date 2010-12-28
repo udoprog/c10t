@@ -34,12 +34,12 @@
 #include "global.hpp"
 #include "cache.hpp"
 #include "fileutils.hpp"
-#include "world.hpp"
 #include "players.hpp"
 #include "text.hpp"
 #include "json.hpp"
 #include "warps.hpp"
 
+#include "mc/world.hpp"
 #include "mc/blocks.hpp"
 #include "mc/utils.hpp"
 
@@ -55,6 +55,7 @@ struct nullstream: std::ostream {
 
 nullstream nil;
 std::ostream out(std::cout.rdbuf());
+std::ofstream out_log;
 
 struct marker {
 public:
@@ -65,7 +66,20 @@ public:
   
   marker(std::string text, std::string type, text::font_face font, int x, int y, int z) :
       text(text), type(type), font(font), x(x), y(y), z(z)
+  {  }
+};
+
+struct rotated_level_info {
+  mc::level_info level;
+  mc::utils::level_coord coord;
+  
+  rotated_level_info(mc::level_info level, mc::utils::level_coord coord)
+    : level(level), coord(coord)
   {
+  }
+  
+  bool operator<(const rotated_level_info& other) const {
+    return coord < other.coord;
   }
 };
 
@@ -239,12 +253,11 @@ inline void write_markers(settings_t& s, json::array* array, boost::shared_ptr<e
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
     
-    int p_x = m.x, p_y = m.y, p_z = m.z;
-    transform_world_xz(p_x, p_z, s.rotation);
+    mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
     image_base::pos_t x, y;
     
-    engine->wp2pt(p_x, p_y, p_z, x, y);
+    engine->wp2pt(coord.get_x(), m.y, coord.get_z(), x, y);
 
     json::object* o = new json::object;
     
@@ -274,12 +287,11 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
     
-    int p_x = m.x, p_y = m.y, p_z = m.z;
-    transform_world_xz(p_x, p_z, s.rotation);
+    mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
     image_base::pos_t x, y;
     
-    engine->wp2pt(p_x, p_y, p_z, x, y);
+    engine->wp2pt(coord.get_x(), m.y, coord.get_z(), x, y);
     
     m.font.draw(*all, m.text, x + 5, y);
     //all->safe_composite(x - 3, y - 3, positionmark);
@@ -304,10 +316,13 @@ void cout_mb_endl(streampos progress, streampos total) {
   out << " " << setw(8) << fixed << float(progress) / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
-bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
+bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
+  out << endl << "Generating PNG Map" << endl << endl;
+  
   std::vector<player> players;
   std::vector<warp> warps;
-
+  list<rotated_level_info> levels;
+  
   bool any_db =
     s.show_players
     || s.show_signs
@@ -358,18 +373,62 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     out << " --- SCANNING WORLD DIRECTORY --- " << endl;
     out << "world: " << world_path.string() << endl;
   }
-
-  nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
-  world_info world(s, world_path, reporter);
+  
+  mc::world world(world_path);
+  
+  {
+    nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
+    mc::chunk_iterator iterator = world.get_iterator();
+    
+    while (iterator.has_next()) {
+      reporter.add(1);
+      
+      try {
+        mc::level_info level = iterator.next();
+        
+        const mc::utils::level_coord coord = level.get_coord();
+        
+        uint64_t x2 = coord.get_x() * coord.get_x();
+        uint64_t z2 = coord.get_z() * coord.get_z();
+        uint64_t r2 = s.max_radius * s.max_radius;
+        
+        bool out_of_range = 
+            coord.get_x() < s.min_x
+            || coord.get_x() > s.max_x
+            || coord.get_z() < s.min_z
+            || coord.get_z() > s.max_z
+            || x2 + z2 >= r2;
+        
+        if (out_of_range) {
+          if (!s.silent && s.debug) {
+            out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          }
+          
+          continue;
+        }
+        
+        rotated_level_info rlevel =
+          rotated_level_info(level, coord.rotate(s.rotation));
+        
+        levels.push_back(rlevel);
+        world.update(rlevel.coord);
+      } catch(mc::bad_level& e) {
+        out_log << e.where() << ": " << e.what() << std::endl;
+      }
+    }
+    
+    reporter.done(0);
+    levels.sort();
+  }
   
   if (s.debug) {
     out << " --- DEBUG WORLD INFO --- " << endl;
-    out << "world_info" << endl;
+    out << "mc::world" << endl;
     out << "  min_x: " << world.min_x << endl;
     out << "  max_x: " << world.max_x << endl;
     out << "  min_z: " << world.min_z << endl;
     out << "  max_z: " << world.max_z << endl;
-    out << "  levels: " << world.levels.size() << endl;
+    out << "  levels: " << levels.size() << endl;
     out << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
   }
   
@@ -443,12 +502,12 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     all.reset(new memory_image(i_w, i_h));
   }
   
-  unsigned int world_size = world.levels.size();
+  unsigned int world_size = levels.size();
   
   renderer renderer(s, s.threads, world_size);
   
   std::vector<mc::marker> signs;
-  std::list<level>::iterator lvlit = world.levels.begin();
+  std::list<rotated_level_info>::iterator lvlit = levels.begin();
   
   renderer.start();
   
@@ -470,21 +529,23 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   for (i = 0; i < world_size; i++) {
     if (queued <= filllimit) {
-      for (; queued < prebuffer && lvlit != world.levels.end(); lvlit++) {
-        level l = *lvlit;
+      for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
+        rotated_level_info rl = *lvlit;
+        fs::path path = rl.level.get_path();
         
-        fs::path path = world.get_level_path(l);
-        if (s.debug) { out << path << ": queued OK" << endl; }
         render_job job;
         
         job.engine = engine;
-        job.path = path;
-        job.xPos = l.xPos;
-        job.zPos = l.zPos;
-        job.xReal= l.xReal;
-        job.zReal = l.zReal;
+        job.path = rl.level.get_path();
+        job.xPos = rl.coord.get_x();
+        job.zPos = rl.coord.get_z();
+        job.xReal = rl.level.get_x();
+        job.zReal = rl.level.get_z();
         
         renderer.give(job);
+        
+        if (s.debug) { out << rl.level.get_path() << ": queued OK" << endl; }
+        
         queued++;
       }
     }
@@ -593,17 +654,21 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
         coordinate_font.set_color(s.coordinate_color);
       }
       
-      for (lvlit = world.levels.begin(); lvlit != world.levels.end(); lvlit++) {
-        level l = *lvlit;
-        if (l.zPos - 4 < world.min_z) continue;
-        if (l.zPos + 4 > world.max_z) continue;
-        if (l.xPos - 4 < world.min_x) continue;
-        if (l.xPos + 4 > world.max_x) continue;
-        if (l.zPos % 10 != 0) continue;
-        if (l.xPos % 10 != 0) continue;
+      for (lvlit = levels.begin(); lvlit != levels.end(); lvlit++) {
+        rotated_level_info rl = *lvlit;
+        mc::utils::level_coord c = rl.coord;
+        mc::level_info l = rl.level;
+        
+        if (c.get_z() - 4 < world.min_z) continue;
+        if (c.get_z() + 4 > world.max_z) continue;
+        if (c.get_x() - 4 < world.min_x) continue;
+        if (c.get_x() + 4 > world.max_x) continue;
+        if (c.get_z() % 10 != 0) continue;
+        if (c.get_x() % 10 != 0) continue;
         std::stringstream ss;
-        ss << "(" << l.xPos * mc::MapX << ", " << l.zPos * mc::MapZ << ")";
-        marker *m = new marker(ss.str(), "coord", coordinate_font, l.xPos * mc::MapX, 0, l.zPos * mc::MapZ);
+        
+        ss << "(" << l.get_x() * mc::MapX << ", " << l.get_z() * mc::MapZ << ")";
+        marker *m = new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ);
         markers.push_back(m);
       }
     }
@@ -723,6 +788,136 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   return true;
 }
 
+bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_path)
+{
+  out << endl << "Generating Statistics File" << endl << endl;
+  
+  std::vector<player> players;
+  mc::world world(world_path);
+  
+  long statistics[mc::MaterialCount];
+
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    statistics[i] = 0;
+  }
+    
+  bool any_db =
+    s.show_players
+    || s.show_signs
+    || s.show_coordinates
+    || s.show_warps;
+  
+  if (any_db) {
+    out << " --- LOOKING FOR DATABASES --- " << endl;
+    
+    if (s.show_players) {
+      fs::path show_players_path = world_path / "players";
+      
+      out << "players: " << show_players_path << ": " << flush;
+      
+      players_db pdb(show_players_path, s.show_players_set);
+      
+      try {
+        pdb.read(players);
+        out << players.size() << " player(s) OK" << endl;
+      } catch(players_db_exception& e) {
+        out << " " << e.what() << endl;
+      }
+    }
+  }
+  
+  {
+    nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
+    mc::chunk_iterator iterator = world.get_iterator();
+    
+    while (iterator.has_next()) {
+      reporter.add(1);
+        
+      try {
+        mc::level_info level = iterator.next();
+          
+        const mc::utils::level_coord coord = level.get_coord();
+          
+        uint64_t x2 = coord.get_x() * coord.get_x();
+        uint64_t z2 = coord.get_z() * coord.get_z();
+        uint64_t r2 = s.max_radius * s.max_radius;
+          
+        bool out_of_range = 
+              coord.get_x() < s.min_x
+              || coord.get_x() > s.max_x
+              || coord.get_z() < s.min_z
+              || coord.get_z() > s.max_z
+              || x2 + z2 >= r2;
+          
+        if (out_of_range) {
+          if (!s.silent && s.debug) {
+            out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          }
+          continue;
+        }
+        
+        mc::level level_data(level.get_path());
+        
+        try {
+          level_data.read();
+        } catch(mc::invalid_file& e) {
+          out_log << level.get_path() << ": " << e.what();
+          continue;
+        }
+
+        boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
+        
+        for (int i = 0; i < blocks->length; i++) {
+          nbt::Byte block = blocks->values[i];
+          statistics[block] += 1;
+        }
+        
+        world.update(level.get_coord());
+      } catch(mc::bad_level& e) {
+        out_log << e.where() << ": " << e.what() << std::endl;
+      }
+    }
+    
+    reporter.done(0);
+  }
+
+  ofstream stats(output_path.string().c_str());
+
+  stats << "[WORLD]" << endl; 
+  
+  stats << "min_x " << world.min_x << endl;
+  stats << "max_x " << world.max_x << endl;
+  stats << "min_z " << world.min_z << endl;
+  stats << "max_z " << world.max_z << endl;
+
+  if (s.show_players) {
+    stats << "[PLAYERS]" << endl;
+    
+    std::vector<player>::iterator plit = players.begin();
+    
+    for (; plit != players.end(); plit++) { 
+      player p = *plit;
+      stats << p.name << " " << p.xPos << " " << p.yPos << " " << p.zPos << endl;
+    }
+  }
+  
+  stats << "[BLOCKS]" << endl; 
+  
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    stats << setw(3) << i << " " << setw(24) << mc::MaterialName[i] << " " << statistics[i] << endl;
+  }
+  
+  stats.close();
+  
+  if (stats.fail()) {
+    error << "failed to write statistics to " << output_path;
+    return false;
+  }
+
+  out << "statistics written to " << output_path;
+  return true;
+}
+
 int do_help() {
   out << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
   out << "" << endl;
@@ -748,6 +943,11 @@ int do_help() {
        /*******************************************************************************/
     << "  -w, --world <world>       - use this world directory as input                " << endl
     << "  -o, --output <output>     - use this file as output file for generated png   " << endl
+    << "  -S, --statistics <output> - create a statistics file of the entire world     " << endl
+    << endl
+    << "  --log [file]              - Specify another location for logging warnings,   " << endl
+    << "                              defaults to `c10t.log'                           " << endl
+    << "  --no-log                  - Suppress logging of warnings                     " << endl
     << endl
     << "  -s, --silent              - execute silently, printing nothing except errors " << endl
     << "  -h, --help                - display this help text                           " << endl
@@ -755,40 +955,47 @@ int do_help() {
     << "  -D, --debug               - display debug information while executing        " << endl
     << "  -l, --list-colors         - list all available colors and block types        " << endl
     << endl
-    << "  -t, --top <int>           - splice from the top, must be less than 128       " << endl
-    << "  -b, --bottom <int>        - splice from the bottom, must be greater than or  " << endl
+    << "Rendering options:" << endl
+    << "  -q, --oblique             - Oblique rendering                                " << endl
+    << "  -y, --oblique-angle       - Oblique angle rendering                          " << endl
+    << "  -z, --isometric           - Isometric rendering                              " << endl
+    << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW   " << endl
+    << endl
+    << "  -n, --night               - Night-time rendering mode                        " << endl
+    << "  -H, --heightmap           - Heightmap rendering mode (black to white)        " << endl
+    << endl
+    << "Filtering options:" << endl
+    << "  -e, --exclude <blockid>   - Exclude block-id from render (multiple occurences" << endl
+    << "                              is possible)                                     " << endl
+    << "  -i, --include <blockid>   - Include only this block-id in render (multiple   " << endl
+    << "                              occurences is possible)                          " << endl
+    << "  -a, --hide-all            - Show no blocks except those specified with '-i'  " << endl
+    << "  -c, --cave-mode           - Cave mode - top down until solid block found,    " << endl
+    << "                              then render bottom outlines only                 " << endl
+    << "      --hell-mode           - Hell mode - top down until non-solid block found," << endl
+    << "                              then render normally (a.k.a. nether)             " << endl
+    << endl
+    << "  -t, --top <int>           - Splice from the top, must be less than 128       " << endl
+    << "  -b, --bottom <int>        - Splice from the bottom, must be greater than or  " << endl
     << "                              equal to zero.                                   " << endl
-    << "  -L, --limits <int-list>   - limit render to certain area. int-list form:     " << endl
+    << "  -L, --limits <int-list>   - Limit render to certain area. int-list form:     " << endl
     << "                              North,South,East,West, e.g.                      " << endl
     << "                              -L 0,100,-10,20 limiting between 0 and 100 in the" << endl
     << "                              north-south direction and between -10 and 20 in  " << endl
     << "                              the east-west direction.                         " << endl
     << "                              Note: South and West are the positive directions." << endl
-    << "  -R, --radius <int>        - limit render to a specific radius, useful when   " << endl
+    << "  -R, --radius <int>        - Limit render to a specific radius, useful when   " << endl
     << "                              your map is absurdly large and you want a 'fast' " << endl
-    << "                              limit option.                                    " << endl
+    << "                              limiting option.                                 " << endl
     << endl
-    << "Filtering options:" << endl
-    << "  -e, --exclude <blockid>   - exclude block-id from render (multiple occurences" << endl
-    << "                              is possible)                                     " << endl
-    << "  -i, --include <blockid>   - include only this block-id in render (multiple   " << endl
-    << "                              occurences is possible)                          " << endl
-    << "  -a, --hide-all            - show no blocks except those specified with '-i'  " << endl
-    << "  -c, --cave-mode           - cave mode - top down until solid block found,    " << endl
-    << "                              then render bottom outlines only                 " << endl
-    << "      --hell-mode           - hell mode - top down until non-solid block found," << endl
-    << "                              then render normally (a.k.a. nether)             " << endl
-    << "  -n, --night               - night-time rendering mode                        " << endl
-    << "  -H, --heightmap           - heightmap rendering mode                         " << endl
+    << "  -N, --no-check            - Ignore missing <world>/level.dat                 " << endl
+       /*******************************************************************************/
     << endl
-    << "  -N, --no-check            - ignore missing <world>/level.dat                 " << endl
-    << endl
-    << "Rendering options:" << endl
-    << "  -q, --oblique             - oblique rendering                                " << endl
-    << "  -y, --oblique-angle       - oblique angle rendering                          " << endl
-    << "  -z, --isometric           - Isometric rendering                              " << endl
-    << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW   " << endl
-    << endl
+    << "Performance options:" << endl
+    << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
+    << "                              file when necessary                              " << endl
+    << "  -C, --swap-file <file>    - Swap file to use when memory limit `-M' is       " << endl
+    << "                              reached, defaults to `swap.bin'                  " << endl
     << "  -m, --threads <int>       - Specify the amount of threads to use, for maximum" << endl
     << "                              efficency, this should match the amount of cores " << endl
     << "                              on your machine                                  " << endl
@@ -801,12 +1008,16 @@ int do_help() {
     << "                              `<int>,<int>,<int>[,<int>]'. The side color will " << endl
     << "                              be a darkened variant of the base                " << endl
     << "                              example: `-B Grass=0,255,0,120'                  " << endl
-    << "  -S <set>                  - Specify the side color for a specific block id   " << endl
+    << "                              NOTE: Use only for experimentation, for a more   " << endl
+    << "                                    permanent solution, use color palette files" << endl
+    // this has been commented out since it is planned to be integrated for '-B' as a token scanning
+    /*<< "  --side <set>              - Specify the side color for a specific block id   " << endl
     << "                              this uses the same format as '-B' only the color " << endl
-    << "                              is applied to the side of the block              " << endl
+    << "                              is applied to the side of the block              " << endl*/
     << "  -p, --split <px>          - Split the render into parts which must be <px>   " << endl
     << "                              pixels squared. `output' name must contain two   " << endl
     << "                              format specifiers `%d' for x and y position.     " << endl
+       /*******************************************************************************/
     << endl
     << "Other Options:" << endl
     << "  -x, --binary              - Will output progress information in binary form, " << endl
@@ -823,10 +1034,6 @@ int do_help() {
     << "  --show-warps=<file>       - Will draw out warp positions from the specified  " << endl
     << "                              warps.txt file, as used by hey0's mod            " << endl
     << "  --show-coordinates        - Will draw out each chunks expected coordinates   " << endl
-    << "  -M, --memory-limit <MB>   - Will limit the memory usage caching operations to" << endl
-    << "                              file when necessary                              " << endl
-    << "  -C, --swap-file <file>    - Swap file to use when memory limit `-M' is       " << endl
-    << "                              reached                                          " << endl
     << "  -P <file>                 - use <file> as palette, each line should take the " << endl
     << "                              form: <block-id> ' ' <color> ' ' <color>         " << endl
     << "  -W <file>                 - write the default color palette to <file>, this  " << endl
@@ -839,6 +1046,7 @@ int do_help() {
     << "                              which helps to distinguish heights               " << endl
     << "  --write-json <file>       - Write markers to <file> in JSON format instead of" << endl
     << "                              printing them on map                             " << endl
+       /*******************************************************************************/
     << endl
     << "Font Options:" << endl
     << "  --ttf-path <font>         - Use the following ttf file when drawing text.    " << endl
@@ -1121,6 +1329,8 @@ int main(int argc, char *argv[]){
   
   fs::path world_path;
   fs::path output_path = fs::system_complete(fs::path("out.png"));
+  fs::path statistics_path = fs::system_complete(fs::path("statistics.txt"));
+  fs::path output_log = fs::system_complete(fs::path("c10t.log"));
   string palette_write_path, palette_read_path;
   
   int c, blockid;
@@ -1182,12 +1392,17 @@ int main(int argc, char *argv[]){
      {"warp-color",       required_argument, &flag, 19},
      {"prebuffer",       required_argument, &flag, 20},
      {"hell-mode",        no_argument, &flag, 22},
+     {"statistics",        optional_argument, 0, 'S'},
+     {"log",            required_argument, &flag, 24},
+     {"no-log",         no_argument, &flag, 25},
      {0, 0, 0, 0}
   };
 
   bool exclude_all = false;
   bool excludes[mc::MaterialCount];
   bool includes[mc::MaterialCount];
+  bool do_generate_map = false;
+  bool do_generate_statistics = false;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
     excludes[i] = false;
@@ -1338,6 +1553,12 @@ int main(int argc, char *argv[]){
       case 22:
         s.hellmode = true;
         break;
+      case 24:
+        output_log = fs::system_complete(fs::path(optarg));
+        break;
+      case 25:
+        s.no_log = true;
+        break;
       }
       
       continue;
@@ -1382,7 +1603,10 @@ int main(int argc, char *argv[]){
       includes[blockid] = true;
       break;
     case 'w': world_path = fs::system_complete(fs::path(optarg)); break;
-    case 'o': output_path = fs::system_complete(fs::path(optarg)); break;
+    case 'o':
+      do_generate_map = true;
+      output_path = fs::system_complete(fs::path(optarg));
+      break;
     case 's': 
       out.rdbuf(nil.rdbuf());
       break;
@@ -1456,7 +1680,11 @@ int main(int argc, char *argv[]){
       if (!do_base_color_set(optarg)) goto exit_error;
       break;
     case 'S':
-      if (!do_side_color_set(optarg)) goto exit_error;
+      do_generate_statistics = true;
+      
+      if (optarg != NULL) {
+        statistics_path = fs::system_complete(fs::path(optarg));
+      }
       break;
     case '?':
       if (optopt == 'c')
@@ -1471,7 +1699,9 @@ int main(int argc, char *argv[]){
       abort ();
     }
   }
-
+  
+  if (!s.no_log) out_log.open(output_log.string().c_str());
+  
   if (s.memory_limit_default) {
     hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
   }
@@ -1561,8 +1791,12 @@ int main(int argc, char *argv[]){
     }
   }
   
-  if (!do_world(s, world_path, output_path))  {
-    goto exit_error;
+  if (do_generate_map)  {
+    if (!generate_map(s, world_path, output_path)) goto exit_error;
+  }
+  
+  if (do_generate_statistics)  {
+    if (!generate_statistics(s, world_path, statistics_path)) goto exit_error;
   }
   
   if (!s.binary && hints.size() > 0) {
@@ -1584,6 +1818,12 @@ int main(int argc, char *argv[]){
   }
   
   mc::deinitialize_constants();
+  
+  if (!s.no_log) {
+    out << "Log written to " << output_log << endl;
+    out_log.close();
+  }
+
   return 0;
 
 exit_error:
@@ -1599,5 +1839,11 @@ exit_error:
   }
   
   mc::deinitialize_constants();
+  
+  if (!s.no_log) {
+    out << "Log written to " << output_log << endl;
+    out_log.close();
+  }
+  
   return 1;
 }

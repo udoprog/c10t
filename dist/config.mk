@@ -1,5 +1,4 @@
 SOURCES+=src/algorithm.cpp
-SOURCES+=src/world.cpp
 SOURCES+=src/text.cpp
 SOURCES+=src/players.cpp
 SOURCES+=src/fileutils.cpp
@@ -11,6 +10,7 @@ SOURCES+=src/warps.cpp
 SOURCES+=src/mc/utils.cpp
 SOURCES+=src/mc/level.cpp
 SOURCES+=src/mc/blocks.cpp
+SOURCES+=src/mc/world.cpp
 SOURCES+=src/engine/isometric_engine.cpp
 SOURCES+=src/engine/oblique_engine.cpp
 SOURCES+=src/engine/obliqueangle_engine.cpp

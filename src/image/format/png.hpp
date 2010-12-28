@@ -41,6 +41,13 @@ class png_format {
          goto exit_cleanup;
       }
 
+      /* optipng tends to select these options for c10t generated images */
+
+      png_set_compression_level(png_ptr, 9);
+      png_set_compression_mem_level(png_ptr, 8);
+      png_set_compression_strategy(png_ptr, Z_DEFAULT_STRATEGY);
+      png_set_filter(png_ptr, PNG_FILTER_TYPE_BASE, PNG_FILTER_NONE);
+
       info_ptr = png_create_info_struct(png_ptr);
 
       if (info_ptr == NULL)

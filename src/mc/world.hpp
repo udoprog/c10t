@@ -24,13 +24,16 @@ namespace mc {
   
   struct level_info {
     private:
-      const fs::path& root;
-      const utils::level_coord coord;
+      fs::path root;
+      utils::level_coord coord;
     public:
-      level_info(const fs::path& root, int x, int z) : root(root), coord(x, z) {
+      level_info() : root(), coord() {
+      }
+
+      level_info(fs::path root, int x, int z) : root(root), coord(x, z) {
       }
       
-      level_info(const fs::path& root, utils::level_coord coord) : root(root), coord(coord) {
+      level_info(fs::path root, utils::level_coord coord) : root(root), coord(coord) {
       }
       
       const fs::path& get_root() {

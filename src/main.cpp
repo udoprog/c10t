@@ -383,38 +383,40 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     while (iterator.has_next()) {
       reporter.add(1);
       
+      mc::level_info level;
+      
       try {
-        mc::level_info level = iterator.next();
-        
-        const mc::utils::level_coord coord = level.get_coord();
-        
-        uint64_t x2 = coord.get_x() * coord.get_x();
-        uint64_t z2 = coord.get_z() * coord.get_z();
-        uint64_t r2 = s.max_radius * s.max_radius;
-        
-        bool out_of_range = 
-            coord.get_x() < s.min_x
-            || coord.get_x() > s.max_x
-            || coord.get_z() < s.min_z
-            || coord.get_z() > s.max_z
-            || x2 + z2 >= r2;
-        
-        if (out_of_range) {
-          if (!s.silent && s.debug) {
-            out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-          }
-          
-          continue;
-        }
-        
-        rotated_level_info rlevel =
-          rotated_level_info(level, coord.rotate(s.rotation));
-        
-        levels.push_back(rlevel);
-        world.update(rlevel.coord);
+        level = iterator.next();
       } catch(mc::bad_level& e) {
         out_log << e.where() << ": " << e.what() << std::endl;
       }
+      
+      const mc::utils::level_coord coord = level.get_coord();
+      
+      uint64_t x2 = coord.get_x() * coord.get_x();
+      uint64_t z2 = coord.get_z() * coord.get_z();
+      uint64_t r2 = s.max_radius * s.max_radius;
+      
+      bool out_of_range = 
+          coord.get_x() < s.min_x
+          || coord.get_x() > s.max_x
+          || coord.get_z() < s.min_z
+          || coord.get_z() > s.max_z
+          || x2 + z2 >= r2;
+      
+      if (out_of_range) {
+        if (!s.silent && s.debug) {
+          out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+        }
+        
+        continue;
+      }
+      
+      rotated_level_info rlevel =
+        rotated_level_info(level, coord.rotate(s.rotation));
+      
+      levels.push_back(rlevel);
+      world.update(rlevel.coord);
     }
     
     reporter.done(0);
@@ -833,49 +835,51 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
     while (iterator.has_next()) {
       reporter.add(1);
         
+      mc::level_info level;
+      
       try {
-        mc::level_info level = iterator.next();
-          
-        const mc::utils::level_coord coord = level.get_coord();
-          
-        uint64_t x2 = coord.get_x() * coord.get_x();
-        uint64_t z2 = coord.get_z() * coord.get_z();
-        uint64_t r2 = s.max_radius * s.max_radius;
-          
-        bool out_of_range = 
-              coord.get_x() < s.min_x
-              || coord.get_x() > s.max_x
-              || coord.get_z() < s.min_z
-              || coord.get_z() > s.max_z
-              || x2 + z2 >= r2;
-          
-        if (out_of_range) {
-          if (!s.silent && s.debug) {
-            out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-          }
-          continue;
-        }
-        
-        mc::level level_data(level.get_path());
-        
-        try {
-          level_data.read();
-        } catch(mc::invalid_file& e) {
-          out_log << level.get_path() << ": " << e.what();
-          continue;
-        }
-
-        boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
-        
-        for (int i = 0; i < blocks->length; i++) {
-          nbt::Byte block = blocks->values[i];
-          statistics[block] += 1;
-        }
-        
-        world.update(level.get_coord());
+        level = iterator.next();
       } catch(mc::bad_level& e) {
         out_log << e.where() << ": " << e.what() << std::endl;
       }
+      
+      mc::utils::level_coord coord = level.get_coord();
+      
+      uint64_t x2 = coord.get_x() * coord.get_x();
+      uint64_t z2 = coord.get_z() * coord.get_z();
+      uint64_t r2 = s.max_radius * s.max_radius;
+        
+      bool out_of_range = 
+            coord.get_x() < s.min_x
+            || coord.get_x() > s.max_x
+            || coord.get_z() < s.min_z
+            || coord.get_z() > s.max_z
+            || x2 + z2 >= r2;
+        
+      if (out_of_range) {
+        if (!s.silent && s.debug) {
+          out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+        }
+        continue;
+      }
+      
+      mc::level level_data(level.get_path());
+      
+      try {
+        level_data.read();
+      } catch(mc::invalid_file& e) {
+        out_log << level.get_path() << ": " << e.what();
+        continue;
+      }
+
+      boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
+      
+      for (int i = 0; i < blocks->length; i++) {
+        nbt::Byte block = blocks->values[i];
+        statistics[block] += 1;
+      }
+      
+      world.update(level.get_coord());
     }
     
     reporter.done(0);

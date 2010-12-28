@@ -61,9 +61,10 @@ namespace mc {
      */
     struct level_coord {
       private:
-        const int x;
-        const int z;
+        int x;
+        int z;
       public:
+        level_coord() : x(0), z(0) {}
         level_coord(int x, int z) : x(x), z(z) {}
         
         int get_x() const { return x; };

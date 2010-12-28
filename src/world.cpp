@@ -4,6 +4,8 @@
 
 #include <mc/utils.hpp>
 
+#include <iostream>
+
 void transform_world_xz(int& x, int& z, int rotation)
 {
   int t = x;

@@ -9,6 +9,9 @@
 
 #include <iostream>
 
+// I admit, this is pretty drastic, but I was desperate
+// now I just keep it for the sake of having it available to new
+// platforms.
 #if !defined(C10T_DISABLE_THREADS)
 #include <boost/detail/atomic_count.hpp>
 #include <boost/thread/mutex.hpp>

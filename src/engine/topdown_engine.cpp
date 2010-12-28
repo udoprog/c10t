@@ -1,7 +1,7 @@
 #include "engine/topdown_engine.hpp"
 #include <iostream>
 
-void topdown_engine::render(level_file& level, boost::shared_ptr<image_operations> oper)
+void topdown_engine::render(mc::level& level, boost::shared_ptr<image_operations> oper)
 {
   if (!level.is_read()) {
     return;

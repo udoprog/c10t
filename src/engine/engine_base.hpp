@@ -3,7 +3,9 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "level.hpp"
+#include "2d/cube.hpp"
+#include "mc/level.hpp"
+#include "image/image_operations.hpp"
 #include "world.hpp"
 
 class engine_base {
@@ -23,7 +25,7 @@ class engine_base {
     {
     }
     
-    virtual void render(level_file& level, boost::shared_ptr<image_operations> oper) = 0;
+    virtual void render(mc::level& level, boost::shared_ptr<image_operations> oper) = 0;
     virtual void get_boundaries(pos_t& width, pos_t& height) = 0;
     virtual void get_level_boundaries(pos_t& width, pos_t& height) = 0;
     virtual void w2pt(int xPos, int zPos, pos_t& x, pos_t& y) = 0;

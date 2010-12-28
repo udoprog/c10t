@@ -6,7 +6,7 @@
 class topdown_engine : public engine_base {
   public:
     topdown_engine(settings_t& s, world_info& world) : engine_base(s, world) {}
-    void render(level_file& level, boost::shared_ptr<image_operations> operations);
+    void render(mc::level& level, boost::shared_ptr<image_operations> operations);
     
     void get_boundaries(pos_t& width, pos_t& height) {
       mpos_c.get_top_limits(width, height);

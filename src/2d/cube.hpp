@@ -4,6 +4,7 @@
 #define _CUBE_H_
 
 #include <stdlib.h>
+#include <stdint.h>
 
 struct point {
   typedef uint64_t pos_t;

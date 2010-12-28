@@ -17,7 +17,6 @@
 
 #include "fileutils.hpp"
 #include "global.hpp"
-#include "level.hpp"
 #include "algorithm.hpp"
 
 namespace fs = boost::filesystem;
@@ -27,17 +26,6 @@ void transform_world_xz(int& x, int& z, int rotation);
 struct level {
   int xPos, zPos;
   int xReal, zReal;
-};
-
-struct world_pos {
-  int x, z;
-  
-  bool operator<(const world_pos& o) const
-  {
-    if (x < o.x) return true;
-    if (x == o.x && z < o.z) return true;
-    return false;
-  }
 };
 
 bool compare_levels(level first, level second);

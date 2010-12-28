@@ -32,16 +32,15 @@
 #include "image/cached_image.hpp"
 
 #include "global.hpp"
-#include "level.hpp"
 #include "cache.hpp"
-#include "blocks.hpp"
 #include "fileutils.hpp"
 #include "world.hpp"
 #include "players.hpp"
 #include "text.hpp"
-#include "marker.hpp"
 #include "json.hpp"
 #include "warps.hpp"
+
+#include "mc/blocks.hpp"
 #include "mc/utils.hpp"
 
 #include "engine/engine_base.hpp"
@@ -56,6 +55,19 @@ struct nullstream: std::ostream {
 
 nullstream nil;
 std::ostream out(std::cout.rdbuf());
+
+struct marker {
+public:
+  std::string text;
+  std::string type;
+  text::font_face font;
+  int x, y, z;
+  
+  marker(std::string text, std::string type, text::font_face font, int x, int y, int z) :
+      text(text), type(type), font(font), x(x), y(y), z(z)
+  {
+  }
+};
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -149,7 +161,7 @@ struct render_result {
   boost::shared_ptr<image_operations> operations;
   bool fatal;
   std::string fatal_why;
-  std::vector<light_marker> markers;
+  std::vector<mc::marker> signs;
   bool cache_hit;
   
   render_result() : fatal(false), fatal_why("(no error)") {}
@@ -192,17 +204,17 @@ public:
       }
     }
 
-    level_file level(job.path);
+    mc::level level(job.path);
     
     try {
       level.read();
-    } catch(invalid_file& e) {
+    } catch(mc::invalid_file& e) {
       p.fatal = true;
       p.fatal_why = e.what();
       return p;
     }
     
-    p.markers = level.get_markers();
+    p.signs = level.get_signs();
     
     job.engine->render(level, p.operations);
     
@@ -435,7 +447,7 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   renderer renderer(s, s.threads, world_size);
   
-  std::vector<light_marker> light_markers;
+  std::vector<mc::marker> signs;
   std::list<level>::iterator lvlit = world.levels.begin();
   
   renderer.start();
@@ -495,9 +507,9 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
     
     ///if (progress_c != NULL) progress_c(i, world_size);
     
-    if (p.markers.size() > 0) {
-      if (s.debug) { out << "Found " << p.markers.size() << " signs"; };
-      light_markers.insert(light_markers.end(), p.markers.begin(), p.markers.end());
+    if (p.signs.size() > 0) {
+      if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
+      signs.insert(signs.end(), p.signs.begin(), p.signs.end());
     }
     
     try {
@@ -553,17 +565,17 @@ bool do_world(settings_t &s, fs::path& world_path, fs::path& output_path) {
       }
     }
     
-    if (s.show_signs && light_markers.size() > 0) {
+    if (s.show_signs && signs.size() > 0) {
       text::font_face sign_font = font;
       
       if (s.has_sign_color) {
         sign_font.set_color(s.sign_color);
       }
       
-      std::vector<light_marker>::iterator lmit = light_markers.begin();
+      std::vector<mc::marker>::iterator lmit = signs.begin();
       
-      for (; lmit != light_markers.end(); lmit++) {
-        light_marker lm = *lmit;
+      for (; lmit != signs.end(); lmit++) {
+        mc::marker lm = *lmit;
         
         if (!s.show_signs_filter.empty() && lm.text.find(s.show_signs_filter) == string::npos) {
           continue;

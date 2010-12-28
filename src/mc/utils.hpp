@@ -1,5 +1,5 @@
-#ifndef __MCUTILS_HPP__
-#define __MCUTILS_HPP__
+#ifndef __MC_UTILS_HPP__
+#define __MC_UTILS_HPP__
 
 #include <exception>
 
@@ -8,9 +8,30 @@
 namespace fs = boost::filesystem;
 
 namespace mc {
+  /*
+   * designates a text related to a position
+   * Possible usages:
+   *   Signs
+   *   Player Positions
+   *   Custom Markers
+   **/
+  struct marker {
+  public:
+    std::string text;
+    int x, y, z;
+    
+    marker(std::string text, int x, int y, int z) :
+        text(text), x(x), y(y), z(z)
+    {
+    }
+  };
+  
   namespace utils {
     /**
-     * The fastest portable split I could find, only limitation is that it splits on only one character, but that's O.K.
+     * The fastest portable split I could find, only
+     * limitation is that it splits on only one character, but that's O.K.
+     * And yes - this actually has an effective impact on performance since
+     * it is heavily used during broad phase scanning.
      **/
     void split(std::vector<std::string>& v, const std::string& str, char delim);
     
@@ -51,4 +72,4 @@ namespace mc {
   }
 }
 
-#endif /* __MCUTILS_HPP__ */
+#endif /* __MC_UTILS_HPP__ */

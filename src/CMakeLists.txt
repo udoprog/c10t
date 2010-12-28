@@ -1,9 +1,8 @@
 add_subdirectory(image)
 add_subdirectory(nbt)
+add_subdirectory(mc)
 
-set(c10t_SOURCES level.cpp)
-set(c10t_SOURCES ${c10t_SOURCES} algorithm.cpp)
-set(c10t_SOURCES ${c10t_SOURCES} blocks.cpp)
+set(c10t_SOURCES algorithm.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} players.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} world.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} fileutils.cpp)
@@ -15,7 +14,7 @@ set(c10t_SOURCES ${c10t_SOURCES} engine/oblique_engine.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} engine/obliqueangle_engine.cpp)
 set(c10t_SOURCES ${c10t_SOURCES} engine/isometric_engine.cpp)
 
-set(c10t_LIBRARIES ${c10t_LIBRARIES} c10t-image c10t-nbt)
+set(c10t_LIBRARIES ${c10t_LIBRARIES} c10t-image c10t-nbt c10t-mc)
 
 add_executable(c10t main.cpp ${c10t_SOURCES})
 add_executable(c10t-debug EXCLUDE_FROM_ALL main.cpp ${c10t_SOURCES})

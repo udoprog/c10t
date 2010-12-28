@@ -2,7 +2,6 @@ SOURCES+=src/algorithm.cpp
 SOURCES+=src/text.cpp
 SOURCES+=src/players.cpp
 SOURCES+=src/fileutils.cpp
-SOURCES+=src/common.cpp
 SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
 SOURCES+=src/utf8.cpp

@@ -99,7 +99,7 @@ namespace mc {
     Jackolantern = 0x5B,
     MaterialCount = 0x5C,
 	PineLeaves = 0xEC,
-	BirchLeaves = 0xED,
+	BirchLeaves = 0xED
   };
   
   void initialize_constants();

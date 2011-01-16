@@ -218,7 +218,7 @@ namespace mc {
 	MaterialSideColor[LapisLazuliBlock] = color(MaterialColor[LapisLazuliBlock]);
 	MaterialSideColor[Dispenser] = color(MaterialColor[Dispenser]);
 	MaterialSideColor[Sandstone] = color(MaterialColor[Sandstone]);
-	MaterialSideColor[NoteBlock] = color(MaterialColor[Noteblock]);
+	MaterialSideColor[NoteBlock] = color(MaterialColor[NoteBlock]);
     MaterialSideColor[BlackWool] = color(MaterialColor[BlackWool]);
     MaterialSideColor[GrayWool] = color(MaterialColor[GrayWool]);
     MaterialSideColor[WhiteWool] = color(MaterialColor[WhiteWool]);

@@ -34,15 +34,15 @@ namespace mc {
     Leaves = 0x12,
     Sponge = 0x13,
     Glass = 0x14,
-	LapisLazuliOre = 0x15,
-	LapisLazuliBlock = 0x16,
-	Dispenser = 0x17,
-	Sandstone = 0x18,
-	NoteBlock = 0x19,
-	BlackWool = 0x22,
+    LapisLazuliOre = 0x15,
+    LapisLazuliBlock = 0x16,
+    Dispenser = 0x17,
+    Sandstone = 0x18,
+    NoteBlock = 0x19,
+    BlackWool = 0x22,
     GrayWool = 0x23,
     WhiteWool = 0x24,
-	YellowFlower = 0x25,
+    YellowFlower = 0x25,
     RedRose = 0x26,
     BrownMushroom = 0x28,
     RedMushroom = 0x27,
@@ -97,9 +97,9 @@ namespace mc {
     Lightstone = 0x59,
     Portal = 0x5A,
     Jackolantern = 0x5B,
-    MaterialCount = 0x5C,
-	PineLeaves = 0xEC,
-	BirchLeaves = 0xED
+    PineLeaves = 0xEC,
+    BirchLeaves = 0xED
+    MaterialCount = 0xEE,
   };
   
   void initialize_constants();

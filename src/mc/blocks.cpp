@@ -40,11 +40,11 @@ namespace mc {
     MaterialName[Leaves] = "Leaves";
     MaterialName[Sponge] = "Sponge";
     MaterialName[Glass] = "Glass";
-	MaterialName[LapisLazuliOre] = "LapisLazuliOre";
-	MaterialName[LapisLazuliBlock] = "LapisLazuliBlock";
-	MaterialName[Dispenser] = "Dispenser";
-	MaterialName[Sandstone] = "Sandstone";
-	MaterialName[NoteBlock] = "NoteBlock";
+    MaterialName[LapisLazuliOre] = "LapisLazuliOre";
+    MaterialName[LapisLazuliBlock] = "LapisLazuliBlock";
+    MaterialName[Dispenser] = "Dispenser";
+    MaterialName[Sandstone] = "Sandstone";
+    MaterialName[NoteBlock] = "NoteBlock";
     MaterialName[BlackWool] = "BlackWool";
     MaterialName[GrayWool] = "GrayWool";
     MaterialName[WhiteWool] = "WhiteWool";
@@ -103,8 +103,8 @@ namespace mc {
     MaterialName[Lightstone] = "Lightstone";
     MaterialName[Portal] = "Portal";
     MaterialName[Jackolantern] = "Jackolantern";
-	MaterialName[PineLeaves] = "PineLeaves";
-	MaterialName[BirchLeaves] = "BirchLeaves";
+    MaterialName[PineLeaves] = "PineLeaves";
+    MaterialName[BirchLeaves] = "BirchLeaves";
     
     MaterialColor[Air] = color(255,255,255,0);
     MaterialColor[Stone] = color(128,128,128,255);
@@ -127,11 +127,11 @@ namespace mc {
     MaterialColor[Leaves] = color(0x4a,0x83,0x42,0x80);
     MaterialColor[Sponge] = color(0xc3,0xc3,0x32,0xff);
     MaterialColor[Glass] = color(255,255,255,48);
-	MaterialColor[LapisLazuliOre] = color(102,112,134,255);
-	MaterialColor[LapisLazuliBlock] = color(29,71,165,255);
-	MaterialColor[Dispenser] = color(107,107,107,255);
-	MaterialColor[Sandstone] = MaterialColor[Sand];
-	MaterialColor[NoteBlock] = color(100,67,50,255);
+    MaterialColor[LapisLazuliOre] = color(102,112,134,255);
+    MaterialColor[LapisLazuliBlock] = color(29,71,165,255);
+    MaterialColor[Dispenser] = color(107,107,107,255);
+    MaterialColor[Sandstone] = MaterialColor[Sand];
+    MaterialColor[NoteBlock] = color(100,67,50,255);
     MaterialColor[BlackWool] = color(77,77,77,255);
     MaterialColor[GrayWool] = color(143,143,143,255);
     MaterialColor[WhiteWool] = color(222,222,222,255);
@@ -190,8 +190,8 @@ namespace mc {
     MaterialColor[Lightstone] = color(0xff, 0xbc, 0x5e, 0xff);
     MaterialColor[Portal] = color(0x3c, 0x0d, 0x6a, 0x7f);
     MaterialColor[Jackolantern] = MaterialColor[Pumpkin];
-	MaterialColor[PineLeaves] = MaterialColor[Leaves];
-	MaterialColor[BirchLeaves] = MaterialColor[Leaves];
+    MaterialColor[PineLeaves] = MaterialColor[Leaves];
+    MaterialColor[BirchLeaves] = MaterialColor[Leaves];
     
     MaterialSideColor[Air] = color(MaterialColor[Air]);
     MaterialSideColor[Stone] = color(MaterialColor[Stone]);
@@ -215,10 +215,10 @@ namespace mc {
     MaterialSideColor[Sponge] = color(MaterialColor[Sponge]);
     MaterialSideColor[Glass] = color(MaterialColor[Glass]);
     MaterialSideColor[LapisLazuliOre] = color(MaterialColor[LapisLazuliOre]);
-	MaterialSideColor[LapisLazuliBlock] = color(MaterialColor[LapisLazuliBlock]);
-	MaterialSideColor[Dispenser] = color(MaterialColor[Dispenser]);
-	MaterialSideColor[Sandstone] = color(MaterialColor[Sandstone]);
-	MaterialSideColor[NoteBlock] = color(MaterialColor[NoteBlock]);
+    MaterialSideColor[LapisLazuliBlock] = color(MaterialColor[LapisLazuliBlock]);
+    MaterialSideColor[Dispenser] = color(MaterialColor[Dispenser]);
+    MaterialSideColor[Sandstone] = color(MaterialColor[Sandstone]);
+    MaterialSideColor[NoteBlock] = color(MaterialColor[NoteBlock]);
     MaterialSideColor[BlackWool] = color(MaterialColor[BlackWool]);
     MaterialSideColor[GrayWool] = color(MaterialColor[GrayWool]);
     MaterialSideColor[WhiteWool] = color(MaterialColor[WhiteWool]);
@@ -277,8 +277,8 @@ namespace mc {
     MaterialSideColor[Lightstone] = color(MaterialColor[Lightstone]);
     MaterialSideColor[Portal] = color(MaterialColor[Portal]);
     MaterialSideColor[Jackolantern] = color(MaterialColor[Jackolantern]);
-	MaterialSideColor[PineLeaves] = color(MaterialColor[PineLeaves]);
-	MaterialSideColor[BirchLeaves] = color(MaterialColor[BirchLeaves]);
+    MaterialSideColor[PineLeaves] = color(MaterialColor[PineLeaves]);
+    MaterialSideColor[BirchLeaves] = color(MaterialColor[BirchLeaves]);
     
     MaterialModes[Air] = Block;
     MaterialModes[Stone] = Block;
@@ -301,11 +301,11 @@ namespace mc {
     MaterialModes[Leaves] = Block;
     MaterialModes[Sponge] = Block;
     MaterialModes[Glass] = Block;
-	MaterialModes[LapisLazuliOre] = Block;
-	MaterialModes[LapisLazuliBlock] = Block;
-	MaterialModes[Dispenser] = Block;
-	MaterialModes[Sandstone] = Block;
-	MaterialModes[NoteBlock] = Block;
+    MaterialModes[LapisLazuliOre] = Block;
+    MaterialModes[LapisLazuliBlock] = Block;
+    MaterialModes[Dispenser] = Block;
+    MaterialModes[Sandstone] = Block;
+    MaterialModes[NoteBlock] = Block;
     MaterialModes[BlackWool] = Block;
     MaterialModes[GrayWool] = Block;
     MaterialModes[WhiteWool] = Block;
@@ -364,8 +364,8 @@ namespace mc {
     MaterialModes[Lightstone] = Block;
     MaterialModes[Portal] = Block;
     MaterialModes[Jackolantern] = Block;
-	MaterialModes[PineLeaves] = Block;
-	MaterialModes[BirchLeaves] = Block;
+    MaterialModes[PineLeaves] = Block;
+    MaterialModes[BirchLeaves] = Block;
     
     for (int i = 0; i < MaterialCount; i++) {
       MaterialSideColor[i].darken(50);

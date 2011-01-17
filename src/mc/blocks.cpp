@@ -103,6 +103,7 @@ namespace mc {
     MaterialName[Lightstone] = "Lightstone";
     MaterialName[Portal] = "Portal";
     MaterialName[Jackolantern] = "Jackolantern";
+    MaterialName[Cake] = "Cake";
     MaterialName[PineLeaves] = "PineLeaves";
     MaterialName[BirchLeaves] = "BirchLeaves";
     
@@ -190,8 +191,9 @@ namespace mc {
     MaterialColor[Lightstone] = color(0xff, 0xbc, 0x5e, 0xff);
     MaterialColor[Portal] = color(0x3c, 0x0d, 0x6a, 0x7f);
     MaterialColor[Jackolantern] = MaterialColor[Pumpkin];
-    MaterialColor[PineLeaves] = MaterialColor[Leaves];
-    MaterialColor[BirchLeaves] = MaterialColor[Leaves];
+    MaterialColor[Cake] = color(228,205,206,255);
+    MaterialColor[PineLeaves] = MaterialColor[Leaves].darken(25);
+    MaterialColor[BirchLeaves] = MaterialColor[Leaves].lighten(25);
     
     MaterialSideColor[Air] = color(MaterialColor[Air]);
     MaterialSideColor[Stone] = color(MaterialColor[Stone]);
@@ -277,6 +279,7 @@ namespace mc {
     MaterialSideColor[Lightstone] = color(MaterialColor[Lightstone]);
     MaterialSideColor[Portal] = color(MaterialColor[Portal]);
     MaterialSideColor[Jackolantern] = color(MaterialColor[Jackolantern]);
+    MaterialSideColor[Cake] = color(MaterialColor[Cake]);
     MaterialSideColor[PineLeaves] = color(MaterialColor[PineLeaves]);
     MaterialSideColor[BirchLeaves] = color(MaterialColor[BirchLeaves]);
     
@@ -364,6 +367,7 @@ namespace mc {
     MaterialModes[Lightstone] = Block;
     MaterialModes[Portal] = Block;
     MaterialModes[Jackolantern] = Block;
+    MaterialModes[Cake] = HalfBlock;
     MaterialModes[PineLeaves] = Block;
     MaterialModes[BirchLeaves] = Block;
     

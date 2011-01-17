@@ -97,6 +97,7 @@ namespace mc {
     Lightstone = 0x59,
     Portal = 0x5A,
     Jackolantern = 0x5B,
+    Cake = 0x5C,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
     MaterialCount = 0xEE

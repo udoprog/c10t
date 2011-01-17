@@ -98,8 +98,8 @@ namespace mc {
     Portal = 0x5A,
     Jackolantern = 0x5B,
     PineLeaves = 0xEC,
-    BirchLeaves = 0xED
-    MaterialCount = 0xEE,
+    BirchLeaves = 0xED,
+    MaterialCount = 0xEE
   };
   
   void initialize_constants();

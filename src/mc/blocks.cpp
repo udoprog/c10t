@@ -192,8 +192,8 @@ namespace mc {
     MaterialColor[Portal] = color(0x3c, 0x0d, 0x6a, 0x7f);
     MaterialColor[Jackolantern] = MaterialColor[Pumpkin];
     MaterialColor[Cake] = color(228,205,206,255);
-    MaterialColor[PineLeaves] = color(MaterialColor[Leaves]).darken(25);
-    MaterialColor[BirchLeaves] = color(MaterialColor[Leaves]).lighten(25);
+    MaterialColor[PineLeaves] = color(50,89,45,128);
+    MaterialColor[BirchLeaves] = color(94,167,84,128);
     
     MaterialSideColor[Air] = color(MaterialColor[Air]);
     MaterialSideColor[Stone] = color(MaterialColor[Stone]);

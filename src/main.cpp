@@ -49,6 +49,9 @@
 #include "engine/obliqueangle_engine.hpp"
 #include "engine/isometric_engine.hpp"
 
+using namespace std;
+namespace fs = boost::filesystem;
+
 struct nullstream: std::ostream {
   nullstream(): std::ios(0), std::ostream(0) {}
 };
@@ -56,6 +59,15 @@ struct nullstream: std::ostream {
 nullstream nil;
 std::ostream out(std::cout.rdbuf());
 std::ofstream out_log;
+
+stringstream error;
+vector<std::string> hints;
+const uint8_t ERROR_BYTE = 0x01;
+const uint8_t RENDER_BYTE = 0x10;
+const uint8_t COMP_BYTE = 0x20;
+const uint8_t IMAGE_BYTE = 0x30;
+const uint8_t PARSE_BYTE = 0x40;
+const uint8_t END_BYTE = 0xF0;
 
 struct marker {
 public:
@@ -82,18 +94,6 @@ struct rotated_level_info {
     return coord < other.coord;
   }
 };
-
-using namespace std;
-namespace fs = boost::filesystem;
-
-stringstream error;
-vector<std::string> hints;
-const uint8_t ERROR_BYTE = 0x01;
-const uint8_t RENDER_BYTE = 0x10;
-const uint8_t COMP_BYTE = 0x20;
-const uint8_t IMAGE_BYTE = 0x30;
-const uint8_t PARSE_BYTE = 0x40;
-const uint8_t END_BYTE = 0xF0;
 
 void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
   if (i == all) {
@@ -123,45 +123,13 @@ void cout_progress_ionly_n(image_base::pos_t i, image_base::pos_t all) {
   } 
 }
 
-inline void cout_progress_ionly_b(const uint8_t type, image_base::pos_t part, image_base::pos_t whole) {
-  out << hex << std::setw(2) << setfill('0') << static_cast<int>(type);
-  
-  if (whole == 1) {
-    out << hex << std::setw(2) << setfill('0') << static_cast<int>(2) << flush;
-  }
-  else if (part % 1000 == 0) {
-    out << hex << std::setw(2) << setfill('0') << static_cast<int>(1) << flush;
-  }
-  else {
-    out << hex << std::setw(2) << setfill('0') << static_cast<int>(0) << flush;
-  }
-}
-
-inline void cout_progress_b(const uint8_t type, image_base::pos_t part, image_base::pos_t whole) {
-  uint8_t b = ((part * 0xff) / whole);
-  out << hex << std::setw(2) << setfill('0') << static_cast<int>(type)
-       << hex << std::setw(2) << setfill('0') << static_cast<int>(b) << flush;
-}
-
-void cout_progress_b_parse(image_base::pos_t i, image_base::pos_t all) {
-  cout_progress_ionly_b(PARSE_BYTE, i, all);
-}
-
-void cout_progress_b_render(image_base::pos_t i, image_base::pos_t all) {
-  cout_progress_b(RENDER_BYTE, i, all);
-}
-
-void cout_progress_b_image(image_base::pos_t i, image_base::pos_t all) {
-  cout_progress_b(IMAGE_BYTE, i, all);
-}
-
 inline void cout_error(const string& message) {
-  out << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE)
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE)
        << hex << message << flush;
 }
 
 inline void cout_end() {
-  out << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
+  cout << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
 }
 
 /*
@@ -405,7 +373,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
           || x2 + z2 >= r2;
       
       if (out_of_range) {
-        if (!s.silent && s.debug) {
+        if (s.debug) {
           out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
         }
         
@@ -857,7 +825,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
             || x2 + z2 >= r2;
         
       if (out_of_range) {
-        if (!s.silent && s.debug) {
+        if (s.debug) {
           out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
         }
         continue;
@@ -1615,9 +1583,8 @@ int main(int argc, char *argv[]){
       out.rdbuf(nil.rdbuf());
       break;
     case 'x':
+      out.rdbuf(out_log.rdbuf());
       s.binary = true;
-      error << "Binary output is not supported in this version of c10t";
-      goto exit_error;
       break;
     case 'r':
       s.rotation = atoi(optarg) % 360;
@@ -1798,12 +1765,15 @@ int main(int argc, char *argv[]){
   if (do_generate_map)  {
     if (!generate_map(s, world_path, output_path)) goto exit_error;
   }
-  
-  if (do_generate_statistics)  {
+  else if (do_generate_statistics)  {
     if (!generate_statistics(s, world_path, statistics_path)) goto exit_error;
   }
+  else {
+    error << "No action specified";
+    goto exit_error;
+  }
   
-  if (!s.binary && hints.size() > 0) {
+  if (hints.size() > 0) {
     out << endl;
     
     int i = 1;
@@ -1827,9 +1797,8 @@ int main(int argc, char *argv[]){
     out << "Log written to " << output_log << endl;
     out_log.close();
   }
-
+  
   return 0;
-
 exit_error:
   if (s.binary) {
     cout_error(error.str());

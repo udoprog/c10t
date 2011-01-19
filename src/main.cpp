@@ -685,6 +685,10 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     json_world->put("diff-x", new json::number((world.diff_x + 1) * mc::MapX));
     json_world->put("diff-z", new json::number((world.diff_z + 1) * mc::MapZ));
     json_world->put("diff-y", new json::number(mc::MapY));
+    json_world->put("min-x", new json::number(world.min_x));
+    json_world->put("min-z", new json::number(world.min_z));
+    json_world->put("max-x", new json::number(world.max_x));
+    json_world->put("max-z", new json::number(world.max_z));
     
     file.put("world", json_world);
     

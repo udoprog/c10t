@@ -121,7 +121,9 @@ void cached_image::blend_pixel(pos_t x, pos_t y, color &c)
   pos_t by = y - buffer_y;
   pos_t bp = bx + by * buffer_w;
 
-  assert(bp < buffer_s);
+  if (!(bp < buffer_s)) {
+    return;
+  }
   
   buffer[bp].blend(c);
 }

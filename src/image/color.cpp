@@ -14,22 +14,17 @@ inline uint8_t alpha_over_c(uint8_t ac, uint8_t aa, uint8_t bc, uint8_t ba) {
   return ((ac * aa) + ((0xff * (bc * ba) - aa * (bc * ba)) / 0xff)) / 0xff;
 }
 
-void color::overlay(const color &other) {
-  r = alpha_over_c(other.r, other.a, r, a);
-  g = alpha_over_c(other.g, other.a, g, a);
-  b = alpha_over_c(other.b, other.a, b, a);
-  a = a + (other.a * (0xff - a)) / 0xff;
-}
-
-void color::underlay(const color &other) {
-  r = alpha_over_c(r, a, other.r, other.a);
-  g = alpha_over_c(g, a, other.g, other.a);
-  b = alpha_over_c(b, a, other.b, other.a);
-  a = other.a + (a * (0xff - other.a)) / 0xff;
-}
-
 void color::blend(const color &other) {
   if (other.is_invisible()) return;
+
+  if (other.is_opaque() || is_invisible()) {
+    r = other.r;
+    g = other.g;
+    b = other.b;
+    a = other.a;
+    return;
+  }
+  
   r = alpha_over_c(other.r, other.a, r, a);
   g = alpha_over_c(other.g, other.a, g, a);
   b = alpha_over_c(other.b, other.a, b, a);

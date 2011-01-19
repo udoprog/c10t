@@ -43,12 +43,6 @@ void memory_image::blend_pixel(pos_t x, pos_t y, color &c)
 {
   color o;
   get_pixel(x, y, o);
-  
-  if (o.is_invisible()) {
-    set_pixel(x, y, c);
-    return;
-  }
-  
   o.blend(c);
   set_pixel(x, y, o);
 }

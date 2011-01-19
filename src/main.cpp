@@ -678,12 +678,15 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     out << "Writing json information: " << s.write_json_path.string() << endl;
     
     json::object file;
-    json::object* world = new json::object;
+    json::object* json_world = new json::object;
     
-    world->put("center-x", new json::number(center_x));
-    world->put("center-y", new json::number(center_y));
+    json_world->put("center-x", new json::number(center_x));
+    json_world->put("center-y", new json::number(center_y));
+    json_world->put("diff-x", new json::number((world.diff_x + 1) * mc::MapX));
+    json_world->put("diff-z", new json::number((world.diff_z + 1) * mc::MapZ));
+    json_world->put("diff-y", new json::number(mc::MapY));
     
-    file.put("world", world);
+    file.put("world", json_world);
     
     json::array* markers_array = new json::array;
     write_markers(s, markers_array, engine, markers);

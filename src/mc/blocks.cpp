@@ -7,6 +7,7 @@ namespace mc {
   const int MapZ = 0x10;
   const int MapY = 0x80;
 
+  const char *DefaultName = "None";
   const char **MaterialName;
   color *MaterialColor;
   color *MaterialSideColor;
@@ -18,6 +19,13 @@ namespace mc {
     MaterialColor = new color[MaterialCount];
     MaterialSideColor = new color[MaterialCount];
     MaterialModes = new enum MaterialMode[MaterialCount];
+
+    for (int i = 0; i < MaterialCount; i++) {
+      MaterialName[i] = DefaultName;
+      MaterialColor[i] = color(0, 0, 0, 0xff);
+      MaterialSideColor[i] = color(0, 0, 0, 0xff);
+      MaterialModes[i] = Block;
+    }
     
     MaterialName[Air] = "Air";
     MaterialName[Stone] = "Stone";

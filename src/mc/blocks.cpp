@@ -11,6 +11,7 @@ namespace mc {
   const char **MaterialName;
   color *MaterialColor;
   color *MaterialSideColor;
+  color *WoolColor;
 
   MaterialMode *MaterialModes;
 
@@ -19,6 +20,7 @@ namespace mc {
     MaterialColor = new color[MaterialCount];
     MaterialSideColor = new color[MaterialCount];
     MaterialModes = new enum MaterialMode[MaterialCount];
+    WoolColor = new color[WoolColorCount];
 
     for (int i = 0; i < MaterialCount; i++) {
       MaterialName[i] = DefaultName;
@@ -53,9 +55,7 @@ namespace mc {
     MaterialName[Dispenser] = "Dispenser";
     MaterialName[Sandstone] = "Sandstone";
     MaterialName[NoteBlock] = "NoteBlock";
-    MaterialName[BlackWool] = "BlackWool";
-    MaterialName[GrayWool] = "GrayWool";
-    MaterialName[WhiteWool] = "WhiteWool";
+    MaterialName[Wool] = "Wool";
     MaterialName[YellowFlower] = "YellowFlower";
     MaterialName[RedRose] = "RedRose";
     MaterialName[BrownMushroom] = "BrownMushroom";
@@ -141,9 +141,6 @@ namespace mc {
     MaterialColor[Dispenser] = color(107,107,107,255);
     MaterialColor[Sandstone] = MaterialColor[Sand];
     MaterialColor[NoteBlock] = color(100,67,50,255);
-    MaterialColor[BlackWool] = color(77,77,77,255);
-    MaterialColor[GrayWool] = color(143,143,143,255);
-    MaterialColor[WhiteWool] = color(222,222,222,255);
     MaterialColor[YellowFlower] = color(255,255,0,255);
     MaterialColor[RedRose] = color(255,0,0,255);
     MaterialColor[BrownMushroom] = color(0x00, 0x00, 0x00, 0x00);
@@ -229,9 +226,6 @@ namespace mc {
     MaterialSideColor[Dispenser] = color(MaterialColor[Dispenser]);
     MaterialSideColor[Sandstone] = color(MaterialColor[Sandstone]);
     MaterialSideColor[NoteBlock] = color(MaterialColor[NoteBlock]);
-    MaterialSideColor[BlackWool] = color(MaterialColor[BlackWool]);
-    MaterialSideColor[GrayWool] = color(MaterialColor[GrayWool]);
-    MaterialSideColor[WhiteWool] = color(MaterialColor[WhiteWool]);
     MaterialSideColor[YellowFlower] = color(MaterialColor[YellowFlower]);
     MaterialSideColor[RedRose] = color(MaterialColor[RedRose]);
     MaterialSideColor[BrownMushroom] = color(MaterialColor[BrownMushroom]);
@@ -317,9 +311,7 @@ namespace mc {
     MaterialModes[Dispenser] = Block;
     MaterialModes[Sandstone] = Block;
     MaterialModes[NoteBlock] = Block;
-    MaterialModes[BlackWool] = Block;
-    MaterialModes[GrayWool] = Block;
-    MaterialModes[WhiteWool] = Block;
+    MaterialModes[Wool] = Block;
     MaterialModes[YellowFlower] = Block;
     MaterialModes[RedRose] = Block;
     MaterialModes[BrownMushroom] = Block;
@@ -389,6 +381,23 @@ namespace mc {
     MaterialSideColor[Torch] = MaterialColor[Wood];
     MaterialSideColor[RedstoneTorchOff] = MaterialColor[Wood];
     MaterialSideColor[RedstoneTorchOn] = MaterialColor[Wood];
+
+    WoolColor[WoolWhite] = color(223, 223, 223, 255);
+    WoolColor[WoolOrange] = color(234, 128, 55, 255);
+    WoolColor[WoolMagenta] = color(191, 76, 201, 255);
+    WoolColor[WoolLightBlue] = color(105, 139, 212, 255);
+    WoolColor[WoolYellow] = color(195, 181, 28, 255);
+    WoolColor[WoolLightGreen] = color(59, 189, 48, 255);
+    WoolColor[WoolPink] = color(218, 132, 155, 255);
+    WoolColor[WoolGray] = color(67, 67, 67, 255);
+    WoolColor[WoolLightGray] = color(159, 166, 166, 255);
+    WoolColor[WoolCyan] = color(39, 117, 150, 255);
+    WoolColor[WoolPurple] = color(130, 54, 196, 255);
+    WoolColor[WoolBlue] = color(39, 51, 154, 255);
+    WoolColor[WoolBrown] = color(86, 51, 28, 255);
+    WoolColor[WoolDarkGreen] = color(56, 77, 24, 255);
+    WoolColor[WoolRed] = color(164, 45, 41, 255);
+    WoolColor[WoolBlack] = color(27, 23, 23, 255);
   }
   
   void deinitialize_constants() {

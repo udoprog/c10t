@@ -39,9 +39,7 @@ namespace mc {
     Dispenser = 0x17,
     Sandstone = 0x18,
     NoteBlock = 0x19,
-    BlackWool = 0x22,
-    GrayWool = 0x23,
-    WhiteWool = 0x24,
+    Wool = 0x23,
     YellowFlower = 0x25,
     RedRose = 0x26,
     BrownMushroom = 0x28,
@@ -102,6 +100,26 @@ namespace mc {
     BirchLeaves = 0xED,
     MaterialCount = 0xEE
   };
+
+  enum {
+    WoolWhite = 0x00,
+    WoolOrange,
+    WoolMagenta,
+    WoolLightBlue,
+    WoolYellow,
+    WoolLightGreen,
+    WoolPink,
+    WoolGray,
+    WoolLightGray,
+    WoolCyan,
+    WoolPurple,
+    WoolBlue,
+    WoolBrown,
+    WoolDarkGreen,
+    WoolRed,
+    WoolBlack,
+    WoolColorCount
+  };
   
   void initialize_constants();
   void deinitialize_constants();
@@ -112,6 +130,7 @@ namespace mc {
   extern const char **MaterialName;
   extern color* MaterialColor;
   extern color* MaterialSideColor;
+  extern color* WoolColor;
   extern enum MaterialMode *MaterialModes;
 }
 

@@ -9,6 +9,7 @@ void isometric_engine::render(mc::level& level, boost::shared_ptr<image_operatio
   }
   
   BlockRotation b_r(s, level.get_blocks());
+  BlockRotation b_d(s, level.get_data());
   BlockRotation bl_r(s, level.get_blocklight());
   BlockRotation sl_r(s, level.get_skylight());
   BlockRotation hm_r(s, level.get_heightmap());
@@ -31,6 +32,7 @@ void isometric_engine::render(mc::level& level, boost::shared_ptr<image_operatio
       
       hm_r.set_xz(x, z);
       b_r.set_xz(x, z);
+      b_d.set_xz(x, z);
       bl_r.set_xz(x, z);
       sl_r.set_xz(x, z);
       
@@ -60,7 +62,15 @@ void isometric_engine::render(mc::level& level, boost::shared_ptr<image_operatio
         pos_t px, py;
         part_c.project_isometric(p, px, py);
         
-        color top = mc::MaterialColor[bt];
+        color top, side;
+        if(bt == mc::Wool) {
+          int md = b_d.get4(y);
+          top = mc::WoolColor[md];
+          side = mc::WoolColor[md];
+        } else {
+          top = mc::MaterialColor[bt];
+          side = mc::MaterialSideColor[bt];
+        }
         
         if (mc::MaterialModes[bt] == mc::Block) {
           int bp = px + iw * py;
@@ -72,7 +82,6 @@ void isometric_engine::render(mc::level& level, boost::shared_ptr<image_operatio
           blocked[bp] = top.is_opaque() && bt != mc::Fence;
         }
         
-        color side = mc::MaterialSideColor[bt];
         
         int bl = bl_r.get4(y + 1);
         

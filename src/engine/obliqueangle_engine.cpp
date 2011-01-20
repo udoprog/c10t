@@ -12,6 +12,7 @@ void obliqueangle_engine::render(mc::level& level, boost::shared_ptr<image_opera
   part_c.get_obliqueangle_limits(iw, ih);
   
   BlockRotation b_r(s, level.get_blocks());
+  BlockRotation b_d(s, level.get_data());
   BlockRotation bl_r(s, level.get_blocklight());
   BlockRotation sl_r(s, level.get_skylight());
   BlockRotation hm_r(s, level.get_heightmap());
@@ -31,6 +32,7 @@ void obliqueangle_engine::render(mc::level& level, boost::shared_ptr<image_opera
       
       hm_r.set_xz(x, z);
       b_r.set_xz(x, z);
+      b_d.set_xz(x, z);
       bl_r.set_xz(x, z);
       sl_r.set_xz(x, z);
       
@@ -60,7 +62,15 @@ void obliqueangle_engine::render(mc::level& level, boost::shared_ptr<image_opera
         pos_t px, py;
         part_c.project_obliqueangle(p, px, py);
         
-        color top = mc::MaterialColor[bt];
+        color top, side;
+        if(bt == mc::Wool) {
+          int md = b_d.get4(y);
+          top = mc::WoolColor[md];
+          side = mc::WoolColor[md];
+        } else {
+          top = mc::MaterialColor[bt];
+          side = mc::MaterialSideColor[bt];
+        }
         
         if (mc::MaterialModes[bt] == mc::Block) {
           int bp = px + iw * py;
@@ -73,8 +83,6 @@ void obliqueangle_engine::render(mc::level& level, boost::shared_ptr<image_opera
         }
         
         int bl = bl_r.get4(y + 1);
-        
-        color side = mc::MaterialSideColor[bt];
         
         apply_shading(s, bl, sl_r.get4(y + 1), hmval, y, top);
         apply_shading(s, bl, -1, hmval, y, side);

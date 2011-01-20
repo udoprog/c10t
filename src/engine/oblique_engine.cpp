@@ -14,6 +14,7 @@ void oblique_engine::render(mc::level& level, boost::shared_ptr<image_operations
   part_c.get_oblique_limits(iw, ih);
   
   BlockRotation b_r(s, level.get_blocks());
+  BlockRotation b_d(s, level.get_data());
   BlockRotation bl_r(s, level.get_blocklight());
   BlockRotation sl_r(s, level.get_skylight());
   
@@ -31,6 +32,7 @@ void oblique_engine::render(mc::level& level, boost::shared_ptr<image_operations
       bool hell_solid = true;
       
       b_r.set_xz(x, z);
+      b_d.set_xz(x, z);
       bl_r.set_xz(x, z);
       sl_r.set_xz(x, z);
 
@@ -58,7 +60,15 @@ void oblique_engine::render(mc::level& level, boost::shared_ptr<image_operations
         pos_t px, py;
         part_c.project_oblique(p, px, py);
         
-        color top = mc::MaterialColor[bt];
+        color top, side;
+        if(bt == mc::Wool) {
+          int md = b_d.get4(y);
+          top = mc::WoolColor[md];
+          side = mc::WoolColor[md];
+        } else {
+          top = mc::MaterialColor[bt];
+          side = mc::MaterialSideColor[bt];
+        }
         
         int bp = px + iw * py;
         
@@ -73,7 +83,6 @@ void oblique_engine::render(mc::level& level, boost::shared_ptr<image_operations
         apply_shading(s, bl, sl_r.get4(y + 1), 0, y, top);
         oper->add_pixel(px, py, top);
         
-        color side = mc::MaterialSideColor[bt];
         apply_shading(s, bl, -1, 0, y, side);
         oper->add_pixel(px, py + 1, side);
       }

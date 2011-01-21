@@ -34,6 +34,7 @@ namespace mc {
       std::vector<marker> signs;
       
       boost::shared_ptr<nbt::ByteArray> blocks;
+      boost::shared_ptr<nbt::ByteArray> data;
       boost::shared_ptr<nbt::ByteArray> skylight;
       boost::shared_ptr<nbt::ByteArray> heightmap;
       boost::shared_ptr<nbt::ByteArray> blocklight;
@@ -57,6 +58,11 @@ namespace mc {
       boost::shared_ptr<nbt::ByteArray>
       get_blocks() {
         return blocks;
+      }
+
+      boost::shared_ptr<nbt::ByteArray>
+      get_data() {
+        return data;
       }
 
       boost::shared_ptr<nbt::ByteArray>

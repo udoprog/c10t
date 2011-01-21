@@ -12,6 +12,7 @@ void topdown_engine::render(mc::level& level, boost::shared_ptr<image_operations
   
   // block type
   BlockRotation b_r(s, level.get_blocks());
+  BlockRotation b_d(s, level.get_data());
   BlockRotation bl_r(s, level.get_blocklight());
   BlockRotation sl_r(s, level.get_skylight());
   
@@ -24,6 +25,7 @@ void topdown_engine::render(mc::level& level, boost::shared_ptr<image_operations
       bool hell_solid = true;
       
       b_r.set_xz(x, z);
+      b_d.set_xz(x, z);
       bl_r.set_xz(x, z);
       sl_r.set_xz(x, z);
       
@@ -47,8 +49,14 @@ void topdown_engine::render(mc::level& level, boost::shared_ptr<image_operations
           continue;
         }
         
-        color bc = mc::MaterialColor[bt];
-        
+        color bc;
+        if(bt == mc::Wool) {
+          int md = b_d.get4(y);
+          bc = mc::WoolColor[md];
+        } else {
+          bc = mc::MaterialColor[bt];
+        }
+
         apply_shading(s, bl_r.get4(y + 1), sl_r.get4(y + 1), 0, y, bc);
         
         point p(x, y, z);

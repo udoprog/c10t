@@ -13,6 +13,7 @@ namespace mc {
     std::vector<marker> signs;
     
     boost::shared_ptr<nbt::ByteArray> blocks;
+    boost::shared_ptr<nbt::ByteArray> data;
     boost::shared_ptr<nbt::ByteArray> skylight;
     boost::shared_ptr<nbt::ByteArray> heightmap;
     boost::shared_ptr<nbt::ByteArray> blocklight;
@@ -80,6 +81,11 @@ namespace mc {
     if (name.compare("Blocks") == 0) {
       level->blocks.reset(byte_array);
       return;
+    }
+
+    if(name.compare("Data") == 0) {
+        level->data.reset(byte_array);
+        return;
     }
     
     if (name.compare("SkyLight") == 0) {
@@ -165,6 +171,7 @@ namespace mc {
     
     signs = context.signs;
     blocks = context.blocks;
+    data = context.data;
     skylight = context.skylight;
     heightmap = context.heightmap;
     blocklight = context.blocklight;

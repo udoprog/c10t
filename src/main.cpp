@@ -670,25 +670,32 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   engine_base::pos_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
   
-  if (s.write_json) {
+  if (s.write_json || s.write_js) {
     if (!any_db) {
       hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
     }
     
-    out << "Writing json information: " << s.write_json_path.string() << endl;
-    
     json::object file;
+    json::object* json_static = new json::object;
+    
+    json_static->put("MapX", new json::number(mc::MapX));
+    json_static->put("MapY", new json::number(mc::MapY));
+    json_static->put("MapZ", new json::number(mc::MapZ));
+    
+    file.put("st", json_static);
+    
     json::object* json_world = new json::object;
     
-    json_world->put("center-x", new json::number(center_x));
-    json_world->put("center-y", new json::number(center_y));
-    json_world->put("diff-x", new json::number((world.diff_x + 1) * mc::MapX));
-    json_world->put("diff-z", new json::number((world.diff_z + 1) * mc::MapZ));
-    json_world->put("diff-y", new json::number(mc::MapY));
-    json_world->put("min-x", new json::number(world.min_x));
-    json_world->put("min-z", new json::number(world.min_z));
-    json_world->put("max-x", new json::number(world.max_x));
-    json_world->put("max-z", new json::number(world.max_z));
+    json_world->put("cx", new json::number(center_x));
+    json_world->put("cy", new json::number(center_y));
+    json_world->put("dx", new json::number((world.diff_x + 1) * mc::MapX));
+    json_world->put("dz", new json::number((world.diff_z + 1) * mc::MapZ));
+    json_world->put("dy", new json::number(mc::MapY));
+    json_world->put("mn_x", new json::number(world.min_x * 16));
+    json_world->put("mn_z", new json::number(world.min_z * 16));
+    json_world->put("mx_x", new json::number(world.max_x * 16));
+    json_world->put("mx_z", new json::number(world.max_z * 16));
+    json_world->put("mode", new json::number(s.mode));
     
     file.put("world", json_world);
     
@@ -696,9 +703,19 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     write_markers(s, markers_array, engine, markers);
     file.put("markers", markers_array);
     
-    std::ofstream of(s.write_json_path.string().c_str());
-    of << file;
-    of.close();
+    if (s.write_json) {
+      out << "Writing json information: " << s.write_json_path.string() << endl;
+      std::ofstream of(s.write_json_path.string().c_str());
+      of << file;
+      of.close();
+    }
+
+    if (s.write_js) {
+      out << "Writing js (javascript `var c10t_json') information: " << s.write_js_path.string() << endl;
+      std::ofstream of(s.write_js_path.string().c_str());
+      of << "var c10t_json = " << file << ";";
+      of.close();
+    }
   }
   else {
     overlay_markers(s, all, engine, markers);
@@ -1025,6 +1042,9 @@ int do_help() {
     << "                              which helps to distinguish heights               " << endl
     << "  --write-json <file>       - Write markers to <file> in JSON format instead of" << endl
     << "                              printing them on map                             " << endl
+    << "  --write-js <file>         - Same as `write-json' with the exception that the " << endl
+    << "                              result will be a valid javascript file containing" << endl
+    << "                              a declaration for `var c10t_json'                " << endl
        /*******************************************************************************/
     << endl
     << "Font Options:" << endl
@@ -1364,6 +1384,7 @@ int main(int argc, char *argv[]){
      {"no-alpha",       no_argument, &flag, 14},
      {"striped-terrain",       no_argument, &flag, 15},
      {"write-json",       required_argument, &flag, 16},
+     {"write-js",         required_argument, &flag, 26},
      {"write-markers",       required_argument, &flag, 21},
      {"split",            required_argument, &flag, 17},
      {"pixelsplit",       required_argument, &flag, 17},
@@ -1486,6 +1507,21 @@ int main(int argc, char *argv[]){
         
         {
           fs::path parent = s.write_json_path.parent_path();
+          
+          if (!fs::is_directory(parent)) {
+            error << "Not a directory: " << parent.string();
+            goto exit_error;
+          }
+        }
+        
+        break;
+      case 26:
+        s.write_js = true;
+
+        s.write_js_path = fs::system_complete(fs::path(optarg));
+        
+        {
+          fs::path parent = s.write_js_path.parent_path();
           
           if (!fs::is_directory(parent)) {
             error << "Not a directory: " << parent.string();

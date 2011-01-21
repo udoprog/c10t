@@ -18,10 +18,10 @@
 namespace fs = boost::filesystem;
 
 enum mode {
-  Top,
-  Oblique,
-  ObliqueAngle,
-  Isometric
+  Top = 0x0,
+  Oblique = 0x1,
+  ObliqueAngle = 0x2,
+  Isometric = 0x3
 };
 
 struct settings_t {
@@ -75,6 +75,8 @@ struct settings_t {
   bool cache_use;
   bool write_json;
   fs::path write_json_path;
+  bool write_js;
+  fs::path write_js_path;
   bool no_log;
   
   settings_t() {
@@ -137,6 +139,7 @@ struct settings_t {
     this->cache_dir = "cache";
     this->cache_compress = false;
     this->write_json = false;
+    this->write_js = false;
     this->no_log = false;
   }
   

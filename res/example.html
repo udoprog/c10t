@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script type="text/javascript" src="libc10t.js"></script>
+    <script type="text/javascript" src="c10t_json.js"></script>
+    <script type="text/javascript">
+      if (window.c10t_json == undefined) {
+        alert("There is no c10t_json.js available, render one with `--write-js <output>'");
+      }
+      else {
+        var c = new c10t(c10t_json);
+        // try out a projection
+        var p = {"X":-123,"Y":5,"Z":19,"text":"Protected","type":"player","x":4610,"y":2444}
+        alert(c.project(p.X, p.Y, p.Z));
+      }
+    </script>
+  </head>
+	<body></body>
+</html>

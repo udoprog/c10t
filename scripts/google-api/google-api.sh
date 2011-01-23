@@ -214,6 +214,13 @@ for t in $TILE_SIZES; do
   generate "-n" "night" $t $z $s
 done
 
+# fix to correct center-x and center-y missing
+sed -i s/cx/center-x/g $target/day.json
+sed -i s/cy/center-y/g $target/day.json
+sed -i s/cx/center-x/g $target/night.json
+sed -i s/cy/center-y/g $target/night.json
+# end fix
+
 cat > $target/options.js << ENDL
 var options = {
   host: "$host$tiles/",

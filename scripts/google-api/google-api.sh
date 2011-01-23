@@ -135,7 +135,7 @@ cat > $target/index.html << ENDL
         
         {
           var world = globaldata.world;
-          var center = new google.maps.Point(world["center-x"] / $FACTOR, world["center-y"] / $FACTOR);
+          var center = new google.maps.Point(world["cx"] / $FACTOR, world["cy"] / $FACTOR);
           var latlng = EuclideanProjection.prototype.fromPointToLatLng(center)
           map.setCenter(latlng);
           map.setZoom(0);

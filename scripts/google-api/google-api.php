@@ -359,7 +359,7 @@ $output = '
         
         {
           var world = globaldata.world;
-          var center = new google.maps.Point(world["center-x"] / 16, world["center-y"] / 16);
+          var center = new google.maps.Point(world["cx"] / 16, world["cy"] / 16);
           var latlng = EuclideanProjection.prototype.fromPointToLatLng(center)
           map.setCenter(latlng);
           map.setZoom(0);

@@ -62,6 +62,7 @@ std::ofstream out_log;
 
 stringstream error;
 vector<std::string> hints;
+vector<std::string> warnings;
 const uint8_t ERROR_BYTE = 0x01;
 const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
@@ -215,7 +216,7 @@ public:
   }
 };
 
-inline void write_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
+inline void populate_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
   
   for (it = markers.begin(); it != markers.end(); it++) {
@@ -254,6 +255,10 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
   
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
+
+    if (!m.font.is_initialized()) {
+      continue;
+    }
     
     mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
@@ -296,6 +301,9 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     || s.show_signs
     || s.show_coordinates
     || s.show_warps;
+
+  bool write_markers = 
+    s.write_json || s.write_js;
   
   if (any_db) {
     out << " --- LOOKING FOR DATABASES --- " << endl;
@@ -564,14 +572,15 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   boost::ptr_vector<marker> markers;
   
   if (any_db) {
-    fs::path ttf_path(s.ttf_path);
+    text::font_face font(s.ttf_path, s.ttf_size, s.ttf_color);
     
-    if (!fs::is_regular_file(ttf_path)) {
-      error << "ttf_path - not a file: " << ttf_path;
-      return false;
+    if (!write_markers) {
+      try {
+        font.init();
+      } catch(text::text_error& e) {
+        warnings.push_back(std::string("Failed to initialize font: ") + e.what());
+      }
     }
-    
-    text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
     
     if (s.show_players) {
       text::font_face player_font = font;
@@ -591,8 +600,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         if (p.xPos / mc::MapX < s.min_x) continue;
         if (p.xPos / mc::MapX > s.max_x) continue;
         
-        marker *m = new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos);
-        markers.push_back(m);
+        markers.push_back(new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos));
       }
     }
     
@@ -612,8 +620,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
           continue;
         }
         
-        marker *m = new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z);
-        markers.push_back(m);
+        markers.push_back(new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z));
       }
     }
     
@@ -638,8 +645,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         std::stringstream ss;
         
         ss << "(" << l.get_x() * mc::MapX << ", " << l.get_z() * mc::MapZ << ")";
-        marker *m = new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ);
-        markers.push_back(m);
+        markers.push_back(new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ));
       }
     }
     
@@ -670,7 +676,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   engine_base::pos_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
   
-  if (s.write_json || s.write_js) {
+  if (write_markers) {
     if (!any_db) {
       hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
     }
@@ -700,7 +706,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     file.put("world", json_world);
     
     json::array* markers_array = new json::array;
-    write_markers(s, markers_array, engine, markers);
+    populate_markers(s, markers_array, engine, markers);
     file.put("markers", markers_array);
     
     if (s.write_json) {
@@ -959,6 +965,7 @@ int do_help() {
     << endl
     << "  -n, --night               - Night-time rendering mode                        " << endl
     << "  -H, --heightmap           - Heightmap rendering mode (black to white)        " << endl
+    << "      --disable-skylight    - Disables skylight (faster rendering)             " << endl
     << endl
     << "Filtering options:" << endl
     << "  -e, --exclude <blockid>   - Exclude block-id from render (multiple occurences" << endl
@@ -1395,6 +1402,7 @@ int main(int argc, char *argv[]){
      {"statistics",        optional_argument, 0, 'S'},
      {"log",            required_argument, &flag, 24},
      {"no-log",         no_argument, &flag, 25},
+     {"disable-skylight",         no_argument, &flag, 26},
      {0, 0, 0, 0}
   };
 
@@ -1816,15 +1824,19 @@ int main(int argc, char *argv[]){
     goto exit_error;
   }
   
-  if (hints.size() > 0) {
-    out << endl;
-    
+  if (hints.size() > 0 || warnings.size() > 0) {
     int i = 1;
+    
+    for (vector<std::string>::iterator it = warnings.begin(); it != warnings.end(); it++) {
+      out << "WARNING " << i++ << ": " << *it << endl;
+    }
+    
+    i = 1;
     for (vector<std::string>::iterator it = hints.begin(); it != hints.end(); it++) {
       out << "Hint " << i++ << ": " << *it << endl;
     }
-    
-    out << endl;
+
+    std::cout << endl;
   }
   
   if (s.binary) {

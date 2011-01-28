@@ -44,6 +44,7 @@ struct settings_t {
   bool show_coordinates;
   bool show_signs;
   bool show_players;
+  bool disable_skylight;
   bool show_warps;
   fs::path show_warps_path;
   bool has_sign_color;
@@ -141,6 +142,7 @@ struct settings_t {
     this->write_json = false;
     this->write_js = false;
     this->no_log = false;
+    this->disable_skylight = false;
   }
   
   ~settings_t() {

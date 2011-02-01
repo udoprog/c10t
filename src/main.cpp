@@ -2,7 +2,6 @@
 // (C) Copyright 2010 John-John Tedro et al.
 #include <stdlib.h>
 #include <stdio.h>
-#include <getopt.h>
 
 #include <errno.h>
 
@@ -60,8 +59,6 @@ nullstream nil;
 std::ostream out(std::cout.rdbuf());
 std::ofstream out_log;
 
-vector<std::string> hints;
-vector<std::string> warnings;
 const uint8_t ERROR_BYTE = 0x01;
 const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
@@ -213,6 +210,8 @@ void cout_mb_endl(streampos progress, streampos total) {
 
 bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   out << endl << "Generating PNG Map" << endl << endl;
+  
+  out << "Threads: " << s.threads << std::endl;
   
   std::vector<player> players;
   std::vector<warp> warps;
@@ -1051,415 +1050,25 @@ int main(int argc, char *argv[]){
 
   settings_t s;
   
-  fs::path world_path;
-  fs::path output_path = fs::system_complete(fs::path("out.png"));
-  fs::path statistics_path = fs::system_complete(fs::path("statistics.txt"));
-  fs::path output_log = fs::system_complete(fs::path("c10t.log"));
-  string palette_write_path, palette_read_path;
-  
-  int c, blockid;
+  read_opts(s, argc, argv);
 
-  int option_index;
-
-  int flag;
-
-  struct option long_options[] =
-   {
-     {"world",            required_argument, 0, 'w'},
-     {"output",           required_argument, 0, 'o'},
-     {"top",              required_argument, 0, 't'},
-     {"bottom",           required_argument, 0, 'b'},
-     {"limits",           required_argument, 0, 'L'},
-     {"radius",           required_argument, 0, 'R'},
-     {"memory-limit",     required_argument, 0, 'M'},
-     {"cache-file",       required_argument, 0, 'C'},
-     {"swap-file",        required_argument, 0, 'C'},
-     {"exclude",          required_argument, 0, 'e'},
-     {"include",          required_argument, 0, 'i'},
-     {"rotate",           required_argument, 0, 'r'},
-     {"threads",          required_argument, 0, 'm'},
-     {"help",             no_argument, 0, 'h'},
-     {"silent",           no_argument, 0, 's'},
-     {"version",          no_argument, 0, 'v'},
-     {"debug",            no_argument, 0, 'D'},
-     {"list-colors",      no_argument, 0, 'l'},
-     {"hide-all",         no_argument, 0, 'a'},
-     {"no-check",         no_argument, 0, 'N'},
-     {"oblique",          no_argument, 0, 'q'},
-     {"oblique-angle",    no_argument, 0, 'y'},
-     {"isometric",        no_argument, 0, 'z'},
-     {"cave-mode",        no_argument, 0, 'c'},
-     {"night",            no_argument, 0, 'n'},
-     {"heightmap",        no_argument, 0, 'H'},
-     {"binary",           no_argument, 0, 'x'},
-     {"require-all",      no_argument, &flag, 0},
-     {"show-players",     optional_argument, &flag, 1},
-     {"ttf-path",         required_argument, &flag, 2},
-     {"ttf-size",         required_argument, &flag, 3},
-     {"ttf-color",        required_argument, &flag, 4},
-     {"show-coordinates",     no_argument, &flag, 5},
-     {"pedantic-broad-phase", no_argument, &flag, 6},
-     {"show-signs",       optional_argument, &flag, 7},
-     {"sign-color",        required_argument, &flag, 8},
-     {"player-color",        required_argument, &flag, 9},
-     {"coordinate-color",        required_argument, &flag, 10},
-     {"cache-key",       required_argument, &flag, 11},
-     {"cache-dir",       required_argument, &flag, 12},
-     {"cache-compress",       no_argument, &flag, 13},
-     {"no-alpha",       no_argument, &flag, 14},
-     {"striped-terrain",       no_argument, &flag, 15},
-     {"write-json",       required_argument, &flag, 16},
-     {"write-js",         required_argument, &flag, 26},
-     {"write-markers",       required_argument, &flag, 21},
-     {"split",            required_argument, &flag, 17},
-     {"pixelsplit",       required_argument, &flag, 17},
-     {"show-warps",       required_argument, &flag, 18},
-     {"warp-color",       required_argument, &flag, 19},
-     {"prebuffer",       required_argument, &flag, 20},
-     {"hell-mode",        no_argument, &flag, 22},
-     {"statistics",        optional_argument, 0, 'S'},
-     {"log",            required_argument, &flag, 24},
-     {"no-log",         no_argument, &flag, 25},
-     {"disable-skylight",         no_argument, &flag, 26},
-     {0, 0, 0, 0}
-  };
-
-  bool exclude_all = false;
-  bool excludes[mc::MaterialCount];
-  bool includes[mc::MaterialCount];
-  bool do_generate_map = false;
-  bool do_generate_statistics = false;
-  
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    excludes[i] = false;
-    includes[i] = false;
-  }
-  
-  while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
-  {
-    blockid = -1;
-    
-    if (c == 0) {
-      switch (flag) {
-      case 0:
-        s.require_all = true;
-        break;
-      case 1:
-        s.show_players = true;
-        if (optarg != NULL) {
-          if (!read_set(s.show_players_set, optarg)) {
-            goto exit_error;
-          }
-        }
-        break;
-      case 2:
-        s.ttf_path = optarg;
-        break;
-      case 3:
-        s.ttf_size = atoi(optarg);
-        
-        if (s.ttf_size <= 0) {
-          error << "ttf-size must be greater than 0";
-          goto exit_error;
-        }
-        
-        break;
-      case 4:
-        if (!parse_color(optarg, s.ttf_color)) {
-          goto exit_error;
-        }
-        break;
-      case 5:
-        s.show_coordinates = true;
-        break;
-      case 6:
-        s.pedantic_broad_phase = true;
-        break;
-      case 7:
-        s.show_signs = true;
-
-        if (optarg) {
-          s.show_signs_filter = optarg;
-          
-          if (s.show_signs_filter.empty()) {
-            error << "Sign filter must not be empty string";
-            goto exit_error;
-          }
-        }
-        
-        break;
-      case 8:
-        if (!parse_color(optarg, s.sign_color)) {
-          goto exit_error;
-        }
-        
-        s.has_sign_color = true;
-        break;
-      case 9:
-        if (!parse_color(optarg, s.player_color)) {
-          goto exit_error;
-        }
-        
-        s.has_player_color = true;
-        break;
-      case 10:
-        if (!parse_color(optarg, s.coordinate_color)) {
-          goto exit_error;
-        }
-        
-        s.has_coordinate_color = true;
-        break;
-      case 11:
-        s.cache_use = true;
-        s.cache_key = optarg;
-        break;
-      case 12:
-        s.cache_dir = optarg;
-        break;
-      case 13:
-        s.cache_compress = true;
-        break;
-      case 14:
-        for (int i = mc::Air + 1; i < mc::MaterialCount; i++)
-          mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
-        break;
-      case 15: s.striped_terrain = true; break;
-      case 21:
-        hints.push_back("`--write-markers' has been deprecated in favour of `--write-json' - use that instead and note the new json structure");
-      case 16:
-        s.write_json = true;
-
-        s.write_json_path = fs::system_complete(fs::path(optarg));
-        
-        {
-          fs::path parent = s.write_json_path.parent_path();
-          
-          if (!fs::is_directory(parent)) {
-            error << "Not a directory: " << parent.string();
-            goto exit_error;
-          }
-        }
-        
-        break;
-      case 26:
-        s.write_js = true;
-
-        s.write_js_path = fs::system_complete(fs::path(optarg));
-        
-        {
-          fs::path parent = s.write_js_path.parent_path();
-          
-          if (!fs::is_directory(parent)) {
-            error << "Not a directory: " << parent.string();
-            goto exit_error;
-          }
-        }
-        
-        break;
-      case 17:
-        try {
-          s.split = boost::lexical_cast<int>(optarg);
-        } catch(boost::bad_lexical_cast& e) {
-          error << "Cannot be converted to number: " << optarg;
-          goto exit_error;
-        }
-        
-        if (!(s.split >= 1)) {
-          error << "split argument must be greater or equal to one";
-          goto exit_error;
-        }
-        
-        s.use_split = true;
-        break;
-      case 18:
-        s.show_warps = true;
-        s.show_warps_path = fs::system_complete(fs::path(optarg));
-        break;
-      case 19:
-        if (!parse_color(optarg, s.warp_color)) {
-          goto exit_error;
-        }
-        
-        s.has_warp_color = true;
-        break;
-      case 20:
-        s.prebuffer = atoi(optarg);
-        
-        if (s.prebuffer <= 0) {
-          error << "Number of prebuffered jobs must be more than 0";
-          goto exit_error;
-        }
-        
-        break;
-      case 22:
-        s.hellmode = true;
-        break;
-      case 24:
-        output_log = fs::system_complete(fs::path(optarg));
-        break;
-      case 25:
-        s.no_log = true;
-        break;
-      }
-      
-      continue;
-    }
-    
-    switch (c)
-    {
-    case 'v':
+  switch(s.action) {
+    case Version:
       return do_version();
-    case 'h':
+    case Help:
       return do_help();
-    case 'e':
-      if (!get_blockid(optarg, blockid)) goto exit_error;
-      excludes[blockid] = true;
-      break;
-    case 'm':
-      s.threads = atoi(optarg);
-      
-      if (s.threads <= 0) {
-        error << "Number of worker threads must be more than 0";
-        goto exit_error;
-      }
-      
-      break;
-    case 'q':
-      s.mode = Oblique;
-      break;
-    case 'z':
-      s.mode = Isometric;
-      break;
-    case 'D':
-      s.debug = true;
-      break;
-    case 'y':
-      s.mode = ObliqueAngle;
-      break;
-    case 'a':
-      exclude_all = true;
-      break;
-    case 'i':
-      if (!get_blockid(optarg, blockid)) goto exit_error;
-      includes[blockid] = true;
-      break;
-    case 'w': world_path = fs::system_complete(fs::path(optarg)); break;
-    case 'o':
-      do_generate_map = true;
-      output_path = fs::system_complete(fs::path(optarg));
-      break;
-    case 's': 
-      out.rdbuf(nil.rdbuf());
-      break;
-    case 'x':
-      out.rdbuf(out_log.rdbuf());
-      s.binary = true;
-      break;
-    case 'r':
-      s.rotation = atoi(optarg) % 360;
-      if (s.rotation < 0) {
-        s.rotation += 360;
-      }
-      if (s.rotation % 90 != 0) {
-        error << "Rotation must be a multiple of 90 degrees";
-        goto exit_error;
-      }
-
-      break;
-    case 'N': s.nocheck = true; break;
-    case 'n': s.night = true; break;
-    case 'H': s.heightmap = true; break;
-    case 'c': s.cavemode = true; break;
-    case 't':
-      s.top = atoi(optarg);
-      
-      if (!(s.top > s.bottom && s.top < mc::MapY)) {
-        error << "Top limit must be between `<bottom limit> - " << mc::MapY << "', not " << s.top;
-        goto exit_error;
-      }
-      
-      break;
-    case 'L':
-      if (!parse_limits(optarg, s)) {
-        goto exit_error;
-      }
-      break;
-    case 'R':
-      s.max_radius = boost::lexical_cast<int>(optarg);
-      
-      if (s.max_radius < 0) {
-        error << "Radius must be greater than zero";
-        goto exit_error;
-      }
-      break;
-    case 'b':
-      s.bottom = atoi(optarg);
-      
-      if (!(s.bottom < s.top && s.bottom >= 0)) {
-        error << "Bottom limit must be between `0 - <top limit>', not " << s.bottom;
-        goto exit_error;
-      }
-      
-      break;
-    case 'l':
-      return do_colors();
-    case 'M':
-      {
-        int memory = boost::lexical_cast<int>(optarg);
-        assert(memory >= 0);
-        s.memory_limit = memory * 1024 * 1024;
-        s.memory_limit_default = false;
-      }
-      break;
-    case 'C':
-      s.swap_file = fs::system_complete(fs::path(optarg));
-      break;
-    case 'W': palette_write_path = optarg; break;
-    case 'P': palette_read_path = optarg; break;
-    case 'B':
-      if (!do_base_color_set(optarg)) goto exit_error;
-      break;
-    case 'S':
-      do_generate_statistics = true;
-      
-      if (optarg != NULL) {
-        statistics_path = fs::system_complete(fs::path(optarg));
-      }
-      break;
-    case '?':
-      if (optopt == 'c')
-        error << "Option -" << optopt << " requires an argument";
-      else if (isprint (optopt))
-        error << "Unknown option `-" << optopt << "'";
-      else
-        error << "Unknown option character `\\x" << std::hex << static_cast<int>(optopt) << "'.";
-
-       goto exit_error;
-    default:
-      abort ();
-    }
+    case None:
+      error << "No action specified, please type `c10t -h' for help";
+      goto exit_error;
+    default: break;
   }
-  
-  if (!s.no_log) out_log.open(output_log.string().c_str());
+
+  if (s.binary) out.rdbuf(out_log.rdbuf());
+  if (s.silent) out.rdbuf(nil.rdbuf());
+  if (!s.no_log) out_log.open(s.output_log.string().c_str());
   
   if (s.memory_limit_default) {
     hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
-  }
-
-  if (exclude_all) {
-    for (int i = 0; i < mc::MaterialCount; i++) {
-      s.excludes[i] = true;
-    }
-  }
-
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    if (excludes[i]) {
-      s.excludes[i] = true;
-    }
-    
-    if (includes[i]) {
-      s.excludes[i] = false;
-    }
   }
   
   if (s.cache_use) {
@@ -1482,52 +1091,31 @@ int main(int argc, char *argv[]){
     }
   }
   
-  out << "Threads: " << s.threads << std::endl;
-  
-  if (!palette_write_path.empty()) {
-    if (!do_write_palette(s, palette_write_path)) {
+  if (!s.palette_write_path.empty()) {
+    if (!do_write_palette(s, s.palette_write_path)) {
       goto exit_error;
     }
 
-    out << "Sucessfully wrote palette to " << palette_write_path << endl;
+    out << "Sucessfully wrote palette to " << s.palette_write_path << endl;
   }
   
-  if (!palette_read_path.empty()) {
-    if (!do_read_palette(s, palette_read_path)) {
+  if (!s.palette_read_path.empty()) {
+    if (!do_read_palette(s, s.palette_read_path)) {
       goto exit_error;
     }
 
-    out << "Sucessfully read palette from " << palette_read_path << endl;
+    out << "Sucessfully read palette from " << s.palette_read_path << endl;
   }
   
-  if (world_path.empty())
+  if (s.world_path.empty())
   {
     error << "You must specify a world to render using `-w <directory>'";
     goto exit_error;
   }
   
-  if (output_path.empty()) {
-    error << "You must specify output file using `-o <file>'";
-    goto exit_error;
-  }
-  
-  if (!fs::is_directory(output_path.parent_path())) {
-    error << "Output directory does not exist: " << output_path;
-    goto exit_error;
-  }
-  
-  if (s.use_split) {
-    try {
-      boost::format(fs::basename(output_path)) % 0 % 0;
-    } catch (boost::io::too_many_args& e) {
-      error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
-      goto exit_error;
-    }
-  }
-  
   if (!s.nocheck)
   {
-    fs::path level_dat = world_path / "level.dat";
+    fs::path level_dat = s.world_path / "level.dat";
     
     if (!fs::exists(level_dat)) {
       error << "Does not exist: " << level_dat.string();
@@ -1535,15 +1123,38 @@ int main(int argc, char *argv[]){
     }
   }
   
-  if (do_generate_map)  {
-    if (!generate_map(s, world_path, output_path)) goto exit_error;
-  }
-  else if (do_generate_statistics)  {
-    if (!generate_statistics(s, world_path, statistics_path)) goto exit_error;
-  }
-  else {
-    error << "No action specified";
-    goto exit_error;
+  switch(s.action) {
+    case GenerateWorld:
+      /* do some nice sanity checking prior to generating since this might
+       * catch a couple of errors */
+
+      if (s.output_path.empty()) {
+        error << "You must specify output file using `-o <file>'";
+        goto exit_error;
+      }
+      
+      if (!fs::is_directory(s.output_path.parent_path())) {
+        error << "Output directory does not exist: " << s.output_path;
+        goto exit_error;
+      }
+      
+      if (s.use_split) {
+        try {
+          boost::format(fs::basename(s.output_path)) % 0 % 0;
+        } catch (boost::io::too_many_args& e) {
+          error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
+          goto exit_error;
+        }
+      }
+  
+      if (!generate_map(s, s.world_path, s.output_path)) goto exit_error;
+      break;
+    case GenerateStatistics:
+      if (!generate_statistics(s, s.world_path, s.statistics_path)) goto exit_error;
+      break;
+    default:
+      error << "No action specified";
+      goto exit_error;
   }
   
   if (hints.size() > 0 || warnings.size() > 0) {
@@ -1571,7 +1182,7 @@ int main(int argc, char *argv[]){
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << output_log << endl;
+    out << "Log written to " << s.output_log << endl;
     out_log.close();
   }
   
@@ -1581,17 +1192,13 @@ exit_error:
     cout_error(error.str());
   }
   else {
-    {
-      out << "Type `-h' for help" << endl;
-    }
-    
     out << argv[0] << ": " << error.str() << endl;
   }
   
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << output_log << endl;
+    out << "Log written to " << s.output_log << endl;
     out_log.close();
   }
   

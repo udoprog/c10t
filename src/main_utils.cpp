@@ -1,5 +1,7 @@
 #include "main_utils.hpp"
 
+#include <getopt.h>
+
 #include <sstream>
 #include <fstream>
 #include <iomanip>
@@ -10,6 +12,8 @@
 using namespace std;
 using namespace boost;
 
+vector<std::string> hints;
+vector<std::string> warnings;
 stringstream error;
 
 template<typename C>
@@ -170,8 +174,8 @@ bool read_set(std::set<string>& set, const string s) {
   return true;
 }
 
-bool do_write_palette(settings_t& s, string& path) {
-  std::ofstream pal(path.c_str());
+bool do_write_palette(settings_t& s, const fs::path& path) {
+  std::ofstream pal(path.string().c_str());
 
   pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base R,G,B,A>" << " " << setw(16) << "<side R,G,B,A>" << '\n';
   
@@ -189,10 +193,10 @@ bool do_write_palette(settings_t& s, string& path) {
   return true;
 }
 
-bool do_read_palette(settings_t& s, string& path) {
+bool do_read_palette(settings_t& s, const fs::path& path) {
   typedef tokenizer<boost::char_separator<char> > tokenizer;
 
-  std::ifstream pal(path.c_str());
+  std::ifstream pal(path.string().c_str());
   char_separator<char> sep(" \t\n\r");
   
   while (!pal.eof()) {
@@ -240,5 +244,398 @@ bool do_read_palette(settings_t& s, string& path) {
     }
   }
   
+  return true;
+}
+
+int flag;
+
+struct option long_options[] =
+ {
+   {"world",            required_argument, 0, 'w'},
+   {"output",           required_argument, 0, 'o'},
+   {"top",              required_argument, 0, 't'},
+   {"bottom",           required_argument, 0, 'b'},
+   {"limits",           required_argument, 0, 'L'},
+   {"radius",           required_argument, 0, 'R'},
+   {"memory-limit",     required_argument, 0, 'M'},
+   {"cache-file",       required_argument, 0, 'C'},
+   {"swap-file",        required_argument, 0, 'C'},
+   {"exclude",          required_argument, 0, 'e'},
+   {"include",          required_argument, 0, 'i'},
+   {"rotate",           required_argument, 0, 'r'},
+   {"threads",          required_argument, 0, 'm'},
+   {"help",             no_argument, 0, 'h'},
+   {"silent",           no_argument, 0, 's'},
+   {"version",          no_argument, 0, 'v'},
+   {"debug",            no_argument, 0, 'D'},
+   {"list-colors",      no_argument, 0, 'l'},
+   {"hide-all",         no_argument, 0, 'a'},
+   {"no-check",         no_argument, 0, 'N'},
+   {"oblique",          no_argument, 0, 'q'},
+   {"oblique-angle",    no_argument, 0, 'y'},
+   {"isometric",        no_argument, 0, 'z'},
+   {"cave-mode",        no_argument, 0, 'c'},
+   {"night",            no_argument, 0, 'n'},
+   {"heightmap",        no_argument, 0, 'H'},
+   {"binary",           no_argument, 0, 'x'},
+   {"require-all",      no_argument, &flag, 0},
+   {"show-players",     optional_argument, &flag, 1},
+   {"ttf-path",         required_argument, &flag, 2},
+   {"ttf-size",         required_argument, &flag, 3},
+   {"ttf-color",        required_argument, &flag, 4},
+   {"show-coordinates",     no_argument, &flag, 5},
+   {"pedantic-broad-phase", no_argument, &flag, 6},
+   {"show-signs",       optional_argument, &flag, 7},
+   {"sign-color",        required_argument, &flag, 8},
+   {"player-color",        required_argument, &flag, 9},
+   {"coordinate-color",        required_argument, &flag, 10},
+   {"cache-key",       required_argument, &flag, 11},
+   {"cache-dir",       required_argument, &flag, 12},
+   {"cache-compress",       no_argument, &flag, 13},
+   {"no-alpha",       no_argument, &flag, 14},
+   {"striped-terrain",       no_argument, &flag, 15},
+   {"write-json",       required_argument, &flag, 16},
+   {"write-js",         required_argument, &flag, 26},
+   {"write-markers",       required_argument, &flag, 21},
+   {"split",            required_argument, &flag, 17},
+   {"pixelsplit",       required_argument, &flag, 17},
+   {"show-warps",       required_argument, &flag, 18},
+   {"warp-color",       required_argument, &flag, 19},
+   {"prebuffer",       required_argument, &flag, 20},
+   {"hell-mode",        no_argument, &flag, 22},
+   {"statistics",        optional_argument, 0, 'S'},
+   {"log",            required_argument, &flag, 24},
+   {"no-log",         no_argument, &flag, 25},
+   {"disable-skylight",         no_argument, &flag, 26},
+   {0, 0, 0, 0}
+};
+
+bool read_opts(settings_t& s, int argc, char* argv[])
+{
+  int c;
+  int blockid;
+  int option_index;
+
+  while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
+  {
+    blockid = -1;
+    
+    if (c == 0) {
+      switch (flag) {
+      case 0:
+        s.require_all = true;
+        break;
+      case 1:
+        s.show_players = true;
+        if (optarg != NULL) {
+          if (!read_set(s.show_players_set, optarg)) {
+            return false;
+          }
+        }
+        break;
+      case 2:
+        s.ttf_path = optarg;
+        break;
+      case 3:
+        s.ttf_size = atoi(optarg);
+        
+        if (s.ttf_size <= 0) {
+          error << "ttf-size must be greater than 0";
+          return false;
+        }
+        
+        break;
+      case 4:
+        if (!parse_color(optarg, s.ttf_color)) {
+          return false;
+        }
+        break;
+      case 5:
+        s.show_coordinates = true;
+        break;
+      case 6:
+        s.pedantic_broad_phase = true;
+        break;
+      case 7:
+        s.show_signs = true;
+
+        if (optarg) {
+          s.show_signs_filter = optarg;
+          
+          if (s.show_signs_filter.empty()) {
+            error << "Sign filter must not be empty string";
+            return false;
+          }
+        }
+        
+        break;
+      case 8:
+        if (!parse_color(optarg, s.sign_color)) {
+          return false;
+        }
+        
+        s.has_sign_color = true;
+        break;
+      case 9:
+        if (!parse_color(optarg, s.player_color)) {
+          return false;
+        }
+        
+        s.has_player_color = true;
+        break;
+      case 10:
+        if (!parse_color(optarg, s.coordinate_color)) {
+          return false;
+        }
+        
+        s.has_coordinate_color = true;
+        break;
+      case 11:
+        s.cache_use = true;
+        s.cache_key = optarg;
+        break;
+      case 12:
+        s.cache_dir = optarg;
+        break;
+      case 13:
+        s.cache_compress = true;
+        break;
+      case 14:
+        for (int i = mc::Air + 1; i < mc::MaterialCount; i++)
+          mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
+        break;
+      case 15: s.striped_terrain = true; break;
+      case 21:
+        hints.push_back("`--write-markers' has been deprecated in favour of `--write-json' - use that instead and note the new json structure");
+      case 16:
+        s.write_json = true;
+
+        s.write_json_path = fs::system_complete(fs::path(optarg));
+        
+        {
+          fs::path parent = s.write_json_path.parent_path();
+          
+          if (!fs::is_directory(parent)) {
+            error << "Not a directory: " << parent.string();
+            return false;
+          }
+        }
+        
+        break;
+      case 26:
+        s.write_js = true;
+
+        s.write_js_path = fs::system_complete(fs::path(optarg));
+        
+        {
+          fs::path parent = s.write_js_path.parent_path();
+          
+          if (!fs::is_directory(parent)) {
+            error << "Not a directory: " << parent.string();
+            return false;
+          }
+        }
+        
+        break;
+      case 17:
+        try {
+          s.split = boost::lexical_cast<int>(optarg);
+        } catch(boost::bad_lexical_cast& e) {
+          error << "Cannot be converted to number: " << optarg;
+          return false;
+        }
+        
+        if (!(s.split >= 1)) {
+          error << "split argument must be greater or equal to one";
+          return false;
+        }
+        
+        s.use_split = true;
+        break;
+      case 18:
+        s.show_warps = true;
+        s.show_warps_path = fs::system_complete(fs::path(optarg));
+        break;
+      case 19:
+        if (!parse_color(optarg, s.warp_color)) {
+          return false;
+        }
+        
+        s.has_warp_color = true;
+        break;
+      case 20:
+        s.prebuffer = atoi(optarg);
+        
+        if (s.prebuffer <= 0) {
+          error << "Number of prebuffered jobs must be more than 0";
+          return false;
+        }
+        
+        break;
+      case 22:
+        s.hellmode = true;
+        break;
+      case 24:
+        s.output_log = fs::system_complete(fs::path(optarg));
+        break;
+      case 25:
+        s.no_log = true;
+        break;
+      }
+      
+      continue;
+    }
+    
+    switch (c)
+    {
+    case 'v':
+      s.action = Version;
+      break;
+    case 'h':
+      s.action = Help;
+      break;
+    case 'e':
+      if (!get_blockid(optarg, blockid)) return false;
+      s.excludes[blockid] = true;
+      break;
+    case 'm':
+      s.threads = atoi(optarg);
+      
+      if (s.threads <= 0) {
+        error << "Number of worker threads must be more than 0";
+        return false;
+      }
+      
+      break;
+    case 'q':
+      s.mode = Oblique;
+      break;
+    case 'z':
+      s.mode = Isometric;
+      break;
+    case 'D':
+      s.debug = true;
+      break;
+    case 'y':
+      s.mode = ObliqueAngle;
+      break;
+    case 'a':
+      for (int i = 0; i < mc::MaterialCount; i++)
+      {
+        s.excludes[i] = true;
+      }
+      break;
+    case 'i':
+      if (!get_blockid(optarg, blockid)) return false;
+      s.includes[blockid] = true;
+      break;
+    case 'w':
+      s.world_path = fs::system_complete(fs::path(optarg));
+      break;
+    case 'o':
+      s.action = GenerateWorld;
+      s.output_path = fs::system_complete(fs::path(optarg));
+      break;
+    case 's': 
+      s.silent = true;
+      break;
+    case 'x':
+      s.binary = true;
+      break;
+    case 'r':
+      s.rotation = atoi(optarg) % 360;
+      if (s.rotation < 0) {
+        s.rotation += 360;
+      }
+      if (s.rotation % 90 != 0) {
+        error << "Rotation must be a multiple of 90 degrees";
+        return false;
+      }
+
+      break;
+    case 'N': s.nocheck = true; break;
+    case 'n': s.night = true; break;
+    case 'H': s.heightmap = true; break;
+    case 'c': s.cavemode = true; break;
+    case 't':
+      s.top = atoi(optarg);
+      
+      if (!(s.top > s.bottom && s.top < mc::MapY)) {
+        error << "Top limit must be between `<bottom limit> - " << mc::MapY << "', not " << s.top;
+        return false;
+      }
+      
+      break;
+    case 'L':
+      if (!parse_limits(optarg, s)) {
+        return false;
+      }
+      break;
+    case 'R':
+      s.max_radius = boost::lexical_cast<int>(optarg);
+      
+      if (s.max_radius < 0) {
+        error << "Radius must be greater than zero";
+        return false;
+      }
+      break;
+    case 'b':
+      s.bottom = atoi(optarg);
+      
+      if (!(s.bottom < s.top && s.bottom >= 0)) {
+        error << "Bottom limit must be between `0 - <top limit>', not " << s.bottom;
+        return false;
+      }
+      
+      break;
+    case 'l':
+      s.action = ListColors;
+      break;
+    case 'M':
+      {
+        int memory = boost::lexical_cast<int>(optarg);
+        assert(memory >= 0);
+        s.memory_limit = memory * 1024 * 1024;
+        s.memory_limit_default = false;
+      }
+      break;
+    case 'C':
+      s.swap_file = fs::system_complete(fs::path(optarg));
+      break;
+    case 'W':
+      s.palette_write_path = optarg;
+      break;
+    case 'P':
+      s.palette_read_path = optarg;
+      break;
+    case 'B':
+      if (!do_base_color_set(optarg)) return false;
+      break;
+    case 'S':
+      s.action = GenerateStatistics;
+      
+      if (optarg != NULL) {
+        s.statistics_path = fs::system_complete(fs::path(optarg));
+      }
+      break;
+    case '?':
+      if (optopt == 'c')
+        error << "Option -" << optopt << " requires an argument";
+      else if (isprint (optopt))
+        error << "Unknown option `-" << optopt << "'";
+      else
+        error << "Unknown option character `\\x" << std::hex << static_cast<int>(optopt) << "'.";
+
+       return false;
+    default:
+       error << "Unknown getopt error : ) - congrats, you broke it";
+       return false;
+    }
+  }
+
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    if (s.includes[i]) s.excludes[i] = false;
+  }
+
   return true;
 }

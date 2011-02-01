@@ -4,6 +4,8 @@
 #include <string>
 #include <set>
 #include <sstream>
+#include <vector>
+#include <string>
 
 #include "image/color.hpp"
 
@@ -32,9 +34,13 @@ bool do_side_color_set(const char *set_str);
 bool parse_limits(const std::string& limits_str, settings_t& s);
 bool read_set(std::set<std::string>& set, const std::string s);
 
-bool do_write_palette(settings_t& s, std::string& path);
-bool do_read_palette(settings_t& s, std::string& path);
+bool do_write_palette(settings_t& s, const fs::path& path);
+bool do_read_palette(settings_t& s, const fs::path& path);
 
+bool read_opts(settings_t& s, int argc, char* argv[]);
+
+extern std::vector<std::string> hints;
+extern std::vector<std::string> warnings;
 extern std::stringstream error;
 
 #endif /* __MAIN_UTILS_HPP__ */

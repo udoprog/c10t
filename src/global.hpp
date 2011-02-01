@@ -8,6 +8,7 @@
 #endif
 
 #include <boost/filesystem.hpp>
+#include <boost/shared_array.hpp>
 
 #include <string>
 #include <set>
@@ -24,6 +25,15 @@ enum mode {
   Isometric = 0x3
 };
 
+enum action {
+  None,
+  Version,
+  Help,
+  GenerateWorld,
+  GenerateStatistics,
+  ListColors
+};
+
 struct settings_t {
   bool cavemode;
   bool hellmode;
@@ -31,7 +41,8 @@ struct settings_t {
   bool heightmap;
   bool silent;
   bool nocheck;
-  bool *excludes;
+  boost::shared_array<bool> excludes;
+  boost::shared_array<bool> includes;
   bool binary;
   bool debug;
   bool use_split;
@@ -79,12 +90,28 @@ struct settings_t {
   bool write_js;
   fs::path write_js_path;
   bool no_log;
+  fs::path output_log;
+
+  fs::path world_path;
+  fs::path output_path;
+  fs::path statistics_path;
+
+  fs::path palette_write_path;
+  fs::path palette_read_path;
+
+  enum action action;
   
   settings_t() {
-    this->excludes = new bool[mc::MaterialCount];
+    this->excludes.reset(new bool[mc::MaterialCount]);
     
     for (int i = 0; i < mc::MaterialCount; i++) {
       this->excludes[i] = false;
+    }
+
+    this->includes.reset(new bool[mc::MaterialCount]);
+    
+    for (int i = 0; i < mc::MaterialCount; i++) {
+      this->includes[i] = true;
     }
 
 #   if !defined(C10T_DISABLE_THREADS)
@@ -143,10 +170,11 @@ struct settings_t {
     this->write_js = false;
     this->no_log = false;
     this->disable_skylight = false;
-  }
-  
-  ~settings_t() {
-    delete [] this->excludes;
+    this->output_log = fs::system_complete(fs::path("c10t.log"));
+    this->output_path = fs::system_complete(fs::path("out.png"));
+    this->statistics_path = fs::system_complete(fs::path("statistics.txt"));
+
+    this->action = None;
   }
 };
 

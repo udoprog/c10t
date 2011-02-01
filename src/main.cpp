@@ -14,22 +14,20 @@
 #include <fstream>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/ptr_container/ptr_list.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "config.hpp"
-
-#include "threads/threadworker.hpp"
-#include "2d/cube.hpp"
 
 #include "image/format/png.hpp"
 #include "image/image_base.hpp"
 #include "image/memory_image.hpp"
 #include "image/cached_image.hpp"
+
+#include "threads/renderer.hpp"
+#include "2d/cube.hpp"
 
 #include "global.hpp"
 #include "cache.hpp"
@@ -49,6 +47,8 @@
 #include "engine/obliqueangle_engine.hpp"
 #include "engine/isometric_engine.hpp"
 
+#include "main_utils.hpp"
+
 using namespace std;
 namespace fs = boost::filesystem;
 
@@ -60,7 +60,6 @@ nullstream nil;
 std::ostream out(std::cout.rdbuf());
 std::ofstream out_log;
 
-stringstream error;
 vector<std::string> hints;
 vector<std::string> warnings;
 const uint8_t ERROR_BYTE = 0x01;
@@ -138,83 +137,6 @@ inline void cout_end() {
  *
  * This will allow us to composite the entire image later and calculate sizes then.
  */
-struct render_result {
-  int xPos, zPos;
-  fs::path path;
-  boost::shared_ptr<image_operations> operations;
-  bool fatal;
-  std::string fatal_why;
-  std::vector<mc::marker> signs;
-  bool cache_hit;
-  
-  render_result() : fatal(false), fatal_why("(no error)") {}
-};
-
-struct render_job {
-  int xPos, zPos;
-  int xReal, zReal;
-  fs::path path;
-  boost::shared_ptr<engine_base> engine;
-};
-
-class renderer : public threadworker<render_job, render_result> {
-public:
-  settings_t& s;
-  
-  renderer(settings_t& s, int n, int total) : threadworker<render_job, render_result>(n, total), s(s) {
-  }
-  
-  render_result work(render_job job) {
-    render_result p;
-    
-    p.path = job.path;
-    p.xPos = job.xPos;
-    p.zPos = job.zPos;
-    p.cache_hit = false;
-    
-    cache_file cache(mc::utils::level_dir(s.cache_dir, job.xReal, job.zReal), p.path, s.cache_compress);
-    
-    p.operations.reset(new image_operations);
-    
-    if (s.cache_use) {
-      if (cache.exists()) {
-        if (cache.read(p.operations)) {
-          p.cache_hit = true;
-          return p;
-        }
-        
-        cache.clear();
-      }
-    }
-
-    mc::level level(job.path);
-    
-    try {
-      level.read();
-    } catch(mc::invalid_file& e) {
-      p.fatal = true;
-      p.fatal_why = e.what();
-      return p;
-    }
-    
-    p.signs = level.get_signs();
-    
-    job.engine->render(level, p.operations);
-    
-    if (s.cache_use) {
-      // create the necessary directories required when caching
-      cache.create_directories();
-      
-      // ignore failure while writing the operations to cache
-      if (!cache.write(p.operations)) {
-        // on failure, remove the cache file - this will prompt c10t to regenerate it next time
-        cache.clear();
-      }
-    }
-    
-    return p;
-  }
-};
 
 inline void populate_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
@@ -1119,210 +1041,6 @@ int do_colors() {
   return 0;
 }
 
-bool get_blockid(const string blockid_string, int& blockid) {
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    if (blockid_string.compare(mc::MaterialName[i]) == 0) {
-      blockid = i;
-      return true;
-    }
-  }
-  
-  try {
-    blockid = boost::lexical_cast<int>(blockid_string);
-  } catch(const boost::bad_lexical_cast& e) {
-    error << "Cannot be converted to number: " << blockid_string;
-    return false;
-  }
-  
-  if (!(blockid >= 0 && blockid < mc::MaterialCount)) {
-    error << "Not a valid blockid: " << blockid_string;
-    return false;
-  }
-  
-  return true;
-}
-
-bool parse_color(const string value, color& c) {
-  int cr, cg, cb, ca=0xff;
-  
-  if (!(sscanf(value.c_str(), "%d,%d,%d,%d", &cr, &cg, &cb, &ca) == 4 || 
-        sscanf(value.c_str(), "%d,%d,%d", &cr, &cg, &cb) == 3)) {
-    error << "color sets must be of the form <red>,<green>,<blue>[,<alpha>] but was: " << value;
-    return false;
-  }
-  
-  if (!(
-      cr >= 0 && cr <= 0xff &&
-      cg >= 0 && cg <= 0xff &&
-      cb >= 0 && cb <= 0xff &&
-      ca >= 0 && ca <= 0xff)) {
-    error << "color values must be between 0-255";
-    return false;
-  }
-  
-  c.r = cr;
-  c.g = cg;
-  c.b = cb;
-  c.a = ca;
-  return true;
-}
-
-bool parse_set(const char* set_str, int& blockid, color& c)
-{
-  istringstream iss(set_str);
-  string key, value;
-  
-  assert(getline(iss, key, '='));
-  assert(getline(iss, value));
-  
-  if (!get_blockid(key, blockid)) {
-    return false;
-  }
-
-  if (!parse_color(value, c)) {
-    return false;
-  }
-  
-  return true;
-}
-
-bool do_base_color_set(const char *set_str) {
-  int blockid;
-  color c;
-  
-  if (!parse_set(set_str, blockid, c)) {
-    return false;
-  }
-
-  mc::MaterialColor[blockid] = c;
-  mc::MaterialSideColor[blockid] = mc::MaterialColor[blockid];
-  mc::MaterialSideColor[blockid].darken(0x20);
-  return true;
-}
-
-bool do_side_color_set(const char *set_str) {
-  int blockid;
-  color c;
-  
-  if (!parse_set(set_str, blockid, c)) {
-    return false;
-  }
-
-  mc::MaterialSideColor[blockid] = color(c);
-  return true;
-}
-
-// Convert a string such as "-30,40,50,30" to the corresponding N,S,E,W integers,
-// and fill in the min/max settings.
-bool parse_limits(const string& limits_str, settings_t& s) {
-  std::vector<std::string> limits;
-  boost::split(limits, limits_str, boost::is_any_of(","));
-  
-  if (limits.size() != 4) {
-    error << "Limit argument must of format: <N>,<S>,<E>,<W>";
-    return false;
-  }
-  
-  s.min_x = atoi(limits[0].c_str());
-  s.max_x = atoi(limits[1].c_str());
-  s.min_z = atoi(limits[2].c_str());
-  s.max_z = atoi(limits[3].c_str());
-  return true;
-}
-
-bool parse_list(std::set<string>& set, const string s) {
-  boost::char_separator<char> sep(" \t\n\r,:");
-  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-  tokenizer tokens(s, sep);
-  
-  for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter) {
-    set.insert(*tok_iter);
-  }
-
-  if (set.size() == 0) {
-    error << "List must specify items separated by comma `,'";
-    return false;
-  }
-  
-  return true;
-}
-
-bool do_write_palette(settings_t& s, string& path) {
-  std::ofstream pal(path.c_str());
-
-  pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base R,G,B,A>" << " " << setw(16) << "<side R,G,B,A>" << '\n';
-  
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    color mc = mc::MaterialColor[i];
-    color msc = mc::MaterialSideColor[i];
-    pal << left << setw(20) << mc::MaterialName[i] << " " << setw(16) << mc << " " << setw(16) << msc << '\n';
-  }
-
-  if (pal.fail()) {
-    error << "Failed to write palette to " << path;
-    return false;
-  }
-  
-  out << "Sucessfully wrote palette to " << path << endl;
-  
-  return true;
-}
-
-bool do_read_palette(settings_t& s, string& path) {
-  std::ifstream pal(path.c_str());
-  boost::char_separator<char> sep(" \t\n\r");
-  
-  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-  
-  while (!pal.eof()) {
-    string line;
-    getline(pal, line, '\n');
-    
-    tokenizer tokens(line, sep);
-    
-    int blockid = 0, i = 0;
-    color c;
-    
-    for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++i) {
-      string token = *tok_iter;
-      
-      if (token.at(0) == '#') {
-        // rest is comment
-        break;
-      }
-      
-      switch(i) {
-        case 0:
-          if (!get_blockid(token, blockid)) {
-            return false;
-          }
-          break;
-        case 1:
-          if (!parse_color(token, c)) {
-            return false;
-          }
-          
-          mc::MaterialColor[blockid] = c;
-          c.darken(0x20);
-          mc::MaterialSideColor[blockid] = c;
-          break;
-        case 2:
-          if (!parse_color(token, c)) {
-            return false;
-          }
-          
-          mc::MaterialSideColor[blockid] = c;
-          break;
-        default:
-          break;
-      }
-    }
-  }
-  
-  out << "Sucessfully read palette from " << path << endl;
-  return true;
-}
-
 int main(int argc, char *argv[]){
   nullstream nil;
   
@@ -1429,7 +1147,7 @@ int main(int argc, char *argv[]){
       case 1:
         s.show_players = true;
         if (optarg != NULL) {
-          if (!parse_list(s.show_players_set, optarg)) {
+          if (!read_set(s.show_players_set, optarg)) {
             goto exit_error;
           }
         }
@@ -1770,12 +1488,16 @@ int main(int argc, char *argv[]){
     if (!do_write_palette(s, palette_write_path)) {
       goto exit_error;
     }
+
+    out << "Sucessfully wrote palette to " << palette_write_path << endl;
   }
   
   if (!palette_read_path.empty()) {
     if (!do_read_palette(s, palette_read_path)) {
       goto exit_error;
     }
+
+    out << "Sucessfully read palette from " << palette_read_path << endl;
   }
   
   if (world_path.empty())

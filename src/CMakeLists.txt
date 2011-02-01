@@ -15,8 +15,8 @@ set(c10t_SOURCES ${c10t_SOURCES} engine/isometric_engine.cpp)
 
 set(c10t_LIBRARIES ${c10t_LIBRARIES} c10t-image c10t-nbt c10t-mc)
 
-add_executable(c10t main.cpp ${c10t_SOURCES})
-add_executable(c10t-debug EXCLUDE_FROM_ALL main.cpp ${c10t_SOURCES})
+add_executable(c10t main.cpp main_utils.cpp ${c10t_SOURCES})
+add_executable(c10t-debug EXCLUDE_FROM_ALL main.cpp main_utils.cpp ${c10t_SOURCES})
 add_executable(nbt-inspect EXCLUDE_FROM_ALL nbt/nbt_inspect.cpp nbt/nbt.cpp)
 
 set_target_properties(c10t PROPERTIES COMPILE_FLAGS "-O3 -Wall")

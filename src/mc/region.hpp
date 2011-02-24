@@ -153,7 +153,7 @@ namespace mc {
 
         if (status != Z_STREAM_END) {
           inflateEnd(&strm);
-          return 0;
+          throw bad_region(path, "failed to inflate data (Z_STREAM_END)");
         }
         
         oss.write(data.get(), CHUNK_MAX - strm.avail_out);

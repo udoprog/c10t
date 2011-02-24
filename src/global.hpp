@@ -15,6 +15,7 @@
 
 #include "mc/blocks.hpp"
 #include "image/color.hpp"
+#include "2d/cube.hpp"
 
 namespace fs = boost::filesystem;
 
@@ -34,6 +35,13 @@ enum action {
   GenerateStatistics,
   ListColors,
   WritePalette
+};
+
+struct point_surface{
+	int x;
+	int z;
+	point_surface(int x,int z): x(x),z(z){
+	}
 };
 
 struct settings_t {
@@ -110,6 +118,7 @@ struct settings_t {
   int center_z;
 
   enum action action;
+  std::list< std::list<point_surface> > lines_to_follow;
   
   settings_t() {
     this->excludes.reset(new bool[mc::MaterialCount]);

@@ -44,7 +44,7 @@ namespace mc {
   public:
     fs::path world_path;
     
-    int min_x, min_z, max_x, max_z;
+    int min_x, min_z, max_x, max_z, min_y;
     // the difference between min_* and max_*
     int diff_x, diff_z;
     // min_* as a point

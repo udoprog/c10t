@@ -8,6 +8,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 
 using namespace std;
@@ -186,6 +187,48 @@ bool parse_tuple(const string& str, settings_t& s, int& a, int& b) {
 
   return true;
 }
+
+bool parse_polyline(const string& limits_str, settings_t& s) {
+  std::vector<std::string> limits;
+  boost::split(limits, limits_str, boost::is_any_of(","));
+  
+  size_t size = limits.size() ;
+  if (size < 4 || size % 2 != 0) {
+    error << "Polygon argument must of format: <x1>,<z1>,<x2>,<z2>[,<x1>,<z1>]+";
+    return false;
+  }
+
+  int nbpoints=size/2;
+  std::list<point_surface> line_to_follow;
+  for(int x=0; x<nbpoints; x++){
+	 
+	int X = atoi(limits[2*x].c_str());
+  	int Z = atoi(limits[2*x+1].c_str());
+	point_surface p(X,Z);
+	line_to_follow.push_back(p);
+	// out << "adding new point" << endl; 
+  }
+  s.lines_to_follow.push_back(line_to_follow);
+  return true;
+}
+
+bool parse_list(std::set<string>& set, const string s) {
+  boost::char_separator<char> sep(" \t\n\r,:");
+  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+  tokenizer tokens(s, sep);
+  
+  for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter) {
+    set.insert(*tok_iter);
+  }
+
+  if (set.size() == 0) {
+    error << "List must specify items separated by comma `,'";
+    return false;
+  }
+  
+  return true;
+}
+
 
 bool read_set(std::set<string>& set, const string s) {
   boost_split(set, s);
@@ -370,6 +413,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
 
   while ((c = getopt_long(argc, argv, "DNvxcnHqzZyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
+  while ((c = getopt_long(argc, argv, "DNvxcnHqzZyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:Y:", long_options, &option_index)) != -1)
     blockid = -1;
     
     if (c == 0) {
@@ -669,7 +713,14 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         return false;
       }
       break;
-    case 'b':
+     case 'Y':
+      if (!parse_polyline(optarg, s)) {
+        error << "Invalid polyline format";
+        return false;
+      }
+      break;
+
+   case 'b':
       s.bottom = atoi(optarg);
       
       if (!(s.bottom < s.top && s.bottom >= 0)) {

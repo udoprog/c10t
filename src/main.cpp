@@ -38,6 +38,7 @@
 #include "json.hpp"
 #include "altitude_graph.hpp"
 #include "warps.hpp"
+#include "selectors.hpp"
 
 #include "mc/world.hpp"
 #include "mc/blocks.hpp"
@@ -91,12 +92,12 @@ inline void cout_end() {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
 }
 
+
 /*
  * Store part of a level rendered as a small image.
  *
  * This will allow us to composite the entire image later and calculate sizes then.
  */
-
 inline void populate_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_core> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
   
@@ -511,6 +512,32 @@ bool generate_map(
   /*
    * Scan the world for regions containing levels.
    */
+  
+  all_criterium_chunk_selector selector;
+  in_range_predicate in_range(s);
+  pchunksel in_range_pred (new predicate_criterium<in_range_predicate> (in_range));
+  selector.add_criterium(in_range_pred);
+  typedef boost::shared_ptr<any_criterium_chunk_selector> panychunksel;
+  panychunksel line_selector (new any_criterium_chunk_selector());
+  if(s.lines_to_follow.size()>0){
+	for(std::list< std::list<point_surface> >::iterator it = s.lines_to_follow.begin() ; it!=s.lines_to_follow.end() ; ++it) {
+		 list<point_surface> line_to_follow=*it;
+	         std::list<point_surface>::iterator it = line_to_follow.begin();
+	
+		 point_surface debut=*it;
+		 it++; 
+		 for(;it!=line_to_follow.end();it++){
+			point_surface end=*it; 
+			is_chunk_on_line is(debut,end);
+			pchunksel p(new predicate_criterium<is_chunk_on_line>(is));
+			line_selector->add_criterium(p);
+			debut=end;
+	  	}
+		selector.add_criterium(line_selector);
+		out << "added line criterium" << endl;
+	}
+  } 
+ 
   {
     nonstd::continious<unsigned int> reporter(out, 100, out_dot<unsigned int>, cout_uint_endl);
     mc::region_iterator iterator = world.get_iterator();
@@ -528,7 +555,6 @@ bool generate_map(
         out_log << path_string(region->get_path()) << ": could not read header" << std::endl;
         continue;
       }
-
       std::list<mc::utils::level_coord> coords;
 
       region->read_coords(coords);
@@ -538,11 +564,8 @@ bool generate_map(
         
         mc::utils::level_coord coord = level->get_coord();
         
-        if (coord_out_of_range(s, coord)) {
+        if (! selector.select(coord)) {
           ++filtered_levels;
-          out_log << level->get_path() << ": (z,x) position"
-                  << " (" << coord.get_z() << "," << coord.get_x() << ")"
-                  << " out of limit" << std::endl;
           continue;
         }
         
@@ -1215,12 +1238,15 @@ int do_help(ostream& out) {
     << "  -t, --top <int>           - Splice from the top, must be less than 128       " << endl
     << "  -b, --bottom <int>        - Splice from the bottom, must be greater than or  " << endl
     << "                              equal to zero.                                   " << endl
-    << "  -L, --limits <int-list>   - Limit render to certain area. int-list form:     " << endl
+    << "  -L, --limits <int-list>   - Limit render to certain area. int-list form      " << endl
+    << "                              of chunk number in format                        " << endl
     << "                              North,South,East,West, e.g.                      " << endl
     << "                              -L 0,100,-10,20 limiting between 0 and 100 in the" << endl
     << "                              north-south direction and between -10 and 20 in  " << endl
     << "                              the east-west direction.                         " << endl
     << "                              Note: South and West are the positive directions." << endl
+    << "  -Z, --limits <int-list>   - limt render to certain chunk along a polygon line" << endl
+    << "                              area. int-list form                              " << endl
     << "  -R, --radius <int>        - Limit render to a specific radius, useful when   " << endl
     << "                              your map is absurdly large and you want a 'fast' " << endl
     << "                              limiting option.                                 " << endl
@@ -1377,7 +1403,6 @@ int main(int argc, char *argv[]){
   if (!read_opts(s, argc, argv)) {
     goto exit_error;
   }
-
   switch(s.action) {
     case Version:
       return do_version(out);
@@ -1396,7 +1421,7 @@ int main(int argc, char *argv[]){
       error << "No action specified, please type `c10t -h' for help";
       goto exit_error;
     default: break;
-  }
+ }
 
   if (s.binary) {
     out.rdbuf(out_log.rdbuf());

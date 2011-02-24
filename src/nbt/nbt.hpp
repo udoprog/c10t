@@ -22,23 +22,23 @@ namespace nbt {
   class bad_grammar : std::exception {};
   #define NBT_STACK_SIZE 100
 
-  #define nbt_assert_error(exc_env, zfile, cond, why)                \
+  #define nbt_assert_error(exc_env, file, cond, why)    \
   do {                                                  \
-  if (!(cond)) {                                           \
-    size_t where = file == NULL ? 0 : gztell(file);     \
+  if (!(cond)) {                                        \
+    size_t where = file.tell();                         \
     error_handler(context, where, why);                 \
     longjmp(exc_env, 1);                                \
   }                                                     \
   } while(0)
   
-  #define assert_error_c(exc_env, zfile, cond, why, cleanup)     \
-  do {                                                  \
-  if (!(cond)) {                                           \
-    size_t where = file == NULL ? 0 : gztell(file);     \
-    error_handler(context, where, why);                 \
-    cleanup;                                            \
-    longjmp(exc_env, 1);                                \
-  }                                                     \
+  #define assert_error_c(exc_env, file, cond, why, cleanup)   \
+  do {                                                        \
+  if (!(cond)) {                                              \
+    size_t where = file.tell();                               \
+    error_handler(context, where, why);                       \
+    cleanup;                                                  \
+    longjmp(exc_env, 1);                                      \
+  }                                                           \
   } while(0)
   
   typedef int8_t Byte;
@@ -62,6 +62,46 @@ namespace nbt {
     String name;
     Int list_count, list_read;
     Byte list_type;
+  };
+
+  class const_buffer {
+  public:
+    typedef int pos_t;
+  private:
+    const char* buffer;
+    pos_t offs;
+    pos_t size;
+  public:
+    const_buffer(const char* buffer, pos_t size) : buffer(buffer), offs(0), size(size) {
+    }
+
+    pos_t read(void* target, pos_t len) {
+      if (!(offs + len <= size)) {
+        return -1;
+      }
+
+      ::memcpy(target, &buffer[offs], len);
+      offs += len;
+      return len;
+    }
+
+    pos_t total() {
+      return size;
+    }
+
+    pos_t tell() {
+      return offs;
+    }
+
+    pos_t flush(pos_t len) {
+      if (!(offs + len <= size)) {
+        return -1;
+      }
+      
+      offs += len;
+      
+      return len;
+    }
   };
   
   const Byte TAG_End = 0x0;
@@ -137,27 +177,27 @@ namespace nbt {
       bool running;
       C *context;
       
-      inline Byte read_byte(gzFile file) {
+      inline Byte read_byte(const_buffer& file) {
         Byte b;
-        nbt_assert_error(exc_env, file, gzread(file, &b, sizeof(Byte)) == sizeof(Byte), "Buffer too short to read Byte");
+        nbt_assert_error(exc_env, file, file.read(&b, sizeof(Byte)) == sizeof(Byte), "Buffer too short to read Byte");
         return b;
       }
       
-      inline Short read_short(gzFile file) {
+      inline Short read_short(const_buffer& file) {
         uint8_t b[2];
-        nbt_assert_error(exc_env, file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Short");
+        nbt_assert_error(exc_env, file, file.read(b, sizeof(b)) == sizeof(b), "Buffer to short to read Short");
         Short s = (b[0] << 8) + b[1];
         return s;
       }
 
-      inline Int read_int(gzFile file) {
+      inline Int read_int(const_buffer& file) {
         Int i;
         
 #ifdef BOOST_BIG_ENDIAN
-        nbt_assert_error(exc_env, file, gzread(file, &i, sizeof(b)) == sizeof(b), "Buffer to short to read Int");
+        nbt_assert_error(exc_env, file, file.read(&i, sizeof(b)) == sizeof(b), "Buffer to short to read Int");
 #else
         Byte b[sizeof(i)];
-        nbt_assert_error(exc_env, file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Int");
+        nbt_assert_error(exc_env, file, file.read(b, sizeof(b)) == sizeof(b), "Buffer to short to read Int");
         Int *ip = &i;
         *((Byte*)ip) = b[3];
         *((Byte*)ip + 1) = b[2];
@@ -168,30 +208,30 @@ namespace nbt {
         return i;
       }
       
-      inline String read_string(gzFile file) {
+      inline String read_string(const_buffer& file) {
         Short s = read_short(file);
         nbt_assert_error(exc_env, file, s >= 0, "String specified with invalid length < 0");
         uint8_t *str = new uint8_t[s + 1];
-        assert_error_c(exc_env, file, gzread(file, str, s) == s, "Buffer to short to read String", delete str);
+        assert_error_c(exc_env, file, file.read(str, s) == s, "Buffer to short to read String", delete str);
         String so((const char*)str, s);
         delete [] str;
         return so;
       }
       
-      inline void flush_string(gzFile file) {
+      inline void flush_string(const_buffer& file) {
         Short s = read_short(file);
-        nbt_assert_error(exc_env, file, gzseek(file, s, SEEK_CUR) != -1, "Buffer to short to flush String");
+        nbt_assert_error(exc_env, file, file.flush(s) != -1, "Buffer to short to flush String");
       }
       
-      inline Float read_float(gzFile file)
+      inline Float read_float(const_buffer& file)
       {
         Float f;
         
 #ifdef BOOST_BIG_ENDIAN
-        nbt_assert_error(exc_env, file, gzread(file, &f, sizeof(f)) == sizeof(f), "Buffer to short to read Float");
+        nbt_assert_error(exc_env, file, file.read(&f, sizeof(f)) == sizeof(f), "Buffer to short to read Float");
 #else
         Byte b[sizeof(f)];
-        nbt_assert_error(exc_env, file, gzread(file, b, sizeof(f)) == sizeof(f), "Buffer to short to read Float");
+        nbt_assert_error(exc_env, file, file.read(b, sizeof(f)) == sizeof(f), "Buffer to short to read Float");
         Float *fp = &f;
         *((Byte*)fp) = b[3];
         *((Byte*)fp + 1) = b[2];
@@ -202,14 +242,14 @@ namespace nbt {
         return f;
       }
       
-      inline Long read_long(gzFile file) {
+      inline Long read_long(const_buffer& file) {
         Long l;
         
 #ifdef BOOST_BIG_ENDIAN
-        nbt_assert_error(exc_env, file, gzread(file, &l, sizeof(b)) == sizeof(b), "Buffer to short to read Long");
+        nbt_assert_error(exc_env, file, file.read(&l, sizeof(b)) == sizeof(b), "Buffer to short to read Long");
 #else
         Byte b[sizeof(l)];
-        nbt_assert_error(exc_env, file, gzread(file, b, sizeof(b)) == sizeof(b), "Buffer to short to read Long");
+        nbt_assert_error(exc_env, file, file.read(b, sizeof(b)) == sizeof(b), "Buffer to short to read Long");
         Long *lp = &l;
         *((Byte*)lp) = b[7];
         *((Byte*)lp + 1) = b[6];
@@ -224,14 +264,14 @@ namespace nbt {
         return l;
       }
       
-      inline Double read_double(gzFile file) {
+      inline Double read_double(const_buffer& file) {
         Double d;
         
 #ifdef BOOST_BIG_ENDIAN
-        nbt_assert_error(exc_env, file, gzread(file, &d, sizeof(d)) == sizeof(d), "Buffer to short to read Double");
+        nbt_assert_error(exc_env, file, file.read(&d, sizeof(d)) == sizeof(d), "Buffer to short to read Double");
 #else
         Byte b[sizeof(d)];
-        nbt_assert_error(exc_env, file, gzread(file, b, sizeof(d)) == sizeof(d), "Buffer to short to read Double");
+        nbt_assert_error(exc_env, file, file.read(b, sizeof(d)) == sizeof(d), "Buffer to short to read Double");
         Double *dp = &d;
         *((Byte*)dp) = b[7];
         *((Byte*)dp + 1) = b[6];
@@ -246,22 +286,22 @@ namespace nbt {
         return d;
       }
       
-      inline Byte read_tagType(gzFile file) {
+      inline Byte read_tagType(const_buffer& file) {
         Byte type = read_byte(file);
         nbt_assert_error(exc_env, file, type >= 0 && type <= TAG_Compound, "Not a valid tag type");
         return type;
       }
       
-      inline void flush_byte_array(gzFile file) {
+      inline void flush_byte_array(const_buffer& file) {
         Int length = read_int(file);
-        nbt_assert_error(exc_env, file, gzseek(file, length, SEEK_CUR) != -1,
+        nbt_assert_error(exc_env, file, file.flush(length) != -1,
           "Buffer to short to flush ByteArray");
       }
       
-      inline void handle_byte_array(String name, gzFile file) {
+      inline void handle_byte_array(String name, const_buffer& file) {
         Int length = read_int(file);
         Byte *values = new Byte[length];
-        nbt_assert_error(exc_env, file, gzread(file, values, length) == length, "Buffer to short to read ByteArray");
+        nbt_assert_error(exc_env, file, file.read(values, length) == length, "Buffer to short to read ByteArray");
         ByteArray *array = new ByteArray();
         array->values = values;
         array->length = length;
@@ -339,21 +379,19 @@ namespace nbt {
       void stop() {
         running = false;
       }
-      
-      void parse_file(const char *path)
+
+      void parse_buffer(const char* buffer, unsigned int size)
       {
-        if (setjmp(exc_env) == 1) return;
-        
-        gzFile file = gzopen(path, "rb");
-        nbt_assert_error(exc_env, file, file != NULL, strerror(errno));
-        
+        const_buffer file(buffer, size);
+
         running = true;
         stack_entry *stack = new stack_entry[NBT_STACK_SIZE];
         int stack_p = 0;
         stack_entry *root = stack + 0;
         
         if (setjmp(exc_env) == 1) {
-          goto exit_error;
+          delete [] stack;
+          return;
         }
         
         root->type = read_tagType(file);
@@ -403,7 +441,7 @@ namespace nbt {
           switch(type) {
           case TAG_Long:
             if (register_long == NULL) {
-              nbt_assert_error(exc_env, file, gzseek(file, sizeof(nbt::Long), SEEK_CUR) != -1,
+              nbt_assert_error(exc_env, file, file.flush(sizeof(nbt::Long)) != -1,
                 "Buffer too short to flush long");
             } else {
               register_long(context, name, read_long(file));
@@ -411,7 +449,7 @@ namespace nbt {
             break;
           case TAG_Short:
             if (register_short == NULL) {
-              nbt_assert_error(exc_env, file, gzseek(file, sizeof(nbt::Short), SEEK_CUR) != -1,
+              nbt_assert_error(exc_env, file, file.flush(sizeof(nbt::Short)) != -1,
                 "Buffer too short to flush short");
             } else {
               register_short(context, name, read_short(file));
@@ -426,7 +464,7 @@ namespace nbt {
             break;
           case TAG_Float:
             if (register_float == NULL) {
-              nbt_assert_error(exc_env, file, gzseek(file, sizeof(nbt::Float), SEEK_CUR) != -1,
+              nbt_assert_error(exc_env, file, file.flush(sizeof(nbt::Float)) != -1,
                 "Buffer too short to flush float");
             } else {
               register_float(context, name, read_float(file));
@@ -434,7 +472,7 @@ namespace nbt {
             break;
           case TAG_Double:
             if (register_double == NULL) {
-              nbt_assert_error(exc_env, file, gzseek(file, sizeof(nbt::Double), SEEK_CUR) != -1,
+              nbt_assert_error(exc_env, file, file.flush(sizeof(nbt::Double)) != -1,
                 "Buffer too short to flush double");
             } else {
               register_double(context, name, read_double(file));
@@ -442,7 +480,7 @@ namespace nbt {
             break;
           case TAG_Int:
             if (register_int == NULL) {
-              nbt_assert_error(exc_env, file, gzseek(file, sizeof(nbt::Int), SEEK_CUR) != -1,
+              nbt_assert_error(exc_env, file, file.flush(sizeof(nbt::Int)) != -1,
                 "Buffer too short to flush int");
             } else {
               register_int(context, name, read_int(file));
@@ -450,7 +488,7 @@ namespace nbt {
             break;
           case TAG_Byte:
             if (register_byte == NULL) {
-              nbt_assert_error(exc_env, file, gzseek(file, sizeof(nbt::Byte), SEEK_CUR) != -1,
+              nbt_assert_error(exc_env, file, file.flush(sizeof(nbt::Byte)) != -1,
                 "Buffer too short to flush byte");
             } else {
               register_byte(context, name, read_byte(file));
@@ -493,10 +531,14 @@ namespace nbt {
             break;
           }
         }
-        
-exit_error:
-        gzclose(file);
-        delete [] stack;
+      }
+      
+      void parse_file(const char *path)
+      {
+        /*if (setjmp(exc_env) == 1) return;
+        gzFile file = gzopen(path, "rb");
+        nbt_assert_error(exc_env, file, file != NULL, strerror(errno));
+        gzClose(file);*/
       }
   };
 }

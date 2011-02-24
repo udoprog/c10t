@@ -1,7 +1,11 @@
-// Distributed under the BSD License, see accompanying LICENSE.txt
-// (C) Copyright 2010 John-John Tedro et al.
+#include "mc/region.hpp"
+#include "mc/utils.hpp"
+
 #include "nbt/nbt.hpp"
 
+#include <list>
+
+#include <boost/foreach.hpp>
 #include <iostream>
 #include <iomanip>
 
@@ -72,17 +76,18 @@ void register_byte(inspect_context* inspect, nbt::String name, nbt::Byte value) 
 
 void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteArray* value) {
   cout << setw(inspect->width) << ""
-       << "ByteArray(" << name << "): " << "(binary blob)" << endl;
+       << "ByteArray(" << name << "): " << "(" << int(value->length) << "B binary)" << endl;
   delete value;
 }
 
 int main(int argc, char* argv[]) {
+  using mc::utils::level_coord;
+
   if (argc < 2) {
     return 1;
   }
 
   inspect_context ctx;
-  ctx.width = 0;
   
   nbt::Parser<inspect_context> parser(&ctx);
   parser.begin_compound = begin_compound;
@@ -98,5 +103,15 @@ int main(int argc, char* argv[]) {
   parser.register_byte = register_byte;
   parser.register_byte_array = register_byte_array;
 
-  parser.parse_file(argv[1]);
+  mc::region region(argv[1]);
+
+  list<level_coord> coords;
+
+  region.read_coords(coords);
+
+  BOOST_FOREACH(level_coord c, coords) {
+    std::string chunk = region.read_data(c.get_x(), c.get_z());
+    ctx.width = 0;
+    parser.parse_buffer(chunk.c_str(), chunk.size());
+  }
 }

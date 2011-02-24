@@ -8,6 +8,7 @@
 
 #include <string>
 #include <queue>
+#include <list>
 
 #include "fileutils.hpp"
 
@@ -15,6 +16,7 @@
 #include <boost/filesystem.hpp>
 
 #include <mc/utils.hpp>
+#include <mc/region.hpp>
 
 namespace mc {
   namespace fs = boost::filesystem;
@@ -23,25 +25,32 @@ namespace mc {
   bool file_filter(const std::string& name);
   
   struct level_info {
+    public:
+      typedef boost::shared_ptr<region> region_ptr;
     private:
-      fs::path root;
+      region_ptr _region;
       utils::level_coord coord;
     public:
-      level_info() : root(), coord() {
+      level_info() : coord() {
       }
 
-      level_info(fs::path root, int x, int z) : root(root), coord(x, z) {
+      level_info(region_ptr _region, int x, int z) : _region(_region), coord(x, z) {
       }
       
-      level_info(fs::path root, utils::level_coord coord) : root(root), coord(coord) {
+      level_info(region_ptr _region, utils::level_coord coord) : _region(_region) {
+        utils::level_coord rc = utils::path_to_region_coord(_region->get_path());
+        this->coord = utils::level_coord(rc.get_x() + coord.get_x(),
+                                         rc.get_z() + coord.get_z());
       }
-      
-      const fs::path& get_root() {
-        return root;
+
+      std::string get_path() {
+        std::stringstream ss;
+        ss << _region->get_path() << "(" << coord.get_x() << "," << coord.get_z() << ")";
+        return ss.str();
       }
-      
-      const fs::path get_path() {
-        return mc::utils::level_path(root, coord.get_x(), coord.get_z(), "c", "dat");
+
+      region_ptr get_region() {
+        return _region;
       }
       
       bool operator<(const level_info& other) const {
@@ -49,7 +58,7 @@ namespace mc {
       }
 
       level_info rotate(int degrees) {
-        return level_info(root, coord.rotate(degrees));
+        return level_info(_region, coord.rotate(degrees));
       }
       
       int get_x() { return coord.get_x(); }
@@ -83,23 +92,47 @@ namespace mc {
     private:
       fs::path root;
       dirlist lister;
+      std::list<utils::level_coord> current_region;
+      boost::shared_ptr<region> current_region_r;
     public:
       chunk_iterator(const fs::path path) : root(path), lister(path) {
       }
       
       bool has_next() {
-        return lister.has_next(directory_filter, file_filter);
+        if (current_region.size() > 0) {
+          return true;
+        }
+
+        if (!lister.has_next(directory_filter, file_filter)) {
+          return false;
+        }
+
+        fs::path next = lister.next();
+        current_region_r.reset(new region(next));
+
+        current_region_r->read_coords(current_region);
+
+        if (current_region.size() > 0) {
+          return true;
+        }
+
+        return false;
       }
       
-      level_info next() {
-        fs::path next = lister.next();
+      boost::shared_ptr<level_info> next() {
+        if (current_region.size() > 0) {
+          utils::level_coord c = current_region.front();
+          current_region.pop_front();
 
-        try {
-          mc::utils::level_coord coord = mc::utils::path_to_level_coord(next);
-          return level_info(root, coord.get_x(), coord.get_z());
-        } catch(std::exception& e) {
-          throw bad_level(next, e.what());
+          try {
+            boost::shared_ptr<level_info> ptr(new level_info(current_region_r, c));
+            return ptr;
+          } catch(std::exception& e) {
+            throw bad_level(current_region_r->get_path(), e.what());
+          }
         }
+
+        throw bad_level("", "No more regions");
       }
   };
 

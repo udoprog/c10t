@@ -18,6 +18,7 @@ set(c10t_LIBRARIES ${c10t_LIBRARIES} c10t-image c10t-nbt c10t-mc)
 add_executable(c10t main.cpp main_utils.cpp ${c10t_SOURCES})
 add_executable(c10t-debug EXCLUDE_FROM_ALL main.cpp main_utils.cpp ${c10t_SOURCES})
 add_executable(nbt-inspect EXCLUDE_FROM_ALL nbt/nbt_inspect.cpp nbt/nbt.cpp)
+add_executable(region-inspect EXCLUDE_FROM_ALL mc/region_inspect.cpp)
 
 set_target_properties(c10t PROPERTIES COMPILE_FLAGS "-O3 -Wall")
 set_target_properties(c10t-debug PROPERTIES COMPILE_FLAGS "-Wall -pedantic -g")
@@ -26,3 +27,4 @@ set_target_properties(nbt-inspect PROPERTIES COMPILE_FLAGS "-O3 -Wall -pedantic 
 target_link_libraries(c10t ${c10t_LIBRARIES})
 target_link_libraries(c10t-debug ${c10t_LIBRARIES})
 target_link_libraries(nbt-inspect ${ZLIB_LIBRARIES})
+target_link_libraries(region-inspect ${c10t_LIBRARIES})

@@ -79,10 +79,12 @@ public:
 };
 
 struct rotated_level_info {
-  mc::level_info level;
+  typedef boost::shared_ptr<mc::level_info> level_info_ptr;
+
+  level_info_ptr level;
   mc::utils::level_coord coord;
   
-  rotated_level_info(mc::level_info level, mc::utils::level_coord coord)
+  rotated_level_info(level_info_ptr level, mc::utils::level_coord coord)
     : level(level), coord(coord)
   {
   }
@@ -280,7 +282,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     while (iterator.has_next()) {
       reporter.add(1);
       
-      mc::level_info level;
+      boost::shared_ptr<mc::level_info> level;
       
       try {
         level = iterator.next();
@@ -288,7 +290,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         out_log << e.where() << ": " << e.what() << std::endl;
       }
       
-      const mc::utils::level_coord coord = level.get_coord();
+      const mc::utils::level_coord coord = level->get_coord();
       
       uint64_t x2 = coord.get_x() * coord.get_x();
       uint64_t z2 = coord.get_z() * coord.get_z();
@@ -303,7 +305,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       
       if (out_of_range) {
         if (s.debug) {
-          out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
         }
         
         continue;
@@ -430,20 +432,18 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     if (queued <= filllimit) {
       for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
         rotated_level_info rl = *lvlit;
-        fs::path path = rl.level.get_path();
+        fs::path path = rl.level->get_path();
         
         render_job job;
         
         job.engine = engine;
-        job.path = rl.level.get_path();
+        job.level = rl.level;
         job.xPos = rl.coord.get_x();
         job.zPos = rl.coord.get_z();
-        job.xReal = rl.level.get_x();
-        job.zReal = rl.level.get_z();
         
         renderer.give(job);
         
-        if (s.debug) { out << rl.level.get_path() << ": queued OK" << endl; }
+        if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
         
         queued++;
       }
@@ -453,10 +453,10 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     --queued;
     
     render_result p = renderer.get();
-    
+
     if (p.fatal) {
       {
-        out << p.path << ": " << p.fatal_why << endl;
+        out << p.level->get_path() << ": " << p.fatal_why << endl;
         continue;
       }
     }
@@ -471,7 +471,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
       signs.insert(signs.end(), p.signs.begin(), p.signs.end());
     }
-    
+
     try {
       image_base::pos_t x, y;
       engine->w2pt(p.xPos, p.zPos, x, y);
@@ -555,7 +555,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       for (lvlit = levels.begin(); lvlit != levels.end(); lvlit++) {
         rotated_level_info rl = *lvlit;
         mc::utils::level_coord c = rl.coord;
-        mc::level_info l = rl.level;
+        boost::shared_ptr<mc::level_info> l = rl.level;
         
         if (c.get_z() - 4 < world.min_z) continue;
         if (c.get_z() + 4 > world.max_z) continue;
@@ -565,7 +565,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         if (c.get_x() % 10 != 0) continue;
         std::stringstream ss;
         
-        ss << "(" << l.get_x() * mc::MapX << ", " << l.get_z() * mc::MapZ << ")";
+        ss << "(" << l->get_x() * mc::MapX << ", " << l->get_z() * mc::MapZ << ")";
         markers.push_back(new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ));
       }
     }
@@ -754,7 +754,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
     while (iterator.has_next()) {
       reporter.add(1);
         
-      mc::level_info level;
+      boost::shared_ptr<mc::level_info> level;
       
       try {
         level = iterator.next();
@@ -762,7 +762,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
         out_log << e.where() << ": " << e.what() << std::endl;
       }
       
-      mc::utils::level_coord coord = level.get_coord();
+      mc::utils::level_coord coord = level->get_coord();
       
       uint64_t x2 = coord.get_x() * coord.get_x();
       uint64_t z2 = coord.get_z() * coord.get_z();
@@ -777,17 +777,17 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
         
       if (out_of_range) {
         if (s.debug) {
-          out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
         }
         continue;
       }
       
-      mc::level level_data(level.get_path());
+      mc::level level_data(level);
       
       try {
         level_data.read();
       } catch(mc::invalid_file& e) {
-        out_log << level.get_path() << ": " << e.what();
+        out_log << level->get_path() << ": " << e.what();
         continue;
       }
 
@@ -798,7 +798,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
         statistics[block] += 1;
       }
       
-      world.update(level.get_coord());
+      world.update(level->get_coord());
     }
     
     reporter.done(0);

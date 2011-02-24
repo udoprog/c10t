@@ -138,12 +138,10 @@ namespace mc {
     level->grammar_error_why = why;
   }
 
-#include <iostream>
-
   level::~level(){
   }
 
-  level::level(fs::path path) : path(path) {}
+  level::level(level_info_ptr _level_info) : _level_info(_level_info) {}
 
   void level::read() {
     level_context context;
@@ -158,8 +156,17 @@ namespace mc {
     parser.end_list = end_list;
     parser.end_compound = end_compound;
     parser.error_handler = error_handler;
-    
-    parser.parse_file(path.string().c_str());
+
+    std::string chunk_data;
+
+    try {
+      chunk_data = _level_info->get_region()->read_data(_level_info->get_x(),
+          _level_info->get_z());
+    } catch(mc::bad_region& e) {
+      throw invalid_file("could not read chunk from region");
+    }
+
+    parser.parse_buffer(chunk_data.c_str(), chunk_data.size());
     
     if (context.grammar_error) {
       throw invalid_file("not a valid nbt file");

@@ -2,6 +2,7 @@
 #define __THREADS__RENDERER_HPP__
 
 #include "mc/utils.hpp"
+#include "mc/world.hpp"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
@@ -18,7 +19,7 @@ namespace fs = boost::filesystem;
 
 struct render_result {
   int xPos, zPos;
-  fs::path path;
+  boost::shared_ptr<mc::level_info> level;
   boost::shared_ptr<image_operations> operations;
   bool fatal;
   std::string fatal_why;
@@ -30,8 +31,7 @@ struct render_result {
 
 struct render_job {
   int xPos, zPos;
-  int xReal, zReal;
-  fs::path path;
+  boost::shared_ptr<mc::level_info> level;
   boost::shared_ptr<engine_base> engine;
 };
 
@@ -45,14 +45,15 @@ public:
   render_result work(render_job job) {
     render_result p;
     
-    p.path = job.path;
     p.xPos = job.xPos;
     p.zPos = job.zPos;
+    p.operations.reset(new image_operations);
+    p.level = job.level;
     p.cache_hit = false;
+
+    /*p.path = job.path;
     
     cache_file cache(mc::utils::level_dir(s.cache_dir, job.xReal, job.zReal), p.path, s.cache_compress);
-    
-    p.operations.reset(new image_operations);
     
     if (s.cache_use) {
       if (cache.exists()) {
@@ -63,9 +64,9 @@ public:
         
         cache.clear();
       }
-    }
-
-    mc::level level(job.path);
+    }*/
+    
+    mc::level level(job.level);
     
     try {
       level.read();
@@ -79,7 +80,7 @@ public:
     
     job.engine->render(level, p.operations);
     
-    if (s.cache_use) {
+    /*if (s.cache_use) {
       // create the necessary directories required when caching
       cache.create_directories();
       
@@ -88,7 +89,7 @@ public:
         // on failure, remove the cache file - this will prompt c10t to regenerate it next time
         cache.clear();
       }
-    }
+    }*/
     
     return p;
   }

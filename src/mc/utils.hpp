@@ -111,6 +111,7 @@ namespace mc {
      * Indicate that no coordinates are viable by throwing invalid_argument
      **/
     level_coord path_to_level_coord(const fs::path path);
+    level_coord path_to_region_coord(const fs::path path);
   }
 }
 

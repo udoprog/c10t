@@ -163,7 +163,7 @@ namespace mc {
       chunk_data = _level_info->get_region()->read_data(_level_info->get_x(),
           _level_info->get_z());
     } catch(mc::bad_region& e) {
-      throw invalid_file("could not read chunk from region");
+      throw invalid_file(e.what());
     }
 
     parser.parse_buffer(chunk_data.c_str(), chunk_data.size());

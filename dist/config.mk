@@ -4,6 +4,7 @@ SOURCES+=src/players.cpp
 SOURCES+=src/fileutils.cpp
 SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
+SOURCES+=src/main_utils.cpp
 SOURCES+=src/utf8.cpp
 SOURCES+=src/warps.cpp
 SOURCES+=src/mc/utils.cpp

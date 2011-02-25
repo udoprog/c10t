@@ -49,7 +49,6 @@ namespace mc {
   public:
     enum {
       HEADER_SIZE = 8192,
-      RECORD_MULTI = 256,
       REGION_SIZE = 32,
       HEADER_RECORD_SIZE = 4,
       CHUNK_MAX = 1024 * 128
@@ -122,9 +121,13 @@ namespace mc {
         throw bad_region(path, "bad chunk version");
       }
 
-      boost::shared_array<char> in(new char[CHUNK_MAX * 4]);
+      if (len > co.sector_count * 4096 || len > CHUNK_MAX) {
+        throw bad_region(path, "invalid chunk length");
+      }
 
-      fp.read(in.get(), len);
+      char in[CHUNK_MAX], data[CHUNK_MAX];
+
+      fp.read(in, len);
 
       if (fp.fail()) {
         throw bad_region(path, "could not read chunk");
@@ -136,28 +139,24 @@ namespace mc {
       strm.zfree = (free_func)NULL;
       strm.opaque = NULL;
 
-      strm.next_in = reinterpret_cast<Bytef*>(in.get());
+      strm.next_in = reinterpret_cast<Bytef*>(in);
       strm.avail_in = len - 1;
 
       inflateInit(&strm);
 
-      boost::scoped_array<char> data(new char[CHUNK_MAX]);
-
       std::stringstream oss;
 
-      do {
-        strm.next_out = reinterpret_cast<Bytef*>(data.get());
-        strm.avail_out = CHUNK_MAX;
+      strm.next_out = reinterpret_cast<Bytef*>(data);
+      strm.avail_out = sizeof(data);
 
-        int status = inflate(&strm, Z_NO_FLUSH);
+      int status = inflate(&strm, Z_FINISH);
 
-        if (status != Z_STREAM_END) {
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_STREAM_END)");
-        }
+      if (status != Z_STREAM_END) {
+        inflateEnd(&strm);
+        throw bad_region(path, "failed to inflate data (Z_STREAM_END)");
+      }
         
-        oss.write(data.get(), CHUNK_MAX - strm.avail_out);
-      } while (strm.avail_in > 0);
+      oss.write(data, CHUNK_MAX - strm.avail_out);
 
       inflateEnd(&strm);
       return oss.str();

@@ -22,7 +22,10 @@ namespace mc {
     size_t grammar_error_where;
     const char* grammar_error_why;
 
-    level_context() : grammar_error(false), grammar_error_where(0), grammar_error_why("") {
+    level_context()
+      : islevel(false), in_te(false), in_sign(false),
+        grammar_error(false), grammar_error_where(0), grammar_error_why("")
+    {
     }
   };
 

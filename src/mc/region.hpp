@@ -122,9 +122,9 @@ namespace mc {
         throw bad_region(path, "bad chunk version");
       }
 
-      char* in = new char[CHUNK_MAX * 4];
+      boost::shared_array<char> in(new char[CHUNK_MAX * 4]);
 
-      fp.read(in, len);
+      fp.read(in.get(), len);
 
       if (fp.fail()) {
         throw bad_region(path, "could not read chunk");
@@ -136,7 +136,7 @@ namespace mc {
       strm.zfree = (free_func)NULL;
       strm.opaque = NULL;
 
-      strm.next_in = (Bytef*)in;
+      strm.next_in = reinterpret_cast<Bytef*>(in.get());
       strm.avail_in = len - 1;
 
       inflateInit(&strm);

@@ -531,6 +531,8 @@ namespace nbt {
             break;
           }
         }
+
+        delete [] stack;
       }
       
       void parse_file(const char *path)

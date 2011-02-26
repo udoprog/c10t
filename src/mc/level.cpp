@@ -146,7 +146,8 @@ namespace mc {
 
   level::level(level_info_ptr _level_info) : _level_info(_level_info) {}
 
-  void level::read() {
+  void level::read()
+  {
     level_context context;
     
     nbt::Parser<level_context> parser(&context);
@@ -160,14 +161,16 @@ namespace mc {
     parser.end_compound = end_compound;
     parser.error_handler = error_handler;
 
-    std::string chunk_data;
+    std::stringstream oss;
 
     try {
-      chunk_data = _level_info->get_region()->read_data(_level_info->get_x(),
-          _level_info->get_z());
+      _level_info->get_region()->read_data(_level_info->get_x(),
+          _level_info->get_z(), oss);
     } catch(mc::bad_region& e) {
       throw invalid_file(e.what());
     }
+
+    std::string chunk_data = oss.str();
 
     parser.parse_buffer(chunk_data.c_str(), chunk_data.size());
     

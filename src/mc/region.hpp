@@ -103,7 +103,7 @@ namespace mc {
       }
     }
 
-    std::string read_data(int x, int z) const
+    void read_data(int x, int z, std::stringstream& oss) const
     {
       chunk_offset co = read_chunk_offset(x, z);
       
@@ -143,8 +143,6 @@ namespace mc {
 
       inflateInit(&strm);
 
-      std::stringstream oss;
-
       int status;
 
       char data[CHUNK_MAX];
@@ -174,7 +172,8 @@ namespace mc {
           case Z_VERSION_ERROR:
             inflateEnd(&strm);
             throw bad_region(path, "failed to inflate data (Z_VERSION_ERROR)");
-          default: break;
+          default:
+            break;
         }
         
         oss.write(data, CHUNK_MAX - strm.avail_out);
@@ -190,7 +189,6 @@ namespace mc {
       } while (strm.avail_in > 0);
 
       inflateEnd(&strm);
-      return oss.str();
     }
 
     fs::path get_path() {

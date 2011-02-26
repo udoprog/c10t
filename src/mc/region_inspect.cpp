@@ -80,6 +80,10 @@ void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteAr
   delete value;
 }
 
+void error_handler(inspect_context* ctx, size_t where, const char* why) {
+  std::cout << where << ":" << why << std::endl;
+}
+
 int main(int argc, char* argv[]) {
   using mc::utils::level_coord;
 
@@ -90,6 +94,8 @@ int main(int argc, char* argv[]) {
   inspect_context ctx;
   
   nbt::Parser<inspect_context> parser(&ctx);
+
+  parser.error_handler = error_handler;
   parser.begin_compound = begin_compound;
   parser.end_compound = end_compound;
   parser.begin_list = begin_list;
@@ -109,12 +115,16 @@ int main(int argc, char* argv[]) {
 
   region.read_coords(coords);
 
+  char data[mc::region::CHUNK_MAX];
+
   BOOST_FOREACH(level_coord c, coords) {
-    std::stringstream oss;
-    region.read_data(c.get_x(), c.get_z(), oss);
-    std::string chunk = oss.str();
-    ctx.width = 0;
-    std::cout << "size = " << chunk.size() << std::endl;
-    parser.parse_buffer(chunk.c_str(), chunk.size());
+    try {
+      int len = region.read_data(c.get_x(), c.get_z(), data, mc::region::CHUNK_MAX);
+      std::cout << "CHUNK SIZE: " << std::dec << int(len) << std::endl;
+      ctx.width = 0;
+      parser.parse_buffer(data, len);
+    } catch(mc::bad_region& e) {
+      std::cout << region.get_path() << ": " << e.what() << std::endl;
+    }
   }
 }

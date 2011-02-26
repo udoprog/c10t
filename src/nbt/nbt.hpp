@@ -102,6 +102,10 @@ namespace nbt {
       
       return len;
     }
+
+    bool empty() {
+      return offs == size;
+    }
   };
   
   const Byte TAG_End = 0x0;
@@ -533,6 +537,8 @@ namespace nbt {
         }
 
         delete [] stack;
+
+        nbt_assert_error(exc_env, file, file.empty(), "input buffer is not empty");
       }
       
       void parse_file(const char *path)

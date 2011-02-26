@@ -2,6 +2,8 @@
 
 #include <zlib.h>
 
+#include <iostream>
+
 namespace mc {
   region::region(fs::path path)
       : path(path)
@@ -44,7 +46,7 @@ namespace mc {
     return co;
   }
 
-  void region::read_data(int x, int z, std::stringstream& oss) const
+  int region::read_data(int x, int z, char* buffer, int buffer_size) const
   {
     chunk_offset co = read_chunk_offset(x, z);
     
@@ -56,7 +58,7 @@ namespace mc {
       throw bad_region(path, "failed to open file");
     }
 
-    fp.seekg(4096 * co.sector_number);
+    fp.seekg(RECORD_SIZE * co.sector_number);
 
     if (fp.fail()) {
       throw bad_region(path, "could not seek");
@@ -71,13 +73,17 @@ namespace mc {
     uint32_t len = (buf[0]<<24) + (buf[1]<<16) + (buf[2]<<8) + (buf[3]);
     uint8_t version = buf[4];
 
+    if (len > buffer_size) {
+      throw bad_region(path, "chunk too large to fit in data pointer, use CHUNK_MAX instead");
+    }
+
     if (version != 2) {
       throw bad_region(path, "bad chunk version");
     }
 
-    boost::shared_array<char> in(new char[len]);
+    char read_buffer[CHUNK_MAX];
 
-    fp.read(in.get(), len);
+    fp.read(read_buffer, len);
 
     if (fp.fail()) {
       throw bad_region(path, "could not read chunk");
@@ -91,57 +97,40 @@ namespace mc {
     strm.zfree = (free_func)NULL;
     strm.opaque = NULL;
 
-    strm.next_in = reinterpret_cast<Bytef*>(in.get());
+    strm.next_in = reinterpret_cast<Bytef*>(read_buffer);
     strm.avail_in = len - 1;
 
     inflateInit(&strm);
 
-    int status;
+    strm.next_out = reinterpret_cast<Bytef*>(buffer);
+    strm.avail_out = buffer_size;
 
-    char data[CHUNK_MAX];
-
-    do {
-      strm.next_out = reinterpret_cast<Bytef*>(data);
-      strm.avail_out = CHUNK_MAX;
-
-      status = inflate(&strm, Z_NO_FLUSH);
-
-      switch (status) {
-        case Z_ERRNO:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_ERRNO)");
-        case Z_STREAM_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_STREAM_ERROR)");
-        case Z_DATA_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_DATA_ERROR)");
-        case Z_MEM_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_MEM_ERROR)");
-        case Z_BUF_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_BUF_ERROR)");
-        case Z_VERSION_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_VERSION_ERROR)");
-        default:
-          break;
-      }
-      
-      oss.write(data, CHUNK_MAX - strm.avail_out);
-
-      if (status == Z_STREAM_END) {
-        break;
-      }
-
-      if (status == Z_NEED_DICT) {
-        inflateEnd(&strm);
-        throw bad_region(path, "unhandled inflate state (Z_NEED_DICT)");
-      }
-    } while (strm.avail_in > 0);
+    int status = inflate(&strm, Z_FINISH);
 
     inflateEnd(&strm);
+
+    switch (status) {
+      case Z_ERRNO:
+        throw bad_region(path, "failed to inflate data (Z_ERRNO)");
+      case Z_STREAM_ERROR:
+        throw bad_region(path, "failed to inflate data (Z_STREAM_ERROR)");
+      case Z_DATA_ERROR:
+        throw bad_region(path, "failed to inflate data (Z_DATA_ERROR)");
+      case Z_MEM_ERROR:
+        throw bad_region(path, "failed to inflate data (Z_MEM_ERROR)");
+      case Z_BUF_ERROR:
+        throw bad_region(path, "failed to inflate data (Z_BUF_ERROR)");
+      case Z_VERSION_ERROR:
+        throw bad_region(path, "failed to inflate data (Z_VERSION_ERROR)");
+      default:
+        break;
+    }
+
+    if (strm.avail_in > 0) {
+      throw bad_region(path, "all data was not inflated");
+    }
+
+    return buffer_size - strm.avail_out;
   }
 
   fs::path region::get_path() {

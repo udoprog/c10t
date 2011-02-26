@@ -8,7 +8,6 @@
 #include <boost/scoped_array.hpp>
 
 #include "mc/utils.hpp"
-#include <sstream>
 
 #include <fstream>
 #include <cstring>
@@ -51,11 +50,13 @@ namespace mc {
       RECORD_MULTI = 256,
       REGION_SIZE = 32,
       HEADER_RECORD_SIZE = 4,
+      RECORD_SIZE = 4096,
       CHUNK_MAX = 1024 * 128
     } constants;
   private:
     fs::path path;
     boost::shared_array<char> header;
+    boost::shared_array<char> in_buffer;
   public:
     region(fs::path path);
 
@@ -80,7 +81,7 @@ namespace mc {
       }
     }
 
-    void read_data(int x, int z, std::stringstream& oss) const;
+    int read_data(int x, int z, char* buffer, int buffer_size) const;
     fs::path get_path();
   };
 }

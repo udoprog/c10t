@@ -17,6 +17,7 @@
 
 #include <mc/utils.hpp>
 #include <mc/region.hpp>
+#include <sstream>
 
 namespace mc {
   namespace fs = boost::filesystem;

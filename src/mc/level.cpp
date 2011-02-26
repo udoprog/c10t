@@ -163,16 +163,19 @@ namespace mc {
 
     std::stringstream oss;
 
+    uint32_t len;
+    char buffer[mc::region::CHUNK_MAX];
+
     try {
-      _level_info->get_region()->read_data(_level_info->get_x(),
-          _level_info->get_z(), oss);
+      len = _level_info->get_region()->read_data(_level_info->get_x(),
+          _level_info->get_z(), buffer, mc::region::CHUNK_MAX);
     } catch(mc::bad_region& e) {
       throw invalid_file(e.what());
     }
 
     std::string chunk_data = oss.str();
 
-    parser.parse_buffer(chunk_data.c_str(), chunk_data.size());
+    parser.parse_buffer(buffer, len);
     
     if (context.grammar_error) {
       throw invalid_file("not a valid nbt file");

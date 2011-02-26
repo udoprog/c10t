@@ -322,6 +322,11 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     reporter.done(0);
     levels.sort();
   }
+
+  if (levels.size() <= 0) {
+    out << "No chunks to render" << endl;
+    return 0;
+  }
   
   if (s.debug) {
     out << " --- DEBUG WORLD INFO --- " << endl;

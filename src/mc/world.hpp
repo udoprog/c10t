@@ -108,6 +108,7 @@ namespace mc {
         }
 
         fs::path next = lister.next();
+
         current_region_r.reset(new region(next));
 
         current_region_r->read_coords(current_region);

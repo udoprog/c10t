@@ -110,8 +110,11 @@ int main(int argc, char* argv[]) {
   region.read_coords(coords);
 
   BOOST_FOREACH(level_coord c, coords) {
-    std::string chunk = region.read_data(c.get_x(), c.get_z());
+    std::stringstream oss;
+    region.read_data(c.get_x(), c.get_z(), oss);
+    std::string chunk = oss.str();
     ctx.width = 0;
+    std::cout << "size = " << chunk.size() << std::endl;
     parser.parse_buffer(chunk.c_str(), chunk.size());
   }
 }

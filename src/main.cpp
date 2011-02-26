@@ -288,6 +288,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         level = iterator.next();
       } catch(mc::bad_level& e) {
         out_log << e.where() << ": " << e.what() << std::endl;
+        continue;
       }
       
       const mc::utils::level_coord coord = level->get_coord();
@@ -432,12 +433,22 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     if (queued <= filllimit) {
       for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
         rotated_level_info rl = *lvlit;
-        fs::path path = rl.level->get_path();
         
         render_job job;
         
+        boost::shared_ptr<mc::level> level(new mc::level(rl.level));
+        
         job.engine = engine;
-        job.level = rl.level;
+        job.level = level;
+        
+        try {
+          level->read();
+        } catch(mc::invalid_file& e) {
+          out << level->get_path() << ": " << e.what() << endl;
+          continue;
+        }
+         
+        job.level = level;
         job.xPos = rl.coord.get_x();
         job.zPos = rl.coord.get_z();
         

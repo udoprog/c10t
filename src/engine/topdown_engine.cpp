@@ -1,9 +1,9 @@
 #include "engine/topdown_engine.hpp"
 #include <iostream>
 
-void topdown_engine::render(mc::level& level, boost::shared_ptr<image_operations> oper)
+void topdown_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  if (!level.is_read()) {
+  if (!level->is_read()) {
     return;
   }
   
@@ -11,10 +11,10 @@ void topdown_engine::render(mc::level& level, boost::shared_ptr<image_operations
   get_level_boundaries(iw, ih);
   
   // block type
-  BlockRotation b_r(s, level.get_blocks());
-  BlockRotation b_d(s, level.get_data());
-  BlockRotation bl_r(s, level.get_blocklight());
-  BlockRotation sl_r(s, level.get_skylight());
+  BlockRotation b_r(s, level->get_blocks());
+  BlockRotation b_d(s, level->get_data());
+  BlockRotation bl_r(s, level->get_blocklight());
+  BlockRotation sl_r(s, level->get_skylight());
   
   oper->set_limits(iw, ih);
   

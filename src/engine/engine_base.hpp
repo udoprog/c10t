@@ -17,6 +17,7 @@ class engine_base {
     const mc::world& world;
   public:
     typedef uint64_t pos_t;
+    typedef boost::shared_ptr<mc::level> level_ptr;
     
     engine_base(settings_t& s, mc::world& world) :
       s(s),
@@ -27,7 +28,7 @@ class engine_base {
     {
     }
     
-    virtual void render(mc::level& level, boost::shared_ptr<image_operations> oper) = 0;
+    virtual void render(level_ptr level, boost::shared_ptr<image_operations> oper) = 0;
     virtual void get_boundaries(pos_t& width, pos_t& height) = 0;
     virtual void get_level_boundaries(pos_t& width, pos_t& height) = 0;
     virtual void w2pt(int xPos, int zPos, pos_t& x, pos_t& y) = 0;

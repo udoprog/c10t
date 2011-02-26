@@ -2,17 +2,17 @@
 
 #include "boost/scoped_array.hpp"
 
-void isometric_engine::render(mc::level& level, boost::shared_ptr<image_operations> oper)
+void isometric_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  if (!level.is_read()) {
+  if (!level->is_read()) {
     return;
   }
   
-  BlockRotation b_r(s, level.get_blocks());
-  BlockRotation b_d(s, level.get_data());
-  BlockRotation bl_r(s, level.get_blocklight());
-  BlockRotation sl_r(s, level.get_skylight());
-  BlockRotation hm_r(s, level.get_heightmap());
+  BlockRotation b_r(s, level->get_blocks());
+  BlockRotation b_d(s, level->get_data());
+  BlockRotation bl_r(s, level->get_blocklight());
+  BlockRotation sl_r(s, level->get_skylight());
+  BlockRotation hm_r(s, level->get_heightmap());
 
   pos_t iw, ih;
   

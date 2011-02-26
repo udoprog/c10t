@@ -19,7 +19,7 @@ namespace fs = boost::filesystem;
 
 struct render_result {
   int xPos, zPos;
-  boost::shared_ptr<mc::level_info> level;
+  boost::shared_ptr<mc::level> level;
   boost::shared_ptr<image_operations> operations;
   bool fatal;
   std::string fatal_why;
@@ -31,7 +31,7 @@ struct render_result {
 
 struct render_job {
   int xPos, zPos;
-  boost::shared_ptr<mc::level_info> level;
+  boost::shared_ptr<mc::level> level;
   boost::shared_ptr<engine_base> engine;
 };
 
@@ -66,19 +66,8 @@ public:
       }
     }*/
     
-    mc::level level(job.level);
-    
-    try {
-      level.read();
-    } catch(mc::invalid_file& e) {
-      p.fatal = true;
-      p.fatal_why = e.what();
-      return p;
-    }
-    
-    p.signs = level.get_signs();
-    
-    job.engine->render(level, p.operations);
+    p.signs = job.level->get_signs();
+    job.engine->render(job.level, p.operations);
     
     /*if (s.cache_use) {
       // create the necessary directories required when caching

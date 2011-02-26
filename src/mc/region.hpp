@@ -57,8 +57,11 @@ namespace mc {
   private:
     fs::path path;
     boost::shared_array<char> header;
+    boost::scoped_array<char> data;
   public:
-    region(fs::path path) : path(path), header(new char[HEADER_SIZE]) {
+    region(fs::path path)
+      : path(path), header(new char[HEADER_SIZE]), data(new char[CHUNK_MAX])
+    {
       std::ifstream fp(path.string().c_str());
       fp.read(header.get(), HEADER_SIZE);
     }
@@ -122,7 +125,7 @@ namespace mc {
         throw bad_region(path, "bad chunk version");
       }
 
-      boost::shared_array<char> in(new char[CHUNK_MAX * 4]);
+      boost::shared_array<char> in(new char[len]);
 
       fp.read(in.get(), len);
 
@@ -141,8 +144,6 @@ namespace mc {
 
       inflateInit(&strm);
 
-      boost::scoped_array<char> data(new char[CHUNK_MAX]);
-
       std::stringstream oss;
 
       do {
@@ -151,9 +152,29 @@ namespace mc {
 
         int status = inflate(&strm, Z_NO_FLUSH);
 
-        if (status != Z_STREAM_END) {
+        if (status == Z_STREAM_END) {
           inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_STREAM_END)");
+          break;
+        }
+
+        if (status == Z_NEED_DICT) {
+          throw bad_region(path, "unhandled inflate state (Z_NEED_DICT)");
+        }
+
+        switch (status) {
+          case Z_ERRNO:
+            throw bad_region(path, "failed to inflate data (Z_ERRNO)");
+          case Z_STREAM_ERROR:
+            throw bad_region(path, "failed to inflate data (Z_STREAM_ERROR)");
+          case Z_DATA_ERROR:
+            throw bad_region(path, "failed to inflate data (Z_DATA_ERROR)");
+          case Z_MEM_ERROR:
+            throw bad_region(path, "failed to inflate data (Z_MEM_ERROR)");
+          case Z_BUF_ERROR:
+            throw bad_region(path, "failed to inflate data (Z_BUF_ERROR)");
+          case Z_VERSION_ERROR:
+            throw bad_region(path, "failed to inflate data (Z_VERSION_ERROR)");
+          default: break;
         }
         
         oss.write(data.get(), CHUNK_MAX - strm.avail_out);

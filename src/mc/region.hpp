@@ -57,10 +57,9 @@ namespace mc {
   private:
     fs::path path;
     boost::shared_array<char> header;
-    boost::scoped_array<char> data;
   public:
     region(fs::path path)
-      : path(path), header(new char[HEADER_SIZE]), data(new char[CHUNK_MAX])
+      : path(path), header(new char[HEADER_SIZE])
     {
       std::ifstream fp(path.string().c_str());
       fp.read(header.get(), HEADER_SIZE);
@@ -146,38 +145,48 @@ namespace mc {
 
       std::stringstream oss;
 
+      int status;
+
+      char data[CHUNK_MAX];
+
       do {
-        strm.next_out = reinterpret_cast<Bytef*>(data.get());
+        strm.next_out = reinterpret_cast<Bytef*>(data);
         strm.avail_out = CHUNK_MAX;
 
-        int status = inflate(&strm, Z_NO_FLUSH);
-
-        if (status == Z_STREAM_END) {
-          inflateEnd(&strm);
-          break;
-        }
-
-        if (status == Z_NEED_DICT) {
-          throw bad_region(path, "unhandled inflate state (Z_NEED_DICT)");
-        }
+        status = inflate(&strm, Z_NO_FLUSH);
 
         switch (status) {
           case Z_ERRNO:
+            inflateEnd(&strm);
             throw bad_region(path, "failed to inflate data (Z_ERRNO)");
           case Z_STREAM_ERROR:
+            inflateEnd(&strm);
             throw bad_region(path, "failed to inflate data (Z_STREAM_ERROR)");
           case Z_DATA_ERROR:
+            inflateEnd(&strm);
             throw bad_region(path, "failed to inflate data (Z_DATA_ERROR)");
           case Z_MEM_ERROR:
+            inflateEnd(&strm);
             throw bad_region(path, "failed to inflate data (Z_MEM_ERROR)");
           case Z_BUF_ERROR:
+            inflateEnd(&strm);
             throw bad_region(path, "failed to inflate data (Z_BUF_ERROR)");
           case Z_VERSION_ERROR:
+            inflateEnd(&strm);
             throw bad_region(path, "failed to inflate data (Z_VERSION_ERROR)");
           default: break;
         }
         
-        oss.write(data.get(), CHUNK_MAX - strm.avail_out);
+        oss.write(data, CHUNK_MAX - strm.avail_out);
+
+        if (status == Z_STREAM_END) {
+          break;
+        }
+
+        if (status == Z_NEED_DICT) {
+          inflateEnd(&strm);
+          throw bad_region(path, "unhandled inflate state (Z_NEED_DICT)");
+        }
       } while (strm.avail_in > 0);
 
       inflateEnd(&strm);

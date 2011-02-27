@@ -42,7 +42,6 @@ struct settings_t {
   bool silent;
   bool nocheck;
   boost::shared_array<bool> excludes;
-  boost::shared_array<bool> includes;
   bool binary;
   bool debug;
   bool use_split;
@@ -108,11 +107,7 @@ struct settings_t {
       this->excludes[i] = false;
     }
 
-    this->includes.reset(new bool[mc::MaterialCount]);
-    
-    for (int i = 0; i < mc::MaterialCount; i++) {
-      this->includes[i] = true;
-    }
+    this->excludes[mc::Air] = true;
 
 #   if !defined(C10T_DISABLE_THREADS)
       this->threads = boost::thread::hardware_concurrency();
@@ -125,7 +120,6 @@ struct settings_t {
     this->split = 1;
     this->cavemode = false;
     this->hellmode = false;
-    this->excludes[mc::Air] = true;
     this->top = 127;
     this->bottom = 0;
     this->mode = Top;

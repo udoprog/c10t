@@ -1066,13 +1066,17 @@ int main(int argc, char *argv[]){
 
   settings_t s;
   
-  read_opts(s, argc, argv);
+  if (!read_opts(s, argc, argv)) {
+    goto exit_error;
+  }
 
   switch(s.action) {
     case Version:
       return do_version();
     case Help:
       return do_help();
+    case ListColors:
+      return do_colors();
     case None:
       error << "No action specified, please type `c10t -h' for help";
       goto exit_error;
@@ -1185,7 +1189,7 @@ int main(int argc, char *argv[]){
       out << "Hint " << i++ << ": " << *it << endl;
     }
 
-    std::cout << endl;
+    out << endl;
   }
   
   if (s.binary) {

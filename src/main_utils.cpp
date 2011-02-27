@@ -316,6 +316,16 @@ bool read_opts(settings_t& s, int argc, char* argv[])
   int blockid;
   int option_index;
 
+  bool includes[mc::MaterialCount];
+  bool excludes[mc::MaterialCount];
+
+  for (int i = 0; i < mc::MaterialCount; i++) {
+    includes[i] = false;
+    excludes[i] = false;
+  }
+
+  bool exclude_all = false;
+
   while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
@@ -494,10 +504,6 @@ bool read_opts(settings_t& s, int argc, char* argv[])
     case 'h':
       s.action = Help;
       break;
-    case 'e':
-      if (!get_blockid(optarg, blockid)) return false;
-      s.excludes[blockid] = true;
-      break;
     case 'm':
       s.threads = atoi(optarg);
       
@@ -520,14 +526,15 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       s.mode = ObliqueAngle;
       break;
     case 'a':
-      for (int i = 0; i < mc::MaterialCount; i++)
-      {
-        s.excludes[i] = true;
-      }
+      exclude_all = true;
       break;
     case 'i':
       if (!get_blockid(optarg, blockid)) return false;
-      s.includes[blockid] = true;
+      includes[blockid] = true;
+      break;
+    case 'e':
+      if (!get_blockid(optarg, blockid)) return false;
+      excludes[blockid] = true;
       break;
     case 'w':
       s.world_path = fs::system_complete(fs::path(optarg));
@@ -633,8 +640,16 @@ bool read_opts(settings_t& s, int argc, char* argv[])
     }
   }
 
+  if (exclude_all) {
+    for (int i = 0; i < mc::MaterialCount; i++)
+    {
+      s.excludes[i] = true;
+    }
+  }
+
   for (int i = 0; i < mc::MaterialCount; i++) {
-    if (s.includes[i]) s.excludes[i] = false;
+    if (includes[i]) s.excludes[i] = false;
+    if (excludes[i]) s.excludes[i] = true;
   }
 
   return true;

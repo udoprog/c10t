@@ -81,7 +81,7 @@ namespace mc {
       }
     }
 
-    int read_data(int x, int z, char* buffer, int buffer_size) const;
+    uint32_t read_data(int x, int z, char* buffer, uint32_t buffer_size) const;
     fs::path get_path();
   };
 }

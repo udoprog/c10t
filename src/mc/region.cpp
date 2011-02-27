@@ -46,7 +46,7 @@ namespace mc {
     return co;
   }
 
-  int region::read_data(int x, int z, char* buffer, int buffer_size) const
+  uint32_t region::read_data(int x, int z, char* buffer, uint32_t buffer_size) const
   {
     chunk_offset co = read_chunk_offset(x, z);
     

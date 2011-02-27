@@ -2,7 +2,7 @@
 
 #include <zlib.h>
 
-#include <iostream>
+#include <fstream>
 
 namespace mc {
   region::region(fs::path path)
@@ -11,7 +11,7 @@ namespace mc {
     char* header_c = new char[HEADER_SIZE];
     header.reset(header_c);
 
-    std::ifstream fp(path.string().c_str());
+    std::fstream fp(path.string().c_str(), std::ios::in | std::ios::binary);
     fp.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
 
     if (fp.fail()) {
@@ -52,7 +52,7 @@ namespace mc {
     
     uint8_t buf[5];
 
-    std::ifstream fp(path.string().c_str());
+    std::fstream fp(path.string().c_str(), std::ios::in | std::ios::binary);
 
     if (fp.fail()) {
       throw bad_region(path, "failed to open file");

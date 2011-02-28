@@ -177,7 +177,7 @@ namespace mc {
     parser.parse_buffer(buffer.get(), len);
     
     if (context.grammar_error) {
-      throw invalid_file("not a valid nbt file");
+      throw invalid_file(context.grammar_error_why);
     }
     
     if (!context.islevel) {
@@ -190,7 +190,5 @@ namespace mc {
     skylight = context.skylight;
     heightmap = context.heightmap;
     blocklight = context.blocklight;
-    
-    complete = true;
   }
 }

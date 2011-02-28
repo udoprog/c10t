@@ -4,10 +4,6 @@
 
 void obliqueangle_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  if (!level->is_read()) {
-    return;
-  }
-  
   pos_t iw, ih;
   part_c.get_obliqueangle_limits(iw, ih);
   

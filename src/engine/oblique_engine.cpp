@@ -4,10 +4,6 @@
 
 void oblique_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  if (!level->is_read()) {
-    return;
-  }
-  
   Cube part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   pos_t iw, ih;

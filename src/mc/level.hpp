@@ -30,7 +30,6 @@ namespace mc {
     public:
       typedef boost::shared_ptr<level_info> level_info_ptr;
     private:
-      bool complete;
       level_info_ptr _level_info;
       
       // these must be public for the parser to be able to reach them.
@@ -57,10 +56,6 @@ namespace mc {
        * might throw invalid_file if the file is not gramatically correct
        */
       void read(dynamic_buffer& buffer);
-      
-      bool is_read() {
-        return complete;
-      }
       
       boost::shared_ptr<nbt::ByteArray>
       get_blocks() {

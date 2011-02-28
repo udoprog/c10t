@@ -3,10 +3,6 @@
 
 void topdown_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  if (!level->is_read()) {
-    return;
-  }
-  
   pos_t iw, ih;
   get_level_boundaries(iw, ih);
   

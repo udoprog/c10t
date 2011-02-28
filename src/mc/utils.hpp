@@ -6,75 +6,10 @@
 #include <exception>
 
 #include <boost/filesystem.hpp>
-#include <cstring>
 
 namespace fs = boost::filesystem;
 
 namespace mc {
-  /*
-   * A dynamic buffer can be used when you need a fixed sized buffer that can
-   * be expanded.
-   *
-   * This is useful if you have a shared buffer of optimal size which might
-   * expand, but won't in the normal case.
-   */
-  class dynamic_buffer {
-  private:
-    enum {
-      DEFAULT_FACTOR_MAX = 16
-    };
-    int factor;
-    int factor_max;
-    size_t size;
-    size_t buffer_size;
-    char* buffer;
-  public:
-    dynamic_buffer(size_t size)
-      : factor(1), factor_max(DEFAULT_FACTOR_MAX),
-        size(size), buffer_size(size), buffer(new char[size])
-    {
-    }
-
-    dynamic_buffer(size_t size, int factor_max)
-      : factor(1), factor_max(factor_max),
-        size(size), buffer_size(size), buffer(new char[size])
-    {
-    }
-
-    size_t get_size() {
-      return buffer_size;
-    }
-
-    char* get() {
-      return buffer;
-    }
-
-    /**
-     * Expand the buffer and return the amount it has been expanded with.
-     */
-    size_t expand() {
-      if (factor >= factor_max) {
-        return 0;
-      }
-
-      factor += 1;
-
-      size_t new_size = factor * size;
-      char* new_buffer = new char[new_size];
-
-      memcpy(new_buffer, buffer, buffer_size);
-      delete [] buffer;
-
-      size_t expanded_size = new_size - buffer_size;
-      buffer_size = new_size;
-      return expanded_size;
-    }
-
-    ~dynamic_buffer() {
-      delete [] buffer;
-    }
-  };
-
   /*
    * designates a text related to a position
    * Possible usages:

@@ -24,10 +24,13 @@ namespace mc {
   
   bool directory_filter(const std::string& name);
   bool file_filter(const std::string& name);
+
+  class level_info;
+
+  typedef boost::shared_ptr<level_info> level_info_ptr;
   
   struct level_info {
     public:
-      typedef boost::shared_ptr<region> region_ptr;
     private:
       region_ptr _region;
       utils::level_coord coord;
@@ -67,74 +70,45 @@ namespace mc {
       const utils::level_coord get_coord() { return coord; }
   };
   
-  class bad_level : public std::exception {
+  class iterator_error : public std::exception {
     private:
-      const fs::path path;
       const char* message;
     public:
-      bad_level(const fs::path path, const char* message) 
-        : path(path), message(message)
+      iterator_error(const char* message) 
+        : message(message)
       {
-        
       }
 
-      ~bad_level() throw() {  }
+      ~iterator_error() throw() {  }
 
       const char* what() const throw() {
         return message;
       }
-      
-      const fs::path where() {
-        return path;
-      }
   };
   
-  class chunk_iterator {
+  class region_iterator {
     private:
       fs::path root;
       dirlist lister;
-      std::list<utils::level_coord> current_region;
-      boost::shared_ptr<region> current_region_r;
+      std::list<level_info> current_levels;
+      boost::shared_ptr<region> current_region;
     public:
-      chunk_iterator(const fs::path path) : root(path), lister(path) {
+      region_iterator(const fs::path path) : root(path), lister(path) {
       }
       
-      bool has_next() {
-        if (current_region.size() > 0) {
-          return true;
-        }
-
+      bool has_next()
+      {
         if (!lister.has_next(directory_filter, file_filter)) {
           return false;
         }
 
         fs::path next = lister.next();
-
-        current_region_r.reset(new region(next));
-
-        current_region_r->read_coords(current_region);
-
-        if (current_region.size() > 0) {
-          return true;
-        }
-
-        return false;
+        current_region.reset(new region(next));
+        return true;
       }
       
-      boost::shared_ptr<level_info> next() {
-        if (current_region.size() > 0) {
-          utils::level_coord c = current_region.front();
-          current_region.pop_front();
-
-          try {
-            boost::shared_ptr<level_info> ptr(new level_info(current_region_r, c));
-            return ptr;
-          } catch(std::exception& e) {
-            throw bad_level(current_region_r->get_path(), e.what());
-          }
-        }
-
-        throw bad_level("", "No more regions");
+      boost::shared_ptr<region> next() {
+        return current_region;
       }
   };
 
@@ -150,7 +124,7 @@ namespace mc {
     int chunk_x, chunk_y;
     
     world(fs::path path);
-    chunk_iterator get_iterator();
+    region_iterator get_iterator();
     void update(utils::level_coord coord);
   };
 }

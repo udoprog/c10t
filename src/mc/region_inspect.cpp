@@ -115,10 +115,17 @@ int main(int argc, char* argv[]) {
 
   region.read_coords(coords);
 
+  try {
+    region.read_header();
+  } catch(mc::bad_region& e) {
+    std::cout << region.get_path() << ": " << e.what() << std::endl;
+    return 1;
+  }
+
   mc::dynamic_buffer buffer(mc::region::CHUNK_MAX);
 
   BOOST_FOREACH(level_coord c, coords) {
-    std::cout << "buffer.get_size() = " << buffer.get_size() << std::endl;
+    std::cout << "BUFFER SIZE = " << std::dec << buffer.get_size() << std::endl;
 
     try {
       int len = region.read_data(c.get_x(), c.get_z(), buffer);

@@ -26,8 +26,8 @@ namespace mc {
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)
   { }
   
-  chunk_iterator world::get_iterator() {
-    return chunk_iterator(world_path);
+  region_iterator world::get_iterator() {
+    return region_iterator(world_path);
   }
 
   void world::update(utils::level_coord coord) {

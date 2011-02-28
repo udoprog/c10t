@@ -108,6 +108,10 @@ namespace mc {
     uint8_t sector_count;
   } chunk_offset;
 
+  class region;
+
+  typedef boost::shared_ptr<region> region_ptr;
+
   class region {
   public:
     enum {
@@ -125,6 +129,7 @@ namespace mc {
   public:
     region(fs::path path);
 
+    void read_header();
     inline unsigned int get_offset(unsigned int x, unsigned int z) const;
 
     chunk_offset read_chunk_offset(unsigned int x, unsigned int z) const;

@@ -17,6 +17,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 #include "config.hpp"
 
@@ -79,12 +80,10 @@ public:
 };
 
 struct rotated_level_info {
-  typedef boost::shared_ptr<mc::level_info> level_info_ptr;
-
-  level_info_ptr level;
+  mc::level_info_ptr level;
   mc::utils::level_coord coord;
   
-  rotated_level_info(level_info_ptr level, mc::utils::level_coord coord)
+  rotated_level_info(mc::level_info_ptr level, mc::utils::level_coord coord)
     : level(level), coord(coord)
   {
   }
@@ -277,50 +276,71 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   {
     nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
-    mc::chunk_iterator iterator = world.get_iterator();
+    mc::region_iterator iterator = world.get_iterator();
+
+    int failed_regions = 0;
+    int filtered_levels = 0;
     
     while (iterator.has_next()) {
-      reporter.add(1);
-      
-      boost::shared_ptr<mc::level_info> level;
-      
+      mc::region_ptr region = iterator.next();
+
       try {
-        level = iterator.next();
-      } catch(mc::bad_level& e) {
-        out_log << e.where() << ": " << e.what() << std::endl;
+        region->read_header();
+      } catch(mc::bad_region& e) {
+        ++failed_regions;
+        out_log << region->get_path() << ": could not read header" << std::endl;
         continue;
       }
-      
-      const mc::utils::level_coord coord = level->get_coord();
-      
-      uint64_t x2 = coord.get_x() * coord.get_x();
-      uint64_t z2 = coord.get_z() * coord.get_z();
-      uint64_t r2 = s.max_radius * s.max_radius;
-      
-      bool out_of_range = 
-          coord.get_x() < s.min_x
-          || coord.get_x() > s.max_x
-          || coord.get_z() < s.min_z
-          || coord.get_z() > s.max_z
-          || x2 + z2 >= r2;
-      
-      if (out_of_range) {
-        if (s.debug) {
-          out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+
+      std::list<mc::utils::level_coord> coords;
+
+      region->read_coords(coords);
+
+      BOOST_FOREACH(mc::utils::level_coord c, coords) {
+        mc::level_info_ptr level(new mc::level_info(region, c));
+        
+        mc::utils::level_coord coord = level->get_coord();
+        
+        uint64_t x2 = coord.get_x() * coord.get_x();
+        uint64_t z2 = coord.get_z() * coord.get_z();
+        uint64_t r2 = s.max_radius * s.max_radius;
+        
+        bool out_of_range = 
+            coord.get_x() < s.min_x
+            || coord.get_x() > s.max_x
+            || coord.get_z() < s.min_z
+            || coord.get_z() > s.max_z
+            || x2 + z2 >= r2;
+        
+        if (out_of_range) {
+          ++filtered_levels;
+
+          if (s.debug) {
+            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          }
+
+          continue;
         }
         
-        continue;
+        rotated_level_info rlevel =
+          rotated_level_info(level, coord.rotate(s.rotation));
+        
+        levels.push_back(rlevel);
+        world.update(rlevel.coord);
+        reporter.add(1);
       }
-      
-      rotated_level_info rlevel =
-        rotated_level_info(level, coord.rotate(s.rotation));
-      
-      levels.push_back(rlevel);
-      world.update(rlevel.coord);
     }
     
     reporter.done(0);
     levels.sort();
+
+    if (failed_regions > 0) {
+      out << "SEE LOG: " << failed_regions << " region(s) failed!" << endl;
+    }
+
+    if (filtered_levels > 0) {
+      out << "SEE LOG: " << filtered_levels << " level(s) filtered!" << endl;
+    }
   }
 
   if (levels.size() <= 0) {
@@ -430,80 +450,85 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   {
     out << " --- RENDERING --- " << endl;
-  }
-  
-  int cache_hits = 0;
 
-  mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
-  
-  for (i = 0; i < world_size; i++) {
-    if (queued <= filllimit) {
-      for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
-        rotated_level_info rl = *lvlit;
-        
-        render_job job;
-        
-        boost::shared_ptr<mc::level> level(new mc::level(rl.level));
-        
-        job.engine = engine;
-        job.level = level;
-        
-        try {
-          level->read(region_buffer);
-        } catch(mc::invalid_file& e) {
-          out << level->get_path() << ": " << e.what() << endl;
+    int cache_hits = 0;
+
+    mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
+    int failed_levels = 0;
+    
+    for (i = 0; i < world_size; i++) {
+      if (queued <= filllimit) {
+        for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
+          rotated_level_info rl = *lvlit;
+          
+          render_job job;
+          
+          boost::shared_ptr<mc::level> level(new mc::level(rl.level));
+          
+          job.engine = engine;
+          job.level = level;
+          
+          try {
+            level->read(region_buffer);
+          } catch(mc::invalid_file& e) {
+            out_log << level->get_path() << ": " << e.what() << endl;
+            continue;
+          }
+           
+          job.level = level;
+          job.xPos = rl.coord.get_x();
+          job.zPos = rl.coord.get_z();
+          
+          renderer.give(job);
+          
+          if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
+          
+          queued++;
+        }
+      }
+      
+      c.add(1);
+      --queued;
+      
+      render_result p = renderer.get();
+
+      if (p.fatal) {
+        {
+          out << p.level->get_path() << ": " << p.fatal_why << endl;
           continue;
         }
-         
-        job.level = level;
-        job.xPos = rl.coord.get_x();
-        job.zPos = rl.coord.get_z();
-        
-        renderer.give(job);
-        
-        if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
-        
-        queued++;
+      }
+
+      if (p.cache_hit) {
+        ++cache_hits;
+      }
+      
+      ///if (progress_c != NULL) progress_c(i, world_size);
+      
+      if (p.signs.size() > 0) {
+        if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
+        signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+      }
+
+      try {
+        image_base::pos_t x, y;
+        engine->w2pt(p.xPos, p.zPos, x, y);
+        all->composite(x, y, p.operations);
+      } catch(std::ios::failure& e) {
+        out << s.swap_file << ": " << strerror(errno);
+        return false;
       }
     }
     
-    c.add(1);
-    --queued;
-    
-    render_result p = renderer.get();
+    c.done(0);
 
-    if (p.fatal) {
-      {
-        out << p.level->get_path() << ": " << p.fatal_why << endl;
-        continue;
-      }
-    }
-
-    if (p.cache_hit) {
-      ++cache_hits;
+    if (failed_levels > 0) {
+      out << "SEE LOG: " << failed_levels << " level(s) failed!" << endl;
     }
     
-    ///if (progress_c != NULL) progress_c(i, world_size);
-    
-    if (p.signs.size() > 0) {
-      if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
-      signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+    if (s.cache_use) {
+      out << "cache_hits: " << cache_hits << "/" << world_size << endl;
     }
-
-    try {
-      image_base::pos_t x, y;
-      engine->w2pt(p.xPos, p.zPos, x, y);
-      all->composite(x, y, p.operations);
-    } catch(std::ios::failure& e) {
-      out << s.swap_file << ": " << strerror(errno);
-      return false;
-    }
-  }
-  
-  c.done(0);
-  
-  if (s.cache_use) {
-    out << "cache_hits: " << cache_hits << "/" << world_size << endl;
   }
   
   //if (progress_c != NULL) progress_c(world_size, world_size);
@@ -767,61 +792,91 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
   
   {
     nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
-    mc::chunk_iterator iterator = world.get_iterator();
+    mc::region_iterator iterator = world.get_iterator();
     
     mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
-    
+
+    int failed_regions = 0;
+    int filtered_levels = 0;
+    int failed_levels = 0;
+
     while (iterator.has_next()) {
-      reporter.add(1);
-        
-      boost::shared_ptr<mc::level_info> level;
-      
+      mc::region_ptr region = iterator.next();
+
       try {
-        level = iterator.next();
-      } catch(mc::bad_level& e) {
-        out_log << e.where() << ": " << e.what() << std::endl;
-      }
-      
-      mc::utils::level_coord coord = level->get_coord();
-      
-      uint64_t x2 = coord.get_x() * coord.get_x();
-      uint64_t z2 = coord.get_z() * coord.get_z();
-      uint64_t r2 = s.max_radius * s.max_radius;
-        
-      bool out_of_range = 
-            coord.get_x() < s.min_x
-            || coord.get_x() > s.max_x
-            || coord.get_z() < s.min_z
-            || coord.get_z() > s.max_z
-            || x2 + z2 >= r2;
-        
-      if (out_of_range) {
-        if (s.debug) {
-          out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-        }
-        continue;
-      }
-      
-      mc::level level_data(level);
-      
-      try {
-        level_data.read(region_buffer);
-      } catch(mc::invalid_file& e) {
-        out_log << level->get_path() << ": " << e.what();
+        region->read_header();
+      } catch(mc::bad_region& e) {
+        ++failed_regions;
+        out_log << region->get_path() << ": could not read header" << std::endl;
         continue;
       }
 
-      boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
-      
-      for (int i = 0; i < blocks->length; i++) {
-        nbt::Byte block = blocks->values[i];
-        statistics[block] += 1;
+      std::list<mc::utils::level_coord> coords;
+
+      region->read_coords(coords);
+
+      BOOST_FOREACH(mc::utils::level_coord c, coords) {
+        mc::level_info_ptr level(new mc::level_info(region, c));
+
+        mc::utils::level_coord coord = level->get_coord();
+
+        uint64_t x2 = coord.get_x() * coord.get_x();
+        uint64_t z2 = coord.get_z() * coord.get_z();
+        uint64_t r2 = s.max_radius * s.max_radius;
+          
+        bool out_of_range = 
+              coord.get_x() < s.min_x
+              || coord.get_x() > s.max_x
+              || coord.get_z() < s.min_z
+              || coord.get_z() > s.max_z
+              || x2 + z2 >= r2;
+          
+        if (out_of_range) {
+          ++filtered_levels;
+
+          if (s.debug) {
+            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          }
+
+          continue;
+        }
+        
+        mc::level level_data(level);
+        
+        try {
+          level_data.read(region_buffer);
+        } catch(mc::invalid_file& e) {
+          ++failed_levels;
+          out_log << level->get_path() << ": " << e.what();
+          continue;
+        }
+
+        world.update(level->get_coord());
+
+        boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
+
+        for (int i = 0; i < blocks->length; i++) {
+          nbt::Byte block = blocks->values[i];
+          statistics[block] += 1;
+        }
+
+        reporter.add(1);
       }
-      
-      world.update(level->get_coord());
     }
-    
+
     reporter.done(0);
+
+    if (failed_regions > 0) {
+      out << "SEE LOG: " << failed_regions << " region(s) failed!" << endl;
+    }
+
+    if (filtered_levels > 0) {
+      out << "SEE LOG: " << filtered_levels << " level(s) filtered!" << endl;
+    }
+
+    if (failed_levels > 0) {
+      out << "SEE LOG: " << failed_levels << " level(s) failed!" << endl;
+    }
   }
 
   ofstream stats(output_path.string().c_str());

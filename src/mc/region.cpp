@@ -8,17 +8,19 @@ namespace mc {
   region::region(fs::path path)
       : path(path), in_buffer(CHUNK_MAX)
   {
-    char* header_c = new char[HEADER_SIZE];
-    header.reset(header_c);
+  }
+
+  void region::read_header()
+  {
+    header.reset(new char[HEADER_SIZE]);
 
     std::fstream fp(path.string().c_str(), std::ios::in | std::ios::binary);
-    fp.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
 
     if (fp.fail()) {
       throw bad_region(path, "failed to open region");
     }
 
-    fp.read(header_c, HEADER_SIZE);
+    fp.read(header.get(), HEADER_SIZE);
 
     if (fp.fail()) {
       throw bad_region(path, "failed to read header area");
@@ -32,6 +34,10 @@ namespace mc {
 
   chunk_offset region::read_chunk_offset(unsigned int x, unsigned int z) const
   {
+    if (!header) {
+      throw bad_region(path, "header has not been loaded");
+    }
+
     int o = get_offset(x, z);
 
     uint8_t buf[HEADER_RECORD_SIZE];

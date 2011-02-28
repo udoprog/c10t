@@ -3,7 +3,7 @@ OS=osx
 VERSION=SNAPSHOT
 
 USR=/usr
-CXXFLAGS=-arch i386 -arch x86_64
+CXXFLAGS=-arch i386 -arch x86_64 -Isrc -I/opt/local/include -I/usr/X11R6/include/freetype2
 LDFLAGS=-static -pthread -lpng -lboost_thread-mt -lboost_system-mt -lboost_filesystem-mt -lfreetype -lz
 DIST=c10t
 TARGET=c10t

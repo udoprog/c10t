@@ -146,7 +146,7 @@ namespace mc {
 
   level::level(level_info_ptr _level_info) : _level_info(_level_info) {}
 
-  void level::read()
+  void level::read(dynamic_buffer& buffer)
   {
     level_context context;
     
@@ -164,18 +164,17 @@ namespace mc {
     std::stringstream oss;
 
     uint32_t len;
-    char buffer[mc::region::CHUNK_MAX];
 
     try {
       len = _level_info->get_region()->read_data(_level_info->get_x(),
-          _level_info->get_z(), buffer, mc::region::CHUNK_MAX);
+          _level_info->get_z(), buffer);
     } catch(mc::bad_region& e) {
       throw invalid_file(e.what());
     }
 
     std::string chunk_data = oss.str();
 
-    parser.parse_buffer(buffer, len);
+    parser.parse_buffer(buffer.get(), len);
     
     if (context.grammar_error) {
       throw invalid_file("not a valid nbt file");

@@ -56,7 +56,7 @@ namespace mc {
       /*
        * might throw invalid_file if the file is not gramatically correct
        */
-      void read();
+      void read(dynamic_buffer& buffer);
       
       bool is_read() {
         return complete;

@@ -433,6 +433,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   }
   
   int cache_hits = 0;
+
+  mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
   
   for (i = 0; i < world_size; i++) {
     if (queued <= filllimit) {
@@ -447,7 +449,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         job.level = level;
         
         try {
-          level->read();
+          level->read(region_buffer);
         } catch(mc::invalid_file& e) {
           out << level->get_path() << ": " << e.what() << endl;
           continue;
@@ -767,6 +769,8 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
     nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
     mc::chunk_iterator iterator = world.get_iterator();
     
+    mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
+    
     while (iterator.has_next()) {
       reporter.add(1);
         
@@ -801,7 +805,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
       mc::level level_data(level);
       
       try {
-        level_data.read();
+        level_data.read(region_buffer);
       } catch(mc::invalid_file& e) {
         out_log << level->get_path() << ": " << e.what();
         continue;

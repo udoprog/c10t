@@ -24,7 +24,6 @@ namespace mc {
       bad_region(const fs::path path, const char* message) 
         : path(path), message(message)
       {
-        
       }
 
       ~bad_region() throw() {  }
@@ -56,7 +55,7 @@ namespace mc {
   private:
     fs::path path;
     boost::shared_array<char> header;
-    boost::shared_array<char> in_buffer;
+    dynamic_buffer in_buffer;
   public:
     region(fs::path path);
 
@@ -81,7 +80,7 @@ namespace mc {
       }
     }
 
-    uint32_t read_data(int x, int z, char* buffer, uint32_t buffer_size) const;
+    uint32_t read_data(int x, int z, dynamic_buffer& buffer);
     fs::path get_path();
   };
 }

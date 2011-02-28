@@ -115,14 +115,16 @@ int main(int argc, char* argv[]) {
 
   region.read_coords(coords);
 
-  char data[mc::region::CHUNK_MAX];
+  mc::dynamic_buffer buffer(mc::region::CHUNK_MAX);
 
   BOOST_FOREACH(level_coord c, coords) {
+    std::cout << "buffer.get_size() = " << buffer.get_size() << std::endl;
+
     try {
-      int len = region.read_data(c.get_x(), c.get_z(), data, mc::region::CHUNK_MAX);
+      int len = region.read_data(c.get_x(), c.get_z(), buffer);
       std::cout << "CHUNK SIZE: " << std::dec << int(len) << std::endl;
       ctx.width = 0;
-      parser.parse_buffer(data, len);
+      parser.parse_buffer(buffer.get(), len);
     } catch(mc::bad_region& e) {
       std::cout << region.get_path() << ": " << e.what() << std::endl;
     }

@@ -3,7 +3,9 @@ OS=linux
 VERSION=SNAPSHOT
 
 USR=/usr/i686-pc-linux-gnu/usr
-LDFLAGS=-static -pthread -lpng -lboost_system -lboost_filesystem -lboost_thread -lfreetype -lz
+LIB=/usr/i686-pc-linux-gnu/usr/lib
+
+LDFLAGS=-pthread
 DIST=c10t
 TARGET=c10t
 TARGET_DEBUG=c10t-debug

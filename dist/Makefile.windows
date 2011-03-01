@@ -1,12 +1,13 @@
 ARCH=x86_64
 OS=windows
 VERSION=SNAPSHOT
+USR=/usr/x86_64-w64-mingw32/usr
+LIB=${USR}/lib
 
 SOURCES=src/win32/tss_cleanup_implemented.cpp
-USR=/usr/x86_64-w64-mingw32/usr
 CXX=x86_64-w64-mingw32-g++
 CXXFLAGS=-m64 -O3 -DBOOST_THREAD_USE_LIB=1 -DBOOST_USE_WINDOWS_H
-LDFLAGS=-static-libgcc -static -lpng -lboost_filesystem -lboost_system -lboost_thread_win32 -lfreetype -lz
+LDFLAGS=-static-libgcc -static-libstdc++
 
 TARGET=c10t.exe
 TARGET_DEBUG=c10t-debug.exe

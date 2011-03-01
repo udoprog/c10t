@@ -22,6 +22,13 @@ SOURCES+=src/image/image_base.cpp
 SOURCES+=src/image/image_operations.cpp
 SOURCES+=src/image/memory_image.cpp
 
+LDFLAGS+=${LIB}/libpng.a
+LDFLAGS+=${LIB}/libboost_thread-mt.a
+LDFLAGS+=${LIB}/libboost_system-mt.a
+LDFLAGS+=${LIB}/libboost_filesystem-mt.a
+LDFLAGS+=${LIB}/libfreetype.a
+LDFLAGS+=${LIB}/libz.a
+
 OBJECTS=${SOURCES:.cpp=.o}
 CXXFLAGS+=-Isrc -I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O2
 

@@ -5,7 +5,7 @@ VERSION=SNAPSHOT
 USR=/usr/i686-pc-linux-gnu/usr
 LIB=/usr/i686-pc-linux-gnu/usr/lib
 
-LDFLAGS=-pthread
+LDFLAGS=-pthread -static-libstdc++ -static-libgcc
 DIST=c10t
 TARGET=c10t
 TARGET_DEBUG=c10t-debug

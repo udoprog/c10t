@@ -64,9 +64,7 @@ private:
   sync_queue<O> out;
   boost::condition start_cond;
   boost::condition input_cond;
-  boost::condition order_cond;
   boost::mutex start_mutex;
-  boost::mutex order_mutex;
   
   const int thread_count;
   
@@ -91,11 +89,6 @@ public:
     out.interrupt();
     
     interrupted = true;
-    
-    {
-      boost::mutex::scoped_lock lock(order_mutex);
-      order_cond.notify_all();
-    }
     
     {
       boost::mutex::scoped_lock lock(start_mutex);
@@ -124,23 +117,12 @@ public:
     
     O o = work(i);
     
-    {
-      // first, make sure that we output the results in the same order they came in
-      // try to make it as lock-free as possible
-      boost::mutex::scoped_lock lock(order_mutex);
-      
-      while (!interrupted && qp != output) {
-        order_cond.wait(lock);
-      }
-      
-      if (interrupted) {
-        throw interrupted_exception();
-      }
-      
-      out.add(o);
-      ++output;
-      order_cond.notify_all();
+    if (interrupted) {
+      throw interrupted_exception();
     }
+    
+    out.add(o);
+    ++output;
   }
   
   void run(int id) {

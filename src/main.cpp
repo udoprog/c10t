@@ -438,85 +438,93 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   renderer.start();
   
-  unsigned int queued = 0;
-
-  unsigned int i;
-
-  unsigned int prebuffer = s.threads * s.prebuffer;
-  unsigned int filllimit = prebuffer / 2;
-  
   nonstd::limited<unsigned int> c(50, cout_dot<unsigned int>, cout_uintpart_endl);
   c.set_limit(world_size);
   
   {
     out << " --- RENDERING --- " << endl;
 
+    unsigned int queued = 0;
+    unsigned int prebuffer = s.threads * s.prebuffer;
+    
+    std::list<render_result> render_results;
+  
     int cache_hits = 0;
 
     mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
     int failed_levels = 0;
-    
-    for (i = 0; i < world_size; i++) {
-      if (queued <= filllimit) {
-        for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
-          rotated_level_info rl = *lvlit;
-          
-          render_job job;
-          
-          boost::shared_ptr<mc::level> level(new mc::level(rl.level));
-          
-          job.engine = engine;
-          job.level = level;
-          
-          try {
-            level->read(region_buffer);
-          } catch(mc::invalid_file& e) {
-            out_log << level->get_path() << ": " << e.what() << endl;
-            continue;
-          }
-           
-          job.level = level;
-          job.xPos = rl.coord.get_x();
-          job.zPos = rl.coord.get_z();
-          
-          renderer.give(job);
-          
-          if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
-          
-          queued++;
-        }
-      }
-      
-      c.add(1);
-      --queued;
-      
-      render_result p = renderer.get();
 
-      if (p.fatal) {
-        {
+    while (lvlit != levels.end() || render_results.size() > 0) {
+      while (queued < prebuffer && lvlit != levels.end()) {
+        rotated_level_info rl = *lvlit;
+        lvlit++;
+        
+        render_job job;
+        
+        boost::shared_ptr<mc::level> level(new mc::level(rl.level));
+        
+        job.engine = engine;
+        job.level = level;
+        
+        try {
+          level->read(region_buffer);
+        } catch(mc::invalid_file& e) {
+          out_log << level->get_path() << ": " << e.what() << endl;
+          continue;
+        }
+         
+        job.level = level;
+        job.coord = rl.coord;
+        
+        renderer.give(job);
+        ++queued;
+        
+        if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
+      }
+
+      while (render_results.size() > 0) {
+        render_results.sort();
+      
+        BOOST_FOREACH(render_result p, render_results) {
+          c.add(1);
+
+          try {
+            image_base::pos_t x, y;
+            engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
+            all->composite(x, y, p.operations);
+          } catch(std::ios::failure& e) {
+            out << s.swap_file << ": " << strerror(errno);
+            return false;
+          }
+        }
+
+        render_results.clear();
+      }
+
+      while (queued > 0) {
+        render_result p = renderer.get();
+        --queued;
+
+        if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
+
+        if (p.fatal) {
+          c.add(1);
           out << p.level->get_path() << ": " << p.fatal_why << endl;
           continue;
         }
-      }
 
-      if (p.cache_hit) {
-        ++cache_hits;
-      }
+        if (p.cache_hit) {
+          ++cache_hits;
+        }
+        
+        ///if (progress_c != NULL) progress_c(i, world_size);
+        
+        if (p.signs.size() > 0) {
+          if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
+          signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+        }
       
-      ///if (progress_c != NULL) progress_c(i, world_size);
-      
-      if (p.signs.size() > 0) {
-        if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
-        signs.insert(signs.end(), p.signs.begin(), p.signs.end());
-      }
-
-      try {
-        image_base::pos_t x, y;
-        engine->w2pt(p.xPos, p.zPos, x, y);
-        all->composite(x, y, p.operations);
-      } catch(std::ios::failure& e) {
-        out << s.swap_file << ": " << strerror(errno);
-        return false;
+        render_results.push_back(p);
       }
     }
     

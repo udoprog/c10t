@@ -18,21 +18,25 @@
 namespace fs = boost::filesystem;
 
 struct render_result {
-  int xPos, zPos;
   boost::shared_ptr<mc::level> level;
   boost::shared_ptr<image_operations> operations;
   bool fatal;
   std::string fatal_why;
   std::vector<mc::marker> signs;
   bool cache_hit;
+  mc::utils::level_coord coord;
   
   render_result() : fatal(false), fatal_why("(no error)") {}
+
+  bool operator<(const render_result& other) const {
+    return coord < other.coord;
+  }
 };
 
 struct render_job {
-  int xPos, zPos;
   boost::shared_ptr<mc::level> level;
   boost::shared_ptr<engine_base> engine;
+  mc::utils::level_coord coord;
 };
 
 class renderer : public threadworker<render_job, render_result> {
@@ -45,8 +49,7 @@ public:
   render_result work(render_job job) {
     render_result p;
     
-    p.xPos = job.xPos;
-    p.zPos = job.zPos;
+    p.coord = job.coord;
     p.operations.reset(new image_operations);
     p.level = job.level;
     p.cache_hit = false;

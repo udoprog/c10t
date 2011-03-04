@@ -45,7 +45,7 @@ struct settings_t {
   bool binary;
   bool debug;
   bool use_split;
-  unsigned int split;
+  std::list<unsigned int> split;
   bool striped_terrain;
   std::set<std::string> show_players_set;
   bool require_all;
@@ -117,7 +117,6 @@ struct settings_t {
     this->prebuffer = 4;
     
     this->use_split = false;
-    this->split = 1;
     this->cavemode = false;
     this->hellmode = false;
     this->top = 127;

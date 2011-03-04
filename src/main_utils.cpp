@@ -8,6 +8,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 using namespace boost;
@@ -448,19 +449,31 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         
         break;
       case 17:
-        try {
-          s.split = boost::lexical_cast<int>(optarg);
-        } catch(boost::bad_lexical_cast& e) {
-          error << "Cannot be converted to number: " << optarg;
-          return false;
+        {
+          std::list<std::string> result;
+          std::string split_string(optarg);
+          boost_split(result, split_string);
+
+          BOOST_FOREACH(std::string str, result) {
+            unsigned int split_int = 0;
+
+            try {
+              split_int = boost::lexical_cast<int>(str);
+            } catch(boost::bad_lexical_cast& e) {
+              error << "Cannot be converted to number: " << str;
+              return false;
+            }
+
+            if (!(split_int >= 1)) {
+              error << "split argument must be greater or equal to one";
+              return false;
+            }
+
+            s.split.push_back(split_int);
+          }
+          
+          s.use_split = true;
         }
-        
-        if (!(s.split >= 1)) {
-          error << "split argument must be greater or equal to one";
-          return false;
-        }
-        
-        s.use_split = true;
         break;
       case 18:
         s.show_warps = true;

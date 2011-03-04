@@ -696,36 +696,44 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     
     {
       out << " --- SAVING MULTIPLE IMAGES --- " << endl;
-      out << "splitting on " << s.split << "px basis" << endl;
     }
-    
-    std::map<point2, image_base*> parts = image_split(all.get(), s.split);
-    
-    {
-      out << "saving " << parts.size() << " images" << endl;
-    }
-    
-    for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
-      const point2 p = it->first;
-      boost::scoped_ptr<image_base> img(it->second);
-      
-      stringstream ss;
-      ss << boost::format(output_path.string()) % p.x % p.y;
-      
-      std::string path = ss.str();
-      
-      png_format::opt_type opts;
 
-      opts.center_x = center_x;
-      opts.center_y = center_y;
-      opts.comment = C10T_COMMENT;
+    int i = 0;
+
+    BOOST_FOREACH(unsigned int split_i, s.split) {
+      std::map<point2, image_base*> parts = image_split(all.get(), split_i);
       
-      if (!img->save<png_format>(path, opts)) {
-        out << path << ": Could not save image";
-        continue;
+      out << "Level " << i << ": splitting into " << parts.size() << " image on " << split_i << "px" << endl;
+      
+      for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
+        const point2 p = it->first;
+        boost::scoped_ptr<image_base> img(it->second);
+        
+        stringstream ss;
+        ss << boost::format(output_path.string()) % i % p.x % p.y;
+        fs::path path(ss.str());
+        
+        if (!fs::is_directory(path.parent_path())) {
+          fs::create_directories(path.parent_path());
+        }
+        
+        png_format::opt_type opts;
+        
+        opts.center_x = center_x;
+        opts.center_y = center_y;
+        opts.comment = C10T_COMMENT;
+        
+        std::string path_str(path.string());
+
+        if (!img->save<png_format>(path_str, opts)) {
+          out << path << ": Could not save image";
+          continue;
+        }
+        
+        out << path << ": OK" << endl;
       }
       
-      out << path << ": OK" << endl;
+      ++i;
     }
   }
   else {

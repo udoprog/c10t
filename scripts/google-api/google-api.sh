@@ -96,7 +96,7 @@ cat > $target/index.html << ENDL
         return extend(
           {
             getTileUrl: function(c, z) {
-                return o.host + m + "." + c.x + "." + c.y + "." + z + ".png";
+                return o.host + m + "." + z + "." + c.x + "." + c.y + ".png";
             },
             isPng: true,
             name : "none",
@@ -184,35 +184,35 @@ echo "" > $C10T_OUT
 generate() {
   x_opts=$1
   name=$2
-  pixelsplit=$3
-  zoom=$4
-  scale=$5
-  
+  pixelsplit="$3"
+
   # generate a set of split files
-  src=$target/$tiles/$name.%d.%d.$zoom.src.png
-  echo "$C10T $C10T_OPTS $x_opts --pixelsplit=$pixelsplit -o $src --write-json=$target/$name.json"
-  if ! $C10T $C10T_OPTS $x_opts --pixelsplit=$pixelsplit -o $src --write-json="$target/$name.json"; then
+  src=$target/$tiles/$name.%d.%d.%d.src.png
+
+  echo "$C10T $C10T_OPTS $x_opts --pixelsplit=\"$pixelsplit\" -o $src --write-json=$target/$name.json"
+  if ! $C10T $C10T_OPTS $x_opts --pixelsplit="$pixelsplit" -o $src --write-json="$target/$name.json"; then
     exit 1
   fi
-  
-  # convert the files to the appropriate sizes
-  find $target/$tiles -name "$name.*.*.$zoom.src.png" | while read file; do
-    tg=${file%%.src.png}.png
-    echo "$CONVERT $file -scale $scale $tg"
-    $CONVERT $file -scale $scale $tg
-    rm -f $file
+
+  # resize all necessary tiles
+  for t in $TILE_SIZES; do
+    zoom=${ZOOM[$t]}
+    scale=${SCALE[$t]}
+    
+    # convert the files to the appropriate sizes
+    while read file; do
+      tg=${file%%.src.png}.png
+      echo "$CONVERT $file -scale $scale $tg"
+      $CONVERT $file -scale $scale $tg
+      rm -f $file
+    done < <(find $target/$tiles -name "$name.$zoom.*.*.src.png")
   done
-  
+
   echo "done!"
 }
 
-for t in $TILE_SIZES; do
-  z=${ZOOM[$t]}
-  s=${SCALE[$t]}
-  
-  generate "" "day" $t $z $s
-  generate "-n" "night" $t $z $s
-done
+generate "" "day" "$TILE_SIZES"
+generate "-n" "night" "$TILE_SIZES"
 
 cat > $target/options.js << ENDL
 var options = {

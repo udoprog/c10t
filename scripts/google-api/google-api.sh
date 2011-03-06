@@ -7,20 +7,7 @@ C10T=c10t
 C10T_OPTS="$3"
 C10T_OUT=c10t.out.txt
 
-TILE_SIZES="4096 2048 1024 512 256 128"
-SCALE[4096]="6.25%"
-SCALE[2048]="12.5%"
-SCALE[1024]="25%"
-SCALE[512]="50%"
-SCALE[256]="100%"
-SCALE[128]="200%"
-
-ZOOM[4096]=0
-ZOOM[2048]=1
-ZOOM[1024]=2
-ZOOM[512]=3
-ZOOM[256]=4
-ZOOM[128]=5
+TILE_SIZES="256 512 1024 2048 4096"
 
 FACTOR=16
 
@@ -96,12 +83,12 @@ cat > $target/index.html << ENDL
         return extend(
           {
             getTileUrl: function(c, z) {
-                return o.host + m + "." + z + "." + c.x + "." + c.y + ".png";
+            return o.host + m + "." + (this.maxZoom - z) + "." + c.x + "." + c.y + ".png";
             },
             isPng: true,
             name : "none",
             alt : "none",
-            minZoom: 0, maxZoom: 5,
+            minZoom: 1, maxZoom: 5,
             tileSize: new google.maps.Size(256, 256)
           },
           ob
@@ -187,26 +174,12 @@ generate() {
   pixelsplit="$3"
 
   # generate a set of split files
-  src=$target/$tiles/$name.%d.%d.%d.src.png
+  tile=$target/$tiles/$name.%d.%d.%d.png
 
-  echo "$C10T $C10T_OPTS $x_opts --pixelsplit=\"$pixelsplit\" -o $src --write-json=$target/$name.json"
-  if ! $C10T $C10T_OPTS $x_opts --pixelsplit="$pixelsplit" -o $src --write-json="$target/$name.json"; then
+  echo "$C10T $C10T_OPTS $x_opts --pixelsplit=\"$pixelsplit\" -o $tile --write-json=$target/$name.json"
+  if ! $C10T $C10T_OPTS $x_opts --pixelsplit="$pixelsplit" -o $tile --write-json="$target/$name.json"; then
     exit 1
   fi
-
-  # resize all necessary tiles
-  for t in $TILE_SIZES; do
-    zoom=${ZOOM[$t]}
-    scale=${SCALE[$t]}
-    
-    # convert the files to the appropriate sizes
-    while read file; do
-      tg=${file%%.src.png}.png
-      echo "$CONVERT $file -scale $scale $tg"
-      $CONVERT $file -scale $scale $tg
-      rm -f $file
-    done < <(find $target/$tiles -name "$name.$zoom.*.*.src.png")
-  done
 
   echo "done!"
 }

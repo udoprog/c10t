@@ -700,19 +700,21 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   }
   
   if (s.use_split) {
-    //boost::ptr_map<point2, image_base> parts;
-    
-    {
-      out << " --- SAVING MULTIPLE IMAGES --- " << endl;
-    }
+    out << " --- SAVING MULTIPLE IMAGES --- " << endl;
 
     int i = 0;
 
+    image_base::image_ptr target;
+
     BOOST_FOREACH(unsigned int split_i, s.split) {
+      if (!target) {
+        target.reset(new memory_image(split_i, split_i));
+      }
+
       std::map<point2, image_base*> parts = image_split(all.get(), split_i);
       
       out << "Level " << i << ": splitting into " << parts.size() << " image on " << split_i << "px" << endl;
-      
+
       for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
         const point2 p = it->first;
         boost::scoped_ptr<image_base> img(it->second);
@@ -732,8 +734,11 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         opts.comment = C10T_COMMENT;
         
         std::string path_str(path.string());
+        
+        target->clear();
+        img->resize(target);
 
-        if (!img->save<png_format>(path_str, opts)) {
+        if (!target->save<png_format>(path_str, opts)) {
           out << path << ": Could not save image";
           continue;
         }
@@ -1029,9 +1034,13 @@ int do_help() {
     /*<< "  --side <set>              - Specify the side color for a specific block id   " << endl
     << "                              this uses the same format as '-B' only the color " << endl
     << "                              is applied to the side of the block              " << endl*/
-    << "  -p, --split <px>          - Split the render into parts which must be <px>   " << endl
-    << "                              pixels squared. `output' name must contain two   " << endl
-    << "                              format specifiers `%d' for x and y position.     " << endl
+    << "  -p, --split "px1 px2 .."  - Split the render into parts which must be pxX    " << endl
+    << "                              pixels squared. `output' name must contain three " << endl
+    << "                              format specifiers `%d' for `level' x and y       " << endl
+    << "                              position. Each image will be resized to the      " << endl
+    << "                              specified px1 size.                              " << endl
+    << "                              Supports multiple splits which will be placed on " << endl
+    << "                              specific `level's.                               " << endl
        /*******************************************************************************/
     << endl
     << "Other Options:" << endl
@@ -1103,7 +1112,7 @@ int do_help() {
   out << "    c10t -w /path/to/world -o /path/to/png.png --show-players --ttf-font example.ttf" << endl;
   out << endl;
   out << "  Split the result into multiple files, using 10 chunks across in each file, the two number formatters will be replaced with the x/z positions of the chunks" << endl;
-  out << "    c10t -w /path/to/world -o /path/to/png.%d.%d.png --split 10" << endl;
+  out << "    c10t -w /path/to/world -o /path/to/%d.%d.%d.png --split 10" << endl;
   out << endl;
   return 0;
 }

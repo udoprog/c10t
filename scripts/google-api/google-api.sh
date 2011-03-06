@@ -7,9 +7,9 @@ C10T=c10t
 C10T_OPTS="$3"
 C10T_OUT=c10t.out.txt
 
-TILE_SIZES="256 512 1024 2048 4096"
-
-FACTOR=16
+TILE_SIZES="128 256 512 1024 2048 4096"
+TILE_BASE="256"
+FACTOR=1
 
 set -e
 
@@ -80,15 +80,17 @@ cat > $target/index.html << ENDL
       };
       
       function new_map_type(m, o, ob) {
+        var world = ob.data.world;
+
         return extend(
           {
             getTileUrl: function(c, z) {
-            return o.host + m + "." + (this.maxZoom - z) + "." + c.x + "." + c.y + ".png";
+              return o.host + m + "." + (world.split - z) + "." + c.x + "." + c.y + ".png";
             },
             isPng: true,
             name : "none",
             alt : "none",
-            minZoom: 1, maxZoom: 5,
+            minZoom: 1, maxZoom: world.split,
             tileSize: new google.maps.Size(256, 256)
           },
           ob
@@ -119,19 +121,21 @@ cat > $target/index.html << ENDL
         map.setMapTypeId(firstMode);
 
         var globaldata = modes[firstMode].data;
+
+        var world = globaldata.world;
+        var factor = Math.pow(2, world.split - $FACTOR);
         
         {
-          var world = globaldata.world;
-          var center = new google.maps.Point(world["cx"] / $FACTOR, world["cy"] / $FACTOR);
+          var center = new google.maps.Point(world.cx / factor, world.cy / factor);
           var latlng = EuclideanProjection.prototype.fromPointToLatLng(center)
           map.setCenter(latlng);
-          map.setZoom(0);
+          map.setZoom(1);
         }
         
         for (var i = 0; i < globaldata.markers.length; i++)
         {
           var m = globaldata.markers[i];
-          var point = new google.maps.Point(m.x / $FACTOR, m.y / $FACTOR);
+          var point = new google.maps.Point(m.x / factor, m.y / factor);
           var latlng = EuclideanProjection.prototype.fromPointToLatLng(point)
           
           new google.maps.Marker({
@@ -176,8 +180,8 @@ generate() {
   # generate a set of split files
   tile=$target/$tiles/$name.%d.%d.%d.png
 
-  echo "$C10T $C10T_OPTS $x_opts --pixelsplit=\"$pixelsplit\" -o $tile --write-json=$target/$name.json"
-  if ! $C10T $C10T_OPTS $x_opts --pixelsplit="$pixelsplit" -o $tile --write-json="$target/$name.json"; then
+  echo "$C10T $C10T_OPTS $x_opts --split=\"$pixelsplit\" --split-base=$TILE_BASE -o $tile --write-json=$target/$name.json"
+  if ! $C10T $C10T_OPTS $x_opts --split="$pixelsplit" --split-base=$TILE_BASE -o $tile --write-json="$target/$name.json"; then
     exit 1
   fi
 

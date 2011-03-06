@@ -45,17 +45,43 @@ void image_base::safe_blend_pixel(pos_t x, pos_t y, color &c)
 }
 
 void image_base::resize(image_ptr target) {
-  unsigned int factor = get_width() / target->get_width();
+  if (target->get_width() > get_width()) {
+    // scale up
+    unsigned int factor = target->get_width() / get_width();
+    boost::shared_array<color> line(new color[get_width()]);
 
-  boost::shared_array<color> line(new color[get_width()]);
+    unsigned int scanline = 0;
+    bool first = false;
 
-  for (pos_t y = 0; y < target->get_height(); y++) {
-    pos_t y_p = ((y * factor) + factor / 2);
-    get_line(y_p, pos_t(0), get_width(), line.get());
-    
-    for (pos_t x = 0; x < target->get_width(); x++) {
-      pos_t x_p = ((x * factor) + factor / 2);
-      target->set_pixel(x, y, line[x_p]);
+    for (pos_t y = 0; y < target->get_height(); y++) {
+      pos_t y_p = (y / factor);
+
+      if (y_p != scanline || !first) {
+        get_line(y_p, pos_t(0), get_width(), line.get());
+        first = true;
+        scanline = y_p;
+      }
+
+      for (pos_t x = 0; x < target->get_width(); x++) {
+        pos_t x_p = (x / factor);
+        target->set_pixel(x, y, line[x_p]);
+      }
+    }
+  }
+  else {
+    // scale down
+    unsigned int factor = get_width() / target->get_width();
+
+    boost::shared_array<color> line(new color[get_width()]);
+
+    for (pos_t y = 0; y < target->get_height(); y++) {
+      pos_t y_p = ((y * factor) + factor / 2);
+      get_line(y_p, pos_t(0), get_width(), line.get());
+      
+      for (pos_t x = 0; x < target->get_width(); x++) {
+        pos_t x_p = ((x * factor) + factor / 2);
+        target->set_pixel(x, y, line[x_p]);
+      }
     }
   }
 }

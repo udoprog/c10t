@@ -300,6 +300,7 @@ struct option long_options[] =
    {"write-markers",       required_argument, &flag, 21},
    {"split",            required_argument, &flag, 17},
    {"pixelsplit",       required_argument, &flag, 17},
+   {"split-base",       required_argument, &flag, 27},
    {"show-warps",       required_argument, &flag, 18},
    {"warp-color",       required_argument, &flag, 19},
    {"prebuffer",       required_argument, &flag, 20},
@@ -473,6 +474,19 @@ bool read_opts(settings_t& s, int argc, char* argv[])
           }
           
           s.use_split = true;
+        }
+        break;
+      case 27:
+        try {
+          s.split_base = boost::lexical_cast<int>(optarg);
+        } catch(boost::bad_lexical_cast& e) {
+          error << "Cannot be converted to number: " << optarg;
+          return false;
+        }
+
+        if (!(s.split_base >= 1)) {
+          error << "split argument must be greater or equal to one";
+          return false;
         }
         break;
       case 18:

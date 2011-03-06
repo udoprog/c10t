@@ -674,6 +674,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     json_world->put("mx_x", new json::number(world.max_x * 16));
     json_world->put("mx_z", new json::number(world.max_z * 16));
     json_world->put("mode", new json::number(s.mode));
+    json_world->put("split_base", new json::number(s.split_base));
+    json_world->put("split", new json::number(s.split.size()));
     
     file.put("world", json_world);
     
@@ -707,8 +709,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     image_base::image_ptr target;
 
     BOOST_FOREACH(unsigned int split_i, s.split) {
-      if (!target) {
-        target.reset(new memory_image(split_i, split_i));
+      if (!target && s.split_base > 0) {
+        target.reset(new memory_image(s.split_base, s.split_base));
       }
 
       std::map<point2, image_base*> parts = image_split(all.get(), split_i);
@@ -717,8 +719,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
 
       for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
         const point2 p = it->first;
-        boost::scoped_ptr<image_base> img(it->second);
-        
+        image_base::image_ptr img(it->second);
+
         stringstream ss;
         ss << boost::format(output_path.string()) % i % p.x % p.y;
         fs::path path(ss.str());
@@ -735,8 +737,13 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         
         std::string path_str(path.string());
         
-        target->clear();
-        img->resize(target);
+        if (s.split_base > 0) {
+          target->clear();
+          img->resize(target);
+        }
+        else {
+          target = img;
+        }
 
         if (!target->save<png_format>(path_str, opts)) {
           out << path << ": Could not save image";
@@ -1034,7 +1041,7 @@ int do_help() {
     /*<< "  --side <set>              - Specify the side color for a specific block id   " << endl
     << "                              this uses the same format as '-B' only the color " << endl
     << "                              is applied to the side of the block              " << endl*/
-    << "  -p, --split "px1 px2 .."  - Split the render into parts which must be pxX    " << endl
+    << "  -p, --split 'px1 px2 ..'  - Split the render into parts which must be pxX    " << endl
     << "                              pixels squared. `output' name must contain three " << endl
     << "                              format specifiers `%d' for `level' x and y       " << endl
     << "                              position. Each image will be resized to the      " << endl

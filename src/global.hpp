@@ -46,6 +46,7 @@ struct settings_t {
   bool debug;
   bool use_split;
   std::list<unsigned int> split;
+  unsigned int split_base;
   bool striped_terrain;
   std::set<std::string> show_players_set;
   bool require_all;
@@ -116,6 +117,7 @@ struct settings_t {
 #   endif
     this->prebuffer = 4;
     
+    this->split_base = 0;
     this->use_split = false;
     this->cavemode = false;
     this->hellmode = false;

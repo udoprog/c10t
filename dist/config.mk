@@ -4,8 +4,10 @@ SOURCES+=src/players.cpp
 SOURCES+=src/fileutils.cpp
 SOURCES+=src/nbt/nbt.cpp
 SOURCES+=src/main.cpp
+SOURCES+=src/main_utils.cpp
 SOURCES+=src/utf8.cpp
 SOURCES+=src/warps.cpp
+SOURCES+=src/mc/region.cpp
 SOURCES+=src/mc/utils.cpp
 SOURCES+=src/mc/level.cpp
 SOURCES+=src/mc/blocks.cpp
@@ -19,6 +21,13 @@ SOURCES+=src/image/color.cpp
 SOURCES+=src/image/image_base.cpp
 SOURCES+=src/image/image_operations.cpp
 SOURCES+=src/image/memory_image.cpp
+
+LDFLAGS+=${LIB}/libpng.a
+LDFLAGS+=${LIB}/libboost_thread-mt.a
+LDFLAGS+=${LIB}/libboost_system-mt.a
+LDFLAGS+=${LIB}/libboost_filesystem-mt.a
+LDFLAGS+=${LIB}/libfreetype.a
+LDFLAGS+=${LIB}/libz.a
 
 OBJECTS=${SOURCES:.cpp=.o}
 CXXFLAGS+=-Isrc -I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O2

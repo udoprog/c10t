@@ -56,6 +56,13 @@ namespace mc {
       if (errno == ERANGE) throw bad_cast();
       return res;
     }
+
+    int b10decode(const string num) {
+      if (num.empty()) throw bad_cast();
+      long int res = strtol(num.c_str(), NULL, 10);
+      if (errno == ERANGE) throw bad_cast();
+      return res;
+    }
     
     fs::path level_dir(const fs::path base, int x, int z)
     {
@@ -87,6 +94,27 @@ namespace mc {
       
       try {
         return level_coord(b36decode(parts.at(1)), b36decode(parts.at(2)));
+      } catch(const bad_cast& e) {
+        throw invalid_argument("could not decode coordinates from file name");
+      }
+    }
+
+    level_coord path_to_region_coord(const fs::path path) {
+      if (!fs::is_regular_file(path)) {
+        throw invalid_argument("not a regular file");
+      }
+      
+      string extension = fs::extension(path);
+      
+      std::vector<string> parts;
+      split(parts, fs::basename(path), '.');
+      
+      if (parts.size() != 3 || extension.compare(".mcr") != 0) {
+        throw invalid_argument("level data file name does not match <x>.<z>.mcr");
+      }
+      
+      try {
+        return level_coord(b10decode(parts.at(1)) * 32, b10decode(parts.at(2)) * 32);
       } catch(const bad_cast& e) {
         throw invalid_argument("could not decode coordinates from file name");
       }

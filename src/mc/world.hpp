@@ -8,6 +8,7 @@
 
 #include <string>
 #include <queue>
+#include <list>
 
 #include "fileutils.hpp"
 
@@ -15,33 +16,45 @@
 #include <boost/filesystem.hpp>
 
 #include <mc/utils.hpp>
+#include <mc/region.hpp>
+#include <sstream>
 
 namespace mc {
   namespace fs = boost::filesystem;
   
   bool directory_filter(const std::string& name);
   bool file_filter(const std::string& name);
+
+  class level_info;
+
+  typedef boost::shared_ptr<level_info> level_info_ptr;
   
   struct level_info {
+    public:
     private:
-      fs::path root;
+      region_ptr _region;
       utils::level_coord coord;
     public:
-      level_info() : root(), coord() {
+      level_info() : coord() {
       }
 
-      level_info(fs::path root, int x, int z) : root(root), coord(x, z) {
+      level_info(region_ptr _region, int x, int z) : _region(_region), coord(x, z) {
       }
       
-      level_info(fs::path root, utils::level_coord coord) : root(root), coord(coord) {
+      level_info(region_ptr _region, utils::level_coord coord) : _region(_region) {
+        utils::level_coord rc = utils::path_to_region_coord(_region->get_path());
+        this->coord = utils::level_coord(rc.get_x() + coord.get_x(),
+                                         rc.get_z() + coord.get_z());
       }
-      
-      const fs::path& get_root() {
-        return root;
+
+      std::string get_path() {
+        std::stringstream ss;
+        ss << _region->get_path() << "(" << coord.get_x() << "," << coord.get_z() << ")";
+        return ss.str();
       }
-      
-      const fs::path get_path() {
-        return mc::utils::level_path(root, coord.get_x(), coord.get_z(), "c", "dat");
+
+      region_ptr get_region() {
+        return _region;
       }
       
       bool operator<(const level_info& other) const {
@@ -49,7 +62,7 @@ namespace mc {
       }
 
       level_info rotate(int degrees) {
-        return level_info(root, coord.rotate(degrees));
+        return level_info(_region, coord.rotate(degrees));
       }
       
       int get_x() { return coord.get_x(); }
@@ -57,49 +70,45 @@ namespace mc {
       const utils::level_coord get_coord() { return coord; }
   };
   
-  class bad_level : public std::exception {
+  class iterator_error : public std::exception {
     private:
-      const fs::path path;
       const char* message;
     public:
-      bad_level(const fs::path path, const char* message) 
-        : path(path), message(message)
+      iterator_error(const char* message) 
+        : message(message)
       {
-        
       }
 
-      ~bad_level() throw() {  }
+      ~iterator_error() throw() {  }
 
       const char* what() const throw() {
         return message;
       }
-      
-      const fs::path where() {
-        return path;
-      }
   };
   
-  class chunk_iterator {
+  class region_iterator {
     private:
       fs::path root;
       dirlist lister;
+      std::list<level_info> current_levels;
+      boost::shared_ptr<region> current_region;
     public:
-      chunk_iterator(const fs::path path) : root(path), lister(path) {
+      region_iterator(const fs::path path) : root(path), lister(path) {
       }
       
-      bool has_next() {
-        return lister.has_next(directory_filter, file_filter);
-      }
-      
-      level_info next() {
-        fs::path next = lister.next();
-
-        try {
-          mc::utils::level_coord coord = mc::utils::path_to_level_coord(next);
-          return level_info(root, coord.get_x(), coord.get_z());
-        } catch(std::exception& e) {
-          throw bad_level(next, e.what());
+      bool has_next()
+      {
+        if (!lister.has_next(directory_filter, file_filter)) {
+          return false;
         }
+
+        fs::path next = lister.next();
+        current_region.reset(new region(next));
+        return true;
+      }
+      
+      boost::shared_ptr<region> next() {
+        return current_region;
       }
   };
 
@@ -115,7 +124,7 @@ namespace mc {
     int chunk_x, chunk_y;
     
     world(fs::path path);
-    chunk_iterator get_iterator();
+    region_iterator get_iterator();
     void update(utils::level_coord coord);
   };
 }

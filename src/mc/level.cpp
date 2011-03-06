@@ -22,7 +22,10 @@ namespace mc {
     size_t grammar_error_where;
     const char* grammar_error_why;
 
-    level_context() : grammar_error(false), grammar_error_where(0), grammar_error_why("") {
+    level_context()
+      : islevel(false), in_te(false), in_sign(false),
+        grammar_error(false), grammar_error_where(0), grammar_error_why("")
+    {
     }
   };
 
@@ -138,14 +141,13 @@ namespace mc {
     level->grammar_error_why = why;
   }
 
-#include <iostream>
-
   level::~level(){
   }
 
-  level::level(fs::path path) : path(path) {}
+  level::level(level_info_ptr _level_info) : _level_info(_level_info) {}
 
-  void level::read() {
+  void level::read(dynamic_buffer& buffer)
+  {
     level_context context;
     
     nbt::Parser<level_context> parser(&context);
@@ -158,11 +160,24 @@ namespace mc {
     parser.end_list = end_list;
     parser.end_compound = end_compound;
     parser.error_handler = error_handler;
-    
-    parser.parse_file(path.string().c_str());
+
+    std::stringstream oss;
+
+    uint32_t len;
+
+    try {
+      len = _level_info->get_region()->read_data(_level_info->get_x(),
+          _level_info->get_z(), buffer);
+    } catch(mc::bad_region& e) {
+      throw invalid_file(e.what());
+    }
+
+    std::string chunk_data = oss.str();
+
+    parser.parse_buffer(buffer.get(), len);
     
     if (context.grammar_error) {
-      throw invalid_file("not a valid nbt file");
+      throw invalid_file(context.grammar_error_why);
     }
     
     if (!context.islevel) {
@@ -175,7 +190,5 @@ namespace mc {
     skylight = context.skylight;
     heightmap = context.heightmap;
     blocklight = context.blocklight;
-    
-    complete = true;
   }
 }

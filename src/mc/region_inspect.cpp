@@ -1,7 +1,11 @@
-// Distributed under the BSD License, see accompanying LICENSE.txt
-// (C) Copyright 2010 John-John Tedro et al.
+#include "mc/region.hpp"
+#include "mc/utils.hpp"
+
 #include "nbt/nbt.hpp"
 
+#include <list>
+
+#include <boost/foreach.hpp>
 #include <iostream>
 #include <iomanip>
 
@@ -72,19 +76,26 @@ void register_byte(inspect_context* inspect, nbt::String name, nbt::Byte value) 
 
 void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteArray* value) {
   cout << setw(inspect->width) << ""
-       << "ByteArray(" << name << "): " << "(binary blob)" << endl;
+       << "ByteArray(" << name << "): " << "(" << int(value->length) << "B binary)" << endl;
   delete value;
 }
 
+void error_handler(inspect_context* ctx, size_t where, const char* why) {
+  std::cout << where << ":" << why << std::endl;
+}
+
 int main(int argc, char* argv[]) {
+  using mc::utils::level_coord;
+
   if (argc < 2) {
     return 1;
   }
 
   inspect_context ctx;
-  ctx.width = 0;
   
   nbt::Parser<inspect_context> parser(&ctx);
+
+  parser.error_handler = error_handler;
   parser.begin_compound = begin_compound;
   parser.end_compound = end_compound;
   parser.begin_list = begin_list;
@@ -98,5 +109,31 @@ int main(int argc, char* argv[]) {
   parser.register_byte = register_byte;
   parser.register_byte_array = register_byte_array;
 
-  parser.parse_file(argv[1]);
+  mc::region region(argv[1]);
+
+  list<level_coord> coords;
+
+  region.read_coords(coords);
+
+  try {
+    region.read_header();
+  } catch(mc::bad_region& e) {
+    std::cout << region.get_path() << ": " << e.what() << std::endl;
+    return 1;
+  }
+
+  mc::dynamic_buffer buffer(mc::region::CHUNK_MAX);
+
+  BOOST_FOREACH(level_coord c, coords) {
+    std::cout << "BUFFER SIZE = " << std::dec << buffer.get_size() << std::endl;
+
+    try {
+      int len = region.read_data(c.get_x(), c.get_z(), buffer);
+      std::cout << "CHUNK SIZE: " << std::dec << int(len) << std::endl;
+      ctx.width = 0;
+      parser.parse_buffer(buffer.get(), len);
+    } catch(mc::bad_region& e) {
+      std::cout << region.get_path() << ": " << e.what() << std::endl;
+    }
+  }
 }

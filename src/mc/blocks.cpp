@@ -123,8 +123,8 @@ namespace mc {
     MaterialColor[Wood] = color(157,128,79,255);
     MaterialColor[Sapling] = color(120,120,120,0);
     MaterialColor[Bedrock] = color(84,84,84,255);
-    MaterialColor[Water] = color(56,68,127,127);
-    MaterialColor[StationaryWater] = color(56,68,127,127);
+    MaterialColor[Water] = color(56,68,127,64);
+    MaterialColor[StationaryWater] = color(56,68,127,64);
     MaterialColor[Lava] = color(255,90,0,255);
     MaterialColor[StationaryLava] = color(255,90,0,255);
     MaterialColor[Sand] = color(218,210,158,255);

@@ -2,7 +2,6 @@
 // (C) Copyright 2010 John-John Tedro et al.
 #include <stdlib.h>
 #include <stdio.h>
-#include <getopt.h>
 
 #include <errno.h>
 
@@ -14,22 +13,21 @@
 #include <fstream>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/ptr_container/ptr_list.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 
 #include "config.hpp"
-
-#include "threads/threadworker.hpp"
-#include "2d/cube.hpp"
 
 #include "image/format/png.hpp"
 #include "image/image_base.hpp"
 #include "image/memory_image.hpp"
 #include "image/cached_image.hpp"
+
+#include "threads/renderer.hpp"
+#include "2d/cube.hpp"
 
 #include "global.hpp"
 #include "cache.hpp"
@@ -49,6 +47,8 @@
 #include "engine/obliqueangle_engine.hpp"
 #include "engine/isometric_engine.hpp"
 
+#include "main_utils.hpp"
+
 using namespace std;
 namespace fs = boost::filesystem;
 
@@ -60,8 +60,6 @@ nullstream nil;
 std::ostream out(std::cout.rdbuf());
 std::ofstream out_log;
 
-stringstream error;
-vector<std::string> hints;
 const uint8_t ERROR_BYTE = 0x01;
 const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
@@ -82,10 +80,10 @@ public:
 };
 
 struct rotated_level_info {
-  mc::level_info level;
+  mc::level_info_ptr level;
   mc::utils::level_coord coord;
   
-  rotated_level_info(mc::level_info level, mc::utils::level_coord coord)
+  rotated_level_info(mc::level_info_ptr level, mc::utils::level_coord coord)
     : level(level), coord(coord)
   {
   }
@@ -137,85 +135,8 @@ inline void cout_end() {
  *
  * This will allow us to composite the entire image later and calculate sizes then.
  */
-struct render_result {
-  int xPos, zPos;
-  fs::path path;
-  boost::shared_ptr<image_operations> operations;
-  bool fatal;
-  std::string fatal_why;
-  std::vector<mc::marker> signs;
-  bool cache_hit;
-  
-  render_result() : fatal(false), fatal_why("(no error)") {}
-};
 
-struct render_job {
-  int xPos, zPos;
-  int xReal, zReal;
-  fs::path path;
-  boost::shared_ptr<engine_base> engine;
-};
-
-class renderer : public threadworker<render_job, render_result> {
-public:
-  settings_t& s;
-  
-  renderer(settings_t& s, int n, int total) : threadworker<render_job, render_result>(n, total), s(s) {
-  }
-  
-  render_result work(render_job job) {
-    render_result p;
-    
-    p.path = job.path;
-    p.xPos = job.xPos;
-    p.zPos = job.zPos;
-    p.cache_hit = false;
-    
-    cache_file cache(mc::utils::level_dir(s.cache_dir, job.xReal, job.zReal), p.path, s.cache_compress);
-    
-    p.operations.reset(new image_operations);
-    
-    if (s.cache_use) {
-      if (cache.exists()) {
-        if (cache.read(p.operations)) {
-          p.cache_hit = true;
-          return p;
-        }
-        
-        cache.clear();
-      }
-    }
-
-    mc::level level(job.path);
-    
-    try {
-      level.read();
-    } catch(mc::invalid_file& e) {
-      p.fatal = true;
-      p.fatal_why = e.what();
-      return p;
-    }
-    
-    p.signs = level.get_signs();
-    
-    job.engine->render(level, p.operations);
-    
-    if (s.cache_use) {
-      // create the necessary directories required when caching
-      cache.create_directories();
-      
-      // ignore failure while writing the operations to cache
-      if (!cache.write(p.operations)) {
-        // on failure, remove the cache file - this will prompt c10t to regenerate it next time
-        cache.clear();
-      }
-    }
-    
-    return p;
-  }
-};
-
-inline void write_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
+inline void populate_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
   
   for (it = markers.begin(); it != markers.end(); it++) {
@@ -254,6 +175,10 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
   
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
+
+    if (!m.font.is_initialized()) {
+      continue;
+    }
     
     mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
@@ -287,6 +212,8 @@ void cout_mb_endl(streampos progress, streampos total) {
 bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   out << endl << "Generating PNG Map" << endl << endl;
   
+  out << "Threads: " << s.threads << std::endl;
+  
   std::vector<player> players;
   std::vector<warp> warps;
   list<rotated_level_info> levels;
@@ -296,6 +223,9 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     || s.show_signs
     || s.show_coordinates
     || s.show_warps;
+
+  bool write_markers = 
+    s.write_json || s.write_js;
   
   if (any_db) {
     out << " --- LOOKING FOR DATABASES --- " << endl;
@@ -346,49 +276,76 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   {
     nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
-    mc::chunk_iterator iterator = world.get_iterator();
+    mc::region_iterator iterator = world.get_iterator();
+
+    int failed_regions = 0;
+    int filtered_levels = 0;
     
     while (iterator.has_next()) {
-      reporter.add(1);
-      
-      mc::level_info level;
-      
+      mc::region_ptr region = iterator.next();
+
       try {
-        level = iterator.next();
-      } catch(mc::bad_level& e) {
-        out_log << e.where() << ": " << e.what() << std::endl;
-      }
-      
-      const mc::utils::level_coord coord = level.get_coord();
-      
-      uint64_t x2 = coord.get_x() * coord.get_x();
-      uint64_t z2 = coord.get_z() * coord.get_z();
-      uint64_t r2 = s.max_radius * s.max_radius;
-      
-      bool out_of_range = 
-          coord.get_x() < s.min_x
-          || coord.get_x() > s.max_x
-          || coord.get_z() < s.min_z
-          || coord.get_z() > s.max_z
-          || x2 + z2 >= r2;
-      
-      if (out_of_range) {
-        if (s.debug) {
-          out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-        }
-        
+        region->read_header();
+      } catch(mc::bad_region& e) {
+        ++failed_regions;
+        out_log << region->get_path() << ": could not read header" << std::endl;
         continue;
       }
-      
-      rotated_level_info rlevel =
-        rotated_level_info(level, coord.rotate(s.rotation));
-      
-      levels.push_back(rlevel);
-      world.update(rlevel.coord);
+
+      std::list<mc::utils::level_coord> coords;
+
+      region->read_coords(coords);
+
+      BOOST_FOREACH(mc::utils::level_coord c, coords) {
+        mc::level_info_ptr level(new mc::level_info(region, c));
+        
+        mc::utils::level_coord coord = level->get_coord();
+        
+        uint64_t x2 = coord.get_x() * coord.get_x();
+        uint64_t z2 = coord.get_z() * coord.get_z();
+        uint64_t r2 = s.max_radius * s.max_radius;
+        
+        bool out_of_range = 
+            coord.get_x() < s.min_x
+            || coord.get_x() > s.max_x
+            || coord.get_z() < s.min_z
+            || coord.get_z() > s.max_z
+            || x2 + z2 >= r2;
+        
+        if (out_of_range) {
+          ++filtered_levels;
+
+          if (s.debug) {
+            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          }
+
+          continue;
+        }
+        
+        rotated_level_info rlevel =
+          rotated_level_info(level, coord.rotate(s.rotation));
+        
+        levels.push_back(rlevel);
+        world.update(rlevel.coord);
+        reporter.add(1);
+      }
     }
     
     reporter.done(0);
     levels.sort();
+
+    if (failed_regions > 0) {
+      out << "SEE LOG: " << failed_regions << " region(s) failed!" << endl;
+    }
+
+    if (filtered_levels > 0) {
+      out << "SEE LOG: " << filtered_levels << " level(s) filtered!" << endl;
+    }
+  }
+
+  if (levels.size() <= 0) {
+    out << "No chunks to render" << endl;
+    return 0;
   }
   
   if (s.debug) {
@@ -481,82 +438,105 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   renderer.start();
   
-  unsigned int queued = 0;
-
-  unsigned int i;
-
-  unsigned int prebuffer = s.threads * s.prebuffer;
-  unsigned int filllimit = prebuffer / 2;
-  
   nonstd::limited<unsigned int> c(50, cout_dot<unsigned int>, cout_uintpart_endl);
   c.set_limit(world_size);
   
   {
     out << " --- RENDERING --- " << endl;
-  }
+
+    unsigned int queued = 0;
+    unsigned int prebuffer = s.threads * s.prebuffer;
+    
+    std::list<render_result> render_results;
   
-  int cache_hits = 0;
-  
-  for (i = 0; i < world_size; i++) {
-    if (queued <= filllimit) {
-      for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
+    int cache_hits = 0;
+
+    mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
+    int failed_levels = 0;
+
+    while (lvlit != levels.end() || render_results.size() > 0) {
+      while (queued < prebuffer && lvlit != levels.end()) {
         rotated_level_info rl = *lvlit;
-        fs::path path = rl.level.get_path();
+        lvlit++;
         
         render_job job;
         
+        boost::shared_ptr<mc::level> level(new mc::level(rl.level));
+        
         job.engine = engine;
-        job.path = rl.level.get_path();
-        job.xPos = rl.coord.get_x();
-        job.zPos = rl.coord.get_z();
-        job.xReal = rl.level.get_x();
-        job.zReal = rl.level.get_z();
+        job.level = level;
+        
+        try {
+          level->read(region_buffer);
+        } catch(mc::invalid_file& e) {
+          out_log << level->get_path() << ": " << e.what() << endl;
+          continue;
+        }
+         
+        job.level = level;
+        job.coord = rl.coord;
         
         renderer.give(job);
+        ++queued;
         
-        if (s.debug) { out << rl.level.get_path() << ": queued OK" << endl; }
-        
-        queued++;
+        if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
       }
-    }
-    
-    c.add(1);
-    --queued;
-    
-    render_result p = renderer.get();
-    
-    if (p.fatal) {
-      {
-        out << p.path << ": " << p.fatal_why << endl;
-        continue;
-      }
-    }
 
-    if (p.cache_hit) {
-      ++cache_hits;
+      while (render_results.size() > 0) {
+        render_results.sort();
+      
+        BOOST_FOREACH(render_result p, render_results) {
+          c.add(1);
+
+          try {
+            image_base::pos_t x, y;
+            engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
+            all->composite(x, y, p.operations);
+          } catch(std::ios::failure& e) {
+            out << s.swap_file << ": " << strerror(errno);
+            return false;
+          }
+        }
+
+        render_results.clear();
+      }
+
+      while (queued > 0) {
+        render_result p = renderer.get();
+        --queued;
+
+        if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
+
+        if (p.fatal) {
+          c.add(1);
+          out << p.level->get_path() << ": " << p.fatal_why << endl;
+          continue;
+        }
+
+        if (p.cache_hit) {
+          ++cache_hits;
+        }
+        
+        ///if (progress_c != NULL) progress_c(i, world_size);
+        
+        if (p.signs.size() > 0) {
+          if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
+          signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+        }
+      
+        render_results.push_back(p);
+      }
     }
     
-    ///if (progress_c != NULL) progress_c(i, world_size);
-    
-    if (p.signs.size() > 0) {
-      if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
-      signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+    c.done(0);
+
+    if (failed_levels > 0) {
+      out << "SEE LOG: " << failed_levels << " level(s) failed!" << endl;
     }
     
-    try {
-      image_base::pos_t x, y;
-      engine->w2pt(p.xPos, p.zPos, x, y);
-      all->composite(x, y, p.operations);
-    } catch(std::ios::failure& e) {
-      out << s.swap_file << ": " << strerror(errno);
-      return false;
+    if (s.cache_use) {
+      out << "cache_hits: " << cache_hits << "/" << world_size << endl;
     }
-  }
-  
-  c.done(0);
-  
-  if (s.cache_use) {
-    out << "cache_hits: " << cache_hits << "/" << world_size << endl;
   }
   
   //if (progress_c != NULL) progress_c(world_size, world_size);
@@ -564,14 +544,15 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   boost::ptr_vector<marker> markers;
   
   if (any_db) {
-    fs::path ttf_path(s.ttf_path);
+    text::font_face font(s.ttf_path, s.ttf_size, s.ttf_color);
     
-    if (!fs::is_regular_file(ttf_path)) {
-      error << "ttf_path - not a file: " << ttf_path;
-      return false;
+    if (!write_markers) {
+      try {
+        font.init();
+      } catch(text::text_error& e) {
+        warnings.push_back(std::string("Failed to initialize font: ") + e.what());
+      }
     }
-    
-    text::font_face font(ttf_path.string(), s.ttf_size, s.ttf_color);
     
     if (s.show_players) {
       text::font_face player_font = font;
@@ -591,8 +572,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         if (p.xPos / mc::MapX < s.min_x) continue;
         if (p.xPos / mc::MapX > s.max_x) continue;
         
-        marker *m = new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos);
-        markers.push_back(m);
+        markers.push_back(new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos));
       }
     }
     
@@ -612,8 +592,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
           continue;
         }
         
-        marker *m = new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z);
-        markers.push_back(m);
+        markers.push_back(new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z));
       }
     }
     
@@ -627,7 +606,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       for (lvlit = levels.begin(); lvlit != levels.end(); lvlit++) {
         rotated_level_info rl = *lvlit;
         mc::utils::level_coord c = rl.coord;
-        mc::level_info l = rl.level;
+        boost::shared_ptr<mc::level_info> l = rl.level;
         
         if (c.get_z() - 4 < world.min_z) continue;
         if (c.get_z() + 4 > world.max_z) continue;
@@ -637,9 +616,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         if (c.get_x() % 10 != 0) continue;
         std::stringstream ss;
         
-        ss << "(" << l.get_x() * mc::MapX << ", " << l.get_z() * mc::MapZ << ")";
-        marker *m = new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ);
-        markers.push_back(m);
+        ss << "(" << l->get_x() * mc::MapX << ", " << l->get_z() * mc::MapZ << ")";
+        markers.push_back(new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ));
       }
     }
     
@@ -670,7 +648,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   engine_base::pos_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
   
-  if (s.write_json || s.write_js) {
+  if (write_markers) {
     if (!any_db) {
       hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
     }
@@ -700,7 +678,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     file.put("world", json_world);
     
     json::array* markers_array = new json::array;
-    write_markers(s, markers_array, engine, markers);
+    populate_markers(s, markers_array, engine, markers);
     file.put("markers", markers_array);
     
     if (s.write_json) {
@@ -722,40 +700,53 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   }
   
   if (s.use_split) {
-    //boost::ptr_map<point2, image_base> parts;
-    
-    {
-      out << " --- SAVING MULTIPLE IMAGES --- " << endl;
-      out << "splitting on " << s.split << "px basis" << endl;
-    }
-    
-    std::map<point2, image_base*> parts = image_split(all.get(), s.split);
-    
-    {
-      out << "saving " << parts.size() << " images" << endl;
-    }
-    
-    for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
-      const point2 p = it->first;
-      boost::scoped_ptr<image_base> img(it->second);
-      
-      stringstream ss;
-      ss << boost::format(output_path.string()) % p.x % p.y;
-      
-      std::string path = ss.str();
-      
-      png_format::opt_type opts;
+    out << " --- SAVING MULTIPLE IMAGES --- " << endl;
 
-      opts.center_x = center_x;
-      opts.center_y = center_y;
-      opts.comment = C10T_COMMENT;
+    int i = 0;
+
+    image_base::image_ptr target;
+
+    BOOST_FOREACH(unsigned int split_i, s.split) {
+      if (!target) {
+        target.reset(new memory_image(split_i, split_i));
+      }
+
+      std::map<point2, image_base*> parts = image_split(all.get(), split_i);
       
-      if (!img->save<png_format>(path, opts)) {
-        out << path << ": Could not save image";
-        continue;
+      out << "Level " << i << ": splitting into " << parts.size() << " image on " << split_i << "px" << endl;
+
+      for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
+        const point2 p = it->first;
+        boost::scoped_ptr<image_base> img(it->second);
+        
+        stringstream ss;
+        ss << boost::format(output_path.string()) % i % p.x % p.y;
+        fs::path path(ss.str());
+        
+        if (!fs::is_directory(path.parent_path())) {
+          fs::create_directories(path.parent_path());
+        }
+        
+        png_format::opt_type opts;
+        
+        opts.center_x = center_x;
+        opts.center_y = center_y;
+        opts.comment = C10T_COMMENT;
+        
+        std::string path_str(path.string());
+        
+        target->clear();
+        img->resize(target);
+
+        if (!target->save<png_format>(path_str, opts)) {
+          out << path << ": Could not save image";
+          continue;
+        }
+        
+        out << path << ": OK" << endl;
       }
       
-      out << path << ": OK" << endl;
+      ++i;
     }
   }
   else {
@@ -822,59 +813,91 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
   
   {
     nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
-    mc::chunk_iterator iterator = world.get_iterator();
+    mc::region_iterator iterator = world.get_iterator();
     
+    mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
+
+    int failed_regions = 0;
+    int filtered_levels = 0;
+    int failed_levels = 0;
+
     while (iterator.has_next()) {
-      reporter.add(1);
-        
-      mc::level_info level;
-      
+      mc::region_ptr region = iterator.next();
+
       try {
-        level = iterator.next();
-      } catch(mc::bad_level& e) {
-        out_log << e.where() << ": " << e.what() << std::endl;
-      }
-      
-      mc::utils::level_coord coord = level.get_coord();
-      
-      uint64_t x2 = coord.get_x() * coord.get_x();
-      uint64_t z2 = coord.get_z() * coord.get_z();
-      uint64_t r2 = s.max_radius * s.max_radius;
-        
-      bool out_of_range = 
-            coord.get_x() < s.min_x
-            || coord.get_x() > s.max_x
-            || coord.get_z() < s.min_z
-            || coord.get_z() > s.max_z
-            || x2 + z2 >= r2;
-        
-      if (out_of_range) {
-        if (s.debug) {
-          out_log << level.get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-        }
-        continue;
-      }
-      
-      mc::level level_data(level.get_path());
-      
-      try {
-        level_data.read();
-      } catch(mc::invalid_file& e) {
-        out_log << level.get_path() << ": " << e.what();
+        region->read_header();
+      } catch(mc::bad_region& e) {
+        ++failed_regions;
+        out_log << region->get_path() << ": could not read header" << std::endl;
         continue;
       }
 
-      boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
-      
-      for (int i = 0; i < blocks->length; i++) {
-        nbt::Byte block = blocks->values[i];
-        statistics[block] += 1;
+      std::list<mc::utils::level_coord> coords;
+
+      region->read_coords(coords);
+
+      BOOST_FOREACH(mc::utils::level_coord c, coords) {
+        mc::level_info_ptr level(new mc::level_info(region, c));
+
+        mc::utils::level_coord coord = level->get_coord();
+
+        uint64_t x2 = coord.get_x() * coord.get_x();
+        uint64_t z2 = coord.get_z() * coord.get_z();
+        uint64_t r2 = s.max_radius * s.max_radius;
+          
+        bool out_of_range = 
+              coord.get_x() < s.min_x
+              || coord.get_x() > s.max_x
+              || coord.get_z() < s.min_z
+              || coord.get_z() > s.max_z
+              || x2 + z2 >= r2;
+          
+        if (out_of_range) {
+          ++filtered_levels;
+
+          if (s.debug) {
+            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          }
+
+          continue;
+        }
+        
+        mc::level level_data(level);
+        
+        try {
+          level_data.read(region_buffer);
+        } catch(mc::invalid_file& e) {
+          ++failed_levels;
+          out_log << level->get_path() << ": " << e.what();
+          continue;
+        }
+
+        world.update(level->get_coord());
+
+        boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
+
+        for (int i = 0; i < blocks->length; i++) {
+          nbt::Byte block = blocks->values[i];
+          statistics[block] += 1;
+        }
+
+        reporter.add(1);
       }
-      
-      world.update(level.get_coord());
     }
-    
+
     reporter.done(0);
+
+    if (failed_regions > 0) {
+      out << "SEE LOG: " << failed_regions << " region(s) failed!" << endl;
+    }
+
+    if (filtered_levels > 0) {
+      out << "SEE LOG: " << filtered_levels << " level(s) filtered!" << endl;
+    }
+
+    if (failed_levels > 0) {
+      out << "SEE LOG: " << failed_levels << " level(s) failed!" << endl;
+    }
   }
 
   ofstream stats(output_path.string().c_str());
@@ -959,6 +982,7 @@ int do_help() {
     << endl
     << "  -n, --night               - Night-time rendering mode                        " << endl
     << "  -H, --heightmap           - Heightmap rendering mode (black to white)        " << endl
+    << "      --disable-skylight    - Disables skylight (faster rendering)             " << endl
     << endl
     << "Filtering options:" << endl
     << "  -e, --exclude <blockid>   - Exclude block-id from render (multiple occurences" << endl
@@ -1010,9 +1034,13 @@ int do_help() {
     /*<< "  --side <set>              - Specify the side color for a specific block id   " << endl
     << "                              this uses the same format as '-B' only the color " << endl
     << "                              is applied to the side of the block              " << endl*/
-    << "  -p, --split <px>          - Split the render into parts which must be <px>   " << endl
-    << "                              pixels squared. `output' name must contain two   " << endl
-    << "                              format specifiers `%d' for x and y position.     " << endl
+    << "  -p, --split "px1 px2 .."  - Split the render into parts which must be pxX    " << endl
+    << "                              pixels squared. `output' name must contain three " << endl
+    << "                              format specifiers `%d' for `level' x and y       " << endl
+    << "                              position. Each image will be resized to the      " << endl
+    << "                              specified px1 size.                              " << endl
+    << "                              Supports multiple splits which will be placed on " << endl
+    << "                              specific `level's.                               " << endl
        /*******************************************************************************/
     << endl
     << "Other Options:" << endl
@@ -1084,7 +1112,7 @@ int do_help() {
   out << "    c10t -w /path/to/world -o /path/to/png.png --show-players --ttf-font example.ttf" << endl;
   out << endl;
   out << "  Split the result into multiple files, using 10 chunks across in each file, the two number formatters will be replaced with the x/z positions of the chunks" << endl;
-  out << "    c10t -w /path/to/world -o /path/to/png.%d.%d.png --split 10" << endl;
+  out << "    c10t -w /path/to/world -o /path/to/%d.%d.%d.png --split 10" << endl;
   out << endl;
   return 0;
 }
@@ -1112,210 +1140,6 @@ int do_colors() {
   return 0;
 }
 
-bool get_blockid(const string blockid_string, int& blockid) {
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    if (blockid_string.compare(mc::MaterialName[i]) == 0) {
-      blockid = i;
-      return true;
-    }
-  }
-  
-  try {
-    blockid = boost::lexical_cast<int>(blockid_string);
-  } catch(const boost::bad_lexical_cast& e) {
-    error << "Cannot be converted to number: " << blockid_string;
-    return false;
-  }
-  
-  if (!(blockid >= 0 && blockid < mc::MaterialCount)) {
-    error << "Not a valid blockid: " << blockid_string;
-    return false;
-  }
-  
-  return true;
-}
-
-bool parse_color(const string value, color& c) {
-  int cr, cg, cb, ca=0xff;
-  
-  if (!(sscanf(value.c_str(), "%d,%d,%d,%d", &cr, &cg, &cb, &ca) == 4 || 
-        sscanf(value.c_str(), "%d,%d,%d", &cr, &cg, &cb) == 3)) {
-    error << "color sets must be of the form <red>,<green>,<blue>[,<alpha>] but was: " << value;
-    return false;
-  }
-  
-  if (!(
-      cr >= 0 && cr <= 0xff &&
-      cg >= 0 && cg <= 0xff &&
-      cb >= 0 && cb <= 0xff &&
-      ca >= 0 && ca <= 0xff)) {
-    error << "color values must be between 0-255";
-    return false;
-  }
-  
-  c.r = cr;
-  c.g = cg;
-  c.b = cb;
-  c.a = ca;
-  return true;
-}
-
-bool parse_set(const char* set_str, int& blockid, color& c)
-{
-  istringstream iss(set_str);
-  string key, value;
-  
-  assert(getline(iss, key, '='));
-  assert(getline(iss, value));
-  
-  if (!get_blockid(key, blockid)) {
-    return false;
-  }
-
-  if (!parse_color(value, c)) {
-    return false;
-  }
-  
-  return true;
-}
-
-bool do_base_color_set(const char *set_str) {
-  int blockid;
-  color c;
-  
-  if (!parse_set(set_str, blockid, c)) {
-    return false;
-  }
-
-  mc::MaterialColor[blockid] = c;
-  mc::MaterialSideColor[blockid] = mc::MaterialColor[blockid];
-  mc::MaterialSideColor[blockid].darken(0x20);
-  return true;
-}
-
-bool do_side_color_set(const char *set_str) {
-  int blockid;
-  color c;
-  
-  if (!parse_set(set_str, blockid, c)) {
-    return false;
-  }
-
-  mc::MaterialSideColor[blockid] = color(c);
-  return true;
-}
-
-// Convert a string such as "-30,40,50,30" to the corresponding N,S,E,W integers,
-// and fill in the min/max settings.
-bool parse_limits(const string& limits_str, settings_t& s) {
-  std::vector<std::string> limits;
-  boost::split(limits, limits_str, boost::is_any_of(","));
-  
-  if (limits.size() != 4) {
-    error << "Limit argument must of format: <N>,<S>,<E>,<W>";
-    return false;
-  }
-  
-  s.min_x = atoi(limits[0].c_str());
-  s.max_x = atoi(limits[1].c_str());
-  s.min_z = atoi(limits[2].c_str());
-  s.max_z = atoi(limits[3].c_str());
-  return true;
-}
-
-bool parse_list(std::set<string>& set, const string s) {
-  boost::char_separator<char> sep(" \t\n\r,:");
-  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-  tokenizer tokens(s, sep);
-  
-  for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter) {
-    set.insert(*tok_iter);
-  }
-
-  if (set.size() == 0) {
-    error << "List must specify items separated by comma `,'";
-    return false;
-  }
-  
-  return true;
-}
-
-bool do_write_palette(settings_t& s, string& path) {
-  std::ofstream pal(path.c_str());
-
-  pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base R,G,B,A>" << " " << setw(16) << "<side R,G,B,A>" << '\n';
-  
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    color mc = mc::MaterialColor[i];
-    color msc = mc::MaterialSideColor[i];
-    pal << left << setw(20) << mc::MaterialName[i] << " " << setw(16) << mc << " " << setw(16) << msc << '\n';
-  }
-
-  if (pal.fail()) {
-    error << "Failed to write palette to " << path;
-    return false;
-  }
-  
-  out << "Sucessfully wrote palette to " << path << endl;
-  
-  return true;
-}
-
-bool do_read_palette(settings_t& s, string& path) {
-  std::ifstream pal(path.c_str());
-  boost::char_separator<char> sep(" \t\n\r");
-  
-  typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-  
-  while (!pal.eof()) {
-    string line;
-    getline(pal, line, '\n');
-    
-    tokenizer tokens(line, sep);
-    
-    int blockid = 0, i = 0;
-    color c;
-    
-    for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++i) {
-      string token = *tok_iter;
-      
-      if (token.at(0) == '#') {
-        // rest is comment
-        break;
-      }
-      
-      switch(i) {
-        case 0:
-          if (!get_blockid(token, blockid)) {
-            return false;
-          }
-          break;
-        case 1:
-          if (!parse_color(token, c)) {
-            return false;
-          }
-          
-          mc::MaterialColor[blockid] = c;
-          c.darken(0x20);
-          mc::MaterialSideColor[blockid] = c;
-          break;
-        case 2:
-          if (!parse_color(token, c)) {
-            return false;
-          }
-          
-          mc::MaterialSideColor[blockid] = c;
-          break;
-        default:
-          break;
-      }
-    }
-  }
-  
-  out << "Sucessfully read palette from " << path << endl;
-  return true;
-}
-
 int main(int argc, char *argv[]){
   nullstream nil;
   
@@ -1326,414 +1150,29 @@ int main(int argc, char *argv[]){
 
   settings_t s;
   
-  fs::path world_path;
-  fs::path output_path = fs::system_complete(fs::path("out.png"));
-  fs::path statistics_path = fs::system_complete(fs::path("statistics.txt"));
-  fs::path output_log = fs::system_complete(fs::path("c10t.log"));
-  string palette_write_path, palette_read_path;
-  
-  int c, blockid;
-
-  int option_index;
-
-  int flag;
-
-  struct option long_options[] =
-   {
-     {"world",            required_argument, 0, 'w'},
-     {"output",           required_argument, 0, 'o'},
-     {"top",              required_argument, 0, 't'},
-     {"bottom",           required_argument, 0, 'b'},
-     {"limits",           required_argument, 0, 'L'},
-     {"radius",           required_argument, 0, 'R'},
-     {"memory-limit",     required_argument, 0, 'M'},
-     {"cache-file",       required_argument, 0, 'C'},
-     {"swap-file",        required_argument, 0, 'C'},
-     {"exclude",          required_argument, 0, 'e'},
-     {"include",          required_argument, 0, 'i'},
-     {"rotate",           required_argument, 0, 'r'},
-     {"threads",          required_argument, 0, 'm'},
-     {"help",             no_argument, 0, 'h'},
-     {"silent",           no_argument, 0, 's'},
-     {"version",          no_argument, 0, 'v'},
-     {"debug",            no_argument, 0, 'D'},
-     {"list-colors",      no_argument, 0, 'l'},
-     {"hide-all",         no_argument, 0, 'a'},
-     {"no-check",         no_argument, 0, 'N'},
-     {"oblique",          no_argument, 0, 'q'},
-     {"oblique-angle",    no_argument, 0, 'y'},
-     {"isometric",        no_argument, 0, 'z'},
-     {"cave-mode",        no_argument, 0, 'c'},
-     {"night",            no_argument, 0, 'n'},
-     {"heightmap",        no_argument, 0, 'H'},
-     {"binary",           no_argument, 0, 'x'},
-     {"require-all",      no_argument, &flag, 0},
-     {"show-players",     optional_argument, &flag, 1},
-     {"ttf-path",         required_argument, &flag, 2},
-     {"ttf-size",         required_argument, &flag, 3},
-     {"ttf-color",        required_argument, &flag, 4},
-     {"show-coordinates",     no_argument, &flag, 5},
-     {"pedantic-broad-phase", no_argument, &flag, 6},
-     {"show-signs",       optional_argument, &flag, 7},
-     {"sign-color",        required_argument, &flag, 8},
-     {"player-color",        required_argument, &flag, 9},
-     {"coordinate-color",        required_argument, &flag, 10},
-     {"cache-key",       required_argument, &flag, 11},
-     {"cache-dir",       required_argument, &flag, 12},
-     {"cache-compress",       no_argument, &flag, 13},
-     {"no-alpha",       no_argument, &flag, 14},
-     {"striped-terrain",       no_argument, &flag, 15},
-     {"write-json",       required_argument, &flag, 16},
-     {"write-js",         required_argument, &flag, 26},
-     {"write-markers",       required_argument, &flag, 21},
-     {"split",            required_argument, &flag, 17},
-     {"pixelsplit",       required_argument, &flag, 17},
-     {"show-warps",       required_argument, &flag, 18},
-     {"warp-color",       required_argument, &flag, 19},
-     {"prebuffer",       required_argument, &flag, 20},
-     {"hell-mode",        no_argument, &flag, 22},
-     {"statistics",        optional_argument, 0, 'S'},
-     {"log",            required_argument, &flag, 24},
-     {"no-log",         no_argument, &flag, 25},
-     {0, 0, 0, 0}
-  };
-
-  bool exclude_all = false;
-  bool excludes[mc::MaterialCount];
-  bool includes[mc::MaterialCount];
-  bool do_generate_map = false;
-  bool do_generate_statistics = false;
-  
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    excludes[i] = false;
-    includes[i] = false;
+  if (!read_opts(s, argc, argv)) {
+    goto exit_error;
   }
-  
-  while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
-  {
-    blockid = -1;
-    
-    if (c == 0) {
-      switch (flag) {
-      case 0:
-        s.require_all = true;
-        break;
-      case 1:
-        s.show_players = true;
-        if (optarg != NULL) {
-          if (!parse_list(s.show_players_set, optarg)) {
-            goto exit_error;
-          }
-        }
-        break;
-      case 2:
-        s.ttf_path = optarg;
-        break;
-      case 3:
-        s.ttf_size = atoi(optarg);
-        
-        if (s.ttf_size <= 0) {
-          error << "ttf-size must be greater than 0";
-          goto exit_error;
-        }
-        
-        break;
-      case 4:
-        if (!parse_color(optarg, s.ttf_color)) {
-          goto exit_error;
-        }
-        break;
-      case 5:
-        s.show_coordinates = true;
-        break;
-      case 6:
-        s.pedantic_broad_phase = true;
-        break;
-      case 7:
-        s.show_signs = true;
 
-        if (optarg) {
-          s.show_signs_filter = optarg;
-          
-          if (s.show_signs_filter.empty()) {
-            error << "Sign filter must not be empty string";
-            goto exit_error;
-          }
-        }
-        
-        break;
-      case 8:
-        if (!parse_color(optarg, s.sign_color)) {
-          goto exit_error;
-        }
-        
-        s.has_sign_color = true;
-        break;
-      case 9:
-        if (!parse_color(optarg, s.player_color)) {
-          goto exit_error;
-        }
-        
-        s.has_player_color = true;
-        break;
-      case 10:
-        if (!parse_color(optarg, s.coordinate_color)) {
-          goto exit_error;
-        }
-        
-        s.has_coordinate_color = true;
-        break;
-      case 11:
-        s.cache_use = true;
-        s.cache_key = optarg;
-        break;
-      case 12:
-        s.cache_dir = optarg;
-        break;
-      case 13:
-        s.cache_compress = true;
-        break;
-      case 14:
-        for (int i = mc::Air + 1; i < mc::MaterialCount; i++)
-          mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
-        break;
-      case 15: s.striped_terrain = true; break;
-      case 21:
-        hints.push_back("`--write-markers' has been deprecated in favour of `--write-json' - use that instead and note the new json structure");
-      case 16:
-        s.write_json = true;
-
-        s.write_json_path = fs::system_complete(fs::path(optarg));
-        
-        {
-          fs::path parent = s.write_json_path.parent_path();
-          
-          if (!fs::is_directory(parent)) {
-            error << "Not a directory: " << parent.string();
-            goto exit_error;
-          }
-        }
-        
-        break;
-      case 26:
-        s.write_js = true;
-
-        s.write_js_path = fs::system_complete(fs::path(optarg));
-        
-        {
-          fs::path parent = s.write_js_path.parent_path();
-          
-          if (!fs::is_directory(parent)) {
-            error << "Not a directory: " << parent.string();
-            goto exit_error;
-          }
-        }
-        
-        break;
-      case 17:
-        try {
-          s.split = boost::lexical_cast<int>(optarg);
-        } catch(boost::bad_lexical_cast& e) {
-          error << "Cannot be converted to number: " << optarg;
-          goto exit_error;
-        }
-        
-        if (!(s.split >= 1)) {
-          error << "split argument must be greater or equal to one";
-          goto exit_error;
-        }
-        
-        s.use_split = true;
-        break;
-      case 18:
-        s.show_warps = true;
-        s.show_warps_path = fs::system_complete(fs::path(optarg));
-        break;
-      case 19:
-        if (!parse_color(optarg, s.warp_color)) {
-          goto exit_error;
-        }
-        
-        s.has_warp_color = true;
-        break;
-      case 20:
-        s.prebuffer = atoi(optarg);
-        
-        if (s.prebuffer <= 0) {
-          error << "Number of prebuffered jobs must be more than 0";
-          goto exit_error;
-        }
-        
-        break;
-      case 22:
-        s.hellmode = true;
-        break;
-      case 24:
-        output_log = fs::system_complete(fs::path(optarg));
-        break;
-      case 25:
-        s.no_log = true;
-        break;
-      }
-      
-      continue;
-    }
-    
-    switch (c)
-    {
-    case 'v':
+  switch(s.action) {
+    case Version:
       return do_version();
-    case 'h':
+    case Help:
       return do_help();
-    case 'e':
-      if (!get_blockid(optarg, blockid)) goto exit_error;
-      excludes[blockid] = true;
-      break;
-    case 'm':
-      s.threads = atoi(optarg);
-      
-      if (s.threads <= 0) {
-        error << "Number of worker threads must be more than 0";
-        goto exit_error;
-      }
-      
-      break;
-    case 'q':
-      s.mode = Oblique;
-      break;
-    case 'z':
-      s.mode = Isometric;
-      break;
-    case 'D':
-      s.debug = true;
-      break;
-    case 'y':
-      s.mode = ObliqueAngle;
-      break;
-    case 'a':
-      exclude_all = true;
-      break;
-    case 'i':
-      if (!get_blockid(optarg, blockid)) goto exit_error;
-      includes[blockid] = true;
-      break;
-    case 'w': world_path = fs::system_complete(fs::path(optarg)); break;
-    case 'o':
-      do_generate_map = true;
-      output_path = fs::system_complete(fs::path(optarg));
-      break;
-    case 's': 
-      out.rdbuf(nil.rdbuf());
-      break;
-    case 'x':
-      out.rdbuf(out_log.rdbuf());
-      s.binary = true;
-      break;
-    case 'r':
-      s.rotation = atoi(optarg) % 360;
-      if (s.rotation < 0) {
-        s.rotation += 360;
-      }
-      if (s.rotation % 90 != 0) {
-        error << "Rotation must be a multiple of 90 degrees";
-        goto exit_error;
-      }
-
-      break;
-    case 'N': s.nocheck = true; break;
-    case 'n': s.night = true; break;
-    case 'H': s.heightmap = true; break;
-    case 'c': s.cavemode = true; break;
-    case 't':
-      s.top = atoi(optarg);
-      
-      if (!(s.top > s.bottom && s.top < mc::MapY)) {
-        error << "Top limit must be between `<bottom limit> - " << mc::MapY << "', not " << s.top;
-        goto exit_error;
-      }
-      
-      break;
-    case 'L':
-      if (!parse_limits(optarg, s)) {
-        goto exit_error;
-      }
-      break;
-    case 'R':
-      s.max_radius = boost::lexical_cast<int>(optarg);
-      
-      if (s.max_radius < 0) {
-        error << "Radius must be greater than zero";
-        goto exit_error;
-      }
-      break;
-    case 'b':
-      s.bottom = atoi(optarg);
-      
-      if (!(s.bottom < s.top && s.bottom >= 0)) {
-        error << "Bottom limit must be between `0 - <top limit>', not " << s.bottom;
-        goto exit_error;
-      }
-      
-      break;
-    case 'l':
+    case ListColors:
       return do_colors();
-    case 'M':
-      {
-        int memory = boost::lexical_cast<int>(optarg);
-        assert(memory >= 0);
-        s.memory_limit = memory * 1024 * 1024;
-        s.memory_limit_default = false;
-      }
-      break;
-    case 'C':
-      s.swap_file = fs::system_complete(fs::path(optarg));
-      break;
-    case 'W': palette_write_path = optarg; break;
-    case 'P': palette_read_path = optarg; break;
-    case 'B':
-      if (!do_base_color_set(optarg)) goto exit_error;
-      break;
-    case 'S':
-      do_generate_statistics = true;
-      
-      if (optarg != NULL) {
-        statistics_path = fs::system_complete(fs::path(optarg));
-      }
-      break;
-    case '?':
-      if (optopt == 'c')
-        error << "Option -" << optopt << " requires an argument";
-      else if (isprint (optopt))
-        error << "Unknown option `-" << optopt << "'";
-      else
-        error << "Unknown option character `\\x" << std::hex << static_cast<int>(optopt) << "'.";
-
-       goto exit_error;
-    default:
-      abort ();
-    }
+    case None:
+      error << "No action specified, please type `c10t -h' for help";
+      goto exit_error;
+    default: break;
   }
-  
-  if (!s.no_log) out_log.open(output_log.string().c_str());
+
+  if (s.binary) out.rdbuf(out_log.rdbuf());
+  if (s.silent) out.rdbuf(nil.rdbuf());
+  if (!s.no_log) out_log.open(s.output_log.string().c_str());
   
   if (s.memory_limit_default) {
     hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
-  }
-
-  if (exclude_all) {
-    for (int i = 0; i < mc::MaterialCount; i++) {
-      s.excludes[i] = true;
-    }
-  }
-
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    if (excludes[i]) {
-      s.excludes[i] = true;
-    }
-    
-    if (includes[i]) {
-      s.excludes[i] = false;
-    }
   }
   
   if (s.cache_use) {
@@ -1756,48 +1195,31 @@ int main(int argc, char *argv[]){
     }
   }
   
-  out << "Threads: " << s.threads << std::endl;
-  
-  if (!palette_write_path.empty()) {
-    if (!do_write_palette(s, palette_write_path)) {
+  if (!s.palette_write_path.empty()) {
+    if (!do_write_palette(s, s.palette_write_path)) {
       goto exit_error;
     }
+
+    out << "Sucessfully wrote palette to " << s.palette_write_path << endl;
   }
   
-  if (!palette_read_path.empty()) {
-    if (!do_read_palette(s, palette_read_path)) {
+  if (!s.palette_read_path.empty()) {
+    if (!do_read_palette(s, s.palette_read_path)) {
       goto exit_error;
     }
+
+    out << "Sucessfully read palette from " << s.palette_read_path << endl;
   }
   
-  if (world_path.empty())
+  if (s.world_path.empty())
   {
     error << "You must specify a world to render using `-w <directory>'";
     goto exit_error;
   }
   
-  if (output_path.empty()) {
-    error << "You must specify output file using `-o <file>'";
-    goto exit_error;
-  }
-  
-  if (!fs::is_directory(output_path.parent_path())) {
-    error << "Output directory does not exist: " << output_path;
-    goto exit_error;
-  }
-  
-  if (s.use_split) {
-    try {
-      boost::format(fs::basename(output_path)) % 0 % 0;
-    } catch (boost::io::too_many_args& e) {
-      error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
-      goto exit_error;
-    }
-  }
-  
   if (!s.nocheck)
   {
-    fs::path level_dat = world_path / "level.dat";
+    fs::path level_dat = s.world_path / "level.dat";
     
     if (!fs::exists(level_dat)) {
       error << "Does not exist: " << level_dat.string();
@@ -1805,25 +1227,52 @@ int main(int argc, char *argv[]){
     }
   }
   
-  if (do_generate_map)  {
-    if (!generate_map(s, world_path, output_path)) goto exit_error;
-  }
-  else if (do_generate_statistics)  {
-    if (!generate_statistics(s, world_path, statistics_path)) goto exit_error;
-  }
-  else {
-    error << "No action specified";
-    goto exit_error;
+  switch(s.action) {
+    case GenerateWorld:
+      /* do some nice sanity checking prior to generating since this might
+       * catch a couple of errors */
+
+      if (s.output_path.empty()) {
+        error << "You must specify output file using `-o <file>'";
+        goto exit_error;
+      }
+      
+      if (!fs::is_directory(s.output_path.parent_path())) {
+        error << "Output directory does not exist: " << s.output_path;
+        goto exit_error;
+      }
+      
+      if (s.use_split) {
+        try {
+          boost::format(fs::basename(s.output_path)) % 0 % 0;
+        } catch (boost::io::too_many_args& e) {
+          error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
+          goto exit_error;
+        }
+      }
+  
+      if (!generate_map(s, s.world_path, s.output_path)) goto exit_error;
+      break;
+    case GenerateStatistics:
+      if (!generate_statistics(s, s.world_path, s.statistics_path)) goto exit_error;
+      break;
+    default:
+      error << "No action specified";
+      goto exit_error;
   }
   
-  if (hints.size() > 0) {
-    out << endl;
-    
+  if (hints.size() > 0 || warnings.size() > 0) {
     int i = 1;
+    
+    for (vector<std::string>::iterator it = warnings.begin(); it != warnings.end(); it++) {
+      out << "WARNING " << i++ << ": " << *it << endl;
+    }
+    
+    i = 1;
     for (vector<std::string>::iterator it = hints.begin(); it != hints.end(); it++) {
       out << "Hint " << i++ << ": " << *it << endl;
     }
-    
+
     out << endl;
   }
   
@@ -1837,7 +1286,7 @@ int main(int argc, char *argv[]){
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << output_log << endl;
+    out << "Log written to " << s.output_log << endl;
     out_log.close();
   }
   
@@ -1847,17 +1296,13 @@ exit_error:
     cout_error(error.str());
   }
   else {
-    {
-      out << "Type `-h' for help" << endl;
-    }
-    
     out << argv[0] << ": " << error.str() << endl;
   }
   
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << output_log << endl;
+    out << "Log written to " << s.output_log << endl;
     out_log.close();
   }
   

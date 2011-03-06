@@ -8,6 +8,8 @@
 
 #include <nbt/nbt.hpp>
 #include <mc/utils.hpp>
+#include <mc/region.hpp>
+#include <mc/world.hpp>
 
 namespace mc {
   namespace fs = boost::filesystem;
@@ -25,10 +27,10 @@ namespace mc {
   
   class level
   {
+    public:
+      typedef boost::shared_ptr<level_info> level_info_ptr;
     private:
-      bool complete;
-      int x, z;
-      const fs::path path;
+      level_info_ptr _level_info;
       
       // these must be public for the parser to be able to reach them.
       std::vector<marker> signs;
@@ -39,21 +41,21 @@ namespace mc {
       boost::shared_ptr<nbt::ByteArray> heightmap;
       boost::shared_ptr<nbt::ByteArray> blocklight;
     public:
-      level(const fs::path path);
+      level(level_info_ptr _level_info);
       ~level();
       
       std::vector<marker> get_signs() {
         return signs;
       }
+
+      std::string get_path() {
+        return _level_info->get_path();
+      }
       
       /*
        * might throw invalid_file if the file is not gramatically correct
        */
-      void read();
-      
-      bool is_read() {
-        return complete;
-      }
+      void read(dynamic_buffer& buffer);
       
       boost::shared_ptr<nbt::ByteArray>
       get_blocks() {
@@ -78,6 +80,10 @@ namespace mc {
       boost::shared_ptr<nbt::ByteArray>
       get_blocklight() {
         return blocklight;
+      }
+
+      bool operator<(const level& other) const {
+        return _level_info->get_coord() < other._level_info->get_coord();
       }
   };
 }

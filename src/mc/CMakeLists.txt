@@ -4,6 +4,7 @@ add_library(
   level.cpp
   utils.cpp
   world.cpp
+  region.cpp
 )
 
 set_target_properties(c10t-mc PROPERTIES COMPILE_FLAGS "-O3 -Wall -pedantic -g")

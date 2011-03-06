@@ -2,21 +2,17 @@
 
 #include <boost/scoped_array.hpp>
 
-void oblique_engine::render(mc::level& level, boost::shared_ptr<image_operations> oper)
+void oblique_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  if (!level.is_read()) {
-    return;
-  }
-  
   Cube part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
   
   pos_t iw, ih;
   part_c.get_oblique_limits(iw, ih);
   
-  BlockRotation b_r(s, level.get_blocks());
-  BlockRotation b_d(s, level.get_data());
-  BlockRotation bl_r(s, level.get_blocklight());
-  BlockRotation sl_r(s, level.get_skylight());
+  BlockRotation b_r(s, level->get_blocks());
+  BlockRotation b_d(s, level->get_data());
+  BlockRotation bl_r(s, level->get_blocklight());
+  BlockRotation sl_r(s, level->get_skylight());
   
   pos_t bmt = iw * ih;
   

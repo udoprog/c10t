@@ -899,7 +899,7 @@ bool generate_map(
     
     if (s.show_signs && signs.size() > 0) {
       push_sign_markers(s, font, signs, markers);
-    }
+   }
     
     if (s.show_coordinates) {
       push_coordinate_markers(out, s, font, world, levels, markers);

@@ -509,7 +509,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         hints.push_back("`--write-markers' has been deprecated in favour of `--write-json' - use that instead and note the new json structure");
       case 16:
         s.write_json = true;
-
+	error << "json option !!";
         s.write_json_path = fs::system_complete(fs::path(optarg));
         
         {

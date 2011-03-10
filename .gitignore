@@ -8,3 +8,4 @@ CMakeFiles
 *.orig
 *.rej
 src/config.hpp
+data

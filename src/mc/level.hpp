@@ -81,6 +81,10 @@ namespace mc {
       get_blocklight() {
         return blocklight;
       }
+
+      bool operator<(const level& other) const {
+        return _level_info->get_coord() < other._level_info->get_coord();
+      }
   };
 }
 

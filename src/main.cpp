@@ -438,85 +438,93 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   renderer.start();
   
-  unsigned int queued = 0;
-
-  unsigned int i;
-
-  unsigned int prebuffer = s.threads * s.prebuffer;
-  unsigned int filllimit = prebuffer / 2;
-  
   nonstd::limited<unsigned int> c(50, cout_dot<unsigned int>, cout_uintpart_endl);
   c.set_limit(world_size);
   
   {
     out << " --- RENDERING --- " << endl;
 
+    unsigned int queued = 0;
+    unsigned int prebuffer = s.threads * s.prebuffer;
+    
+    std::list<render_result> render_results;
+  
     int cache_hits = 0;
 
     mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
     int failed_levels = 0;
-    
-    for (i = 0; i < world_size; i++) {
-      if (queued <= filllimit) {
-        for (; queued < prebuffer && lvlit != levels.end(); lvlit++) {
-          rotated_level_info rl = *lvlit;
-          
-          render_job job;
-          
-          boost::shared_ptr<mc::level> level(new mc::level(rl.level));
-          
-          job.engine = engine;
-          job.level = level;
-          
-          try {
-            level->read(region_buffer);
-          } catch(mc::invalid_file& e) {
-            out_log << level->get_path() << ": " << e.what() << endl;
-            continue;
-          }
-           
-          job.level = level;
-          job.xPos = rl.coord.get_x();
-          job.zPos = rl.coord.get_z();
-          
-          renderer.give(job);
-          
-          if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
-          
-          queued++;
-        }
-      }
-      
-      c.add(1);
-      --queued;
-      
-      render_result p = renderer.get();
 
-      if (p.fatal) {
-        {
+    while (lvlit != levels.end() || render_results.size() > 0) {
+      while (queued < prebuffer && lvlit != levels.end()) {
+        rotated_level_info rl = *lvlit;
+        lvlit++;
+        
+        render_job job;
+        
+        boost::shared_ptr<mc::level> level(new mc::level(rl.level));
+        
+        job.engine = engine;
+        job.level = level;
+        
+        try {
+          level->read(region_buffer);
+        } catch(mc::invalid_file& e) {
+          out_log << level->get_path() << ": " << e.what() << endl;
+          continue;
+        }
+         
+        job.level = level;
+        job.coord = rl.coord;
+        
+        renderer.give(job);
+        ++queued;
+        
+        if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
+      }
+
+      while (render_results.size() > 0) {
+        render_results.sort();
+      
+        BOOST_FOREACH(render_result p, render_results) {
+          c.add(1);
+
+          try {
+            image_base::pos_t x, y;
+            engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
+            all->composite(x, y, p.operations);
+          } catch(std::ios::failure& e) {
+            out << s.swap_file << ": " << strerror(errno);
+            return false;
+          }
+        }
+
+        render_results.clear();
+      }
+
+      while (queued > 0) {
+        render_result p = renderer.get();
+        --queued;
+
+        if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
+
+        if (p.fatal) {
+          c.add(1);
           out << p.level->get_path() << ": " << p.fatal_why << endl;
           continue;
         }
-      }
 
-      if (p.cache_hit) {
-        ++cache_hits;
-      }
+        if (p.cache_hit) {
+          ++cache_hits;
+        }
+        
+        ///if (progress_c != NULL) progress_c(i, world_size);
+        
+        if (p.signs.size() > 0) {
+          if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
+          signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+        }
       
-      ///if (progress_c != NULL) progress_c(i, world_size);
-      
-      if (p.signs.size() > 0) {
-        if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
-        signs.insert(signs.end(), p.signs.begin(), p.signs.end());
-      }
-
-      try {
-        image_base::pos_t x, y;
-        engine->w2pt(p.xPos, p.zPos, x, y);
-        all->composite(x, y, p.operations);
-      } catch(std::ios::failure& e) {
-        out << s.swap_file << ": " << strerror(errno);
-        return false;
+        render_results.push_back(p);
       }
     }
     
@@ -666,6 +674,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     json_world->put("mx_x", new json::number(world.max_x * 16));
     json_world->put("mx_z", new json::number(world.max_z * 16));
     json_world->put("mode", new json::number(s.mode));
+    json_world->put("split_base", new json::number(s.split_base));
+    json_world->put("split", new json::number(s.split.size()));
     
     file.put("world", json_world);
     
@@ -692,40 +702,58 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   }
   
   if (s.use_split) {
-    //boost::ptr_map<point2, image_base> parts;
-    
-    {
-      out << " --- SAVING MULTIPLE IMAGES --- " << endl;
-      out << "splitting on " << s.split << "px basis" << endl;
-    }
-    
-    std::map<point2, image_base*> parts = image_split(all.get(), s.split);
-    
-    {
-      out << "saving " << parts.size() << " images" << endl;
-    }
-    
-    for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
-      const point2 p = it->first;
-      boost::scoped_ptr<image_base> img(it->second);
-      
-      stringstream ss;
-      ss << boost::format(output_path.string()) % p.x % p.y;
-      
-      std::string path = ss.str();
-      
-      png_format::opt_type opts;
+    out << " --- SAVING MULTIPLE IMAGES --- " << endl;
 
-      opts.center_x = center_x;
-      opts.center_y = center_y;
-      opts.comment = C10T_COMMENT;
+    int i = 0;
+
+    image_base::image_ptr target;
+
+    BOOST_FOREACH(unsigned int split_i, s.split) {
+      if (!target && s.split_base > 0) {
+        target.reset(new memory_image(s.split_base, s.split_base));
+      }
+
+      std::map<point2, image_base*> parts = image_split(all.get(), split_i);
       
-      if (!img->save<png_format>(path, opts)) {
-        out << path << ": Could not save image";
-        continue;
+      out << "Level " << i << ": splitting into " << parts.size() << " image on " << split_i << "px" << endl;
+
+      for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
+        const point2 p = it->first;
+        image_base::image_ptr img(it->second);
+
+        stringstream ss;
+        ss << boost::format(output_path.string()) % i % p.x % p.y;
+        fs::path path(ss.str());
+        
+        if (!fs::is_directory(path.parent_path())) {
+          fs::create_directories(path.parent_path());
+        }
+        
+        png_format::opt_type opts;
+        
+        opts.center_x = center_x;
+        opts.center_y = center_y;
+        opts.comment = C10T_COMMENT;
+        
+        std::string path_str(path.string());
+        
+        if (s.split_base > 0) {
+          target->clear();
+          img->resize(target);
+        }
+        else {
+          target = img;
+        }
+
+        if (!target->save<png_format>(path_str, opts)) {
+          out << path << ": Could not save image";
+          continue;
+        }
+        
+        out << path << ": OK" << endl;
       }
       
-      out << path << ": OK" << endl;
+      ++i;
     }
   }
   else {
@@ -1013,9 +1041,13 @@ int do_help() {
     /*<< "  --side <set>              - Specify the side color for a specific block id   " << endl
     << "                              this uses the same format as '-B' only the color " << endl
     << "                              is applied to the side of the block              " << endl*/
-    << "  -p, --split <px>          - Split the render into parts which must be <px>   " << endl
-    << "                              pixels squared. `output' name must contain two   " << endl
-    << "                              format specifiers `%d' for x and y position.     " << endl
+    << "  -p, --split 'px1 px2 ..'  - Split the render into parts which must be pxX    " << endl
+    << "                              pixels squared. `output' name must contain three " << endl
+    << "                              format specifiers `%d' for `level' x and y       " << endl
+    << "                              position. Each image will be resized to the      " << endl
+    << "                              specified px1 size.                              " << endl
+    << "                              Supports multiple splits which will be placed on " << endl
+    << "                              specific `level's.                               " << endl
        /*******************************************************************************/
     << endl
     << "Other Options:" << endl
@@ -1087,7 +1119,7 @@ int do_help() {
   out << "    c10t -w /path/to/world -o /path/to/png.png --show-players --ttf-font example.ttf" << endl;
   out << endl;
   out << "  Split the result into multiple files, using 10 chunks across in each file, the two number formatters will be replaced with the x/z positions of the chunks" << endl;
-  out << "    c10t -w /path/to/world -o /path/to/png.%d.%d.png --split 10" << endl;
+  out << "    c10t -w /path/to/world -o /path/to/%d.%d.%d.png --split 10" << endl;
   out << endl;
   return 0;
 }

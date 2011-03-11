@@ -18,6 +18,7 @@ namespace fs = boost::filesystem;
 class image_base {
 public:
   typedef uint64_t pos_t;
+  typedef boost::shared_ptr<image_base> image_ptr;
 protected:
   pos_t w, h;
 public:
@@ -32,6 +33,8 @@ public:
   }
   
   void fill(color& c);
+
+  void clear();
   
   inline pos_t get_width() { return w; };
   inline pos_t get_height() { return h; };
@@ -55,6 +58,8 @@ public:
   bool save(const std::string str, typename T::opt_type opts) {
     return T::save(this, str, opts);
   }
+
+  void resize(image_ptr target);
   
   virtual void blend_pixel(pos_t x, pos_t y, color &c) = 0;
   virtual void set_pixel(pos_t x, pos_t y, color& c) = 0;

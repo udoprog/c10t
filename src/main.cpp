@@ -193,7 +193,7 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
 
 template<typename T>
 void cout_dot(T total) {
-  if (total == 0) out << " done!";
+  if ((int)total == 0) out << " done!";
   else out << "." << flush;
 }
 

@@ -22,3 +22,4 @@ local-package:
 	tar -cvf ${PACKAGE}-${OS}-${ARCH}.tar ${PACKAGE}
 	gzip -f ${PACKAGE}-${OS}-${ARCH}.tar
 	mv ${PACKAGE}-${OS}-${ARCH}.tar.gz ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz
+	sha1sum ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz > ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz.sha1

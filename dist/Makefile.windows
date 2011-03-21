@@ -27,3 +27,4 @@ local-package:
 	
 	zip -r ${PACKAGE}-${OS}-${ARCH}.zip ${PACKAGE}
 	mv ${PACKAGE}-${OS}-${ARCH}.zip ${BUILD}/${PACKAGE}-${OS}-${ARCH}.zip
+	sha1sum ${BUILD}/${PACKAGE}-${OS}-${ARCH}.zip > ${BUILD}/${PACKAGE}-${OS}-${ARCH}.zip.sha1

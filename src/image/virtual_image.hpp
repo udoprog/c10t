@@ -5,12 +5,14 @@
 
 #include <string.h>
 
+#include "image/image_base.hpp"
+
 class virtual_image : public image_base {
 private:
-  image_base* base;
+  image_ptr base;
   pos_t x, y;
 public:
-  virtual_image(pos_t w, pos_t h, image_base* base, pos_t x, pos_t y) : image_base(w, h), base(base), x(x), y(y)
+  virtual_image(pos_t w, pos_t h, image_ptr base, pos_t x, pos_t y) : image_base(w, h), base(base), x(x), y(y)
   {
   }
   

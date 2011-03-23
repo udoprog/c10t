@@ -25,6 +25,7 @@
 #include "image/image_base.hpp"
 #include "image/memory_image.hpp"
 #include "image/cached_image.hpp"
+#include "image/algorithms.hpp"
 
 #include "threads/renderer.hpp"
 #include "2d/cube.hpp"
@@ -824,7 +825,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   
   if (output_json) {
     if (!use_any_database) {
-      hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
+      hints.push_back("Use `--write-json' in combination with `--show-*'"
+          " in order to write different types of markers to file");
     }
     
     write_json_file(s, engine, world, markers);
@@ -848,9 +850,12 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         target.reset(new memory_image(s.split_base, s.split_base));
       }
 
-      std::map<point2, image_base*> parts = image_split(work_in_progress.get(), split_i);
-      
-      out << "Level " << i << ": splitting into " << parts.size() << " image on " << split_i << "px" << endl;
+      std::map<point2, image_base*> parts;
+
+      image::split(work_in_progress, split_i, parts);
+
+      out << "Level " << i << ": splitting into " << parts.size()
+          << " image on " << split_i << "px" << endl;
 
       for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
         const point2 p = it->first;

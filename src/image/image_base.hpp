@@ -72,6 +72,4 @@ public:
   virtual void align(pos_t x, pos_t y, pos_t w, pos_t h) {};
 };
 
-std::map<point2, image_base*> image_split(image_base* base, int pixels);
-
 #endif /* IMAGE_BASE */

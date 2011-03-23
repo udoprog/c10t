@@ -10,6 +10,10 @@
 
 #include "global.hpp"
 
+class engine_base;
+
+typedef boost::shared_ptr<engine_base> engine_ptr;
+
 class engine_base {
   protected:
     settings_t& s;

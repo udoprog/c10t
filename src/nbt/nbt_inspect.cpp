@@ -85,6 +85,7 @@ int main(int argc, char* argv[]) {
   ctx.width = 0;
   
   nbt::Parser<inspect_context> parser(&ctx);
+
   parser.begin_compound = begin_compound;
   parser.end_compound = end_compound;
   parser.begin_list = begin_list;
@@ -99,4 +100,5 @@ int main(int argc, char* argv[]) {
   parser.register_byte_array = register_byte_array;
 
   parser.parse_file(argv[1]);
+  return 0;
 }

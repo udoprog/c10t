@@ -15,10 +15,13 @@
 
 namespace fs = boost::filesystem;
 
+class image_base;
+
+typedef boost::shared_ptr<image_base> image_ptr;
+
 class image_base {
 public:
   typedef uint64_t pos_t;
-  typedef boost::shared_ptr<image_base> image_ptr;
 protected:
   pos_t w, h;
 public:

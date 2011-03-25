@@ -94,7 +94,7 @@ struct rotated_level_info {
   }
 };
 
-void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
+void cout_progress_n(pos_t i, pos_t all) {
   if (i == all) {
     out << setw(6) << "done!" << endl;
   }
@@ -109,7 +109,7 @@ void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
   } 
 }
 
-void cout_progress_ionly_n(image_base::pos_t i, image_base::pos_t all) {
+void cout_progress_ionly_n(pos_t i, pos_t all) {
   if (all == 1) {
     out << setw(6) << "done!" << endl;
   }
@@ -145,7 +145,7 @@ inline void populate_markers(settings_t& s, json::array* array, boost::shared_pt
     
     mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
-    image_base::pos_t x, y;
+    pos_t x, y;
     
     engine->wp2pt(coord.get_x(), m.y, coord.get_z(), x, y);
 
@@ -183,7 +183,7 @@ inline void overlay_markers(settings_t& s, image_ptr work_in_progress, engine_pt
     
     mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
-    image_base::pos_t x, y;
+    pos_t x, y;
     
     engine->wp2pt(coord.get_x(), m.y, coord.get_z(), x, y);
     
@@ -604,13 +604,13 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
    * use.
    */
   {
-    image_base::pos_t i_w, i_h;
-    image_base::pos_t l_w, l_h;
+    pos_t i_w, i_h;
+    pos_t l_w, l_h;
     
     engine->get_boundaries(i_w, i_h);
     engine->get_level_boundaries(l_w, l_h);
     
-    image_base::pos_t mem_x = i_w * i_h * sizeof(color);
+    pos_t mem_x = i_w * i_h * sizeof(color);
     float memory_usage_mb = float(mem_x) / 1000000.0f; 
     float memory_limit_mb = float(s.memory_limit) / 1000000.0f;
     
@@ -695,6 +695,14 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     int failed_levels = 0;
 
     /**
+     * Store image limits for cropping.
+     */
+    pos_t im_min_x = numeric_limits<pos_t>::max();
+    pos_t im_min_y = numeric_limits<pos_t>::max();
+    pos_t im_max_x = numeric_limits<pos_t>::min();
+    pos_t im_max_y = numeric_limits<pos_t>::min();
+
+    /**
      * Define a dynamically growing buffer to read regions in.
      * Is grown on demand, but never shrunk.
      */
@@ -738,13 +746,23 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
 
       while (render_results.size() > 0) {
         render_results.sort();
-      
+
         BOOST_FOREACH(render_result p, render_results) {
           reporter.add(1);
 
           try {
-            image_base::pos_t x, y;
+            pos_t x, y;
             engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
+
+            //if (y == 0) std::cout << "WTF" << std::endl;
+            std::cout << p.coord.get_x() << " -> " << x << std::endl;
+
+            // update image limits
+            im_min_x = std::min(im_min_x, x);
+            im_min_y = std::min(im_min_y, y);
+            im_max_x = std::max(im_max_x, x + p.operations->max_x - 1);
+            im_max_y = std::max(im_max_y, y + p.operations->max_y - 1);
+
             work_in_progress->composite(x, y, p.operations);
           } catch(std::ios::failure& e) {
             out << s.swap_file << ": " << strerror(errno);
@@ -789,6 +807,13 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     if (s.cache_use) {
       out << "cache_hits: " << cache_hits << "/" << world_size << endl;
     }
+
+    std::cout << "image limits: "
+              << im_min_x << "x" << im_min_y << " "
+              << im_max_x << "x" << im_max_y;
+
+    image_ptr cropped = image::crop(work_in_progress, im_min_x, im_max_x, im_min_y, im_max_y);
+    work_in_progress = cropped;
   }
   
   if (use_any_database) {

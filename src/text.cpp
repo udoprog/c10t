@@ -43,20 +43,20 @@ namespace text {
   }
   
   void
-  font_face::draw_bitmap(image_ptr image, FT_Bitmap* bitmap, image_base::pos_t pen_x, image_base::pos_t pen_y) const
+  font_face::draw_bitmap(image_ptr image, FT_Bitmap* bitmap, pos_t pen_x, pos_t pen_y) const
   {
     assert(bitmap->pixel_mode == FT_PIXEL_MODE_GRAY);
     
     uint8_t* buffer = bitmap->buffer;
 
-    image_base::pos_t s_bitmap_rows =
-      boost::numeric_cast<image_base::pos_t>(bitmap->rows);
+    pos_t s_bitmap_rows =
+      boost::numeric_cast<pos_t>(bitmap->rows);
     
-    image_base::pos_t s_bitmap_width =
-      boost::numeric_cast<image_base::pos_t>(bitmap->width);
+    pos_t s_bitmap_width =
+      boost::numeric_cast<pos_t>(bitmap->width);
     
-    for (image_base::pos_t y = 0; y < s_bitmap_rows && y < image->get_height() + pen_y; y++) {
-      for (image_base::pos_t x = 0; x < s_bitmap_width && x < image->get_width() + pen_x; x++) {
+    for (pos_t y = 0; y < s_bitmap_rows && y < image->get_height() + pen_y; y++) {
+      for (pos_t x = 0; x < s_bitmap_width && x < image->get_width() + pen_x; x++) {
         color c(base);
         c.a = buffer[x + y * bitmap->width];
         image->safe_blend_pixel(pen_x + x, pen_y + y, c);

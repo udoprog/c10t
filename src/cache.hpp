@@ -16,8 +16,8 @@ struct cache_hdr {
   bool compressed;
   std::time_t mod;
   uintmax_t filesize;
-  size_t minx, miny;
-  size_t maxx, maxy;
+  size_t min_x, min_y;
+  size_t max_x, max_y;
   size_t size;
 };
 
@@ -146,10 +146,10 @@ public:
     if (hdr.mod != fs::last_write_time(source_path)) return false;
     if (hdr.filesize != fs::file_size(source_path)) return false;
     
-    oper->maxx = hdr.maxx;
-    oper->minx = hdr.minx;
-    oper->maxy = hdr.maxy;
-    oper->miny = hdr.miny;
+    oper->max_x = hdr.max_x;
+    oper->min_x = hdr.min_x;
+    oper->max_y = hdr.max_y;
+    oper->min_y = hdr.min_y;
     oper->operations.resize(hdr.size);
     
     //fs.read(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
@@ -181,10 +181,10 @@ public:
       }
       
       hdr.compressed = cache_compress;
-      hdr.maxx = oper->maxx;
-      hdr.minx = oper->minx;
-      hdr.maxy = oper->maxy;
-      hdr.miny = oper->miny;
+      hdr.max_x = oper->max_x;
+      hdr.min_x = oper->min_x;
+      hdr.max_y = oper->max_y;
+      hdr.min_y = oper->min_y;
       hdr.mod = fs::last_write_time(source_path);
       hdr.filesize = fs::file_size(source_path);
       hdr.size = oper->operations.size();

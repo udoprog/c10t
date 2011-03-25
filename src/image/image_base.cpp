@@ -24,15 +24,16 @@ void image_base::clear() {
     set_line(y, 0, get_width(), line.get());
 }
 
-void image_base::composite(int xoffset, int yoffset, boost::shared_ptr<image_operations> img)
+void image_base::composite(int x, int y, image_operations_ptr opers)
 {
-  std::vector<image_operation>::size_type i = img->operations.size();
+  std::vector<image_operation>::size_type i = opers->operations.size();
   
-  align(xoffset, yoffset, img->maxx, img->maxy);
+  align(x, y, opers->max_x, opers->max_y);
   
-  while (i--) {
-    image_operation op = img->operations[i];
-    blend_pixel(xoffset + op.x, yoffset + op.y, op.c);
+  while (i--)
+  {
+    image_operation op = opers->operations[i];
+    blend_pixel(x + op.x, y + op.y, op.c);
   }
 }
 

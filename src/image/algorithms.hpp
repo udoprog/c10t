@@ -17,12 +17,14 @@ namespace image {
   template<typename M>
   void split(image_ptr base, int pixels, M& map)
   {
-    for (image_base::pos_t w = 0, px = 0; w < base->get_width(); w += pixels, px++) {
-      for (image_base::pos_t h = 0, py = 0; h < base->get_height(); h += pixels, py++) {
+    for (pos_t w = 0, px = 0; w < base->get_width(); w += pixels, px++) {
+      for (pos_t h = 0, py = 0; h < base->get_height(); h += pixels, py++) {
         map[point2(px, py)] = new virtual_image(pixels, pixels, base, w, h);
       }
     }
   }
+
+  image_ptr crop(image_ptr base, pos_t min_x, pos_t max_x, pos_t min_y, pos_t max_y);
 }
 
 #endif /*__IMAGE_ALGORITHMS__*/

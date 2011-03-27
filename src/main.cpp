@@ -754,9 +754,6 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
             pos_t x, y;
             engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
 
-            //if (y == 0) std::cout << "WTF" << std::endl;
-            std::cout << p.coord.get_x() << " -> " << x << std::endl;
-
             // update image limits
             im_min_x = std::min(im_min_x, x);
             im_min_y = std::min(im_min_y, y);

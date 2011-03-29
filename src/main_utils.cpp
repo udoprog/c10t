@@ -679,5 +679,9 @@ bool read_opts(settings_t& s, int argc, char* argv[])
     if (excludes[i]) s.excludes[i] = true;
   }
 
+  if (!s.palette_write_path.empty()) {
+    s.action = WritePalette;
+  }
+
   return true;
 }

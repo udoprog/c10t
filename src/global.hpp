@@ -31,7 +31,8 @@ enum action {
   Help,
   GenerateWorld,
   GenerateStatistics,
-  ListColors
+  ListColors,
+  WritePalette
 };
 
 struct settings_t {

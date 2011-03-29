@@ -1304,6 +1304,13 @@ int main(int argc, char *argv[]){
       return do_help();
     case ListColors:
       return do_colors();
+    case WritePalette:
+      if (!do_write_palette(s, s.palette_write_path)) {
+        goto exit_error;
+      }
+
+      out << "Successfully wrote palette to " << s.palette_write_path << endl;
+      return 0;
     case None:
       error << "No action specified, please type `c10t -h' for help";
       goto exit_error;
@@ -1336,14 +1343,6 @@ int main(int argc, char *argv[]){
       out << "Caching to directory: " << s.cache_dir << std::endl;
       out << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")  << std::endl;
     }
-  }
-  
-  if (!s.palette_write_path.empty()) {
-    if (!do_write_palette(s, s.palette_write_path)) {
-      goto exit_error;
-    }
-
-    out << "Sucessfully wrote palette to " << s.palette_write_path << endl;
   }
   
   if (!s.palette_read_path.empty()) {

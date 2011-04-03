@@ -92,7 +92,6 @@ inline void cout_end() {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
 }
 
-
 /*
  * Store part of a level rendered as a small image.
  *
@@ -561,7 +560,6 @@ bool generate_map(
 
       BOOST_FOREACH(mc::utils::level_coord c, coords) {
         mc::level_info::level_info_ptr level(new mc::level_info(region, c));
-        
         mc::utils::level_coord coord = level->get_coord();
         
         if (! selector.select(coord)) {

@@ -627,9 +627,13 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       break;
     case 'M':
       {
-        int memory = boost::lexical_cast<int>(optarg);
-        assert(memory >= 0);
-        s.memory_limit = memory * 1024 * 1024;
+        s.memory_limit = boost::lexical_cast<int>(optarg);
+      
+        if (s.memory_limit <= 0) {
+          error << "Memory limit must be non-negative value, not " << s.memory_limit;
+          return false;
+        }
+
         s.memory_limit_default = false;
       }
       break;

@@ -604,30 +604,28 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
    * use.
    */
   {
-    pos_t i_w, i_h;
-    pos_t l_w, l_h;
+    pos_t image_width, image_height;
+    pos_t level_width, level_height;
     
-    engine->get_boundaries(i_w, i_h);
-    engine->get_level_boundaries(l_w, l_h);
+    engine->get_boundaries(image_width, image_height);
+    engine->get_level_boundaries(level_width, level_height);
     
-    pos_t mem_x = i_w * i_h * sizeof(color);
-    float memory_usage_mb = float(mem_x) / 1000000.0f; 
-    float memory_limit_mb = float(s.memory_limit) / 1000000.0f;
+    pos_t memory_usage = image_width * image_height * sizeof(color); 
     
-    if (mem_x >= s.memory_limit) {
+    if (memory_usage >= s.memory_limit) {
       {
         out << " --- BUILDING SWAP --- " << endl;
         out << "NOTE: A swap file is being built to accommodate high memory usage" << endl;
         out << "swap file: " << s.swap_file << endl;
 
-        out << "swap size: " << memory_usage_mb << " MB" << endl;
-        out << "memory limit: " << memory_limit_mb << endl;
+        out << "swap size: " << memory_usage << " MB" << endl;
+        out << "memory limit: " << s.memory_limit << endl;
       }
       
       cached_image* image;
       
       try {
-        image = new cached_image(s.swap_file, i_w, i_h, l_w, l_h);
+        image = new cached_image(s.swap_file, image_width, image_height, level_width, level_height);
       } catch(std::ios::failure& e) {
         if (errno != 0) {
           error << s.swap_file << ": " << strerror(errno);
@@ -656,11 +654,11 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     } else {
       {
         out << " --- ALLOCATING MEMORY --- " << endl;
-        out << "memory usage: " << memory_usage_mb << " MB" << endl;
-        out << "memory limit: " << memory_limit_mb << " MB" << endl;
+        out << "memory usage: " << memory_usage << " MB" << endl;
+        out << "memory limit: " << s.memory_limit << " MB" << endl;
       }
       
-      work_in_progress.reset(new memory_image(i_w, i_h));
+      work_in_progress.reset(new memory_image(image_width, image_height));
     }
   }
   

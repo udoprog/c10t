@@ -55,6 +55,9 @@ namespace mc {
     MaterialName[Dispenser] = "Dispenser";
     MaterialName[Sandstone] = "Sandstone";
     MaterialName[NoteBlock] = "NoteBlock";
+    MaterialName[Bed] = "Bed";
+    MaterialName[PoweredRail] = "PoweredRail";
+    MaterialName[DetectorRail] = "DetectorRail";
     MaterialName[Wool] = "Wool";
     MaterialName[YellowFlower] = "YellowFlower";
     MaterialName[RedRose] = "RedRose";
@@ -141,6 +144,9 @@ namespace mc {
     MaterialColor[Dispenser] = color(107,107,107,255);
     MaterialColor[Sandstone] = MaterialColor[Sand];
     MaterialColor[NoteBlock] = color(100,67,50,255);
+    MaterialColor[Bed] = color(150,0,0,255);
+    MaterialColor[PoweredRail] = color(180,100,0,255);
+    MaterialColor[DetectorRail] = color(145,93,60,255);
     MaterialColor[YellowFlower] = color(255,255,0,255);
     MaterialColor[RedRose] = color(255,0,0,255);
     MaterialColor[BrownMushroom] = color(0x00, 0x00, 0x00, 0x00);
@@ -226,6 +232,9 @@ namespace mc {
     MaterialSideColor[Dispenser] = color(MaterialColor[Dispenser]);
     MaterialSideColor[Sandstone] = color(MaterialColor[Sandstone]);
     MaterialSideColor[NoteBlock] = color(MaterialColor[NoteBlock]);
+    MaterialSideColor[Bed] = color(MaterialColor[Bed]);
+    MaterialSideColor[PoweredRail] = color(MaterialColor[PoweredRail]);
+    MaterialSideColor[DetectorRail] = color(MaterialColor[DetectorRail]);
     MaterialSideColor[YellowFlower] = color(MaterialColor[YellowFlower]);
     MaterialSideColor[RedRose] = color(MaterialColor[RedRose]);
     MaterialSideColor[BrownMushroom] = color(MaterialColor[BrownMushroom]);
@@ -311,6 +320,9 @@ namespace mc {
     MaterialModes[Dispenser] = Block;
     MaterialModes[Sandstone] = Block;
     MaterialModes[NoteBlock] = Block;
+    MaterialModes[Bed] = Block;
+    MaterialModes[PoweredRail] = Block;
+    MaterialModes[DetectorRail] = Block;
     MaterialModes[Wool] = Block;
     MaterialModes[YellowFlower] = Block;
     MaterialModes[RedRose] = Block;

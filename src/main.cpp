@@ -618,8 +618,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         out << "NOTE: A swap file is being built to accommodate high memory usage" << endl;
         out << "swap file: " << s.swap_file << endl;
 
-        out << "swap size: " << memory_usage << " MB" << endl;
-        out << "memory limit: " << s.memory_limit << endl;
+        out << "swap size: " << memory_usage / 0x100000 << " MB" << endl;
+        out << "memory limit: " << s.memory_limit / 0x100000 << "MB" << endl;
       }
       
       cached_image* image;
@@ -654,8 +654,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     } else {
       {
         out << " --- ALLOCATING MEMORY --- " << endl;
-        out << "memory usage: " << memory_usage << " MB" << endl;
-        out << "memory limit: " << s.memory_limit << " MB" << endl;
+        out << "memory usage: " << memory_usage / 0x100000 << " MB" << endl;
+        out << "memory limit: " << s.memory_limit /0x100000 << " MB" << endl;
       }
       
       work_in_progress.reset(new memory_image(image_width, image_height));

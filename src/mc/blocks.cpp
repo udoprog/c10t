@@ -145,8 +145,6 @@ namespace mc {
     MaterialColor[Sandstone] = MaterialColor[Sand];
     MaterialColor[NoteBlock] = color(100,67,50,255);
     MaterialColor[Bed] = color(150,0,0,255);
-    MaterialColor[PoweredRail] = color(180,100,0,255);
-    MaterialColor[DetectorRail] = color(145,93,60,255);
     MaterialColor[YellowFlower] = color(255,255,0,255);
     MaterialColor[RedRose] = color(255,0,0,255);
     MaterialColor[BrownMushroom] = color(0x00, 0x00, 0x00, 0x00);
@@ -205,6 +203,11 @@ namespace mc {
     MaterialColor[Cake] = color(228,205,206,255);
     MaterialColor[PineLeaves] = color(50,89,45,128);
     MaterialColor[BirchLeaves] = color(94,167,84,128);
+    
+    MaterialColor[PoweredRail] = MaterialColor[MinecartTracks];
+    MaterialColor[DetectorRail] = MaterialColor[MinecartTracks];
+    MaterialColor[PoweredRail].blend(color(255,220,0,255));
+    MaterialColor[DetectorRail].blend(color(230,0,0,255));
     
     MaterialSideColor[Air] = color(MaterialColor[Air]);
     MaterialSideColor[Stone] = color(MaterialColor[Stone]);

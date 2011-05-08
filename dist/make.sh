@@ -66,3 +66,4 @@ do_sync $dist_res $build_target
 
 echo "cd $build_target && make $@"
 cd $build_target && make "$@"
+exit $?

@@ -15,8 +15,5 @@ local-package:
 	cp -R scripts/google-api ${PACKAGE}/
 	cp -R res/libc10t.js ${PACKAGE}/
 	cp -R res/example.html ${PACKAGE}/
-	
-	tar -cvf ${PACKAGE}-${OS}-${ARCH}.tar ${PACKAGE}
-	gzip -f ${PACKAGE}-${OS}-${ARCH}.tar
-	mv ${PACKAGE}-${OS}-${ARCH}.tar.gz ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz
-	sha1sum ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz > ${BUILD}/${PACKAGE}-${OS}-${ARCH}.tar.gz.sha1
+	make ${PACKAGE}.tar.gz
+	make ${PACKAGE}.tar.gz.sha1

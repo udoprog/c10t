@@ -1,7 +1,12 @@
 #!/bin/sh
 set -e
-make -f dist/Makefile.linux clean package
-make -f dist/Makefile.linux32 clean package
-make -f dist/Makefile.windows clean package
-make -f dist/Makefile.windows32 clean package
-[ -d $1 ] && cp build/*.tar.gz build/*.zip $1
+
+dists="x86-linux x86_64-linux x86-windows x86_64-windows"
+
+for dist in $dists; do
+  dist/make.sh $dist
+
+  (cd build/$dist && {
+    ls -1
+  })
+done

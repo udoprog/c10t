@@ -1,19 +1,14 @@
-ARCH=x86
+ARCH=x86_64
 OS=windows
-VERSION=SNAPSHOT
-USR=/usr/i686-mingw32/usr
-LIB=${USR}/lib
 
-CXX=i686-mingw32-g++
-CXXFLAGS=-DBOOST_THREAD_USE_LIB=1
+TARGET=x86_64-w64-mingw32
+
+BIN=c10t.exe
+CXXFLAGS=-m64 -O3 -DBOOST_THREAD_USE_LIB=1 -DBOOST_USE_WINDOWS_H
 LDFLAGS=-static -static-libgcc
+SOURCES=src/win32/tss_cleanup_implemented.cpp
 
-TARGET=c10t.exe
-TARGET_DEBUG=c10t-debug.exe
-
-DIST=c10t
-
-include dist/config.mk
+include config.mk
 
 all: ${TARGET}
 

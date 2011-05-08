@@ -1,3 +1,6 @@
+USR?=/usr/${TARGET}/usr
+LIB?=${USR}/lib
+
 SOURCES+=src/algorithm.cpp
 SOURCES+=src/text.cpp
 SOURCES+=src/players.cpp
@@ -24,31 +27,41 @@ SOURCES+=src/image/image_operations.cpp
 SOURCES+=src/image/memory_image.cpp
 
 LDFLAGS+=${LIB}/libpng.a
-LDFLAGS+=${LIB}/libboost_thread-mt.a
-LDFLAGS+=${LIB}/libboost_system-mt.a
-LDFLAGS+=${LIB}/libboost_filesystem-mt.a
+LDFLAGS+=${LIB}/libboost_thread.a
+LDFLAGS+=${LIB}/libboost_system.a
+LDFLAGS+=${LIB}/libboost_filesystem.a
 LDFLAGS+=${LIB}/libfreetype.a
 LDFLAGS+=${LIB}/libz.a
 
 OBJECTS=${SOURCES:.cpp=.o}
 CXXFLAGS+=-Isrc -I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O2
 
-PACKAGE=${DIST}-${VERSION}
+CXX=${TARGET}-g++
+STRIP=${TARGET}-strip
+
+PACKAGE=${BIN}-${VERSION}
+
 BUILD=./build
 
-all: ${TARGET}
+all: ${BIN}
 
-${TARGET}: ${OBJECTS}
-	${CXX} ${CXXFLAGS} ${OBJECTS} ${LDFLAGS} -o ${TARGET}
+.SUFFIXES: .cpp .o
+
+.cpp.o:
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+${BIN}: ${OBJECTS}
+	${CXX} ${CXXFLAGS} ${OBJECTS} ${LDFLAGS} -o ${BIN}
+	${STRIP} ${BIN}
 
 clean:
 	${RM} ${OBJECTS}
 	${RM} -rf ${PACKAGE}
 
-package: ${TARGET} ${PACKAGE} local-package
+package: ${BIN} ${PACKAGE} local-package
 	${RM} -rf ${PACKAGE}
 
 ${PACKAGE}:
 	mkdir ${PACKAGE}
-	cp ${TARGET} ${PACKAGE}/${TARGET}
+	cp ${BIN} ${PACKAGE}/${BIN}
 	mkdir -p ${BUILD}

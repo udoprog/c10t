@@ -19,6 +19,7 @@ SOURCES+=src/engine/isometric_engine.cpp
 SOURCES+=src/engine/oblique_engine.cpp
 SOURCES+=src/engine/obliqueangle_engine.cpp
 SOURCES+=src/engine/topdown_engine.cpp
+SOURCES+=src/engine/fatiso_engine.cpp
 SOURCES+=src/image/cached_image.cpp
 SOURCES+=src/image/algorithms.cpp
 SOURCES+=src/image/color.cpp

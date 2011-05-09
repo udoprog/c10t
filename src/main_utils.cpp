@@ -329,7 +329,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
 
   bool exclude_all = false;
 
-  while ((c = getopt_long(argc, argv, "DNvxcnHqzyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnHqzZyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     

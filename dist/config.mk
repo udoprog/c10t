@@ -64,6 +64,7 @@ pre-package: ${BIN}
 	echo "pre-package: ${PACKAGE}"
 	mkdir -p ${PACKAGE}
 	cp ${BIN} ${PACKAGE}/${BIN}
+	rm -rf ${BUILD}
 	mkdir -p ${BUILD}
 
 post-package:
@@ -74,10 +75,13 @@ package: pre-package local-package post-package
 
 %.sha1:
 	sha1sum $* > $*.sha1
+	mv $@ ${BUILD}/$@
 
 %.tar.gz:
 	tar -cvf $*.tar $*
 	gzip -f $*.tar
+	mv $@ ${BUILD}/$@
 
 %.zip:
 	zip -r $*.zip $*
+	mv $@ ${BUILD}/$@

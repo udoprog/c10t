@@ -627,7 +627,14 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       break;
     case 'M':
       {
-        s.memory_limit = boost::lexical_cast<int>(optarg) * 0x100000;
+        s.memory_limit = boost::lexical_cast<int>(optarg);
+	if (s.memory_limit > 0x1000)
+        {
+          error << "Memory limit must be less or equal 4096 MB, not " << s.memory_limit;
+          return false;
+        }
+
+	s.memory_limit *= 0x100000;
       
         if (s.memory_limit <= 0) {
           error << "Memory limit must be non-negative value, not " << s.memory_limit;

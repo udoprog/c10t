@@ -40,11 +40,12 @@ CXXFLAGS+=-Isrc -I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O2
 CXX=${TARGET}-g++
 STRIP=${TARGET}-strip
 
-PACKAGE=${BIN}-${VERSION}
+VERSION?=SNAPSHOT
+PACKAGE=c10t-${VERSION}-${OS}-${ARCH}
 
 BUILD=./build
 
-all: ${BIN}
+all: package
 
 .SUFFIXES: .cpp .o
 
@@ -59,10 +60,24 @@ clean:
 	${RM} ${OBJECTS}
 	${RM} -rf ${PACKAGE}
 
-package: ${BIN} ${PACKAGE} local-package
-	${RM} -rf ${PACKAGE}
-
-${PACKAGE}:
-	mkdir ${PACKAGE}
+pre-package: ${BIN}
+	echo "pre-package: ${PACKAGE}"
+	mkdir -p ${PACKAGE}
 	cp ${BIN} ${PACKAGE}/${BIN}
 	mkdir -p ${BUILD}
+
+post-package:
+	echo "post-package: ${PACKAGE}"
+	${RM} -rf ${PACKAGE}
+
+package: pre-package local-package post-package
+
+%.sha1:
+	sha1sum $* > $*.sha1
+
+%.tar.gz:
+	tar -cvf $*.tar $*
+	gzip -f $*.tar
+
+%.zip:
+	zip -r $*.zip $*

@@ -38,7 +38,7 @@ set(c10t_LIBRARIES ${c10t_LIBRARIES} ${Boost_LIBRARIES} ${FREETYPE_LIBRARY})
 include_directories("${CMAKE_SOURCE_DIR}/src/")
 
 #copy font.ttg to build directory as matter of convenience.
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/font.ttf ${CMAKE_BINARY_DIR}/font.ttf)
+#execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/font.ttf ${CMAKE_BINARY_DIR}/font.ttf)
 
 add_subdirectory(src)
 add_subdirectory(test)

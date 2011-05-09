@@ -75,13 +75,13 @@ package: pre-package local-package post-package
 
 %.sha1:
 	sha1sum $* > $*.sha1
-	mv $@ ${BUILD}/$@
+	cp $@ ${BUILD}/$@
 
 %.tar.gz:
 	tar -cvf $*.tar $*
 	gzip -f $*.tar
-	mv $@ ${BUILD}/$@
+	cp $@ ${BUILD}/$@
 
 %.zip:
 	zip -r $*.zip $*
-	mv $@ ${BUILD}/$@
+	cp $@ ${BUILD}/$@

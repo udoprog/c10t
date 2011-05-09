@@ -47,6 +47,7 @@
 #include "engine/oblique_engine.hpp"
 #include "engine/obliqueangle_engine.hpp"
 #include "engine/isometric_engine.hpp"
+#include "engine/fatiso_engine.hpp"
 
 #include "main_utils.hpp"
 
@@ -597,6 +598,10 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     case Isometric:
       engine.reset(new isometric_engine(s, world));
       break;
+
+    case FatIso:
+      engine.reset(new fatiso_engine(s, world));
+      break;
   }
   
   /**
@@ -610,7 +615,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     engine->get_boundaries(image_width, image_height);
     engine->get_level_boundaries(level_width, level_height);
     
-    pos_t memory_usage = image_width * image_height * sizeof(color); 
+    pos_t memory_usage = (image_width * image_height * sizeof(color)) / 1000000;
     
     if (memory_usage >= s.memory_limit) {
       {
@@ -619,7 +624,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         out << "swap file: " << s.swap_file << endl;
 
         out << "swap size: " << memory_usage << " MB" << endl;
-        out << "memory limit: " << s.memory_limit << endl;
+        out << "memory limit: " << s.memory_limit << " MB" << endl;
       }
       
       cached_image* image;
@@ -661,6 +666,14 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       work_in_progress.reset(new memory_image(image_width, image_height));
     }
   }
+
+  /**
+   * Store image limits for cropping.
+   */
+  pos_t im_min_x = numeric_limits<pos_t>::max();
+  pos_t im_min_y = numeric_limits<pos_t>::max();
+  pos_t im_max_x = numeric_limits<pos_t>::min();
+  pos_t im_max_y = numeric_limits<pos_t>::min();
   
   /**
    * Perform rendering phase where engine takes level information, and produces
@@ -691,14 +704,6 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     
     int cache_hits = 0;
     int failed_levels = 0;
-
-    /**
-     * Store image limits for cropping.
-     */
-    pos_t im_min_x = numeric_limits<pos_t>::max();
-    pos_t im_min_y = numeric_limits<pos_t>::max();
-    pos_t im_max_x = numeric_limits<pos_t>::min();
-    pos_t im_max_y = numeric_limits<pos_t>::min();
 
     /**
      * Define a dynamically growing buffer to read regions in.
@@ -804,8 +809,9 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     }
 
     std::cout << "image limits: "
-              << im_min_x << "x" << im_min_y << " "
-              << im_max_x << "x" << im_max_y;
+              << im_min_x << "x" << im_min_y << " to "
+              << im_max_x << "x" << im_max_y <<
+              " will be the cropped image" << endl;
 
     image_ptr cropped = image::crop(work_in_progress, im_min_x, im_max_x, im_min_y, im_max_y);
     work_in_progress = cropped;
@@ -840,6 +846,14 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     
     if (s.show_warps) {
       push_warp_markers(s, font, warps, markers);
+    }
+
+    /**
+     * Adjust markers to image cropping.
+     */
+    BOOST_FOREACH(marker m, markers) {
+      m.x -= im_min_x;
+      m.y -= im_min_y;
     }
   }
   
@@ -1119,6 +1133,7 @@ int do_help() {
     << "  -q, --oblique             - Oblique rendering                                " << endl
     << "  -y, --oblique-angle       - Oblique angle rendering                          " << endl
     << "  -z, --isometric           - Isometric rendering                              " << endl
+    << "  -Z, --fatiso              - A fat isometric rendering (very slow)            " << endl
     << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW   " << endl
     << endl
     << "  -n, --night               - Night-time rendering mode                        " << endl

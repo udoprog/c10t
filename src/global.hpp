@@ -22,7 +22,8 @@ enum mode {
   Top = 0x0,
   Oblique = 0x1,
   ObliqueAngle = 0x2,
-  Isometric = 0x3
+  Isometric = 0x3,
+  FatIso = 0x4
 };
 
 enum action {
@@ -139,7 +140,7 @@ struct settings_t {
     this->heightmap = false;
     this->debug = false;
     this->swap_file = "swap.bin";
-    this->memory_limit = 1024 * 1024 * 1000;
+    this->memory_limit = 1000;
     this->memory_limit_default = true;
     this->min_x = -10000;
     this->max_x = 10000;

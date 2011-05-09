@@ -275,6 +275,7 @@ struct option long_options[] =
    {"oblique",          no_argument, 0, 'q'},
    {"oblique-angle",    no_argument, 0, 'y'},
    {"isometric",        no_argument, 0, 'z'},
+   {"fatiso",           no_argument, 0, 'Z'},
    {"cave-mode",        no_argument, 0, 'c'},
    {"night",            no_argument, 0, 'n'},
    {"heightmap",        no_argument, 0, 'H'},
@@ -546,6 +547,9 @@ bool read_opts(settings_t& s, int argc, char* argv[])
     case 'z':
       s.mode = Isometric;
       break;
+    case 'Z':
+      s.mode = FatIso;
+      break;
     case 'D':
       s.debug = true;
       break;
@@ -628,13 +632,6 @@ bool read_opts(settings_t& s, int argc, char* argv[])
     case 'M':
       {
         s.memory_limit = boost::lexical_cast<int>(optarg);
-	if (s.memory_limit > 0x1000)
-        {
-          error << "Memory limit must be less or equal 4096 MB, not " << s.memory_limit;
-          return false;
-        }
-
-	s.memory_limit *= 0x100000;
       
         if (s.memory_limit <= 0) {
           error << "Memory limit must be non-negative value, not " << s.memory_limit;

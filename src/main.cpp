@@ -208,7 +208,7 @@ bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
 
 template<typename T>
 void cout_dot(T total) {
-  if (total == 0) out << " done!";
+  if ( (unsigned int) total == 0) out << " done!";
   else out << "." << flush;
 }
 
@@ -615,7 +615,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     engine->get_boundaries(image_width, image_height);
     engine->get_level_boundaries(level_width, level_height);
     
-    pos_t memory_usage = (image_width * image_height * sizeof(color)) / 1000000;
+    pos_t memory_usage = (image_width * image_height * sizeof(color)) / 0x100000;
     
     if (memory_usage >= s.memory_limit) {
       {

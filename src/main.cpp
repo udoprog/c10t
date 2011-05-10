@@ -208,7 +208,7 @@ bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
 
 template<typename T>
 void cout_dot(T total) {
-  if (total == 0) out << " done!";
+  if ((int)total == 0) out << " done!";
   else out << "." << flush;
 }
 

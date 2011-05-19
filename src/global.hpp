@@ -37,69 +37,73 @@ enum action {
 };
 
 struct settings_t {
-  bool cavemode;
-  bool hellmode;
-  bool night;
-  bool heightmap;
-  bool silent;
-  bool nocheck;
-  boost::shared_array<bool> excludes;
   bool binary;
-  bool debug;
-  bool use_split;
-  std::list<unsigned int> split;
-  unsigned int split_base;
-  bool striped_terrain;
-  std::set<std::string> show_players_set;
-  bool require_all;
-  bool pedantic_broad_phase;
-  std::string show_signs_filter;
-  bool show_coordinates;
-  bool show_signs;
-  bool show_players;
-  bool disable_skylight;
-  bool show_warps;
-  fs::path show_warps_path;
-  bool has_sign_color;
-  bool has_player_color;
-  bool has_coordinate_color;
-  bool has_warp_color;
-  // top/bottom used for slicing
-  int top;
-  int bottom;
-  unsigned int threads;
-  unsigned int prebuffer;
-  enum mode mode;
-  unsigned int rotation;
-  int min_x, max_x, min_z, max_z; // limits to draw
-  int max_radius;
-  size_t memory_limit;
-  bool memory_limit_default;
-  int ttf_size;
-  color ttf_color;
-  color sign_color;
-  color player_color;
-  color warp_color;
-  color coordinate_color;
-  fs::path ttf_path;
-  fs::path swap_file;
-  std::string cache_key;
-  fs::path cache_dir;
   bool cache_compress;
   bool cache_use;
-  bool write_json;
-  fs::path write_json_path;
-  bool write_js;
-  fs::path write_js_path;
+  bool cavemode;
+  bool debug;
+  bool disable_skylight;
+  bool has_coordinate_color;
+  bool has_player_color;
+  bool has_sign_color;
+  bool has_warp_color;
+  bool heightmap;
+  bool hellmode;
+  bool memory_limit_default;
+  bool night;
+  bool nocheck;
   bool no_log;
+  bool pedantic_broad_phase;
+  bool require_all;
+  bool show_coordinates;
+  bool show_players;
+  bool show_signs;
+  bool show_warps;
+  bool silent;
+  bool striped_terrain;
+  bool use_split;
+  bool write_js;
+  bool write_json;
+  boost::shared_array<bool> excludes;
+  color coordinate_color;
+  color player_color;
+  color sign_color;
+  color ttf_color;
+  color warp_color;
+  enum mode mode;
+  fs::path cache_dir;
   fs::path output_log;
-
-  fs::path world_path;
   fs::path output_path;
-  fs::path statistics_path;
-
-  fs::path palette_write_path;
   fs::path palette_read_path;
+  fs::path palette_write_path;
+  fs::path show_warps_path;
+  fs::path statistics_path;
+  fs::path swap_file;
+  fs::path ttf_path;
+  fs::path world_path;
+  fs::path write_json_path;
+  fs::path write_js_path;
+  int bottom;
+  int max_radius;
+  int min_x;
+  int max_x;
+  int min_z;
+  int max_z;
+  int top;
+  int ttf_size;
+  size_t memory_limit;
+  std::list<unsigned int> split;
+  std::set<std::string> show_players_set;
+  std::string cache_key;
+  std::string show_signs_filter;
+  // top/bottom used for slicing
+  unsigned int prebuffer;
+  unsigned int rotation;
+  unsigned int split_base;
+  unsigned int threads;
+
+  int center_x;
+  int center_z;
 
   enum action action;
   
@@ -172,6 +176,9 @@ struct settings_t {
     this->statistics_path = fs::system_complete(fs::path("statistics.txt"));
 
     this->action = None;
+
+    this->center_x = 0;
+    this->center_z = 0;
   }
 };
 

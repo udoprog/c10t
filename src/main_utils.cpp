@@ -164,6 +164,27 @@ bool parse_limits(const string& limits_str, settings_t& s) {
   return true;
 }
 
+bool parse_tuple(const string& str, settings_t& s, int& a, int& b) {
+  std::vector<std::string> parts;
+
+  boost_split(parts, str);
+
+  if (parts.size() != 2) {
+    error << "Tuple must be of format: <num>,<num>";
+    return false;
+  }
+
+  try {
+    a = lexical_cast<int>(parts[0]);
+    b = lexical_cast<int>(parts[1]);
+  } catch(const bad_lexical_cast& e) {
+    error << "Cannot be converted to set of numbers: " << str;
+    return false;
+  }
+
+  return true;
+}
+
 bool read_set(std::set<string>& set, const string s) {
   boost_split(set, s);
 
@@ -252,65 +273,66 @@ int flag;
 
 struct option long_options[] =
  {
-   {"world",            required_argument, 0, 'w'},
-   {"output",           required_argument, 0, 'o'},
-   {"top",              required_argument, 0, 't'},
-   {"bottom",           required_argument, 0, 'b'},
-   {"limits",           required_argument, 0, 'L'},
-   {"radius",           required_argument, 0, 'R'},
-   {"memory-limit",     required_argument, 0, 'M'},
-   {"cache-file",       required_argument, 0, 'C'},
-   {"swap-file",        required_argument, 0, 'C'},
-   {"exclude",          required_argument, 0, 'e'},
-   {"include",          required_argument, 0, 'i'},
-   {"rotate",           required_argument, 0, 'r'},
-   {"threads",          required_argument, 0, 'm'},
-   {"help",             no_argument, 0, 'h'},
-   {"silent",           no_argument, 0, 's'},
-   {"version",          no_argument, 0, 'v'},
-   {"debug",            no_argument, 0, 'D'},
-   {"list-colors",      no_argument, 0, 'l'},
-   {"hide-all",         no_argument, 0, 'a'},
-   {"no-check",         no_argument, 0, 'N'},
-   {"oblique",          no_argument, 0, 'q'},
-   {"oblique-angle",    no_argument, 0, 'y'},
-   {"isometric",        no_argument, 0, 'z'},
-   {"fatiso",           no_argument, 0, 'Z'},
-   {"cave-mode",        no_argument, 0, 'c'},
-   {"night",            no_argument, 0, 'n'},
-   {"heightmap",        no_argument, 0, 'H'},
-   {"binary",           no_argument, 0, 'x'},
-   {"require-all",      no_argument, &flag, 0},
-   {"show-players",     optional_argument, &flag, 1},
-   {"ttf-path",         required_argument, &flag, 2},
-   {"ttf-size",         required_argument, &flag, 3},
-   {"ttf-color",        required_argument, &flag, 4},
-   {"show-coordinates",     no_argument, &flag, 5},
-   {"pedantic-broad-phase", no_argument, &flag, 6},
-   {"show-signs",       optional_argument, &flag, 7},
-   {"sign-color",        required_argument, &flag, 8},
-   {"player-color",        required_argument, &flag, 9},
-   {"coordinate-color",        required_argument, &flag, 10},
-   {"cache-key",       required_argument, &flag, 11},
-   {"cache-dir",       required_argument, &flag, 12},
-   {"cache-compress",       no_argument, &flag, 13},
-   {"no-alpha",       no_argument, &flag, 14},
-   {"striped-terrain",       no_argument, &flag, 15},
-   {"write-json",       required_argument, &flag, 16},
-   {"write-js",         required_argument, &flag, 26},
-   {"write-markers",       required_argument, &flag, 21},
-   {"split",            required_argument, &flag, 17},
-   {"pixelsplit",       required_argument, &flag, 17},
-   {"split-base",       required_argument, &flag, 27},
-   {"show-warps",       required_argument, &flag, 18},
-   {"warp-color",       required_argument, &flag, 19},
-   {"prebuffer",       required_argument, &flag, 20},
-   {"hell-mode",        no_argument, &flag, 22},
-   {"statistics",        optional_argument, 0, 'S'},
-   {"log",            required_argument, &flag, 24},
-   {"no-log",         no_argument, &flag, 25},
-   {"disable-skylight",         no_argument, &flag, 26},
-   {0, 0, 0, 0}
+    {"world",                               required_argument,   0,       'w'},
+    {"output",                              required_argument,   0,       'o'},
+    {"top",                                 required_argument,   0,       't'},
+    {"bottom",                              required_argument,   0,       'b'},
+    {"limits",                              required_argument,   0,       'L'},
+    {"radius",                              required_argument,   0,       'R'},
+    {"memory-limit",                        required_argument,   0,       'M'},
+    {"cache-file",                          required_argument,   0,       'C'},
+    {"swap-file",                           required_argument,   0,       'C'},
+    {"exclude",                             required_argument,   0,       'e'},
+    {"include",                             required_argument,   0,       'i'},
+    {"rotate",                              required_argument,   0,       'r'},
+    {"threads",                             required_argument,   0,       'm'},
+    {"help",                                no_argument,         0,       'h'},
+    {"silent",                              no_argument,         0,       's'},
+    {"version",                             no_argument,         0,       'v'},
+    {"debug",                               no_argument,         0,       'D'},
+    {"list-colors",                         no_argument,         0,       'l'},
+    {"hide-all",                            no_argument,         0,       'a'},
+    {"no-check",                            no_argument,         0,       'N'},
+    {"oblique",                             no_argument,         0,       'q'},
+    {"oblique-angle",                       no_argument,         0,       'y'},
+    {"isometric",                           no_argument,         0,       'z'},
+    {"fatiso",                              no_argument,         0,       'Z'},
+    {"cave-mode",                           no_argument,         0,       'c'},
+    {"night",                               no_argument,         0,       'n'},
+    {"heightmap",                           no_argument,         0,       'H'},
+    {"binary",                              no_argument,         0,       'x'},
+    {"require-all",                         no_argument,         &flag,   0},
+    {"show-players",                        optional_argument,   &flag,   1},
+    {"ttf-path",                            required_argument,   &flag,   2},
+    {"ttf-size",                            required_argument,   &flag,   3},
+    {"ttf-color",                           required_argument,   &flag,   4},
+    {"show-coordinates",                    no_argument,         &flag,   5},
+    {"pedantic-broad-phase",                no_argument,         &flag,   6},
+    {"show-signs",                          optional_argument,   &flag,   7},
+    {"sign-color",                          required_argument,   &flag,   8},
+    {"player-color",                        required_argument,   &flag,   9},
+    {"coordinate-color",                    required_argument,   &flag,   10},
+    {"cache-key",                           required_argument,   &flag,   11},
+    {"cache-dir",                           required_argument,   &flag,   12},
+    {"cache-compress",                      no_argument,         &flag,   13},
+    {"no-alpha",                            no_argument,         &flag,   14},
+    {"striped-terrain",                     no_argument,         &flag,   15},
+    {"write-json",                          required_argument,   &flag,   16},
+    {"write-js",                            required_argument,   &flag,   26},
+    {"write-markers",                       required_argument,   &flag,   21},
+    {"split",                               required_argument,   &flag,   17},
+    {"pixelsplit",                          required_argument,   &flag,   17},
+    {"split-base",                          required_argument,   &flag,   27},
+    {"show-warps",                          required_argument,   &flag,   18},
+    {"warp-color",                          required_argument,   &flag,   19},
+    {"prebuffer",                           required_argument,   &flag,   20},
+    {"hell-mode",                           no_argument,         &flag,   22},
+    {"statistics",                          optional_argument,   0,       'S'},
+    {"log",                                 required_argument,   &flag,   24},
+    {"no-log",                              no_argument,         &flag,   25},
+    {"disable-skylight",                    no_argument,         &flag,   26},
+    {"center",                              required_argument,   &flag,   30},
+    {0,                                     0,                   0,       0}
 };
 
 bool read_opts(settings_t& s, int argc, char* argv[])
@@ -518,6 +540,11 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         break;
       case 25:
         s.no_log = true;
+        break;
+      case 30:
+        if (!parse_tuple(optarg, s, s.center_x, s.center_z)) {
+          return false;
+        }
         break;
       }
       

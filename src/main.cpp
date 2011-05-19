@@ -195,14 +195,17 @@ inline void overlay_markers(settings_t& s, image_ptr work_in_progress, engine_pt
 
 bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
 {
-  uint64_t x2 = coord.get_x() * coord.get_x();
-  uint64_t z2 = coord.get_z() * coord.get_z();
+  int x = coord.get_x() - s.center_x;
+  int z = coord.get_z() - s.center_z;
+
+  uint64_t x2 = x * x;
+  uint64_t z2 = z * z;
   uint64_t r2 = s.max_radius * s.max_radius;
     
-  return coord.get_x() < s.min_x
-      || coord.get_x() > s.max_x
-      || coord.get_z() < s.min_z
-      || coord.get_z() > s.max_z
+  return x < s.min_x
+      || x > s.max_x
+      || z < s.min_z
+      || z > s.max_z
       || x2 + z2 >= r2;
 }
 
@@ -1163,6 +1166,8 @@ int do_help() {
     << "  -R, --radius <int>        - Limit render to a specific radius, useful when   " << endl
     << "                              your map is absurdly large and you want a 'fast' " << endl
     << "                              limiting option.                                 " << endl
+    << "      --center <x>,<z>      - Offset the map centering on limits by chunks <x> " << endl
+    << "                              and <z>.                                         " << endl
     << endl
     << "  -N, --no-check            - Ignore missing <world>/level.dat                 " << endl
        /*******************************************************************************/

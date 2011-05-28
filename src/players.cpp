@@ -2,8 +2,12 @@
 // (C) Copyright 2010 John-John Tedro et al.
 #include "players.hpp"
 
+#include <iostream>
+
 void error_handler(player *p, size_t where, const char* why) {
-  p->grammar_error = true;
+  p->error_where = where;
+  p->error_why = why;
+  p->error = true;
 }
 
 void begin_list(player *p, std::string name, nbt::Byte, nbt::Int) {
@@ -32,7 +36,8 @@ void register_double(player *p, std::string name, nbt::Double value) {
 
 player::player(const fs::path path) :
   path(path),
-  name(fs::basename(path)), grammar_error(false), in_pos(false),
+  name(fs::basename(path)),
+  error(false), error_where(0), error_why(""), in_pos(false),
   pos_c(0), xPos(0), yPos(0), zPos(0)
 {
   nbt::Parser<player> parser(this);
@@ -43,7 +48,7 @@ player::player(const fs::path path) :
   parser.parse_file(path.string().c_str());
 }
 
-void players_db::read(std::vector<player>& players) const throw(players_db_exception)
+void players_db::read(std::vector<player>& players) const
 {
   fs::path full_path = fs::system_complete( path );
   
@@ -58,18 +63,13 @@ void players_db::read(std::vector<player>& players) const throw(players_db_excep
         ++dir_itr )
   {
     player p(dir_itr->path());
-    
-    if (p.grammar_error) {
-      // silently ignore bad player files
-      continue;
-    }
-    
+
     if (filter_set.size() > 0) {
       if (filter_set.find(p.name) == filter_set.end()) {
         continue;
       }
     }
-    
+
     players.push_back(p);
   }
 }

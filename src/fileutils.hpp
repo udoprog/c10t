@@ -6,10 +6,20 @@
 #include <string>
 #include <queue>
 
-#include <dirent.h>
 #include <boost/filesystem.hpp>
+#include <boost/version.hpp>
+
+#define BOOST_FSv2 ((BOOST_VERSION / 100) <= 1045)
 
 namespace fs = boost::filesystem;
+
+inline std::string path_string(fs::path path) {
+#if BOOST_FSv2
+  return path.filename();
+#else
+  return path.filename().string();
+#endif
+}
 
 class dirlist {
 private:
@@ -54,7 +64,7 @@ public:
           directories.push(itr->path());
         }
         else if (fs::is_regular_file(itr->status())) {
-          if (!file_filter(itr->path().filename())) {
+          if (!file_filter(path_string(itr->path()))) {
             continue;
           }
           

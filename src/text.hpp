@@ -50,9 +50,9 @@ namespace text {
 
     void set_size(int size);
     
-    void draw_bitmap(image_base& target, FT_Bitmap* bitmap, image_base::pos_t pen_x, image_base::pos_t pen_y) const;
+    void draw_bitmap(image_ptr image, FT_Bitmap* bitmap, pos_t pen_x, pos_t pen_y) const;
     
-    void draw(image_base& image, const std::string rawtext, int x, int y) const;
+    void draw(image_ptr image, const std::string rawtext, int x, int y) const;
 
     void set_color(color& c);
 

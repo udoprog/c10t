@@ -72,6 +72,12 @@ public:
     ry = 2 * (y - p.y - 1) + p.z + p.x;
   }
   
+  inline void project_fatiso(point &p, pos_t &rx, pos_t &ry) const
+  {
+    rx = 4 * ((z - p.z - 1) + p.x);
+    ry = 5 * (y - p.y - 1) + 2 * p.z + 2 * p.x;
+  }
+
   inline void get_top_limits(pos_t &rx, pos_t &ry) const
   {
     rx = z;
@@ -94,6 +100,12 @@ public:
   {
     rx = 2 * (z + x);
     ry = 2 * y + z + x;
+  }
+
+  inline void get_fatiso_limits(pos_t &rx, pos_t &ry) const
+  {
+    rx = 4 * (z + x);
+    ry = 5 * y + 2 * z + 2 * x;
   }
 };
 

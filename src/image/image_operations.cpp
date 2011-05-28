@@ -5,19 +5,19 @@
 
 #include <iostream>
   
-image_operations::image_operations() : minx(0), miny(0), maxx(0), maxy(0) { }
+image_operations::image_operations() : min_x(0), min_y(0), max_x(0), max_y(0) { }
 image_operations::~image_operations() { }
 
-void image_operations::add_pixel(int x, int y, color &c)
+void image_operations::add_pixel(pos_t x, pos_t y, color &c)
 {
   if (c.is_invisible()) {
     return;
   }
   
-  if (!(x >= minx)) { return; }
-  if (!(y >= miny)) { return; }
-  if (!(x < maxx)) { return; }
-  if (!(y < maxy)) { return; }
+  if (!(x >= min_x)) { return; }
+  if (!(y >= min_y)) { return; }
+  if (!(x < max_x)) { return; }
+  if (!(y < max_y)) { return; }
   
   image_operation oper;
   
@@ -27,7 +27,7 @@ void image_operations::add_pixel(int x, int y, color &c)
   oper.c = c;
   
   if (!oper.c.is_transparent()) {
-    uint64_t p = oper.x + oper.y * maxx;
+    uint64_t p = oper.x + oper.y * max_x;
     
     uint8_t pb = lookup[p / 8];
     
@@ -42,16 +42,16 @@ void image_operations::add_pixel(int x, int y, color &c)
   operations.push_back(oper);
 }
 
-void image_operations::set_limits(int x, int y) 
+void image_operations::set_limits(pos_t x, pos_t y) 
 {
-  minx = 0;
-  miny = 0;
-  maxx = x;
-  maxy = y;
+  min_x = 0;
+  min_y = 0;
+  max_x = x;
+  max_y = y;
   
-  size_t lookup_size = (maxx * maxy) / 8 + 1;
+  size_t lookup_size = (max_x * max_y) / 8 + 1;
   lookup.reset(new uint8_t[lookup_size]);
   memset(lookup.get(), 0x0, lookup_size);
-  operations.reserve(maxx * maxy * 2);
+  operations.reserve(max_x * max_y * 2);
 }
 

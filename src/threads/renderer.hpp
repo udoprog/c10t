@@ -19,7 +19,7 @@ namespace fs = boost::filesystem;
 
 struct render_result {
   boost::shared_ptr<mc::level> level;
-  boost::shared_ptr<image_operations> operations;
+  image_operations_ptr operations;
   bool fatal;
   std::string fatal_why;
   std::vector<mc::marker> signs;

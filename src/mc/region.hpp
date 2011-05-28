@@ -116,7 +116,6 @@ namespace mc {
   public:
     enum {
       HEADER_SIZE = 8192,
-      RECORD_MULTI = 256,
       REGION_SIZE = 32,
       HEADER_RECORD_SIZE = 4,
       RECORD_SIZE = 4096,

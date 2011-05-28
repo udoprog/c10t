@@ -10,22 +10,29 @@
 
 #include "image/color.hpp"
 
+typedef uint64_t pos_t;
+
+class image_operations;
+
+typedef boost::shared_ptr<image_operations> image_operations_ptr;
+
 struct image_operation {
   color c;
   uint16_t x, y;
 };
 
-class image_operations {
+class image_operations
+{
 private:
   boost::shared_array<uint8_t> lookup;
 public:
-  int minx, miny;
-  int maxx, maxy;
+  pos_t min_x, min_y;
+  pos_t max_x, max_y;
   
   std::vector<image_operation> operations;
   
-  void add_pixel(int x, int y, color &c);
-  void set_limits(int x, int y);
+  void add_pixel(pos_t x, pos_t y, color &c);
+  void set_limits(pos_t x, pos_t y);
   
   image_operations();
   ~image_operations();

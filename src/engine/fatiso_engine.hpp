@@ -1,0 +1,35 @@
+#ifndef FATISO_ENGINE
+#define FATISO_ENGINE
+
+#include "engine/engine_base.hpp"
+
+class fatiso_engine : public engine_base {
+  public:
+    fatiso_engine(settings_t& s, mc::world& world) : engine_base(s, world) {}
+    
+    void render(level_ptr level, boost::shared_ptr<image_operations> operations);
+    
+    void get_boundaries(pos_t& width, pos_t& height) {
+      mpos_c.get_fatiso_limits(width, height);
+    }
+    
+    void get_level_boundaries(pos_t& width, pos_t& height) {
+      part_c.get_fatiso_limits(width, height);
+    }
+    
+    void w2pt(int xPos, int zPos, pos_t& x, pos_t& y) {
+      pos_t posx = xPos - world.min_x;
+      pos_t posz = zPos - world.min_z;
+      
+      point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
+      
+      pos_c.project_fatiso(pos, x, y);
+    }
+    
+    void wp2pt(int xPos, int yPos, int zPos, pos_t& x, pos_t& y) {
+      point pos(xPos - world.min_xp, yPos, zPos - world.min_zp);
+      mpos_c.project_fatiso(pos, x, y);
+    }
+};
+
+#endif /* FATISO_ENGINE */

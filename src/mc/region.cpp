@@ -3,8 +3,98 @@
 #include <zlib.h>
 
 #include <fstream>
+#include <boost/scoped_ptr.hpp>
 
 namespace mc {
+  class zerror : public std::exception {
+    private:
+      const char* message;
+    public:
+      zerror(const char* message) 
+        : message(message)
+      {
+      }
+
+      ~zerror() throw() {  }
+
+      const char* what() const throw() {
+        return message;
+      }
+  };
+
+  class zstream 
+  {
+  public:
+    zstream() : strm(new z_stream)
+    {
+      strm->zalloc = (alloc_func)NULL;
+      strm->zfree = (free_func)NULL;
+      strm->opaque = NULL;
+      inflateInit(strm.get());
+    }
+
+    ~zstream()
+    {
+      inflateEnd(strm.get());
+    }
+
+    uint32_t get_avail_out()
+    {
+      return strm->avail_out;
+    }
+
+    uint32_t get_avail_in()
+    {
+      return strm->avail_in;
+    }
+
+    void set_in(Bytef* b, uint32_t len)
+    {
+      strm->next_in = b;
+      strm->avail_in = len;
+    }
+
+    void set_out(Bytef* b, uint32_t len)
+    {
+      strm->next_out = b;
+      strm->avail_out = len;
+    }
+
+    bool in_empty()
+    {
+      return strm->avail_in <= 0;
+    }
+
+    bool out_empty()
+    {
+      return strm->avail_out <= 0;
+    }
+
+    void inflate()
+    {
+      int status = ::inflate(strm.get(), Z_NO_FLUSH);
+
+      switch (status) {
+        case Z_ERRNO:
+          throw zerror("failed to inflate data (Z_ERRNO)");
+        case Z_STREAM_ERROR:
+          throw zerror("failed to inflate data (Z_STREAM_ERROR)");
+        case Z_DATA_ERROR:
+          throw zerror("failed to inflate data (Z_DATA_ERROR)");
+        case Z_MEM_ERROR:
+          throw zerror("failed to inflate data (Z_MEM_ERROR)");
+        case Z_BUF_ERROR:
+          throw zerror("failed to inflate data (Z_BUF_ERROR)");
+        case Z_VERSION_ERROR:
+          throw zerror("failed to inflate data (Z_VERSION_ERROR)");
+        default:
+          break;
+      }
+    }
+  private:
+    boost::scoped_ptr<z_stream> strm;
+  };
+
   region::region(fs::path path)
       : path(path), in_buffer(CHUNK_MAX)
   {
@@ -97,63 +187,33 @@ namespace mc {
 
     fp.close();
 
-    z_stream strm;
-
-    strm.zalloc = (alloc_func)NULL;
-    strm.zfree = (free_func)NULL;
-    strm.opaque = NULL;
-
-    strm.next_in = reinterpret_cast<Bytef*>(in_buffer.get());
-    strm.avail_in = len - 1;
-
-    inflateInit(&strm);
-
-    strm.avail_out = buffer.get_size();
+    zstream strm;
 
     size_t pos = 0;
 
+    strm.set_in(reinterpret_cast<Bytef*>(in_buffer.get()), len - 1);
+    strm.set_out(reinterpret_cast<Bytef*>(buffer.get() + pos), buffer.get_size());
+
     do {
-      strm.next_out = reinterpret_cast<Bytef*>(buffer.get() + pos);
-
-      int status = inflate(&strm, Z_NO_FLUSH);
-
-      switch (status) {
-        case Z_ERRNO:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_ERRNO)");
-        case Z_STREAM_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_STREAM_ERROR)");
-        case Z_DATA_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_DATA_ERROR)");
-        case Z_MEM_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_MEM_ERROR)");
-        case Z_BUF_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_BUF_ERROR)");
-        case Z_VERSION_ERROR:
-          inflateEnd(&strm);
-          throw bad_region(path, "failed to inflate data (Z_VERSION_ERROR)");
-        default:
-          break;
+      try {
+        strm.inflate();
+      } catch(const zerror& e) {
+        throw bad_region(path, e.what());
       }
 
-      if (strm.avail_in > 0) {
-        strm.avail_out = buffer.expand();
+      if (!strm.in_empty()) {
+        uint32_t expanded = buffer.expand();
 
-        if (strm.avail_out == 0) {
+        if (expanded == 0) {
           throw bad_region(path, "region output buffer requires too much memory");
         }
 
-        pos += strm.avail_out;
+        pos += expanded;
+        strm.set_out(reinterpret_cast<Bytef*>(buffer.get() + pos), expanded);
       }
-    } while(strm.avail_in > 0);
+    } while(!strm.in_empty());
 
-    inflateEnd(&strm);
-
-    return buffer.get_size() - strm.avail_out;
+    return buffer.get_size() - strm.get_avail_out();
   }
 
   fs::path region::get_path() {

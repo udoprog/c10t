@@ -1,0 +1,18 @@
+ARCH=x86
+OS=linux
+
+TARGET=i686-pc-linux-gnu
+
+LDFLAGS=-pthread -static -static-libgcc
+BIN=c10t
+
+include config.mk
+
+local-package:
+	cp LICENSE.txt ${PACKAGE}/LICENSE.txt
+	cp README.md ${PACKAGE}/README
+	cp -R scripts/google-api ${PACKAGE}/
+	cp -R res/libc10t.js ${PACKAGE}/
+	cp -R res/example.html ${PACKAGE}/
+	make ${PACKAGE}.tar.gz
+	make ${PACKAGE}.tar.gz.sha1

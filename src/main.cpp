@@ -25,6 +25,7 @@
 #include "image/image_base.hpp"
 #include "image/memory_image.hpp"
 #include "image/cached_image.hpp"
+#include "image/algorithms.hpp"
 
 #include "threads/renderer.hpp"
 #include "2d/cube.hpp"
@@ -46,6 +47,7 @@
 #include "engine/oblique_engine.hpp"
 #include "engine/obliqueangle_engine.hpp"
 #include "engine/isometric_engine.hpp"
+#include "engine/fatiso_engine.hpp"
 
 #include "main_utils.hpp"
 
@@ -93,7 +95,7 @@ struct rotated_level_info {
   }
 };
 
-void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
+void cout_progress_n(pos_t i, pos_t all) {
   if (i == all) {
     out << setw(6) << "done!" << endl;
   }
@@ -108,7 +110,7 @@ void cout_progress_n(image_base::pos_t i, image_base::pos_t all) {
   } 
 }
 
-void cout_progress_ionly_n(image_base::pos_t i, image_base::pos_t all) {
+void cout_progress_ionly_n(pos_t i, pos_t all) {
   if (all == 1) {
     out << setw(6) << "done!" << endl;
   }
@@ -144,7 +146,7 @@ inline void populate_markers(settings_t& s, json::array* array, boost::shared_pt
     
     mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
-    image_base::pos_t x, y;
+    pos_t x, y;
     
     engine->wp2pt(coord.get_x(), m.y, coord.get_z(), x, y);
 
@@ -167,7 +169,7 @@ inline void populate_markers(settings_t& s, json::array* array, boost::shared_pt
   // don't bother to check for errors right now, but could be done using the "fail" accessor.
 }
 
-inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
+inline void overlay_markers(settings_t& s, image_ptr work_in_progress, engine_ptr engine, boost::ptr_vector<marker>& markers) {
   memory_image positionmark(5, 5);
   positionmark.fill(s.ttf_color);
   
@@ -182,18 +184,34 @@ inline void overlay_markers(settings_t& s, boost::shared_ptr<image_base> all, bo
     
     mc::utils::level_coord coord = mc::utils::level_coord(m.x, m.z).rotate(s.rotation);
     
-    image_base::pos_t x, y;
+    pos_t x, y;
     
     engine->wp2pt(coord.get_x(), m.y, coord.get_z(), x, y);
     
-    m.font.draw(*all, m.text, x + 5, y);
+    m.font.draw(work_in_progress, m.text, x + 5, y);
     //all->safe_composite(x - 3, y - 3, positionmark);
   }
 }
 
+bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
+{
+  int x = coord.get_x() - s.center_x;
+  int z = coord.get_z() - s.center_z;
+
+  uint64_t x2 = x * x;
+  uint64_t z2 = z * z;
+  uint64_t r2 = s.max_radius * s.max_radius;
+    
+  return x < s.min_x
+      || x > s.max_x
+      || z < s.min_z
+      || z > s.max_z
+      || x2 + z2 >= r2;
+}
+
 template<typename T>
 void cout_dot(T total) {
-  if (total == 0) out << " done!";
+  if ( (unsigned int) total == 0) out << " done!";
   else out << "." << flush;
 }
 
@@ -209,53 +227,272 @@ void cout_mb_endl(streampos progress, streampos total) {
   out << " " << setw(8) << fixed << float(progress) / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
+/**
+ * Helper blocks
+ */
+
+/**
+ * Load all warps from a database and push them to a container.
+ */
+template<typename T>
+inline void load_warps(fs::path warps_path, T& warps)
+{
+  out << "warps: " << warps_path << ": " << flush;
+  
+  warps_db wdb(warps_path);
+  
+  try {
+    wdb.read(warps);
+    out << warps.size() << " warp(s) OK" << endl;
+  } catch(warps_db_exception& e) {
+    out << e.what() << endl;
+  }
+}
+
+/**
+ * Load all players from a database and push them to a container.
+ */
+template<typename T, typename S>
+inline void load_players(fs::path show_players_path, T& players, S& player_set)
+{
+  out << "players: " << show_players_path << ": " << flush;
+  
+  players_db pdb(show_players_path, player_set);
+
+  std::vector<player> all_players;
+  
+  try {
+    pdb.read(all_players);
+  } catch(players_db_exception& e) {
+    out << " " << e.what() << endl;
+    return;
+  }
+
+  out << all_players.size() << " player(s) found" << endl;
+
+  BOOST_FOREACH(player p, all_players) {
+    if (p.error) {
+      out << "  " << p.path << ":" << p.error_where << ": " << p.error_why << endl;
+      continue;
+    }
+
+    players.push_back(p);
+  }
+
+  out << "  " << players.size() << " player(s) OK" << endl;
+}
+
+/**
+ * Push all players to a standard type of marker.
+ */
+template<typename P, typename T>
+inline void push_player_markers(settings_t& s, text::font_face base_font, P& players, T& markers)
+{
+  text::font_face player_font = base_font;
+  
+  if (s.has_player_color) {
+    player_font.set_color(s.player_color);
+  }
+  
+  BOOST_FOREACH(player p, players) {
+    if (p.zPos / mc::MapZ < s.min_z) continue;
+    if (p.zPos / mc::MapZ > s.max_z) continue;
+    if (p.xPos / mc::MapX < s.min_x) continue;
+    if (p.xPos / mc::MapX > s.max_x) continue;
+    
+    markers.push_back(new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos));
+  }
+}
+
+/**
+ * Push all signs to a standard type of marker.
+ */
+template<typename S, typename T>
+inline void push_sign_markers(settings_t& s, text::font_face base_font, S& signs, T& markers)
+{
+  text::font_face sign_font = base_font;
+  
+  if (s.has_sign_color) {
+    sign_font.set_color(s.sign_color);
+  }
+  
+  BOOST_FOREACH(mc::marker lm, signs) {
+    if (!s.show_signs_filter.empty() && lm.text.find(s.show_signs_filter) == string::npos) {
+      continue;
+    }
+    
+    markers.push_back(new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z));
+  }
+}
+
+/**
+ * Push all coordinates to a standard type of marker.
+ */
+template<typename L, typename T>
+inline void push_coordinate_markers(settings_t& s, text::font_face base_font, mc::world& world, L& levels, T& markers)
+{
+  text::font_face coordinate_font = base_font;
+  
+  if (s.has_coordinate_color) {
+    coordinate_font.set_color(s.coordinate_color);
+  }
+
+  BOOST_FOREACH(rotated_level_info rl, levels) {
+    mc::utils::level_coord c = rl.coord;
+    boost::shared_ptr<mc::level_info> l = rl.level;
+    
+    if (c.get_z() - 4 < world.min_z) continue;
+    if (c.get_z() + 4 > world.max_z) continue;
+    if (c.get_x() - 4 < world.min_x) continue;
+    if (c.get_x() + 4 > world.max_x) continue;
+    if (c.get_z() % 10 != 0) continue;
+    if (c.get_x() % 10 != 0) continue;
+    std::stringstream ss;
+    
+    ss << "(" << l->get_x() * mc::MapX << ", " << l->get_z() * mc::MapZ << ")";
+    markers.push_back(new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ));
+  }
+}
+
+/**
+ * Push all warps to a standard type of marker.
+ */
+template<typename W, typename T>
+inline void push_warp_markers(settings_t& s, text::font_face base_font, W& warps, T& markers)
+{
+  text::font_face warp_font = base_font;
+  
+  if (s.has_warp_color) {
+    warp_font.set_color(s.warp_color);
+  }
+  
+  /* initial code for projecting warps */
+  BOOST_FOREACH(warp w, warps) { 
+    if (w.zPos / mc::MapZ < s.min_z) continue;
+    if (w.zPos / mc::MapZ > s.max_z) continue;
+    if (w.xPos / mc::MapX < s.min_x) continue;
+    if (w.xPos / mc::MapX > s.max_x) continue;
+    
+    marker *m = new marker(w.name, "warp", warp_font, w.xPos, w.yPos, w.zPos);
+    markers.push_back(m);
+  }
+}
+
+template<typename M>
+void write_json_file(settings_t& s, engine_ptr engine, mc::world& world, M& markers)
+{
+  // calculate world center
+  engine_base::pos_t center_x, center_y;
+  engine->wp2pt(0, 0, 0, center_x, center_y);
+
+  json::object file;
+  json::object* json_static = new json::object;
+  
+  json_static->put("MapX", new json::number(mc::MapX));
+  json_static->put("MapY", new json::number(mc::MapY));
+  json_static->put("MapZ", new json::number(mc::MapZ));
+  
+  file.put("st", json_static);
+  
+  json::object* json_world = new json::object;
+  
+  json_world->put("cx", new json::number(center_x));
+  json_world->put("cy", new json::number(center_y));
+  json_world->put("dx", new json::number((world.diff_x + 1) * mc::MapX));
+  json_world->put("dz", new json::number((world.diff_z + 1) * mc::MapZ));
+  json_world->put("dy", new json::number(mc::MapY));
+  json_world->put("mn_x", new json::number(world.min_x * 16));
+  json_world->put("mn_z", new json::number(world.min_z * 16));
+  json_world->put("mx_x", new json::number(world.max_x * 16));
+  json_world->put("mx_z", new json::number(world.max_z * 16));
+  json_world->put("mode", new json::number(s.mode));
+  json_world->put("split_base", new json::number(s.split_base));
+  json_world->put("split", new json::number(s.split.size()));
+  
+  file.put("world", json_world);
+  
+  json::array* markers_array = new json::array;
+  populate_markers(s, markers_array, engine, markers);
+  file.put("markers", markers_array);
+  
+  if (s.write_json) {
+    out << "Writing json information: " << s.write_json_path.string() << endl;
+    std::ofstream of(s.write_json_path.string().c_str());
+    of << file;
+    of.close();
+  }
+
+  if (s.write_js) {
+    out << "Writing js (javascript `var c10t_json') information: " << s.write_js_path.string() << endl;
+    std::ofstream of(s.write_js_path.string().c_str());
+    of << "var c10t_json = " << file << ";";
+    of.close();
+  }
+}
+
+/**
+ * Generate a map
+ *
+ * This is one of the main methods, it does the following steps.
+ *
+ * - Look for specificed databases.
+ * - Scan the world for regions containing levels.
+ * - Depending on settings, choose which rendering engine to use.
+ * - Setup work-in-progress image to required type depending on predicted  memory
+ *   use.
+ * - Perform rendering phase where engine takes level information, and produces
+ *   image_operations, composite all operations to the work-in-progress image.
+ *   Try to distribute work evenly among threads.
+ *
+ */
 bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   out << endl << "Generating PNG Map" << endl << endl;
   
-  out << "Threads: " << s.threads << std::endl;
-  
+  // all marker source information.
   std::vector<player> players;
   std::vector<warp> warps;
-  list<rotated_level_info> levels;
-  
-  bool any_db =
-    s.show_players
-    || s.show_signs
-    || s.show_coordinates
-    || s.show_warps;
+  std::vector<mc::marker> signs;
 
-  bool write_markers = 
-    s.write_json || s.write_js;
+  // this is where the actual markers will be populated later.
+  boost::ptr_vector<marker> markers;
   
-  if (any_db) {
+  // symbolic definition of a world.
+  mc::world world(world_path);
+
+  // where to store level info
+  std::list<rotated_level_info> levels;
+  
+  // this is the rendering engine that will be used.
+  engine_ptr engine;
+    
+  // image to work against, could be backed by hard drive, or purely in memory.
+  image_ptr work_in_progress;
+  
+  /**
+   * Any of these options will trigger the database blocks to run.
+   */
+  bool use_any_database =
+          s.show_players
+       || s.show_signs
+       || s.show_coordinates
+       || s.show_warps;
+
+  bool output_json = 
+    s.write_json || s.write_js;
+
+  /*
+   * Look for specificed databases.
+   */
+  if (use_any_database)
+  {
     out << " --- LOOKING FOR DATABASES --- " << endl;
     
     if (s.show_warps) {
-      out << "warps: " << s.show_warps_path << ": " << flush;
-      
-      warps_db wdb(s.show_warps_path);
-      
-      try {
-        wdb.read(warps);
-        out << warps.size() << " warp(s) OK" << endl;
-      } catch(warps_db_exception& e) {
-        out << e.what() << endl;
-      }
+      load_warps(s.show_warps_path, warps);
     }
     
     if (s.show_players) {
-      fs::path show_players_path = world_path / "players";
-      
-      out << "players: " << show_players_path << ": " << flush;
-      
-      players_db pdb(show_players_path, s.show_players_set);
-      
-      try {
-        pdb.read(players);
-        out << players.size() << " player(s) OK" << endl;
-      } catch(players_db_exception& e) {
-        out << " " << e.what() << endl;
-      }
+      load_players(world_path / "players", players, s.show_players_set);
     }
 
     if (s.show_signs) {
@@ -263,17 +500,18 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     }
 
     if (s.show_coordinates) {
-      out << "will store shunk coordinates";
+      out << "will store chunk coordinates";
     }
   }
-  
+    
   {
     out << " --- SCANNING WORLD DIRECTORY --- " << endl;
     out << "world: " << world_path.string() << endl;
   }
   
-  mc::world world(world_path);
-  
+  /*
+   * Scan the world for regions containing levels.
+   */
   {
     nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
     mc::region_iterator iterator = world.get_iterator();
@@ -301,24 +539,9 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         
         mc::utils::level_coord coord = level->get_coord();
         
-        uint64_t x2 = coord.get_x() * coord.get_x();
-        uint64_t z2 = coord.get_z() * coord.get_z();
-        uint64_t r2 = s.max_radius * s.max_radius;
-        
-        bool out_of_range = 
-            coord.get_x() < s.min_x
-            || coord.get_x() > s.max_x
-            || coord.get_z() < s.min_z
-            || coord.get_z() > s.max_z
-            || x2 + z2 >= r2;
-        
-        if (out_of_range) {
+        if (coord_out_of_range(s, coord)) {
           ++filtered_levels;
-
-          if (s.debug) {
-            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-          }
-
+          out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
           continue;
         }
         
@@ -359,100 +582,145 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     out << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
   }
   
-  boost::shared_ptr<engine_base> engine;
-  
+  /**
+   * Depending on settings, choose which rendering engine to use.
+   */
   switch (s.mode) {
-    case Top: engine.reset(new topdown_engine(s, world)); break;
-    case Oblique: engine.reset(new oblique_engine(s, world)); break;
-    case ObliqueAngle: engine.reset(new obliqueangle_engine(s, world)); break;
-    case Isometric: engine.reset(new isometric_engine(s, world)); break;
-  }
-  
-  image_base::pos_t i_w, i_h;
-  image_base::pos_t l_w, l_h;
-  
-  engine->get_boundaries(i_w, i_h);
-  engine->get_level_boundaries(l_w, l_h);
-  
-  image_base::pos_t mem_x = i_w * i_h * 4 * sizeof(uint8_t);
-  float memory_usage_mb = float(mem_x) / 1000000.0f; 
-  float memory_limit_mb = float(s.memory_limit) / 1000000.0f;
-  
-  boost::shared_ptr<image_base> all;
-  
-  if (mem_x >= s.memory_limit) {
-    {
-      out << " --- BUILDING SWAP --- " << endl;
-      out << "NOTE: A swap file is being built to accommodate high memory usage" << endl;
-      out << "swap file: " << s.swap_file << endl;
+    case Top:
+      engine.reset(new topdown_engine(s, world));
+      break;
 
-      out << "swap size: " << memory_usage_mb << " MB" << endl;
-      out << "memory limit: " << memory_limit_mb << endl;
-    }
-    
-    cached_image* image;
-    
-    try {
-      image = new cached_image(s.swap_file, i_w, i_h, l_w, l_h);
-    } catch(std::ios::failure& e) {
-      if (errno != 0) {
-        error << s.swap_file << ": " << strerror(errno);
-      } else {
-        error << s.swap_file << ": " << e.what() << ": could not open file";
-      }
-      
-      return false;
-    }
-    
-    all.reset(image);
-    
-    nonstd::limited<streampos> c(1024 * 1024, cout_dot<streampos>, cout_mb_endl);
-    
-    try {
-      image->build(c);
-    } catch(std::ios::failure& e) {
-      if (errno != 0) {
-        error << s.swap_file << ": could not build cache: " << strerror(errno);
-      } else {
-        error << s.swap_file << ": could not build cache: " << e.what();
-      }
-      
-      return false;
-    }
-  } else {
-    {
-      out << " --- ALLOCATING MEMORY --- " << endl;
-      out << "memory usage: " << memory_usage_mb << " MB" << endl;
-      out << "memory limit: " << memory_limit_mb << " MB" << endl;
-    }
-    
-    all.reset(new memory_image(i_w, i_h));
+    case Oblique:
+      engine.reset(new oblique_engine(s, world));
+      break;
+
+    case ObliqueAngle:
+      engine.reset(new obliqueangle_engine(s, world));
+      break;
+
+    case Isometric:
+      engine.reset(new isometric_engine(s, world));
+      break;
+
+    case FatIso:
+      engine.reset(new fatiso_engine(s, world));
+      break;
   }
   
-  unsigned int world_size = levels.size();
+  /**
+   * Setup work-in-progress image to required type depending on predicted memory
+   * use.
+   */
+  {
+    pos_t image_width, image_height;
+    pos_t level_width, level_height;
+    
+    engine->get_boundaries(image_width, image_height);
+    engine->get_level_boundaries(level_width, level_height);
+    
+    pos_t memory_usage = (image_width * image_height * sizeof(color)) / 0x100000;
+    
+    if (memory_usage >= s.memory_limit) {
+      {
+        out << " --- BUILDING SWAP --- " << endl;
+        out << "NOTE: A swap file is being built to accommodate high memory usage" << endl;
+        out << "swap file: " << s.swap_file << endl;
+
+        out << "swap size: " << memory_usage << " MB" << endl;
+        out << "memory limit: " << s.memory_limit << " MB" << endl;
+      }
+      
+      cached_image* image;
+      
+      try {
+        image = new cached_image(s.swap_file, image_width, image_height, level_width, level_height);
+      } catch(std::ios::failure& e) {
+        if (errno != 0) {
+          error << s.swap_file << ": " << strerror(errno);
+        } else {
+          error << s.swap_file << ": " << e.what() << ": could not open file";
+        }
+        
+        return false;
+      }
+      
+      work_in_progress.reset(image);
+      
+      nonstd::limited<streampos> c(1024 * 1024, cout_dot<streampos>, cout_mb_endl);
+      
+      try {
+        image->build(c);
+      } catch(std::ios::failure& e) {
+        if (errno != 0) {
+          error << s.swap_file << ": could not build cache: " << strerror(errno);
+        } else {
+          error << s.swap_file << ": could not build cache: " << e.what();
+        }
+        
+        return false;
+      }
+    } else {
+      {
+        out << " --- ALLOCATING MEMORY --- " << endl;
+        out << "memory usage: " << memory_usage << " MB" << endl;
+        out << "memory limit: " << s.memory_limit << " MB" << endl;
+      }
+      
+      work_in_progress.reset(new memory_image(image_width, image_height));
+    }
+  }
+
+  /**
+   * Store image limits for cropping.
+   */
+  pos_t im_min_x = numeric_limits<pos_t>::max();
+  pos_t im_min_y = numeric_limits<pos_t>::max();
+  pos_t im_max_x = numeric_limits<pos_t>::min();
+  pos_t im_max_y = numeric_limits<pos_t>::min();
   
-  renderer renderer(s, s.threads, world_size);
-  
-  std::vector<mc::marker> signs;
-  std::list<rotated_level_info>::iterator lvlit = levels.begin();
-  
-  renderer.start();
-  
-  nonstd::limited<unsigned int> c(50, cout_dot<unsigned int>, cout_uintpart_endl);
-  c.set_limit(world_size);
-  
+  /**
+   * Perform rendering phase where engine takes level information, and produces
+   * image_operations, composite all operations to the work-in-progress image.
+   * Try to distribute work evenly among threads.
+   */
   {
     out << " --- RENDERING --- " << endl;
 
+    unsigned int world_size = levels.size();
+  
+    renderer renderer(s, s.threads, world_size);
+
+    /**
+     * The amount of currently enqueued jobs.
+     */
     unsigned int queued = 0;
+
+    /*
+     * prebuffer is the amount of pending jobs that will be given available to
+     * all threads.
+     * As it stands now, all operations must be ordered, but can be rendered
+     * independantly and then sorted.
+     * This is done in steps to minimze memory usage, the size  of the steps steps
+     * are decided by this parameter.
+     */
     unsigned int prebuffer = s.threads * s.prebuffer;
     
-    std::list<render_result> render_results;
-  
     int cache_hits = 0;
-
-    mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
     int failed_levels = 0;
+
+    /**
+     * Define a dynamically growing buffer to read regions in.
+     * Is grown on demand, but never shrunk.
+     */
+    mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
+
+    std::list<render_result> render_results;
+    std::list<rotated_level_info>::iterator lvlit = levels.begin();
+  
+    nonstd::limited<unsigned int> reporter(50, cout_dot<unsigned int>, cout_uintpart_endl);
+    reporter.set_limit(world_size);
+
+    renderer.start();
 
     while (lvlit != levels.end() || render_results.size() > 0) {
       while (queued < prebuffer && lvlit != levels.end()) {
@@ -484,14 +752,21 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
 
       while (render_results.size() > 0) {
         render_results.sort();
-      
+
         BOOST_FOREACH(render_result p, render_results) {
-          c.add(1);
+          reporter.add(1);
 
           try {
-            image_base::pos_t x, y;
+            pos_t x, y;
             engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
-            all->composite(x, y, p.operations);
+
+            // update image limits
+            im_min_x = std::min(im_min_x, x);
+            im_min_y = std::min(im_min_y, y);
+            im_max_x = std::max(im_max_x, x + p.operations->max_x - 1);
+            im_max_y = std::max(im_max_y, y + p.operations->max_y - 1);
+
+            work_in_progress->composite(x, y, p.operations);
           } catch(std::ios::failure& e) {
             out << s.swap_file << ": " << strerror(errno);
             return false;
@@ -508,7 +783,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
 
         if (p.fatal) {
-          c.add(1);
+          reporter.add(1);
           out << p.level->get_path() << ": " << p.fatal_why << endl;
           continue;
         }
@@ -516,8 +791,6 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         if (p.cache_hit) {
           ++cache_hits;
         }
-        
-        ///if (progress_c != NULL) progress_c(i, world_size);
         
         if (p.signs.size() > 0) {
           if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
@@ -528,7 +801,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       }
     }
     
-    c.done(0);
+    reporter.done(0);
 
     if (failed_levels > 0) {
       out << "SEE LOG: " << failed_levels << " level(s) failed!" << endl;
@@ -537,16 +810,24 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     if (s.cache_use) {
       out << "cache_hits: " << cache_hits << "/" << world_size << endl;
     }
+
+    std::cout << "image limits: "
+              << im_min_x << "x" << im_min_y << " to "
+              << im_max_x << "x" << im_max_y <<
+              " will be the cropped image" << endl;
+
+    image_ptr cropped = image::crop(work_in_progress, im_min_x, im_max_x, im_min_y, im_max_y);
+    work_in_progress = cropped;
   }
   
-  //if (progress_c != NULL) progress_c(world_size, world_size);
-  
-  boost::ptr_vector<marker> markers;
-  
-  if (any_db) {
+  if (use_any_database) {
     text::font_face font(s.ttf_path, s.ttf_size, s.ttf_color);
     
-    if (!write_markers) {
+    /*
+     * If we are only going to output json information, do not initialize font.
+     * This will prevent any fonts from actually rendering anything later on.
+     */
+    if (!output_json) {
       try {
         font.init();
       } catch(text::text_error& e) {
@@ -555,170 +836,68 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     }
     
     if (s.show_players) {
-      text::font_face player_font = font;
-      
-      if (s.has_player_color) {
-        player_font.set_color(s.player_color);
-      }
-      
-      std::vector<player>::iterator plit = players.begin();
-      
-      /* initial code for projecting players */
-      for (; plit != players.end(); plit++) { 
-        player p = *plit;
-        
-        if (p.zPos / mc::MapZ < s.min_z) continue;
-        if (p.zPos / mc::MapZ > s.max_z) continue;
-        if (p.xPos / mc::MapX < s.min_x) continue;
-        if (p.xPos / mc::MapX > s.max_x) continue;
-        
-        markers.push_back(new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos));
-      }
+      push_player_markers(s, font, players, markers);
     }
     
     if (s.show_signs && signs.size() > 0) {
-      text::font_face sign_font = font;
-      
-      if (s.has_sign_color) {
-        sign_font.set_color(s.sign_color);
-      }
-      
-      std::vector<mc::marker>::iterator lmit = signs.begin();
-      
-      for (; lmit != signs.end(); lmit++) {
-        mc::marker lm = *lmit;
-        
-        if (!s.show_signs_filter.empty() && lm.text.find(s.show_signs_filter) == string::npos) {
-          continue;
-        }
-        
-        markers.push_back(new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z));
-      }
+      push_sign_markers(s, font, signs, markers);
     }
     
     if (s.show_coordinates) {
-      text::font_face coordinate_font = font;
-      
-      if (s.has_coordinate_color) {
-        coordinate_font.set_color(s.coordinate_color);
-      }
-      
-      for (lvlit = levels.begin(); lvlit != levels.end(); lvlit++) {
-        rotated_level_info rl = *lvlit;
-        mc::utils::level_coord c = rl.coord;
-        boost::shared_ptr<mc::level_info> l = rl.level;
-        
-        if (c.get_z() - 4 < world.min_z) continue;
-        if (c.get_z() + 4 > world.max_z) continue;
-        if (c.get_x() - 4 < world.min_x) continue;
-        if (c.get_x() + 4 > world.max_x) continue;
-        if (c.get_z() % 10 != 0) continue;
-        if (c.get_x() % 10 != 0) continue;
-        std::stringstream ss;
-        
-        ss << "(" << l->get_x() * mc::MapX << ", " << l->get_z() * mc::MapZ << ")";
-        markers.push_back(new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ));
-      }
+      push_coordinate_markers(s, font, world, levels, markers);
     }
     
     if (s.show_warps) {
-      text::font_face warp_font = font;
-      
-      if (s.has_warp_color) {
-        warp_font.set_color(s.warp_color);
-      }
-      
-      std::vector<warp>::iterator wit = warps.begin();
-      
-      /* initial code for projecting warps */
-      for (; wit != warps.end(); wit++) { 
-        warp w = *wit;
-        
-        if (w.zPos / mc::MapZ < s.min_z) continue;
-        if (w.zPos / mc::MapZ > s.max_z) continue;
-        if (w.xPos / mc::MapX < s.min_x) continue;
-        if (w.xPos / mc::MapX > s.max_x) continue;
-        
-        marker *m = new marker(w.name, "warp", warp_font, w.xPos, w.yPos, w.zPos);
-        markers.push_back(m);
-      }
-    }
-  }
-  
-  engine_base::pos_t center_x, center_y;
-  engine->wp2pt(0, 0, 0, center_x, center_y);
-  
-  if (write_markers) {
-    if (!any_db) {
-      hints.push_back("Use `--write-json' in combination with `--show-*' in order to write different types of markers to file");
-    }
-    
-    json::object file;
-    json::object* json_static = new json::object;
-    
-    json_static->put("MapX", new json::number(mc::MapX));
-    json_static->put("MapY", new json::number(mc::MapY));
-    json_static->put("MapZ", new json::number(mc::MapZ));
-    
-    file.put("st", json_static);
-    
-    json::object* json_world = new json::object;
-    
-    json_world->put("cx", new json::number(center_x));
-    json_world->put("cy", new json::number(center_y));
-    json_world->put("dx", new json::number((world.diff_x + 1) * mc::MapX));
-    json_world->put("dz", new json::number((world.diff_z + 1) * mc::MapZ));
-    json_world->put("dy", new json::number(mc::MapY));
-    json_world->put("mn_x", new json::number(world.min_x * 16));
-    json_world->put("mn_z", new json::number(world.min_z * 16));
-    json_world->put("mx_x", new json::number(world.max_x * 16));
-    json_world->put("mx_z", new json::number(world.max_z * 16));
-    json_world->put("mode", new json::number(s.mode));
-    
-    file.put("world", json_world);
-    
-    json::array* markers_array = new json::array;
-    populate_markers(s, markers_array, engine, markers);
-    file.put("markers", markers_array);
-    
-    if (s.write_json) {
-      out << "Writing json information: " << s.write_json_path.string() << endl;
-      std::ofstream of(s.write_json_path.string().c_str());
-      of << file;
-      of.close();
+      push_warp_markers(s, font, warps, markers);
     }
 
-    if (s.write_js) {
-      out << "Writing js (javascript `var c10t_json') information: " << s.write_js_path.string() << endl;
-      std::ofstream of(s.write_js_path.string().c_str());
-      of << "var c10t_json = " << file << ";";
-      of.close();
+    /**
+     * Adjust markers to image cropping.
+     */
+    BOOST_FOREACH(marker m, markers) {
+      m.x -= im_min_x;
+      m.y -= im_min_y;
     }
   }
-  else {
-    overlay_markers(s, all, engine, markers);
+  
+  if (output_json) {
+    if (!use_any_database) {
+      hints.push_back("Use `--write-json' in combination with `--show-*'"
+          " in order to write different types of markers to file");
+    }
+    
+    write_json_file(s, engine, world, markers);
   }
+  else {
+    overlay_markers(s, work_in_progress, engine, markers);
+  }
+
+  engine_base::pos_t center_x, center_y;
+  engine->wp2pt(0, 0, 0, center_x, center_y);
   
   if (s.use_split) {
     out << " --- SAVING MULTIPLE IMAGES --- " << endl;
 
     int i = 0;
 
-    image_base::image_ptr target;
+    image_ptr target;
 
     BOOST_FOREACH(unsigned int split_i, s.split) {
-      if (!target) {
-        target.reset(new memory_image(split_i, split_i));
+      if (!target && s.split_base > 0) {
+        target.reset(new memory_image(s.split_base, s.split_base));
       }
 
-      std::map<point2, image_base*> parts = image_split(all.get(), split_i);
-      
-      out << "Level " << i << ": splitting into " << parts.size() << " image on " << split_i << "px" << endl;
+      std::map<point2, image_base*> parts;
+
+      image::split(work_in_progress, split_i, parts);
+
+      out << "Level " << i << ": splitting into " << parts.size()
+          << " image on " << split_i << "px" << endl;
 
       for (std::map<point2, image_base*>::iterator it = parts.begin(); it != parts.end(); it++) {
         const point2 p = it->first;
-        boost::scoped_ptr<image_base> img(it->second);
-        
+        image_ptr img(it->second);
+
         stringstream ss;
         ss << boost::format(output_path.string()) % i % p.x % p.y;
         fs::path path(ss.str());
@@ -735,8 +914,13 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         
         std::string path_str(path.string());
         
-        target->clear();
-        img->resize(target);
+        if (s.split_base > 0) {
+          target->clear();
+          img->resize(target);
+        }
+        else {
+          target = img;
+        }
 
         if (!target->save<png_format>(path_str, opts)) {
           out << path << ": Could not save image";
@@ -761,7 +945,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     opts.center_y = center_y;
     opts.comment = C10T_COMMENT;
     
-    if (!all->save<png_format>(output_path.string(), opts)) {
+    if (!work_in_progress->save<png_format>(output_path.string(), opts)) {
       out << output_path << ": Could not save image";
       error << strerror(errno);
       return false;
@@ -796,18 +980,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
     out << " --- LOOKING FOR DATABASES --- " << endl;
     
     if (s.show_players) {
-      fs::path show_players_path = world_path / "players";
-      
-      out << "players: " << show_players_path << ": " << flush;
-      
-      players_db pdb(show_players_path, s.show_players_set);
-      
-      try {
-        pdb.read(players);
-        out << players.size() << " player(s) OK" << endl;
-      } catch(players_db_exception& e) {
-        out << " " << e.what() << endl;
-      }
+      load_players(world_path / "players", players, s.show_players_set);
     }
   }
   
@@ -841,28 +1014,15 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
 
         mc::utils::level_coord coord = level->get_coord();
 
-        uint64_t x2 = coord.get_x() * coord.get_x();
-        uint64_t z2 = coord.get_z() * coord.get_z();
-        uint64_t r2 = s.max_radius * s.max_radius;
-          
-        bool out_of_range = 
-              coord.get_x() < s.min_x
-              || coord.get_x() > s.max_x
-              || coord.get_z() < s.min_z
-              || coord.get_z() > s.max_z
-              || x2 + z2 >= r2;
-          
-        if (out_of_range) {
+        if (coord_out_of_range(s, coord)) {
           ++filtered_levels;
-
-          if (s.debug) {
-            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-          }
-
+          out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
           continue;
         }
-        
+
         mc::level level_data(level);
+
+        world.update(level->get_coord());
         
         try {
           level_data.read(region_buffer);
@@ -871,8 +1031,6 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
           out_log << level->get_path() << ": " << e.what();
           continue;
         }
-
-        world.update(level->get_coord());
 
         boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
 
@@ -978,6 +1136,7 @@ int do_help() {
     << "  -q, --oblique             - Oblique rendering                                " << endl
     << "  -y, --oblique-angle       - Oblique angle rendering                          " << endl
     << "  -z, --isometric           - Isometric rendering                              " << endl
+    << "  -Z, --fatiso              - A fat isometric rendering (very slow)            " << endl
     << "  -r <degrees>              - rotate the rendering 90, 180 or 270 degrees CW   " << endl
     << endl
     << "  -n, --night               - Night-time rendering mode                        " << endl
@@ -1007,6 +1166,8 @@ int do_help() {
     << "  -R, --radius <int>        - Limit render to a specific radius, useful when   " << endl
     << "                              your map is absurdly large and you want a 'fast' " << endl
     << "                              limiting option.                                 " << endl
+    << "      --center <x>,<z>      - Offset the map centering on limits by chunks <x> " << endl
+    << "                              and <z>.                                         " << endl
     << endl
     << "  -N, --no-check            - Ignore missing <world>/level.dat                 " << endl
        /*******************************************************************************/
@@ -1034,7 +1195,7 @@ int do_help() {
     /*<< "  --side <set>              - Specify the side color for a specific block id   " << endl
     << "                              this uses the same format as '-B' only the color " << endl
     << "                              is applied to the side of the block              " << endl*/
-    << "  -p, --split "px1 px2 .."  - Split the render into parts which must be pxX    " << endl
+    << "  -p, --split 'px1 px2 ..'  - Split the render into parts which must be pxX    " << endl
     << "                              pixels squared. `output' name must contain three " << endl
     << "                              format specifiers `%d' for `level' x and y       " << endl
     << "                              position. Each image will be resized to the      " << endl
@@ -1161,6 +1322,13 @@ int main(int argc, char *argv[]){
       return do_help();
     case ListColors:
       return do_colors();
+    case WritePalette:
+      if (!do_write_palette(s, s.palette_write_path)) {
+        goto exit_error;
+      }
+
+      out << "Successfully wrote palette to " << s.palette_write_path << endl;
+      return 0;
     case None:
       error << "No action specified, please type `c10t -h' for help";
       goto exit_error;
@@ -1193,14 +1361,6 @@ int main(int argc, char *argv[]){
       out << "Caching to directory: " << s.cache_dir << std::endl;
       out << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")  << std::endl;
     }
-  }
-  
-  if (!s.palette_write_path.empty()) {
-    if (!do_write_palette(s, s.palette_write_path)) {
-      goto exit_error;
-    }
-
-    out << "Sucessfully wrote palette to " << s.palette_write_path << endl;
   }
   
   if (!s.palette_read_path.empty()) {

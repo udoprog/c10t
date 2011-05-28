@@ -4,7 +4,9 @@
 #define CACHED_IMAGE
 
 #include <fstream>
+#include <cstring>
 
+#include <boost/numeric/conversion/cast.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/filesystem.hpp>
 
@@ -41,8 +43,38 @@ public:
   /**
    * Will build the cache from scratch, filling it with null, which coneniently fits
    * with black transparent colors.
+   *
+   * @reporter Any type which supports 'set_limit', 'add' and 'done' functions.
    */
-  void build(nonstd::reporting<std::streampos>& reporter);
+  template<typename R>
+  void build(R& reporter)
+  {
+    using namespace ::std;
+    
+    streampos total =
+      boost::numeric_cast<streampos>(get_width()) *
+      boost::numeric_cast<streampos>(get_height()) *
+      COLOR_TYPE;
+    
+    streampos written = 0;
+    
+    streampos write_size = WRITE_SIZE;
+    
+    boost::scoped_array<char> nil(new char[write_size]);
+    ::memset(nil.get(), 0x0, write_size);
+    
+    reporter.set_limit(total);
+    
+    while (written < total) {
+      streampos write = min(total, write_size);
+      fs.write(nil.get(), write);
+      written += write;
+      
+      reporter.add(write);
+    }
+    
+    reporter.done(0);
+  }
   
   void set_pixel(pos_t x, pos_t y, color&);
   void get_pixel(pos_t x, pos_t y, color&);

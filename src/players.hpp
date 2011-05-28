@@ -33,7 +33,9 @@ public:
   fs::path path;
   std::string name;
   
-  bool grammar_error;
+  bool error;
+  size_t error_where;
+  std::string error_why;
   bool in_pos;
   int pos_c;
   nbt::Int xPos, yPos, zPos;
@@ -47,7 +49,7 @@ class players_db {
     const std::set<std::string> filter_set;
   public:
     players_db(const fs::path path, std::set<std::string> set) : path(path), filter_set(set) {}
-    void read(std::vector<player>&) const throw(players_db_exception);
+    void read(std::vector<player>&) const;
 };
 
 #endif /* _PLAYERS_H_ */

@@ -12,10 +12,10 @@ LDFLAGS+="/opt/local/lib/libboost_system-mt.a"
 LDFLAGS+="/opt/local/lib/libboost_filesystem-mt.a"
 LDFLAGS+="/opt/local/lib/libfreetype.a"
 DIST=c10t
-TARGET=c10t
+BIN=c10t
 TARGET_DEBUG=c10t-debug
 
-include dist/config.mk
+include config.mk
 
 local-package:
 	cp LICENSE.txt ${PACKAGE}/LICENSE.txt
@@ -26,3 +26,4 @@ local-package:
 	
 	zip -r ${PACKAGE}-${OS}-${ARCH}.zip ${PACKAGE}
 	mv ${PACKAGE}-${OS}-${ARCH}.zip ${BUILD}/${PACKAGE}-${OS}-${ARCH}.zip
+	sha1sum ${BUILD}/${PACKAGE}-${OS}-${ARCH}.zip > ${BUILD}/${PACKAGE}-${OS}-${ARCH}.zip.sha1

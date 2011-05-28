@@ -6,19 +6,21 @@
 #include <cstdlib>
 #include <map>
 
-#include "image/image_operations.hpp"
-#include "image/color.hpp"
-#include "2d/cube.hpp"
-
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace fs = boost::filesystem;
+#include "image/image_operations.hpp"
+#include "image/color.hpp"
 
-class image_base {
-public:
-  typedef uint64_t pos_t;
-  typedef boost::shared_ptr<image_base> image_ptr;
+#include "2d/cube.hpp"
+
+class image_base;
+
+typedef boost::shared_ptr<image_base> image_ptr;
+typedef uint64_t pos_t;
+
+class image_base
+{
 protected:
   pos_t w, h;
 public:
@@ -39,7 +41,7 @@ public:
   inline pos_t get_width() { return w; };
   inline pos_t get_height() { return h; };
   
-  void composite(int xoffset, int yoffset, boost::shared_ptr<image_operations> oper);
+  void composite(int xoffset, int yoffset, image_operations_ptr oper);
   
   inline std::streampos get_offset(std::streampos x, std::streampos y) {
     std::streampos width = get_width();
@@ -68,7 +70,5 @@ public:
   virtual void set_line(pos_t y, pos_t offset, pos_t w, color*) {};
   virtual void align(pos_t x, pos_t y, pos_t w, pos_t h) {};
 };
-
-std::map<point2, image_base*> image_split(image_base* base, int pixels);
 
 #endif /* IMAGE_BASE */

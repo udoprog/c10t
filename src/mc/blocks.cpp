@@ -58,6 +58,7 @@ namespace mc {
     MaterialName[Bed] = "Bed";
     MaterialName[PoweredRail] = "PoweredRail";
     MaterialName[DetectorRail] = "DetectorRail";
+    MaterialName[TallGrass] = "TallGrass";
     MaterialName[Wool] = "Wool";
     MaterialName[YellowFlower] = "YellowFlower";
     MaterialName[RedRose] = "RedRose";
@@ -147,6 +148,7 @@ namespace mc {
     MaterialColor[Bed] = color(150,0,0,255);
     MaterialColor[PoweredRail] = color(120, 120, 120, 128);
     MaterialColor[DetectorRail] = MaterialColor[PoweredRail];
+    MaterialColor[TallGrass] = MaterialColor[Crops];
     MaterialColor[YellowFlower] = color(255,255,0,255);
     MaterialColor[RedRose] = color(255,0,0,255);
     MaterialColor[BrownMushroom] = color(0x00, 0x00, 0x00, 0x00);
@@ -235,6 +237,7 @@ namespace mc {
     MaterialSideColor[Bed] = color(MaterialColor[Bed]);
     MaterialSideColor[PoweredRail] = color(255,220,0,128);
     MaterialSideColor[DetectorRail] = color(230,0,0,128);
+    MaterialSideColor[TallGrass] = color(MaterialColor[Crops]);
     MaterialSideColor[YellowFlower] = color(MaterialColor[YellowFlower]);
     MaterialSideColor[RedRose] = color(MaterialColor[RedRose]);
     MaterialSideColor[BrownMushroom] = color(MaterialColor[BrownMushroom]);
@@ -323,6 +326,7 @@ namespace mc {
     MaterialModes[Bed] = Block;
     MaterialModes[PoweredRail] = Block;
     MaterialModes[DetectorRail] = Block;
+    MaterialModes[TallGrass] = Block;
     MaterialModes[Wool] = Block;
     MaterialModes[YellowFlower] = Block;
     MaterialModes[RedRose] = Block;

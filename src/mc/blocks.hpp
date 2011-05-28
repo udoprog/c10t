@@ -42,6 +42,7 @@ namespace mc {
     Bed = 0x1A,
     PoweredRail = 0x1B,
     DetectorRail = 0x1C,
+    TallGrass = 0x1F,
     Wool = 0x23,
     YellowFlower = 0x25,
     RedRose = 0x26,

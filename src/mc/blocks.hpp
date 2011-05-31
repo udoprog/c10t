@@ -97,6 +97,7 @@ namespace mc {
     Bloodstone = 0x57,
     Slowsand = 0x58,
     Lightstone = 0x59,
+    Trapdoor = 0x60,
     Portal = 0x5A,
     Jackolantern = 0x5B,
     Cake = 0x5C,

@@ -113,6 +113,7 @@ namespace mc {
     MaterialName[Bloodstone] = "Bloodstone";
     MaterialName[Slowsand] = "Slowsand";
     MaterialName[Lightstone] = "Lightstone";
+    MaterialName[Trapdoor] = "Trapdoor";
     MaterialName[Portal] = "Portal";
     MaterialName[Jackolantern] = "Jackolantern";
     MaterialName[Cake] = "Cake";
@@ -202,6 +203,7 @@ namespace mc {
     MaterialColor[Bloodstone] = color(0xc2, 0x73, 0x73, 0xff);
     MaterialColor[Slowsand] = color(0x79, 0x61, 0x52, 0xff);
     MaterialColor[Lightstone] = color(0xff, 0xbc, 0x5e, 0xff);
+    MaterialColor[Trapdoor] = MaterialColor[WoodenPressurePlate];
     MaterialColor[Portal] = color(0x3c, 0x0d, 0x6a, 0x7f);
     MaterialColor[Jackolantern] = MaterialColor[Pumpkin];
     MaterialColor[Cake] = color(228,205,206,255);
@@ -291,6 +293,7 @@ namespace mc {
     MaterialSideColor[Bloodstone] = color(MaterialColor[Bloodstone]);
     MaterialSideColor[Slowsand] = color(MaterialColor[Slowsand]);
     MaterialSideColor[Lightstone] = color(MaterialColor[Lightstone]);
+    MaterialSideColor[Trapdoor] = color(MaterialColor[WoodenPressurePlate]);
     MaterialSideColor[Portal] = color(MaterialColor[Portal]);
     MaterialSideColor[Jackolantern] = color(MaterialColor[Jackolantern]);
     MaterialSideColor[Cake] = color(MaterialColor[Cake]);
@@ -363,13 +366,13 @@ namespace mc {
     MaterialModes[Lever] = Block;
     MaterialModes[StonePressurePlate] = HalfBlock;
     MaterialModes[IronDoor] = Block;
-    MaterialModes[WoodenPressurePlate] = Block;
+    MaterialModes[WoodenPressurePlate] = HalfBlock;
     MaterialModes[RedstoneOre] = Block;
     MaterialModes[GlowingRedstoneOre] = Block;
     MaterialModes[RedstoneTorchOff] = TorchBlock;
     MaterialModes[RedstoneTorchOn] = TorchBlock;
     MaterialModes[StoneButton] = Block;
-    MaterialModes[Snow] = Block;
+    MaterialModes[Snow] = HalfBlock;
     MaterialModes[Ice] = Block;
     MaterialModes[SnowBlock] = Block;
     MaterialModes[Cactus] = Block;
@@ -381,6 +384,7 @@ namespace mc {
     MaterialModes[Bloodstone] = Block;
     MaterialModes[Slowsand] = Block;
     MaterialModes[Lightstone] = Block;
+    MaterialModes[Trapdoor] = HalfBlock;
     MaterialModes[Portal] = Block;
     MaterialModes[Jackolantern] = Block;
     MaterialModes[Cake] = HalfBlock;

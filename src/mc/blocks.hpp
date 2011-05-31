@@ -42,6 +42,7 @@ namespace mc {
     Bed = 0x1A,
     PoweredRail = 0x1B,
     DetectorRail = 0x1C,
+    TallGrass = 0x1F,
     Wool = 0x23,
     YellowFlower = 0x25,
     RedRose = 0x26,
@@ -99,6 +100,7 @@ namespace mc {
     Portal = 0x5A,
     Jackolantern = 0x5B,
     Cake = 0x5C,
+    Trapdoor = 0x60,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
     MaterialCount = 0xEE

@@ -125,6 +125,14 @@ namespace mc {
     WoolBlack,
     WoolColorCount
   };
+
+  enum {
+    StepStone = 0x00,
+    StepSandstone,
+    StepWood,
+    StepCobblestone,
+	StepColorCount
+  };
   
   void initialize_constants();
   void deinitialize_constants();
@@ -136,6 +144,7 @@ namespace mc {
   extern color* MaterialColor;
   extern color* MaterialSideColor;
   extern color* WoolColor;
+  extern color* StepColor;
   extern enum MaterialMode *MaterialModes;
 }
 

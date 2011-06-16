@@ -4,7 +4,6 @@
 #include "engine/isometric_base.hpp"
 
 typedef angle_cube<1,1,1> obliqueangle_cube;
-
 class obliqueangle_engine : public isometric_base<obliqueangle_cube> {
 public:
   obliqueangle_engine(engine_settings& s, mc::world& world);

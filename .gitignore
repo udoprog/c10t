@@ -9,3 +9,8 @@ CMakeFiles
 *.rej
 src/config.hpp
 data
+<<<<<<< HEAD
+=======
+debug
+
+>>>>>>> don't remember :(

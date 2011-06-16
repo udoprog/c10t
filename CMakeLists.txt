@@ -83,6 +83,7 @@ set(c10t_SOURCES
   src/warps.cpp
   src/text.cpp
   src/json.cpp
+  src/selectors.cpp
   )
 
 add_executable(c10t ${c10t_SOURCES})

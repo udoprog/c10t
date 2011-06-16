@@ -1,19 +1,31 @@
 #ifndef JSON_SPIRIT_WRITER_TEMPLATE
 #define JSON_SPIRIT_WRITER_TEMPLATE
 
-//          Copyright John W. Wilkinson 2007 - 2009.
+//          Copyright John W. Wilkinson 2007 - 2011
 // Distributed under the MIT License, see accompanying file LICENSE.txt
 
-// json spirit version 4.03
+// json spirit version 4.04
 
 #include "json_spirit_value.h"
 
 #include <cassert>
 #include <sstream>
 #include <iomanip>
+#include <boost/io/ios_state.hpp>
 
 namespace json_spirit
 {
+    enum Output_options{ pretty_print = 0x01,   // Add whitespace to format the output nicely.
+
+                         raw_utf8 = 0x02,       // This prevents non-printable characters from being escapted using "\uNNNN" notation.
+                                                // Note, this is an extension to the JSON standard. It disables the escaping of
+                                                // non-printable characters allowing UTF-8 sequences held in 8 bit char strings
+                                                // to pass through unaltered.
+
+                         remove_trailing_zeros = 0x04
+                                                // outputs e.g. "1.200000000000000" as "1.2"
+                       };
+
     inline char to_hex_char( unsigned int c )
     {
         assert( c <= 0xF );
@@ -60,7 +72,7 @@ namespace json_spirit
     }
 
     template< class String_type >
-    String_type add_esc_chars( const String_type& s )
+    String_type add_esc_chars( const String_type& s, bool raw_utf8 )
     {
         typedef typename String_type::const_iterator Iter_type;
         typedef typename String_type::value_type     Char_type;
@@ -75,19 +87,77 @@ namespace json_spirit
 
             if( add_esc_char( c, result ) ) continue;
 
-            const wint_t unsigned_c( ( c >= 0 ) ? c : 256 + c );
-
-            if( iswprint( unsigned_c ) )
+            if( raw_utf8 )
             {
                 result += c;
             }
             else
             {
-                result += non_printable_to_string< String_type >( unsigned_c );
+                const wint_t unsigned_c( ( c >= 0 ) ? c : 256 + c );
+
+                if( iswprint( unsigned_c ) )
+                {
+                    result += c;
+                }
+                else
+                {
+                    result += non_printable_to_string< String_type >( unsigned_c );
+                }
             }
         }
 
         return result;
+    }
+
+    template< class Ostream >
+    void append_double( Ostream& os, const double d, const int precision )
+    {
+        os << std::showpoint << std::setprecision( precision ) << d;
+    }
+
+    template< class String_type >
+    void erase_and_extract_exponent( String_type& str, String_type& exp )
+    {
+        const typename String_type::size_type exp_start= str.find( 'e' );
+
+        if( exp_start != String_type::npos )
+        {
+            exp = str.substr( exp_start );
+            str.erase( exp_start );
+        }
+    }
+
+    template< class String_type >
+    typename String_type::size_type find_first_non_zero( const String_type& str )
+    {
+        typename String_type::size_type result = str.size() - 1;
+
+        for( ; result != 0; --result )
+        {
+            if( str[ result ] != '0' )
+            {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    template< class String_type >
+    void remove_trailing( String_type& str )
+    {
+        String_type exp;
+
+        erase_and_extract_exponent( str, exp );
+
+        const typename String_type::size_type first_non_zero = find_first_non_zero( str );
+
+        if( first_non_zero != 0 )
+        {
+            str.erase( first_non_zero + 1 );
+        }
+
+        str += exp;
     }
 
     // this class generates the JSON text,
@@ -105,10 +175,13 @@ namespace json_spirit
 
     public:
 
-        Generator( const Value_type& value, Ostream_type& os, bool pretty )
+        Generator( const Value_type& value, Ostream_type& os, unsigned int options )
         :   os_( os )
         ,   indentation_level_( 0 )
-        ,   pretty_( pretty )
+        ,   pretty_( ( options & pretty_print ) != 0 )
+        ,   raw_utf8_( ( options & raw_utf8 ) != 0 )
+        ,   remove_trailing_zeros_( ( options & remove_trailing_zeros ) != 0 )
+        ,   ios_saver_( os )
         {
             output( value );
         }
@@ -123,9 +196,8 @@ namespace json_spirit
                 case array_type: output( value.get_array() ); break;
                 case str_type:   output( value.get_str() );   break;
                 case bool_type:  output( value.get_bool() );  break;
+                case real_type:  output( value.get_real() );  break;
                 case int_type:   output_int( value );         break;
-                case real_type:  os_ << std::showpoint << std::setprecision( 16 ) 
-                                     << value.get_real();     break;
                 case null_type:  os_ << "null";               break;
                 default: assert( false );
             }
@@ -162,12 +234,33 @@ namespace json_spirit
 
         void output( const String_type& s )
         {
-            os_ << '"' << add_esc_chars( s ) << '"';
+            os_ << '"' << add_esc_chars( s, raw_utf8_ ) << '"';
         }
 
         void output( bool b )
         {
             os_ << to_str< String_type >( b ? "true" : "false" );
+        }
+
+        void output( double d )
+        {
+            if( remove_trailing_zeros_ )
+            {
+                std::basic_ostringstream< Char_type > os;
+
+                append_double( os, d, 16 );  // note precision is 16 so that we get some trailing space that we can remove,
+                                             // otherwise, 0.1234 gets converted to "0.12399999..."
+
+                String_type str = os.str();
+
+                remove_trailing( str );
+
+                os_ << str;
+            }
+            else
+            {
+                append_double( os_, d, 17 );
+            }
         }
 
         template< class T >
@@ -221,22 +314,34 @@ namespace json_spirit
         Ostream_type& os_;
         int indentation_level_;
         bool pretty_;
+        bool raw_utf8_;
+        bool remove_trailing_zeros_;
+        boost::io::basic_ios_all_saver< Char_type > ios_saver_;  // so that ostream state is reset after control is returned to the caller
     };
 
+    // writes JSON Value to a stream, e.g.
+    //
+    // write_stream( value, os, pretty_print );
+    //
     template< class Value_type, class Ostream_type >
-    void write_stream( const Value_type& value, Ostream_type& os, bool pretty )
+    void write_stream( const Value_type& value, Ostream_type& os, unsigned int options = 0 )
     {
-        Generator< Value_type, Ostream_type >( value, os, pretty );
+        os << std::dec;
+        Generator< Value_type, Ostream_type >( value, os, options );
     }
 
+    // writes JSON Value to a stream, e.g.
+    //
+    // const string json_str = write( value, pretty_print );
+    //
     template< class Value_type >
-    typename Value_type::String_type write_string( const Value_type& value, bool pretty )
+    typename Value_type::String_type write_string( const Value_type& value, unsigned int options = 0 )
     {
         typedef typename Value_type::String_type::value_type Char_type;
 
         std::basic_ostringstream< Char_type > os;
 
-        write_stream( value, os, pretty );
+        write_stream( value, os, options );
 
         return os.str();
     }

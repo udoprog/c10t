@@ -149,7 +149,7 @@ namespace mc {
     MaterialColor[Bed] = color(150,0,0,255);
     MaterialColor[PoweredRail] = color(120, 120, 120, 128);
     MaterialColor[DetectorRail] = MaterialColor[PoweredRail];
-    MaterialColor[TallGrass] = MaterialColor[Crops];
+    MaterialColor[TallGrass] = color(0x90, 0xbc, 0x27, 0xff);
     MaterialColor[YellowFlower] = color(255,255,0,255);
     MaterialColor[RedRose] = color(255,0,0,255);
     MaterialColor[BrownMushroom] = color(0x00, 0x00, 0x00, 0x00);
@@ -239,7 +239,7 @@ namespace mc {
     MaterialSideColor[Bed] = color(MaterialColor[Bed]);
     MaterialSideColor[PoweredRail] = color(255,220,0,128);
     MaterialSideColor[DetectorRail] = color(230,0,0,128);
-    MaterialSideColor[TallGrass] = color(MaterialColor[Crops]);
+    MaterialSideColor[TallGrass] = color(0x90, 0xbc, 0x27, 0xff);
     MaterialSideColor[YellowFlower] = color(MaterialColor[YellowFlower]);
     MaterialSideColor[RedRose] = color(MaterialColor[RedRose]);
     MaterialSideColor[BrownMushroom] = color(MaterialColor[BrownMushroom]);

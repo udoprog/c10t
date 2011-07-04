@@ -58,7 +58,11 @@ namespace mc {
     MaterialName[Bed] = "Bed";
     MaterialName[PoweredRail] = "PoweredRail";
     MaterialName[DetectorRail] = "DetectorRail";
+    MaterialName[StickyPistonBase] = "StickyPistonBase";
     MaterialName[TallGrass] = "TallGrass";
+    MaterialName[DeadShrub] = "DeadShrub";
+    MaterialName[PistonBase] = "PistonBase";
+    MaterialName[PistonPlatform] = "PistonPlatform";
     MaterialName[Wool] = "Wool";
     MaterialName[YellowFlower] = "YellowFlower";
     MaterialName[RedRose] = "RedRose";
@@ -149,7 +153,11 @@ namespace mc {
     MaterialColor[Bed] = color(150,0,0,255);
     MaterialColor[PoweredRail] = color(120, 120, 120, 128);
     MaterialColor[DetectorRail] = MaterialColor[PoweredRail];
+    MaterialColor[StickyPistonBase] = color(157,192,79,255);
     MaterialColor[TallGrass] = color(0x90, 0xbc, 0x27, 0xff);
+    MaterialColor[DeadShrub] = MaterialColor[Wood];
+    MaterialColor[PistonBase] = MaterialColor[Wood];
+    MaterialColor[PistonPlatform] = MaterialColor[Air];
     MaterialColor[YellowFlower] = color(255,255,0,255);
     MaterialColor[RedRose] = color(255,0,0,255);
     MaterialColor[BrownMushroom] = color(0x00, 0x00, 0x00, 0x00);
@@ -239,7 +247,11 @@ namespace mc {
     MaterialSideColor[Bed] = color(MaterialColor[Bed]);
     MaterialSideColor[PoweredRail] = color(255,220,0,128);
     MaterialSideColor[DetectorRail] = color(230,0,0,128);
+    MaterialSideColor[StickyPistonBase] = color(MaterialColor[Cobblestone]);
     MaterialSideColor[TallGrass] = color(0x90, 0xbc, 0x27, 0xff);
+    MaterialSideColor[DeadShrub] = color(MaterialColor[Wood]);
+    MaterialSideColor[PistonBase] = color(MaterialColor[Cobblestone]);
+    MaterialSideColor[PistonPlatform] = color(MaterialColor[Air]);
     MaterialSideColor[YellowFlower] = color(MaterialColor[YellowFlower]);
     MaterialSideColor[RedRose] = color(MaterialColor[RedRose]);
     MaterialSideColor[BrownMushroom] = color(MaterialColor[BrownMushroom]);
@@ -329,7 +341,11 @@ namespace mc {
     MaterialModes[Bed] = Block;
     MaterialModes[PoweredRail] = Block;
     MaterialModes[DetectorRail] = Block;
+    MaterialModes[StickyPistonBase] = Block;
     MaterialModes[TallGrass] = Block;
+    MaterialModes[DeadShrub] = TorchBlock;
+    MaterialModes[PistonBase] = Block;
+    MaterialModes[PistonPlatform] = Block;
     MaterialModes[Wool] = Block;
     MaterialModes[YellowFlower] = Block;
     MaterialModes[RedRose] = Block;

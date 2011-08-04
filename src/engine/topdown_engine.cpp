@@ -46,9 +46,12 @@ void topdown_engine::render(level_ptr level, boost::shared_ptr<image_operations>
         }
         
         color bc;
-        if(bt == mc::Wool) {
+        if (bt == mc::Wool) {
           int md = b_d.get4(y);
           bc = mc::WoolColor[md];
+        } else if ((bt == mc::Step) || (bt == mc::DoubleStep)) {
+          int md = b_d.get4(y);
+          bc = mc::StepColor[md];
         } else {
           bc = mc::MaterialColor[bt];
         }

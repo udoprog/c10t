@@ -1129,7 +1129,7 @@ int do_help() {
     << "  -w, --world <world>       - use this world directory as input                " << endl
     << "  -o, --output <output>     - use this file as output file for generated png   " << endl
     << "  -S, --statistics <output> - create a statistics file of the entire world     " << endl
-    << "      --block-graph <blockid>                                                  " << endl
+    << "      --graph-block <blockid>                                                  " << endl
     << "                            - make graph for block repartition by altitude     " << endl
     << "                              with filename <output>_graph.png               " << endl
     << endl

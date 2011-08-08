@@ -1,11 +1,11 @@
-#include "statistics.hpp"
+#include "altitude_graph.hpp"
 #include <iostream>
 #include "text.hpp"
 
 #define BORDER_X 50
 #define BORDER_Y 50
 
-BlocStatistics::BlocStatistics(settings_t& _s)
+AltitudeGraph::AltitudeGraph(settings_t& _s)
     :  s(_s), width(800), height(600)
 {
     for(int i = 0; i<128; i++)
@@ -14,7 +14,7 @@ BlocStatistics::BlocStatistics(settings_t& _s)
     }
 }
 
-void BlocStatistics::createGraph()
+void AltitudeGraph::createGraph()
 {
     image_ptr graphImg;
 
@@ -88,12 +88,12 @@ void BlocStatistics::createGraph()
 }
 
 
-void BlocStatistics::registerBloc(Byte value, int altitude)
+void AltitudeGraph::registerBloc(Byte value, int altitude)
 {
     altitudeRegistry[altitude] += 1;
 }
 
-long BlocStatistics::getMax()
+long AltitudeGraph::getMax()
 {
     long max = 0;
     for(int i = 0; i<128; i++)

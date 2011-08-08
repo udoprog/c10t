@@ -39,8 +39,8 @@
    <value key="ProjectExplorer.Target.ActiveRunConfiguration" type="int">0</value>
    <valuemap key="ProjectExplorer.Target.BuildConfiguration.0" type="QVariantMap">
     <value key="CMakeProjectManager.CMakeBuildConfiguration.BuildDirectory" type="QString">/home/freddy/Dev/C++/c10t/build</value>
-    <value key="CMakeProjectManager.CMakeBuildConfiguration.ToolChain" type="QString">ProjectExplorer.ToolChain.Gcc:/usr/bin/g++.x86-linux-generic-elf-64bit.</value>
-    <value key="ProjectExplorer.BuildCOnfiguration.ToolChain" type="QString">ProjectExplorer.ToolChain.Gcc:/usr/bin/g++.x86-linux-generic-elf-64bit.</value>
+    <value key="CMakeProjectManager.CMakeBuildConfiguration.ToolChain" type="QString">ProjectExplorer.ToolChain.Gcc:/usr/bin/g++.x86-linux-generic-elf-32bit.</value>
+    <value key="ProjectExplorer.BuildCOnfiguration.ToolChain" type="QString">ProjectExplorer.ToolChain.Gcc:/usr/bin/g++.x86-linux-generic-elf-32bit.</value>
     <valuemap key="ProjectExplorer.BuildConfiguration.BuildStepList.0" type="QVariantMap">
      <valuemap key="ProjectExplorer.BuildStepList.Step.0" type="QVariantMap">
       <value key="CMakeProjectManager.MakeStep.AdditionalArguments" type="QString"></value>
@@ -116,7 +116,7 @@
     </valuelist>
     <value key="CMakeProjectManager.BaseEnvironmentBase" type="int">2</value>
     <value key="CMakeProjectManager.CMakeRunConfiguation.Title" type="QString">c10t</value>
-    <value key="CMakeProjectManager.CMakeRunConfiguration.Arguments" type="QString">-w /home/freddy/.minecraft/saves/Blah -S result --graph-block 82</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.Arguments" type="QString">-w /home/freddy/.minecraft/saves/Blah -S result --graph-block 56</value>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal" type="bool">false</value>
     <valuelist key="CMakeProjectManager.CMakeRunConfiguration.UserEnvironmentChanges" type="QVariantList"/>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory" type="QString"></value>
@@ -284,7 +284,7 @@
  </data>
  <data>
   <variable>ProjectExplorer.Project.Updater.EnvironmentId</variable>
-  <value type="QString">{ff0f480e-82bd-44f3-9235-4d7e7e896862}</value>
+  <value type="QString">{4b8b4e4a-70fe-4fc9-a335-85e37d87ef9e}</value>
  </data>
  <data>
   <variable>ProjectExplorer.Project.Updater.FileVersion</variable>

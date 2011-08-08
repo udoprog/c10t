@@ -27,14 +27,15 @@ namespace fs = boost::filesystem;
 class BlocStatistics
 {
 public:
-    BlocStatistics();
-    void test();
+    BlocStatistics(settings_t& _s);
+    void createGraph();
 
     /* call this to register block information */
     void registerBloc(Byte value, int altitude);
 
     long getMax();
 private:
+    settings_t s;
     int width;
     int height;
     long altitudeRegistry[128];

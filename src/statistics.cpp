@@ -3,8 +3,8 @@
 #define BORDER_X 50
 #define BORDER_Y 50
 
-BlocStatistics::BlocStatistics()
-    : width(800), height(600)
+BlocStatistics::BlocStatistics(settings_t& _s)
+    :  s(_s), width(800), height(600)
 {
     for(int i = 0; i<128; i++)
     {
@@ -12,7 +12,7 @@ BlocStatistics::BlocStatistics()
     }
 }
 
-void BlocStatistics::test()
+void BlocStatistics::createGraph()
 {
     image_ptr graphImg;
 
@@ -69,7 +69,7 @@ void BlocStatistics::test()
     }
 
     png_format::opt_type opts;
-    graphImg->save<png_format>("graph.png", opts);
+    graphImg->save<png_format>(s.statistics_path.string() + "_graph.png", opts);
 }
 
 

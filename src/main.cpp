@@ -961,11 +961,10 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
 bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_path)
 {
     out << endl << "Generating Statistics File" << endl << endl;
-
     std::vector<player> players;
     mc::world world(world_path);
 
-    BlocStatistics *_stat = new BlocStatistics();
+    BlocStatistics *_stat = new BlocStatistics(s);
     long statistics[mc::MaterialCount];
 
     for (int i = 0; i < mc::MaterialCount; i++) {
@@ -1039,7 +1038,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
           for (int i = 0; i < blocks->length; i++) {
             nbt::Byte block = blocks->values[i];
             statistics[block] += 1;
-            if(blocks->values[i] == 56)
+            if(s.graph_block > 0 && blocks->values[i] == s.graph_block)
             {
                 _stat->registerBloc(blocks->values[i], i%128);
             }
@@ -1098,7 +1097,8 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
 
     out << "statistics written to " << output_path;
 
-    _stat->test();
+    if(s.graph_block > 0)
+        _stat->createGraph();
 
     return true;
 }
@@ -1129,6 +1129,9 @@ int do_help() {
     << "  -w, --world <world>       - use this world directory as input                " << endl
     << "  -o, --output <output>     - use this file as output file for generated png   " << endl
     << "  -S, --statistics <output> - create a statistics file of the entire world     " << endl
+    << "      --block-graph <blockid>                                                  " << endl
+    << "                            - make graph for block repartition by altitude     " << endl
+    << "                              with filename <output>_graph.png               " << endl
     << endl
     << "  --log [file]              - Specify another location for logging warnings,   " << endl
     << "                              defaults to `c10t.log'                           " << endl

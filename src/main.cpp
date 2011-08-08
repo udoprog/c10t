@@ -36,7 +36,7 @@
 #include "players.hpp"
 #include "text.hpp"
 #include "json.hpp"
-#include "statistics.hpp"
+#include "altitude_graph.hpp"
 #include "warps.hpp"
 
 #include "mc/world.hpp"
@@ -964,7 +964,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
     std::vector<player> players;
     mc::world world(world_path);
 
-    BlocStatistics *_stat = new BlocStatistics(s);
+    AltitudeGraph *_stat = new AltitudeGraph(s);
     long statistics[mc::MaterialCount];
 
     for (int i = 0; i < mc::MaterialCount; i++) {

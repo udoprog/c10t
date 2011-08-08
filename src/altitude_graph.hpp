@@ -24,10 +24,10 @@
 using namespace std;
 namespace fs = boost::filesystem;
 
-class BlocStatistics
+class AltitudeGraph
 {
 public:
-    BlocStatistics(settings_t& _s);
+    AltitudeGraph(settings_t& _s);
     void createGraph();
 
     /* call this to register block information */

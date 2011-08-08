@@ -116,7 +116,7 @@
     </valuelist>
     <value key="CMakeProjectManager.BaseEnvironmentBase" type="int">2</value>
     <value key="CMakeProjectManager.CMakeRunConfiguation.Title" type="QString">c10t</value>
-    <value key="CMakeProjectManager.CMakeRunConfiguration.Arguments" type="QString">-w /home/freddy/.minecraft/saves/Blah -S result.png</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.Arguments" type="QString">-w /home/freddy/.minecraft/saves/Blah -S result --graph-block 82</value>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal" type="bool">false</value>
     <valuelist key="CMakeProjectManager.CMakeRunConfiguration.UserEnvironmentChanges" type="QVariantList"/>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory" type="QString"></value>

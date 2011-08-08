@@ -1,4 +1,6 @@
 #include "statistics.hpp"
+#include <iostream>
+#include "text.hpp"
 
 #define BORDER_X 50
 #define BORDER_Y 50
@@ -23,6 +25,12 @@ void BlocStatistics::createGraph()
     color bgcolor(255, 255, 255, 255);
     color fgcolor(150,0,0,255);
     color axiscolor(0,0,0,255);
+    color seacolor(0,0,255,255);
+
+    text::font_face ffsea(s.ttf_path, 8, seacolor);
+    ffsea.init();
+    text::font_face ff12(s.ttf_path, 12, axiscolor);
+    ff12.init();
 
     // fill background
     graphImg->fill(bgcolor);
@@ -33,6 +41,13 @@ void BlocStatistics::createGraph()
     long maxVal = this->getMax();
 
     int x_step = _w / 128;
+
+    std::stringstream maxss;
+    maxss << "MAX = " << maxVal;
+    ff12.draw(graphImg, "NB of blocks", BORDER_X - 30 , BORDER_Y - 25);
+    ff12.draw(graphImg, maxss.str(), BORDER_X - 20 , BORDER_Y - 10);
+
+    ff12.draw(graphImg, "Altitude", _w - 2*BORDER_X , _h + 17);
 
     int x=0, y=0, x0=BORDER_X, y0=_h;
 
@@ -57,15 +72,15 @@ void BlocStatistics::createGraph()
         int size = 2;
         if(i == 63)
         {
-            _axiscolor = color(0,0,255,255);
-            size = 8;
+            _axiscolor = seacolor;
+            ffsea.draw(graphImg, "Sea", x+4, _h+25);
+            size = 25;
         }
         if(i%10 == 0)
         {
             size = 5;
         }
         graphImg->drawLine(x, _h, x, _h+size, _axiscolor);
-
     }
 
     png_format::opt_type opts;

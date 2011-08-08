@@ -1039,9 +1039,11 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
           for (int i = 0; i < blocks->length; i++) {
             nbt::Byte block = blocks->values[i];
             statistics[block] += 1;
-
+            if(blocks->values[i] == 56)
+            {
+                _stat->registerBloc(blocks->values[i], i%128);
+            }
           }
-
           reporter.add(1);
         }
       }

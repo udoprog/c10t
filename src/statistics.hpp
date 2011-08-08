@@ -31,8 +31,13 @@ public:
     void test();
 
     /* call this to register block information */
-    void registerBloc(Byte value, Byte height);
+    void registerBloc(Byte value, int altitude);
+
+    long getMax();
 private:
+    int width;
+    int height;
+    long altitudeRegistry[128];
 
 };
 

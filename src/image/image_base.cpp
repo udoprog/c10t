@@ -37,6 +37,32 @@ void image_base::composite(int x, int y, image_operations_ptr opers)
   }
 }
 
+void image_base::drawLine(pos_t x1, pos_t y1, pos_t x2, pos_t y2, color &c)
+{
+    int sx, sy;
+    int dx = abs(x2-x1);
+    int dy = abs(y2-y1);
+    sx = (x1<x2) ? 1 : -1 ;
+    sy = (y1<y2) ? 1 : -1 ;
+    int err = dx-dy;
+
+    do
+    {
+        this->set_pixel(x1, y1, c);
+        int e2 = 2*err;
+        if(e2 > -dy)
+        {
+            err -= dy;
+            x1 += sx;
+        }
+        if(e2 < dx)
+        {
+            err += dx;
+            y1 += sy;
+        }
+    } while(x1 != x2 || y1 != y2);
+}
+
 void image_base::safe_blend_pixel(pos_t x, pos_t y, color &c)
 {
   if (x >= w) return;

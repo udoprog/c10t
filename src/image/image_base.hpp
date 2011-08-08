@@ -61,6 +61,8 @@ public:
     return T::save(this, str, opts);
   }
 
+  void drawLine(pos_t x1, pos_t y1, pos_t x2, pos_t y2, color &c);
+
   void resize(image_ptr target);
   
   virtual void blend_pixel(pos_t x, pos_t y, color &c) = 0;

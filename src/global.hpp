@@ -102,6 +102,8 @@ struct settings_t {
   unsigned int split_base;
   unsigned int threads;
 
+  int graph_block;
+
   int center_x;
   int center_z;
 
@@ -174,7 +176,7 @@ struct settings_t {
     this->output_log = fs::system_complete(fs::path("c10t.log"));
     this->output_path = fs::system_complete(fs::path("out.png"));
     this->statistics_path = fs::system_complete(fs::path("statistics.txt"));
-
+    this->graph_block = -1;
     this->action = None;
 
     this->center_x = 0;

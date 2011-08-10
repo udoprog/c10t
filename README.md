@@ -90,3 +90,4 @@ Contributions
     rmmh - for figuring out png compression and encouraging people to build properly.
     Athemis - for fixing beta 1.2 compatibility.
     sn4kebite - for implementing Wool colors.
+    ekryyn - for implementing the altitude graph!

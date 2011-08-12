@@ -59,10 +59,14 @@ void obliqueangle_engine::render(level_ptr level, boost::shared_ptr<image_operat
         part_c.project_obliqueangle(p, px, py);
         
         color top, side;
-        if(bt == mc::Wool) {
+        if (bt == mc::Wool) {
           int md = b_d.get4(y);
           top = mc::WoolColor[md];
           side = mc::WoolColor[md];
+        } else if ((bt == mc::Step) || (bt == mc::DoubleStep)) {
+          int md = b_d.get4(y);
+          top = mc::StepColor[md];
+          side = mc::StepColor[md];
         } else {
           top = mc::MaterialColor[bt];
           side = mc::MaterialSideColor[bt];

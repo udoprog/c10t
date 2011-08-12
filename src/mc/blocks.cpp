@@ -12,6 +12,7 @@ namespace mc {
   color *MaterialColor;
   color *MaterialSideColor;
   color *WoolColor;
+  color *StepColor;
 
   MaterialMode *MaterialModes;
 
@@ -21,6 +22,7 @@ namespace mc {
     MaterialSideColor = new color[MaterialCount];
     MaterialModes = new enum MaterialMode[MaterialCount];
     WoolColor = new color[WoolColorCount];
+    StepColor = new color[StepColorCount];
 
     for (int i = 0; i < MaterialCount; i++) {
       MaterialName[i] = DefaultName;
@@ -434,6 +436,11 @@ namespace mc {
     WoolColor[WoolDarkGreen] = color(56, 77, 24, 255);
     WoolColor[WoolRed] = color(164, 45, 41, 255);
     WoolColor[WoolBlack] = color(27, 23, 23, 255);
+
+    StepColor[StepStone] = MaterialColor[Stone];
+    StepColor[StepSandstone] = MaterialColor[Sandstone];
+    StepColor[StepWood] = MaterialColor[Wood];
+    StepColor[StepCobblestone] = MaterialColor[Cobblestone];
   }
   
   void deinitialize_constants() {

@@ -91,3 +91,4 @@ Contributions
     Athemis - for fixing beta 1.2 compatibility.
     sn4kebite - for implementing Wool colors.
     ekryyn - for implementing the altitude graph!
+    UniversE - for epic center calculation, and saving the api!

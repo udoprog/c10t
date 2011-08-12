@@ -1,5 +1,9 @@
 #ifndef STATISTICS_HPP
 #define STATISTICS_HPP
+
+// Include this first, to evade setjmp header bug
+#include "image/format/png.hpp"
+
 #include <string>
 #include <vector>
 #include <set>

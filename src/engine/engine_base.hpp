@@ -22,6 +22,10 @@ class engine_base {
   public:
     typedef uint64_t pos_t;
     typedef boost::shared_ptr<mc::level> level_ptr;
+    pos_t im_min_x;
+    pos_t im_min_y;
+    pos_t im_max_x;
+    pos_t im_max_y;
     
     engine_base(settings_t& s, mc::world& world) :
       s(s),
@@ -36,7 +40,24 @@ class engine_base {
     virtual void get_boundaries(pos_t& width, pos_t& height) = 0;
     virtual void get_level_boundaries(pos_t& width, pos_t& height) = 0;
     virtual void w2pt(int xPos, int zPos, pos_t& x, pos_t& y) = 0;
-    virtual void wp2pt(int xPos, int yPos, int zPos, pos_t& x, pos_t& y) = 0;
+    virtual void wp2pt(int xPos, int yPos, int zPos, pos_t& x, pos_t& y) {
+      x -= im_min_x;
+      y -= im_min_y;
+    };
+
+    void reset_image_limits() {
+      im_min_x = std::numeric_limits<pos_t>::max();
+      im_min_y = std::numeric_limits<pos_t>::max();
+      im_max_x = std::numeric_limits<pos_t>::min();
+      im_max_y = std::numeric_limits<pos_t>::min();
+    }
+
+    void update_image_limits(pos_t x, pos_t y, pos_t max_x, pos_t max_y) {
+      im_min_x = std::min(im_min_x, x);
+      im_min_y = std::min(im_min_y, y);
+      im_max_x = std::max(im_max_x, max_x);
+      im_max_y = std::max(im_max_y, max_y); 
+    };
 };
 
 class BlockRotation {

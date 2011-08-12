@@ -670,14 +670,9 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     }
   }
 
-  /**
-   * Store image limits for cropping.
-   */
-  pos_t im_min_x = numeric_limits<pos_t>::max();
-  pos_t im_min_y = numeric_limits<pos_t>::max();
-  pos_t im_max_x = numeric_limits<pos_t>::min();
-  pos_t im_max_y = numeric_limits<pos_t>::min();
-  
+  /* reset image limits for cropping */
+  engine->reset_image_limits();
+
   /**
    * Perform rendering phase where engine takes level information, and produces
    * image_operations, composite all operations to the work-in-progress image.
@@ -707,6 +702,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     
     int cache_hits = 0;
     int failed_levels = 0;
+
 
     /**
      * Define a dynamically growing buffer to read regions in.
@@ -761,10 +757,10 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
             engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
 
             // update image limits
-            im_min_x = std::min(im_min_x, x);
-            im_min_y = std::min(im_min_y, y);
-            im_max_x = std::max(im_max_x, x + p.operations->max_x - 1);
-            im_max_y = std::max(im_max_y, y + p.operations->max_y - 1);
+            engine->update_image_limits(
+                x, y,
+                x + p.operations->max_x - 1,
+                y + p.operations->max_y - 1);
 
             work_in_progress->composite(x, y, p.operations);
           } catch(std::ios::failure& e) {
@@ -811,12 +807,12 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       out << "cache_hits: " << cache_hits << "/" << world_size << endl;
     }
 
-    std::cout << "image limits: "
-              << im_min_x << "x" << im_min_y << " to "
-              << im_max_x << "x" << im_max_y <<
-              " will be the cropped image" << endl;
+    out << "image limits: "
+        << engine->im_min_x << "x" << engine->im_min_y << " to "
+        << engine->im_max_x << "x" << engine->im_max_y <<
+           " will be the cropped image" << endl;
 
-    image_ptr cropped = image::crop(work_in_progress, im_min_x, im_max_x, im_min_y, im_max_y);
+    image_ptr cropped = image::crop(work_in_progress, engine->im_min_x, engine->im_max_x, engine->im_min_y, engine->im_max_y);
     work_in_progress = cropped;
   }
   
@@ -851,13 +847,6 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       push_warp_markers(s, font, warps, markers);
     }
 
-    /**
-     * Adjust markers to image cropping.
-     */
-    BOOST_FOREACH(marker m, markers) {
-      m.x -= im_min_x;
-      m.y -= im_min_y;
-    }
   }
   
   if (output_json) {

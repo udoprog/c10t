@@ -29,6 +29,7 @@ class fatiso_engine : public engine_base {
     void wp2pt(int xPos, int yPos, int zPos, pos_t& x, pos_t& y) {
       point pos(xPos - world.min_xp, yPos, zPos - world.min_zp);
       mpos_c.project_fatiso(pos, x, y);
+      engine_base::wp2pt(xPos, yPos, zPos, x, y);
     }
 };
 

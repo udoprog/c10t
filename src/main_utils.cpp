@@ -332,6 +332,7 @@ struct option long_options[] =
     {"no-log",                              no_argument,         &flag,   25},
     {"disable-skylight",                    no_argument,         &flag,   26},
     {"center",                              required_argument,   &flag,   30},
+    {"graph-block",                         required_argument,   &flag,   31},
     {0,                                     0,                   0,       0}
 };
 
@@ -544,6 +545,18 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       case 30:
         if (!parse_tuple(optarg, s, s.center_x, s.center_z)) {
           return false;
+        }
+        break;
+      case 31:
+          try {
+            s.graph_block = boost::lexical_cast<int>(optarg);
+          } catch(boost::bad_lexical_cast& e) {
+            error << "Cannot be converted to number: " << optarg;
+            return false;
+          }
+        if(!get_blockid(optarg, s.graph_block))
+        {
+            return false;
         }
         break;
       }

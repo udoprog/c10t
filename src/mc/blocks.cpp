@@ -419,7 +419,7 @@ namespace mc {
     MaterialSideColor[RedstoneTorchOff] = MaterialColor[Wood];
     MaterialSideColor[RedstoneTorchOn] = MaterialColor[Wood];
 
-    MaterialDataColor[Wool] = new color[WoolColorCount];
+    MaterialDataColor[Wool] = new color[16];
 
     MaterialDataColor[Wool][WoolWhite] = color(223, 223, 223, 255);
     MaterialDataColor[Wool][WoolOrange] = color(234, 128, 55, 255);
@@ -438,7 +438,11 @@ namespace mc {
     MaterialDataColor[Wool][WoolRed] = color(164, 45, 41, 255);
     MaterialDataColor[Wool][WoolBlack] = color(27, 23, 23, 255);
 
-    MaterialDataColor[Step] = new color[StepColorCount];
+    MaterialDataColor[Step] = new color[16];
+    
+    for (int i = 0; i < 16; i++) {
+      MaterialDataColor[Step][i] = color(0, 0, 0, 255);
+    }
 
     MaterialDataColor[Step][StepStone] = MaterialColor[Stone];
     MaterialDataColor[Step][StepSandstone] = MaterialColor[Sandstone];

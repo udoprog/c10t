@@ -448,6 +448,17 @@ namespace mc {
     MaterialDataColor[Step][StepSandstone] = MaterialColor[Sandstone];
     MaterialDataColor[Step][StepWood] = MaterialColor[Wood];
     MaterialDataColor[Step][StepCobblestone] = MaterialColor[Cobblestone];
+
+    MaterialDataColor[DoubleStep] = new color[16];
+    
+    for (int i = 0; i < 16; i++) {
+      MaterialDataColor[DoubleStep][i] = color(0, 0, 0, 255);
+    }
+
+    MaterialDataColor[DoubleStep][StepStone] = MaterialColor[Stone];
+    MaterialDataColor[DoubleStep][StepSandstone] = MaterialColor[Sandstone];
+    MaterialDataColor[DoubleStep][StepWood] = MaterialColor[Wood];
+    MaterialDataColor[DoubleStep][StepCobblestone] = MaterialColor[Cobblestone];
   }
   
   void deinitialize_constants() {

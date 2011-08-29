@@ -107,7 +107,7 @@ namespace mc {
     Trapdoor = 0x60,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
-    MaterialCount = 0xEE
+    MaterialCount = 256
   };
 
   enum {
@@ -155,7 +155,7 @@ namespace mc {
   }
 
   inline color getSideColor(int material) {
-    return MaterialColor[material];
+    return MaterialSideColor[material];
   }
 
   inline color getColor(int material, int data) {

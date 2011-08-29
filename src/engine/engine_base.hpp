@@ -189,25 +189,19 @@ inline bool hell_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
 }
 
 inline color blockColor_top(int blockType, int y, BlockRotation blockData) {
-  if(blockType == mc::Wool)
-    return mc::WoolColor[blockData.get4(y)];
-
-  else if((blockType == mc::Step) || (blockType == mc::DoubleStep))
-    return mc::StepColor[blockData.get4(y)];
+  if(mc::MaterialDataColor[blockType])
+    return mc::getColor(blockType, blockData.get4(y));
 
   else
-    return mc::MaterialColor[blockType];
+    return mc::getColor(blockType);
 }
 
 inline color blockColor_side(int blockType, int y, BlockRotation blockData) {
-  if(blockType == mc::Wool)
-    return mc::WoolColor[blockData.get4(y)];
-
-  else if((blockType == mc::Step) || (blockType == mc::DoubleStep))
-    return mc::StepColor[blockData.get4(y)];
+  if(mc::MaterialDataColor[blockType])
+    return mc::getSideColor(blockType, blockData.get4(y));
 
   else
-    return mc::MaterialSideColor[blockType];
+    return mc::getSideColor(blockType);
 }
 
 #endif /* ENGINE_BASE */

@@ -147,9 +147,24 @@ namespace mc {
   extern const char **MaterialName;
   extern color* MaterialColor;
   extern color* MaterialSideColor;
-  extern color* WoolColor;
-  extern color* StepColor;
+  extern color **MaterialDataColor;
   extern enum MaterialMode *MaterialModes;
+
+  inline color getColor(int material) {
+    return MaterialColor[material];
+  }
+
+  inline color getSideColor(int material) {
+    return MaterialColor[material];
+  }
+
+  inline color getColor(int material, int data) {
+    return MaterialDataColor[material][data];
+  }
+
+  inline color getSideColor(int material, int data) {
+    return MaterialDataColor[material][data];
+  }
 }
 
 #endif /* _BLOCKS_H_ */

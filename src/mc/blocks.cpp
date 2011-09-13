@@ -122,7 +122,20 @@ namespace mc {
     MaterialName[Trapdoor] = "Trapdoor";
     MaterialName[Portal] = "Portal";
     MaterialName[Jackolantern] = "Jackolantern";
+	MaterialName[RedstoneRepeaterOn] = "RedstoneRepeaterOn";
+	MaterialName[RedstoneRepeaterOff] = "RedstoneRepeaterOff";
     MaterialName[Cake] = "Cake";
+	MaterialName[EggBlock] = "EggBlock";
+	MaterialName[StoneBrick] = "StoneBrick";
+	MaterialName[HugeRedMushroom] = "HugeRedMushroom";
+	MaterialName[HugeBrownMushroom] = "HugeBrownMushroom";
+	MaterialName[IronBars] = "IronBars";
+	MaterialName[GlassPane] = "GlassPane";
+	MaterialName[Watermelon] = "Watermelon";
+	MaterialName[Vines] = "Vines";
+	MaterialName[FenceGate] = "FenceGate";
+	MaterialName[BrickStairs] = "BrickStairs";
+	MaterialName[StoneBrickStairs] = "StoneBrickStairs";
     MaterialName[PineLeaves] = "PineLeaves";
     MaterialName[BirchLeaves] = "BirchLeaves";
     
@@ -216,7 +229,20 @@ namespace mc {
     MaterialColor[Trapdoor] = MaterialColor[WoodenPressurePlate];
     MaterialColor[Portal] = color(0x3c, 0x0d, 0x6a, 0x7f);
     MaterialColor[Jackolantern] = MaterialColor[Pumpkin];
+	MaterialColor[RedstoneRepeaterOn] = MaterialColor[RedstoneWire];
+	MaterialColor[RedstoneRepeaterOff] = MaterialColor[RedstoneWire];
     MaterialColor[Cake] = color(228,205,206,255);
+	MaterialColor[EggBlock] = MaterialColor[Stone];
+	MaterialColor[StoneBrick] = MaterialColor[Stone];
+	MaterialColor[HugeRedMushroom] = MaterialColor[RedMushroom];
+	MaterialColor[HugeBrownMushroom] = MaterialColor[BrownMushroom];
+	MaterialColor[IronBars] = MaterialColor[IronBlock];
+	MaterialColor[GlassPane] = MaterialColor[Glass];
+	MaterialColor[Watermelon] = color(50,200,45,192);
+	MaterialColor[Vines] = color(50,89,45,128);
+	MaterialColor[FenceGate] = MaterialColor[Fence];
+	MaterialColor[BrickStairs] = MaterialColor[Brick];
+	MaterialColor[StoneBrickStairs] = MaterialColor[Stone];
     MaterialColor[PineLeaves] = color(50,89,45,128);
     MaterialColor[BirchLeaves] = color(94,167,84,128);
     
@@ -311,6 +337,19 @@ namespace mc {
     MaterialSideColor[Portal] = color(MaterialColor[Portal]);
     MaterialSideColor[Jackolantern] = color(MaterialColor[Jackolantern]);
     MaterialSideColor[Cake] = color(MaterialColor[Cake]);
+	MaterialSideColor[RedstoneRepeaterOn] = color(MaterialColor[RedstoneWire]);
+	MaterialSideColor[RedstoneRepeaterOff] = color(MaterialColor[RedstoneWire]);
+	MaterialSideColor[EggBlock] = color(MaterialColor[Stone]);
+	MaterialSideColor[StoneBrick] = color(MaterialColor[Stone]);
+	MaterialSideColor[HugeRedMushroom] = color(MaterialColor[RedMushroom]);
+	MaterialSideColor[HugeBrownMushroom] = color(MaterialColor[BrownMushroom]);
+	MaterialSideColor[IronBars] = color(MaterialColor[IronBlock]);
+	MaterialSideColor[GlassPane] = color(MaterialColor[Glass]);
+	MaterialSideColor[Watermelon] = color(MaterialColor[Watermelon]);
+	MaterialSideColor[Vines] = color(50,89,45,128);
+	MaterialSideColor[FenceGate] = color(MaterialColor[Fence]);
+	MaterialSideColor[BrickStairs] = color(MaterialColor[Brick]);
+	MaterialSideColor[StoneBrickStairs] = color(MaterialColor[Stone]);
     MaterialSideColor[PineLeaves] = color(MaterialColor[PineLeaves]);
     MaterialSideColor[BirchLeaves] = color(MaterialColor[BirchLeaves]);
     
@@ -406,6 +445,19 @@ namespace mc {
     MaterialModes[Portal] = Block;
     MaterialModes[Jackolantern] = Block;
     MaterialModes[Cake] = HalfBlock;
+	MaterialModes[RedstoneRepeaterOn] = Block;
+	MaterialModes[RedstoneRepeaterOff] = Block;
+	MaterialModes[EggBlock] = Block;
+	MaterialModes[StoneBrick] = Block;
+	MaterialModes[HugeRedMushroom] = Block;
+	MaterialModes[HugeBrownMushroom] = Block;
+	MaterialModes[IronBars] = Block;
+	MaterialModes[GlassPane] = Block;
+	MaterialModes[Watermelon] = Block;
+	MaterialModes[Vines] = Block;
+	MaterialModes[FenceGate] = Block;
+	MaterialModes[BrickStairs] = Block;
+	MaterialModes[StoneBrickStairs] = Block;
     MaterialModes[PineLeaves] = Block;
     MaterialModes[BirchLeaves] = Block;
     

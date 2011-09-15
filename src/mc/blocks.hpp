@@ -114,8 +114,8 @@ namespace mc {
 	IronBars = 0x65,
 	GlassPane = 0x66,
 	Melon = 0x67,
-	PumpkinStem = 0x68;
-	MelonStem = 0x69;
+	PumpkinStem = 0x68,
+	MelonStem = 0x69,
 	Vines = 0x6A,
 	FenceGate = 0x6B,
 	BrickStairs = 0x6C,

@@ -109,11 +109,13 @@ namespace mc {
     Trapdoor = 0x60,
 	EggBlock = 0x61,
 	StoneBrick = 0x62,
-	HugeRedMushroom = 0x63,
-	HugeBrownMushroom = 0x64,
+	HugeBrownMushroom = 0x63,
+	HugeRedMushroom = 0x64,
 	IronBars = 0x65,
 	GlassPane = 0x66,
-	Watermelon = 0x67,
+	Melon = 0x67,
+	PumpkinStem = 0x68;
+	MelonStem = 0x69;
 	Vines = 0x6A,
 	FenceGate = 0x6B,
 	BrickStairs = 0x6C,

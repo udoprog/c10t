@@ -6,3 +6,6 @@ CMakeCache.txt
 Makefile
 *.cmake
 src/config.hpp
+*.a
+c10t
+

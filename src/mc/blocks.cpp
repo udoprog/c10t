@@ -13,6 +13,8 @@ namespace mc {
   color *MaterialSideColor;
   color *WoolColor;
   color *StepColor;
+  color *StoneBrickColor;
+  color *EggBlockColor;
 
   MaterialMode *MaterialModes;
 
@@ -23,6 +25,8 @@ namespace mc {
     MaterialModes = new enum MaterialMode[MaterialCount];
     WoolColor = new color[WoolColorCount];
     StepColor = new color[StepColorCount];
+    StoneBrickColor = new color[StoneBrickColorCount];
+    EggBlockColor = new color[EggBlockColorCount];
 
     for (int i = 0; i < MaterialCount; i++) {
       MaterialName[i] = DefaultName;
@@ -525,6 +529,16 @@ namespace mc {
     StepColor[StepSandstone] = MaterialColor[Sandstone];
     StepColor[StepWood] = MaterialColor[Wood];
     StepColor[StepCobblestone] = MaterialColor[Cobblestone];
+    StepColor[StepBrick] = MaterialColor[Brick];
+    StepColor[StepStoneBrick] = MaterialColor[StoneBrick];
+
+    StoneBrickColor[StoneBrickNormal] = MaterialColor[StoneBrick];
+    StoneBrickColor[StoneBrickMossy] = MaterialColor[MossyCobblestone];
+    StoneBrickColor[StoneBrickCracked] = MaterialColor[StoneBrick];
+
+    EggBlockColor[EggBlockStone] = MaterialColor[Stone];
+    EggBlockColor[EggBlockCobblestone] = MaterialColor[Cobblestone];
+    EggBlockColor[EggBlockStoneBrick] = MaterialColor[Brick];
   }
   
   void deinitialize_constants() {

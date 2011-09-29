@@ -156,7 +156,23 @@ namespace mc {
     StepSandstone,
     StepWood,
     StepCobblestone,
+    StepBrick,
+    StepStoneBrick,
     StepColorCount
+  };
+
+  enum {
+    StoneBrickNormal = 0x00,
+    StoneBrickMossy,
+    StoneBrickCracked,
+    StoneBrickColorCount
+  };
+
+  enum {
+    EggBlockStone = 0x00,
+    EggBlockCobblestone,
+    EggBlockStoneBrick,
+    EggBlockColorCount
   };
   
   void initialize_constants();
@@ -170,6 +186,8 @@ namespace mc {
   extern color* MaterialSideColor;
   extern color* WoolColor;
   extern color* StepColor;
+  extern color* StoneBrickColor;
+  extern color* EggBlockColor;
   extern enum MaterialMode *MaterialModes;
 }
 

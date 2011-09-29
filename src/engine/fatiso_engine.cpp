@@ -67,6 +67,14 @@ void fatiso_engine::render(level_ptr level, boost::shared_ptr<image_operations> 
           int md = b_d.get4(y);
           top = mc::StepColor[md];
           side = mc::StepColor[md];
+        } else if (bt == mc::EggBlock) {
+          int md = b_d.get4(y);
+          top = mc::EggBlockColor[md];
+          side = mc::EggBlockColor[md];
+        } else if (bt == mc::StoneBrick) {
+          int md = b_d.get4(y);
+          top = mc::StoneBrickColor[md];
+          side = mc::StoneBrickColor[md];
         } else {
           top = mc::MaterialColor[bt];
           side = mc::MaterialSideColor[bt];

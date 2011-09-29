@@ -52,6 +52,12 @@ void topdown_engine::render(level_ptr level, boost::shared_ptr<image_operations>
         } else if ((bt == mc::Step) || (bt == mc::DoubleStep)) {
           int md = b_d.get4(y);
           bc = mc::StepColor[md];
+        } else if (bt == mc::EggBlock) {
+          int md = b_d.get4(y);
+          bc = mc::EggBlockColor[md];
+        } else if (bt == mc::StoneBrick) {
+          int md = b_d.get4(y);
+          bc = mc::StoneBrickColor[md];
         } else {
           bc = mc::MaterialColor[bt];
         }

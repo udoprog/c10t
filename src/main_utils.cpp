@@ -121,9 +121,7 @@ bool do_base_color_set(const char *set_str) {
     return false;
   }
 
-  mc::MaterialColor[blockid] = c;
-  mc::MaterialSideColor[blockid] = mc::MaterialColor[blockid];
-  mc::MaterialSideColor[blockid].darken(0x20);
+  mc::setColor(blockid, 0, c);
   return true;
 }
 
@@ -135,7 +133,11 @@ bool do_side_color_set(const char *set_str) {
     return false;
   }
 
-  mc::MaterialSideColor[blockid] = color(c);
+  if (mc::MaterialColorData[blockid].count > 0) {
+    mc::MaterialColorData[blockid].side[0] = color(c);
+  } else {
+    std::cerr << "Side colors cannot be set (program flow error)" << endl;
+  }
   return true;
 }
 
@@ -202,19 +204,13 @@ bool do_write_palette(settings_t& s, const fs::path& path) {
   pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base R,G,B,A>" << " " << setw(16) << "<side R,G,B,A>" << '\n';
   
   for (int i = 0; i < mc::MaterialCount; i++) {
-    color mc = mc::MaterialColor[i];
-    color msc = mc::MaterialSideColor[i];
-    pal << left << setw(20) << mc::MaterialName[i] << " " << setw(16) << mc << " " << setw(16) << msc << '\n';
-
-    if (mc::MaterialDataColor[i]) {
-      for (int j = 0; j < 16; j++) {
-        color materialDataColor = mc::MaterialDataColor[i][j];
-        if (materialDataColor != color(0, 0, 0, 255)) {
-          std::ostringstream name;
-          name << mc::MaterialName[i] << ":" << j;
-          pal << left << setw(20) << name.str() << " " << setw(16) << materialDataColor << '\n';
-        }
-      }
+    for (int j = 0; j < mc::MaterialColorData[i].count; j++) {
+      color topCol = mc::MaterialColorData[i].top[j];
+      color sideCol = mc::MaterialColorData[i].side[j];
+      std::ostringstream name;
+      name << mc::MaterialName[i] << ":" << j;
+      pal << left << setw(20) << name.str() << " " << setw(16)
+        << topCol << " " << setw(16) << sideCol << '\n';
     }
   }
 
@@ -239,7 +235,7 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
     tokenizer tokens(line, sep);
     
     int blockid = 0, i = 0, data = -1, dataPos = 0;
-    color c;
+    color top, side;
     
     for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++i) {
       string token = *tok_iter;
@@ -253,14 +249,8 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
         case 0:
           if ((dataPos = token.find(':')) != string::npos) {
             data = lexical_cast<int>(token.substr(dataPos + 1));
-            if (data >= 16) {
+            if (data < 0 || data >= 16) {
               return false;
-            }
-            if (!mc::MaterialDataColor[blockid]) {
-              mc::MaterialDataColor[blockid] = new color[16];
-              for (int j = 0; j < 16; j++) {
-                mc::MaterialDataColor[blockid][j] = color(0, 0, 0, 255);
-              }
             }
             token.resize(dataPos);
           }
@@ -270,27 +260,21 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
           }
           break;
         case 1:
-          if (!parse_color(token, c)) {
+          if (!parse_color(token, top)) {
             return false;
           }
           
-          if (data >= 0) {
-            mc::MaterialDataColor[blockid][data] = c;
-            break;
-          }
-
-          mc::MaterialColor[blockid] = c;
-          c.darken(0x20);
-          mc::MaterialSideColor[blockid] = c;
+          /* don't set color here so we only have ONE call to setColor below */
           break;
         case 2:
-          if (!parse_color(token, c)) {
+          if (!parse_color(token, side)) {
             return false;
           }
           
-          if (data < 0) {
-            mc::MaterialSideColor[blockid] = c;
-          }
+	  /* colors read from the palette are unfortunately
+           * darkened by default and we can't avoid this for now :(
+           */
+          mc::setColor(blockid, data, top, side);
           break;
         default:
           break;
@@ -469,8 +453,12 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         s.cache_compress = true;
         break;
       case 14:
-        for (int i = mc::Air + 1; i < mc::MaterialCount; i++)
-          mc::MaterialColor[i].a = 0xff, mc::MaterialSideColor[i].a = 0xff;
+        for (int i = mc::Air + 1; i < mc::MaterialCount; i++) {
+          for (int j = 0 ; j < mc::MaterialColorData[i].count ; j++) {
+            mc::MaterialColorData[i].top[j].a = 0xFF;
+            mc::MaterialColorData[i].side[j].a = 0xFF;
+          }
+        }
         break;
       case 15: s.striped_terrain = true; break;
       case 21:

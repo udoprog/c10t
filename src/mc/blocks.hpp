@@ -104,25 +104,25 @@ namespace mc {
     Portal = 0x5A,
     Jackolantern = 0x5B,
     Cake = 0x5C,
-	RedstoneRepeaterOn = 0x5D,
-	RedstoneRepeaterOff = 0x5E,
+    RedstoneRepeaterOn = 0x5D,
+    RedstoneRepeaterOff = 0x5E,
     Trapdoor = 0x60,
-	EggBlock = 0x61,
-	StoneBrick = 0x62,
-	HugeBrownMushroom = 0x63,
-	HugeRedMushroom = 0x64,
-	IronBars = 0x65,
-	GlassPane = 0x66,
-	Melon = 0x67,
-	PumpkinStem = 0x68,
-	MelonStem = 0x69,
-	Vines = 0x6A,
-	FenceGate = 0x6B,
-	BrickStairs = 0x6C,
-	StoneBrickStairs = 0x6D,
+    EggBlock = 0x61,
+    StoneBrick = 0x62,
+    HugeBrownMushroom = 0x63,
+    HugeRedMushroom = 0x64,
+    IronBars = 0x65,
+    GlassPane = 0x66,
+    Melon = 0x67,
+    PumpkinStem = 0x68,
+    MelonStem = 0x69,
+    Vines = 0x6A,
+    FenceGate = 0x6B,
+    BrickStairs = 0x6C,
+    StoneBrickStairs = 0x6D,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
-    MaterialCount = 256
+    MaterialCount = 0x100
   };
 
   enum {
@@ -150,36 +150,58 @@ namespace mc {
     StepSandstone,
     StepWood,
     StepCobblestone,
-	StepColorCount
+    StepColorCount
   };
   
   void initialize_constants();
   void deinitialize_constants();
-  
+
+  extern const color SharedInvisColor;
+  extern const color SharedDefaultColor;
+
+  typedef struct {
+    int count;
+    color* top;
+    color* side;
+  } MaterialColorT;
+
   extern const int MapY;
   extern const int MapX;
   extern const int MapZ;
   extern const char **MaterialName;
-  extern color* MaterialColor;
-  extern color* MaterialSideColor;
-  extern color **MaterialDataColor;
+  extern MaterialColorT *MaterialColorData;
   extern enum MaterialMode *MaterialModes;
 
   inline color getColor(int material) {
-    return MaterialColor[material];
+    return MaterialColorData[material].top[0];
   }
 
   inline color getSideColor(int material) {
-    return MaterialSideColor[material];
+    return MaterialColorData[material].side[0];
   }
 
   inline color getColor(int material, int data) {
-    return MaterialDataColor[material][data];
+    if (data >= MaterialColorData[material].count) {
+      data = 0;
+    }
+    return MaterialColorData[material].top[data];
   }
 
   inline color getSideColor(int material, int data) {
-    return MaterialDataColor[material][data];
+    if (data >= MaterialColorData[material].count) {
+      data = 0;
+    }
+    return MaterialColorData[material].side[data];
   }
+  
+  /**
+   * Sets the color values for a material at the specified index.
+   * Notice: the side color is drakened with value 50 automatically, unless
+   * you specifiy the darken parameter as false.
+   * Hint: use SharedInvisColor for the side value to copy the top color
+   */
+  void setColor(int material, int idx, color top,
+    color side = SharedInvisColor, bool darken = true);
 }
 
 #endif /* _BLOCKS_H_ */

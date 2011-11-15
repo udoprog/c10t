@@ -3,33 +3,34 @@
 #include "blocks.hpp"
 
 namespace mc {
+  const color SharedInvisColor = color(0, 0, 0, 0);
+  const color SharedDefaultColor = color(0, 0, 0, 0xff);
+
   const int MapX = 0x10;
   const int MapZ = 0x10;
   const int MapY = 0x80;
 
   const char *DefaultName = "None";
+  
   const char **MaterialName;
-  color *MaterialColor;
-  color *MaterialSideColor;
-  color **MaterialDataColor;
-
+  MaterialColorT *MaterialColorData;
+  
   MaterialMode *MaterialModes;
 
   void initialize_constants() {
     MaterialName = new const char*[MaterialCount];
-    MaterialColor = new color[MaterialCount];
-    MaterialSideColor = new color[MaterialCount];
+    MaterialColorData = new MaterialColorT[MaterialCount];
     MaterialModes = new enum MaterialMode[MaterialCount];
-    MaterialDataColor = new color*[MaterialCount];
 
     for (int i = 0; i < MaterialCount; i++) {
       MaterialName[i] = DefaultName;
-      MaterialColor[i] = color(0, 0, 0, 0xff);
-      MaterialSideColor[i] = color(0, 0, 0, 0xff);
+      MaterialColorData[i].top = new color[16];
+      MaterialColorData[i].side = new color[16];
+      MaterialColorData[i].count = 0;
+      setColor(i, 0, SharedDefaultColor);
       MaterialModes[i] = Block;
-      MaterialDataColor[i] = 0;
     }
-    
+
     MaterialName[Air] = "Air";
     MaterialName[Stone] = "Stone";
     MaterialName[Grass] = "Grass";
@@ -121,243 +122,135 @@ namespace mc {
     MaterialName[Trapdoor] = "Trapdoor";
     MaterialName[Portal] = "Portal";
     MaterialName[Jackolantern] = "Jackolantern";
-	MaterialName[RedstoneRepeaterOn] = "RedstoneRepeaterOn";
-	MaterialName[RedstoneRepeaterOff] = "RedstoneRepeaterOff";
+    MaterialName[RedstoneRepeaterOn] = "RedstoneRepeaterOn";
+    MaterialName[RedstoneRepeaterOff] = "RedstoneRepeaterOff";
     MaterialName[Cake] = "Cake";
-	MaterialName[EggBlock] = "EggBlock";
-	MaterialName[StoneBrick] = "StoneBrick";
-	MaterialName[HugeRedMushroom] = "HugeRedMushroom";
-	MaterialName[HugeBrownMushroom] = "HugeBrownMushroom";
-	MaterialName[IronBars] = "IronBars";
-	MaterialName[GlassPane] = "GlassPane";
-	MaterialName[Melon] = "Melon";
-	MaterialName[PumpkinStem] = "PumpkinStem";
-	MaterialName[MelonStem] = "MelonStem";
-	MaterialName[Vines] = "Vines";
-	MaterialName[FenceGate] = "FenceGate";
-	MaterialName[BrickStairs] = "BrickStairs";
-	MaterialName[StoneBrickStairs] = "StoneBrickStairs";
+    MaterialName[EggBlock] = "EggBlock";
+    MaterialName[StoneBrick] = "StoneBrick";
+    MaterialName[HugeRedMushroom] = "HugeRedMushroom";
+    MaterialName[HugeBrownMushroom] = "HugeBrownMushroom";
+    MaterialName[IronBars] = "IronBars";
+    MaterialName[GlassPane] = "GlassPane";
+    MaterialName[Melon] = "Melon";
+    MaterialName[PumpkinStem] = "PumpkinStem";
+    MaterialName[MelonStem] = "MelonStem";
+    MaterialName[Vines] = "Vines";
+    MaterialName[FenceGate] = "FenceGate";
+    MaterialName[BrickStairs] = "BrickStairs";
+    MaterialName[StoneBrickStairs] = "StoneBrickStairs";
     MaterialName[PineLeaves] = "PineLeaves";
     MaterialName[BirchLeaves] = "BirchLeaves";
     
-    MaterialColor[Air] = color(255,255,255,0);
-    MaterialColor[Stone] = color(128,128,128,255);
-    MaterialColor[Grass] = color(120,172,70,255);
-    MaterialColor[Dirt] = color(134,96,67,255);
-    MaterialColor[Cobblestone] = color(100,100,100,255);
-    MaterialColor[Wood] = color(157,128,79,255);
-    MaterialColor[Sapling] = color(120,120,120,0);
-    MaterialColor[Bedrock] = color(84,84,84,255);
-    MaterialColor[Water] = color(56,68,127,64);
-    MaterialColor[StationaryWater] = color(56,68,127,64);
-    MaterialColor[Lava] = color(255,90,0,255);
-    MaterialColor[StationaryLava] = color(255,90,0,255);
-    MaterialColor[Sand] = color(218,210,158,255);
-    MaterialColor[Gravel] = color(136,126,126,255);
-    MaterialColor[GoldOre] = color(143,140,125,255);
-    MaterialColor[IronOre] = color(136,130,127,255);
-    MaterialColor[CoalOre] = color(115,115,115,255);
-    MaterialColor[Log] = color(102,81,51,255);
-    MaterialColor[Leaves] = color(0x4a,0x83,0x42,0x80);
-    MaterialColor[Sponge] = color(0xc3,0xc3,0x32,0xff);
-    MaterialColor[Glass] = color(255,255,255,48);
-    MaterialColor[LapisLazuliOre] = color(102,112,134,255);
-    MaterialColor[LapisLazuliBlock] = color(29,71,165,255);
-    MaterialColor[Dispenser] = color(107,107,107,255);
-    MaterialColor[Sandstone] = MaterialColor[Sand];
-    MaterialColor[NoteBlock] = color(100,67,50,255);
-    MaterialColor[Bed] = color(150,0,0,255);
-    MaterialColor[PoweredRail] = color(120, 120, 120, 128);
-    MaterialColor[DetectorRail] = MaterialColor[PoweredRail];
-    MaterialColor[StickyPistonBase] = color(157,192,79,255);
-    MaterialColor[TallGrass] = color(0x90, 0xbc, 0x27, 0xff);
-    MaterialColor[DeadShrub] = MaterialColor[Wood];
-    MaterialColor[PistonBase] = MaterialColor[Wood];
-    MaterialColor[PistonPlatform] = MaterialColor[Air];
-    MaterialColor[YellowFlower] = color(255,255,0,255);
-    MaterialColor[RedRose] = color(255,0,0,255);
-    MaterialColor[BrownMushroom] = color(0x00, 0x00, 0x00, 0x00);
-    MaterialColor[RedMushroom] = color(0x00, 0x00, 0x00, 0x00);
-    MaterialColor[GoldBlock] = color(0xff, 0xed, 0x8c, 0xff);
-    MaterialColor[IronBlock] = color(0xd9, 0xd9, 0xd9, 0xff);
-    MaterialColor[DoubleStep] = color(200,200,200,255);
-    MaterialColor[Step] = color(200,200,200,255);
-    MaterialColor[Brick] = color(0x56, 0x23, 0x17, 0xff);
-    MaterialColor[TNT] = color(0xff, 0x0, 0x0, 0xff);
-    MaterialColor[Bookcase] = color(0xbf, 0xa9, 0x74, 0xff);
-    MaterialColor[MossyCobblestone] = color(0x7f, 0xae, 0x7d, 0xff);
-    MaterialColor[Obsidian] = color(0x11, 0x0d, 0x1a, 0xff);
-    MaterialColor[Torch] = color(0xff, 0xe1, 0x60,0xd0);
-    MaterialColor[Fire] = color(0xe0, 0xae, 0x15, 0xff);
-    MaterialColor[MobSpawner] = color(0xff, 0xff, 0xff, 0x00);
-    MaterialColor[WoodenStairs] = color(0xbf, 0xa9, 0x74, 0xff);
-    MaterialColor[Chest] = color(0xbf, 0x87, 0x02, 0xff);
-    MaterialColor[RedstoneWire] = color(0x6f, 0x01, 0x01, 0xff);
-    MaterialColor[DiamondOre] = color(129,140,143,255);
-    MaterialColor[DiamondBlock] = color(45,166,152,255);
-    MaterialColor[Workbench] = color(0xa9, 0x6b, 0x00, 0xff);
-    MaterialColor[Crops] = color(0x90, 0xbc, 0x27, 0xff);
-    MaterialColor[Soil] = MaterialColor[Dirt];
-    MaterialColor[Furnace] = color(0xbc, 0xbc, 0xbc, 0xff);
-    MaterialColor[BurningFurnace] = color(0xdd, 0xdd, 0xdd, 0xff);
-    MaterialColor[SignPost] = color(0x0, 0x0, 0x0, 0x0);
-    MaterialColor[WoodenDoor] = color();
-    MaterialColor[Ladder] = color(0xff, 0xc8, 0x8c, 0);
-    MaterialColor[MinecartTracks] = MaterialColor[PoweredRail];
-    MaterialColor[CobblestoneStairs] = color(120, 120, 120, 128);
-    MaterialColor[WallSign] = color();
-    MaterialColor[Lever] = color();
-    MaterialColor[StonePressurePlate] = color(120,120,120,255);
-    MaterialColor[IronDoor] = color();
-    MaterialColor[WoodenPressurePlate] = color();
-    MaterialColor[RedstoneOre] = color(143,125,125,0xff);
-    MaterialColor[GlowingRedstoneOre] = color(163,145,145,0xff);
-    MaterialColor[RedstoneTorchOff] = color(181,140,64,32);
-    MaterialColor[RedstoneTorchOn] = color(255,0,0,0xb0);
-    MaterialColor[StoneButton] = color();
-    MaterialColor[Snow] = color(255, 255, 255, 255);
-    MaterialColor[Ice] = color(120, 120, 255, 120);
-    MaterialColor[SnowBlock] = color(255, 255, 255, 255);
-    MaterialColor[Cactus] = color(85,107,47,255);
-    MaterialColor[Clay] = color(0x90, 0x98, 0xa8, 0xff);
-    MaterialColor[Reed] = color(193,234,150,255);
-    MaterialColor[Jukebox] = color(0x7d, 0x42, 0x2c, 0xff);
-    MaterialColor[Fence] = color(0x58, 0x36, 0x16, 200);
-    MaterialColor[Pumpkin] = color(0xe3, 0x90, 0x1d, 0xff);
-    MaterialColor[Bloodstone] = color(0xc2, 0x73, 0x73, 0xff);
-    MaterialColor[Slowsand] = color(0x79, 0x61, 0x52, 0xff);
-    MaterialColor[Lightstone] = color(0xff, 0xbc, 0x5e, 0xff);
-    MaterialColor[Trapdoor] = MaterialColor[WoodenPressurePlate];
-    MaterialColor[Portal] = color(0x3c, 0x0d, 0x6a, 0x7f);
-    MaterialColor[Jackolantern] = MaterialColor[Pumpkin];
-	MaterialColor[RedstoneRepeaterOn] = MaterialColor[RedstoneWire];
-	MaterialColor[RedstoneRepeaterOff] = MaterialColor[RedstoneWire];
-    MaterialColor[Cake] = color(228,205,206,255);
-	MaterialColor[EggBlock] = MaterialColor[Stone];
-	MaterialColor[StoneBrick] = MaterialColor[Stone];
-	MaterialColor[HugeRedMushroom] = color(183,31,29,0xff);
-	MaterialColor[HugeBrownMushroom] = color(206,174,123,0xff);
-	MaterialColor[IronBars] = MaterialColor[IronBlock];
-	MaterialColor[GlassPane] = MaterialColor[Glass];
-	MaterialColor[Melon] = color(50,200,45,192);
-	MaterialColor[PumpkinStem] = color(0x00, 0x00, 0x00, 0x00);
-	MaterialColor[MelonStem] = color(0x00, 0x00, 0x00, 0x00);
-	MaterialColor[Vines] = color(50,89,45,128);
-	MaterialColor[FenceGate] = MaterialColor[Fence];
-	MaterialColor[BrickStairs] = MaterialColor[Brick];
-	MaterialColor[StoneBrickStairs] = MaterialColor[Stone];
-    MaterialColor[PineLeaves] = color(50,89,45,128);
-    MaterialColor[BirchLeaves] = color(94,167,84,128);
-    
-    MaterialSideColor[Air] = color(MaterialColor[Air]);
-    MaterialSideColor[Stone] = color(MaterialColor[Stone]);
-    MaterialSideColor[Grass] = color(MaterialColor[Dirt]);
-    MaterialSideColor[Dirt] = color(MaterialColor[Dirt]);
-    MaterialSideColor[Cobblestone] = color(MaterialColor[Cobblestone]);
-    MaterialSideColor[Wood] = color(MaterialColor[Wood]);
-    MaterialSideColor[Sapling] = color(MaterialColor[Sapling]);
-    MaterialSideColor[Bedrock] = color(MaterialColor[Bedrock]);
-    MaterialSideColor[Water] = color(MaterialColor[Water]);
-    MaterialSideColor[StationaryWater] = color(MaterialColor[StationaryWater]);
-    MaterialSideColor[Lava] = color(MaterialColor[Lava]);
-    MaterialSideColor[StationaryLava] = color(MaterialColor[StationaryLava]);
-    MaterialSideColor[Sand] = color(MaterialColor[Sand]);
-    MaterialSideColor[Gravel] = color(MaterialColor[Gravel]);
-    MaterialSideColor[GoldOre] = color(MaterialColor[GoldOre]);
-    MaterialSideColor[IronOre] = color(MaterialColor[IronOre]);
-    MaterialSideColor[CoalOre] = color(MaterialColor[CoalOre]);
-    MaterialSideColor[Log] = color(MaterialColor[Log]);
-    MaterialSideColor[Leaves] = color(MaterialColor[Leaves]);
-    MaterialSideColor[Sponge] = color(MaterialColor[Sponge]);
-    MaterialSideColor[Glass] = color(MaterialColor[Glass]);
-    MaterialSideColor[LapisLazuliOre] = color(MaterialColor[LapisLazuliOre]);
-    MaterialSideColor[LapisLazuliBlock] = color(MaterialColor[LapisLazuliBlock]);
-    MaterialSideColor[Dispenser] = color(MaterialColor[Dispenser]);
-    MaterialSideColor[Sandstone] = color(MaterialColor[Sandstone]);
-    MaterialSideColor[NoteBlock] = color(MaterialColor[NoteBlock]);
-    MaterialSideColor[Bed] = color(MaterialColor[Bed]);
-    MaterialSideColor[PoweredRail] = color(255,220,0,128);
-    MaterialSideColor[DetectorRail] = color(230,0,0,128);
-    MaterialSideColor[StickyPistonBase] = color(MaterialColor[Cobblestone]);
-    MaterialSideColor[TallGrass] = color(0x90, 0xbc, 0x27, 0xff);
-    MaterialSideColor[DeadShrub] = color(MaterialColor[Wood]);
-    MaterialSideColor[PistonBase] = color(MaterialColor[Cobblestone]);
-    MaterialSideColor[PistonPlatform] = color(MaterialColor[Air]);
-    MaterialSideColor[YellowFlower] = color(MaterialColor[YellowFlower]);
-    MaterialSideColor[RedRose] = color(MaterialColor[RedRose]);
-    MaterialSideColor[BrownMushroom] = color(MaterialColor[BrownMushroom]);
-    MaterialSideColor[RedMushroom] = color(MaterialColor[RedMushroom]);
-    MaterialSideColor[GoldBlock] = color(MaterialColor[GoldBlock]);
-    MaterialSideColor[IronBlock] = color(MaterialColor[IronBlock]);
-    MaterialSideColor[DoubleStep] = color(MaterialColor[DoubleStep]);
-    MaterialSideColor[Step] = color(MaterialColor[Step]);
-    MaterialSideColor[Brick] = color(MaterialColor[Brick]);
-    MaterialSideColor[TNT] = color(MaterialColor[TNT]);
-    MaterialSideColor[Bookcase] = color(MaterialColor[Bookcase]);
-    MaterialSideColor[MossyCobblestone] = color(MaterialColor[MossyCobblestone]);
-    MaterialSideColor[Obsidian] = color(MaterialColor[Obsidian]);
-    MaterialSideColor[Torch] = color(MaterialColor[Torch]);
-    MaterialSideColor[Fire] = color(MaterialColor[Fire]);
-    MaterialSideColor[MobSpawner] = color(MaterialColor[MobSpawner]);
-    MaterialSideColor[WoodenStairs] = color(MaterialColor[WoodenStairs]);
-    MaterialSideColor[Chest] = color(MaterialColor[Chest]);
-    MaterialSideColor[RedstoneWire] = color(MaterialColor[RedstoneWire]);
-    MaterialSideColor[DiamondOre] = color(MaterialColor[DiamondOre]);
-    MaterialSideColor[DiamondBlock] = color(MaterialColor[DiamondBlock]);
-    MaterialSideColor[Workbench] = color(MaterialColor[Workbench]);
-    MaterialSideColor[Crops] = color(MaterialColor[Crops]);
-    MaterialSideColor[Soil] = color(MaterialColor[Soil]);
-    MaterialSideColor[Furnace] = color(MaterialColor[Furnace]);
-    MaterialSideColor[BurningFurnace] = color(MaterialColor[BurningFurnace]);
-    MaterialSideColor[SignPost] = color(MaterialColor[SignPost]);
-    MaterialSideColor[WoodenDoor] = color(MaterialColor[WoodenDoor]);
-    MaterialSideColor[Ladder] = color(MaterialColor[Ladder]);
-    MaterialSideColor[MinecartTracks] = color(MaterialColor[MinecartTracks]);
-    MaterialSideColor[CobblestoneStairs] = color(MaterialColor[CobblestoneStairs]);
-    MaterialSideColor[WallSign] = color(MaterialColor[WallSign]);
-    MaterialSideColor[Lever] = color(MaterialColor[Lever]);
-    MaterialSideColor[StonePressurePlate] = color(MaterialColor[StonePressurePlate]);
-    MaterialSideColor[IronDoor] = color(MaterialColor[IronDoor]);
-    MaterialSideColor[WoodenPressurePlate] = color(MaterialColor[WoodenPressurePlate]);
-    MaterialSideColor[RedstoneOre] = color(MaterialColor[RedstoneOre]);
-    MaterialSideColor[GlowingRedstoneOre] = color(MaterialColor[GlowingRedstoneOre]);
-    MaterialSideColor[RedstoneTorchOff] = color(MaterialColor[RedstoneTorchOff]);
-    MaterialSideColor[RedstoneTorchOn] = color(MaterialColor[RedstoneTorchOn]);
-    MaterialSideColor[StoneButton] = color(MaterialColor[StoneButton]);
-    MaterialSideColor[Snow] = color(MaterialColor[Snow]);
-    MaterialSideColor[Ice] = color(MaterialColor[Ice]);
-    MaterialSideColor[SnowBlock] = color(MaterialColor[SnowBlock]);
-    MaterialSideColor[Cactus] = color(MaterialColor[Cactus]);
-    MaterialSideColor[Clay] = color(MaterialColor[Clay]);
-    MaterialSideColor[Reed] = color(MaterialColor[Reed]);
-    MaterialSideColor[Jukebox] = color(MaterialColor[Jukebox]);
-    MaterialSideColor[Fence] = color(MaterialColor[Fence]);
-    MaterialSideColor[Pumpkin] = color(MaterialColor[Pumpkin]);
-    MaterialSideColor[Bloodstone] = color(MaterialColor[Bloodstone]);
-    MaterialSideColor[Slowsand] = color(MaterialColor[Slowsand]);
-    MaterialSideColor[Lightstone] = color(MaterialColor[Lightstone]);
-    MaterialSideColor[Trapdoor] = color(MaterialColor[WoodenPressurePlate]);
-    MaterialSideColor[Portal] = color(MaterialColor[Portal]);
-    MaterialSideColor[Jackolantern] = color(MaterialColor[Jackolantern]);
-    MaterialSideColor[Cake] = color(MaterialColor[Cake]);
-	MaterialSideColor[RedstoneRepeaterOn] = color(MaterialColor[RedstoneWire]);
-	MaterialSideColor[RedstoneRepeaterOff] = color(MaterialColor[RedstoneWire]);
-	MaterialSideColor[EggBlock] = color(MaterialColor[Stone]);
-	MaterialSideColor[StoneBrick] = color(MaterialColor[Stone]);
-	MaterialSideColor[HugeRedMushroom] = color(MaterialColor[HugeRedMushroom]);
-	MaterialSideColor[HugeBrownMushroom] = color(MaterialColor[HugeBrownMushroom]);
-	MaterialSideColor[IronBars] = color(MaterialColor[IronBlock]);
-	MaterialSideColor[GlassPane] = color(MaterialColor[Glass]);
-	MaterialSideColor[Melon] = color(MaterialColor[Melon]);
-	MaterialSideColor[PumpkinStem] = color(MaterialColor[PumpkinStem]);
-	MaterialSideColor[MelonStem] = color(MaterialColor[MelonStem]);
-	MaterialSideColor[Vines] = color(50,89,45,128);
-	MaterialSideColor[FenceGate] = color(MaterialColor[Fence]);
-	MaterialSideColor[BrickStairs] = color(MaterialColor[Brick]);
-	MaterialSideColor[StoneBrickStairs] = color(MaterialColor[Stone]);
-    MaterialSideColor[PineLeaves] = color(MaterialColor[PineLeaves]);
-    MaterialSideColor[BirchLeaves] = color(MaterialColor[BirchLeaves]);
-    
+    setColor(Air, 0, color(255,255,255,0), SharedInvisColor, false);
+    setColor(Stone, 0, color(128,128,128,255));
+    setColor(Dirt, 0, color(134,96,67,255));
+    setColor(Grass, 0, color(120,172,70,255), getColor(Dirt));
+    setColor(Cobblestone, 0, color(100,100,100,255));
+    setColor(Wood, 0, color(157,128,79,255));
+    setColor(Sapling, 0, color(120,120,120,0));
+    setColor(Bedrock, 0, color(84,84,84,255));
+    setColor(Water, 0, color(56,68,127,64), SharedInvisColor, false);
+    setColor(StationaryWater, 0, color(56,68,127,64), SharedInvisColor, false);
+    setColor(Lava, 0, color(255,90,0,255));
+    setColor(StationaryLava, 0, color(255,90,0,255));
+    setColor(Sand, 0, color(218,210,158,255));
+    setColor(Gravel, 0, color(136,126,126,255));
+    setColor(GoldOre, 0, color(143,140,125,255));
+    setColor(IronOre, 0, color(136,130,127,255));
+    setColor(CoalOre, 0, color(115,115,115,255));
+    setColor(Log, 0, color(102,81,51,255));
+    setColor(Leaves, 0, color(0x4a,0x83,0x42,0x80));
+    setColor(Sponge, 0, color(0xc3,0xc3,0x32,0xff));
+    setColor(Glass, 0, color(255,255,255,48));
+    setColor(LapisLazuliOre, 0, color(102,112,134,255));
+    setColor(LapisLazuliBlock, 0, color(29,71,165,255));
+    setColor(Dispenser, 0, color(107,107,107,255));
+    setColor(Sandstone, 0, getColor(Sand));
+    setColor(NoteBlock, 0, color(100,67,50,255));
+    setColor(Bed, 0, color(150,0,0,255));
+    setColor(PoweredRail, 0, color(120, 120, 120, 128), color(255,220,0,128));
+    setColor(DetectorRail, 0, getColor(PoweredRail), color(230,0,0,128));
+    setColor(StickyPistonBase, 0, color(157,192,79,255));
+    setColor(TallGrass, 0,
+      color(0x90, 0xbc, 0x27, 0xff), color(0x90, 0xbc, 0x27, 0xff));
+    setColor(DeadShrub, 0, getColor(Wood));
+    setColor(PistonBase, 0, getColor(Wood));
+    setColor(PistonPlatform, 0, getColor(Air));
+    setColor(YellowFlower, 0, color(255,255,0,255));
+    setColor(RedRose, 0, color(255,0,0,255));
+    setColor(BrownMushroom, 0, SharedInvisColor);
+    setColor(RedMushroom, 0, SharedInvisColor);
+    setColor(GoldBlock, 0, color(0xff, 0xed, 0x8c, 0xff));
+    setColor(IronBlock, 0, color(0xd9, 0xd9, 0xd9, 0xff));
+    setColor(DoubleStep, 0, color(200,200,200,255));
+    setColor(Step, 0, color(200,200,200,255));
+    setColor(Brick, 0, color(0x56, 0x23, 0x17, 0xff));
+    setColor(TNT, 0, color(0xff, 0x0, 0x0, 0xff));
+    setColor(Bookcase, 0, color(0xbf, 0xa9, 0x74, 0xff));
+    setColor(MossyCobblestone, 0, color(0x7f, 0xae, 0x7d, 0xff));
+    setColor(Obsidian, 0, color(0x11, 0x0d, 0x1a, 0xff));
+    setColor(Torch, 0, color(0xff, 0xe1, 0x60,0xd0), SharedInvisColor, false);
+    setColor(Fire, 0, color(0xe0, 0xae, 0x15, 0xff));
+    setColor(MobSpawner, 0, color(0xff, 0xff, 0xff, 0x00));
+    setColor(WoodenStairs, 0, color(0xbf, 0xa9, 0x74, 0xff));
+    setColor(Chest, 0, color(0xbf, 0x87, 0x02, 0xff));
+    setColor(RedstoneWire, 0, color(0x6f, 0x01, 0x01, 0xff));
+    setColor(DiamondOre, 0, color(129,140,143,255));
+    setColor(DiamondBlock, 0, color(45,166,152,255));
+    setColor(Workbench, 0, color(0xa9, 0x6b, 0x00, 0xff));
+    setColor(Crops, 0, color(0x90, 0xbc, 0x27, 0xff));
+    setColor(Soil, 0, getColor(Dirt));
+    setColor(Furnace, 0, color(0xbc, 0xbc, 0xbc, 0xff));
+    setColor(BurningFurnace, 0, color(0xdd, 0xdd, 0xdd, 0xff));
+    setColor(SignPost, 0, SharedInvisColor);
+    setColor(WoodenDoor, 0, SharedInvisColor);
+    setColor(Ladder, 0, color(0xff, 0xc8, 0x8c, 0));
+    setColor(MinecartTracks, 0, getColor(PoweredRail));
+    setColor(CobblestoneStairs, 0, color(120, 120, 120, 128));
+    setColor(WallSign, 0, SharedInvisColor);
+    setColor(Lever, 0, SharedInvisColor);
+    setColor(StonePressurePlate, 0, color(120,120,120,255));
+    setColor(IronDoor, 0, SharedInvisColor);
+    setColor(WoodenPressurePlate, 0, SharedInvisColor);
+    setColor(RedstoneOre, 0, color(143,125,125,0xff));
+    setColor(GlowingRedstoneOre, 0, color(163,145,145,0xff));
+    setColor(RedstoneTorchOff, 0, color(181,140,64,32),SharedInvisColor,false);
+    setColor(RedstoneTorchOn, 0, color(255,0,0,0xb0), SharedInvisColor, false);
+    setColor(StoneButton, 0, SharedInvisColor);
+    setColor(Snow, 0, color(255, 255, 255, 255));
+    setColor(Ice, 0, color(120, 120, 255, 120));
+    setColor(SnowBlock, 0, color(255, 255, 255, 255));
+    setColor(Cactus, 0, color(85,107,47,255));
+    setColor(Clay, 0, color(0x90, 0x98, 0xa8, 0xff));
+    setColor(Reed, 0, color(193,234,150,255));
+    setColor(Jukebox, 0, color(0x7d, 0x42, 0x2c, 0xff));
+    setColor(Fence, 0, color(0x58, 0x36, 0x16, 200));
+    setColor(Pumpkin, 0, color(0xe3, 0x90, 0x1d, 0xff));
+    setColor(Bloodstone, 0, color(0xc2, 0x73, 0x73, 0xff));
+    setColor(Slowsand, 0, color(0x79, 0x61, 0x52, 0xff));
+    setColor(Lightstone, 0, color(0xff, 0xbc, 0x5e, 0xff));
+    setColor(Trapdoor, 0, getColor(WoodenPressurePlate));
+    setColor(Portal, 0, color(0x3c, 0x0d, 0x6a, 0x7f));
+    setColor(Jackolantern, 0, getColor(Pumpkin));
+    setColor(RedstoneRepeaterOn, 0, getColor(RedstoneWire));
+    setColor(RedstoneRepeaterOff, 0, getColor(RedstoneWire));
+    setColor(Cake, 0, color(228,205,206,255));
+    setColor(EggBlock, 0, getColor(Stone));
+    setColor(StoneBrick, 0, getColor(Stone));
+    setColor(HugeRedMushroom, 0, color(183,31,29,0xff));
+    setColor(HugeBrownMushroom, 0, color(206,174,123,0xff));
+    setColor(IronBars, 0, getColor(IronBlock));
+    setColor(GlassPane, 0, getColor(Glass));
+    setColor(Melon, 0, color(50,200,45,192));
+    setColor(PumpkinStem, 0, color(0x00, 0x00, 0x00, 0x00));
+    setColor(MelonStem, 0, color(0x00, 0x00, 0x00, 0x00));
+    setColor(Vines, 0, color(50,89,45,128), color(50,89,45,128));
+    setColor(FenceGate, 0, getColor(Fence));
+    setColor(BrickStairs, 0, getColor(Brick));
+    setColor(StoneBrickStairs, 0, getColor(Stone));
+    setColor(PineLeaves, 0, color(50,89,45,128));
+    setColor(BirchLeaves, 0, color(94,167,84,128));
+
     MaterialModes[Air] = Block;
     MaterialModes[Stone] = Block;
     MaterialModes[Grass] = Block;
@@ -450,79 +343,75 @@ namespace mc {
     MaterialModes[Portal] = Block;
     MaterialModes[Jackolantern] = Block;
     MaterialModes[Cake] = HalfBlock;
-	MaterialModes[RedstoneRepeaterOn] = Block;
-	MaterialModes[RedstoneRepeaterOff] = Block;
-	MaterialModes[EggBlock] = Block;
-	MaterialModes[StoneBrick] = Block;
-	MaterialModes[HugeRedMushroom] = Block;
-	MaterialModes[HugeBrownMushroom] = Block;
-	MaterialModes[IronBars] = Block;
-	MaterialModes[GlassPane] = Block;
-	MaterialModes[Melon] = Block;
-	MaterialModes[PumpkinStem] = Block;
-	MaterialModes[MelonStem] = Block;
-	MaterialModes[Vines] = Block;
-	MaterialModes[FenceGate] = Block;
-	MaterialModes[BrickStairs] = Block;
-	MaterialModes[StoneBrickStairs] = Block;
+    MaterialModes[RedstoneRepeaterOn] = Block;
+    MaterialModes[RedstoneRepeaterOff] = Block;
+    MaterialModes[EggBlock] = Block;
+    MaterialModes[StoneBrick] = Block;
+    MaterialModes[HugeRedMushroom] = Block;
+    MaterialModes[HugeBrownMushroom] = Block;
+    MaterialModes[IronBars] = Block;
+    MaterialModes[GlassPane] = Block;
+    MaterialModes[Melon] = Block;
+    MaterialModes[PumpkinStem] = Block;
+    MaterialModes[MelonStem] = Block;
+    MaterialModes[Vines] = Block;
+    MaterialModes[FenceGate] = Block;
+    MaterialModes[BrickStairs] = Block;
+    MaterialModes[StoneBrickStairs] = Block;
     MaterialModes[PineLeaves] = Block;
     MaterialModes[BirchLeaves] = Block;
-    
-    for (int i = 0; i < MaterialCount; i++) {
-      MaterialSideColor[i].darken(50);
-    }
-    
-    MaterialSideColor[Air] = MaterialColor[Air];
-    MaterialSideColor[Water] = MaterialColor[Water];
-    MaterialSideColor[StationaryWater] = MaterialColor[StationaryWater];
-    MaterialSideColor[Torch] = MaterialColor[Wood];
-    MaterialSideColor[RedstoneTorchOff] = MaterialColor[Wood];
-    MaterialSideColor[RedstoneTorchOn] = MaterialColor[Wood];
 
-    MaterialDataColor[Wool] = new color[16];
+    /* Special colors depending on data value
+     * Start with the highest index to reduce allocation time complexity 
+     * The order of the following entries does not matter.
+     */
+    setColor(Wool, WoolBlack, color(27, 23, 23, 255));
+    setColor(Wool, WoolWhite, color(223, 223, 223, 255));
+    setColor(Wool, WoolOrange, color(234, 128, 55, 255));
+    setColor(Wool, WoolMagenta, color(191, 76, 201, 255));
+    setColor(Wool, WoolLightBlue, color(105, 139, 212, 255));
+    setColor(Wool, WoolYellow, color(195, 181, 28, 255));
+    setColor(Wool, WoolLightGreen, color(59, 189, 48, 255));
+    setColor(Wool, WoolPink, color(218, 132, 155, 255));
+    setColor(Wool, WoolGray, color(67, 67, 67, 255));
+    setColor(Wool, WoolLightGray, color(159, 166, 166, 255));
+    setColor(Wool, WoolCyan, color(39, 117, 150, 255));
+    setColor(Wool, WoolPurple, color(130, 54, 196, 255));
+    setColor(Wool, WoolBlue, color(39, 51, 154, 255));
+    setColor(Wool, WoolBrown, color(86, 51, 28, 255));
+    setColor(Wool, WoolDarkGreen, color(56, 77, 24, 255));
+    setColor(Wool, WoolRed, color(164, 45, 41, 255));
 
-    MaterialDataColor[Wool][WoolWhite] = color(223, 223, 223, 255);
-    MaterialDataColor[Wool][WoolOrange] = color(234, 128, 55, 255);
-    MaterialDataColor[Wool][WoolMagenta] = color(191, 76, 201, 255);
-    MaterialDataColor[Wool][WoolLightBlue] = color(105, 139, 212, 255);
-    MaterialDataColor[Wool][WoolYellow] = color(195, 181, 28, 255);
-    MaterialDataColor[Wool][WoolLightGreen] = color(59, 189, 48, 255);
-    MaterialDataColor[Wool][WoolPink] = color(218, 132, 155, 255);
-    MaterialDataColor[Wool][WoolGray] = color(67, 67, 67, 255);
-    MaterialDataColor[Wool][WoolLightGray] = color(159, 166, 166, 255);
-    MaterialDataColor[Wool][WoolCyan] = color(39, 117, 150, 255);
-    MaterialDataColor[Wool][WoolPurple] = color(130, 54, 196, 255);
-    MaterialDataColor[Wool][WoolBlue] = color(39, 51, 154, 255);
-    MaterialDataColor[Wool][WoolBrown] = color(86, 51, 28, 255);
-    MaterialDataColor[Wool][WoolDarkGreen] = color(56, 77, 24, 255);
-    MaterialDataColor[Wool][WoolRed] = color(164, 45, 41, 255);
-    MaterialDataColor[Wool][WoolBlack] = color(27, 23, 23, 255);
+    setColor(Step, StepCobblestone, getColor(Cobblestone));
+    setColor(Step, StepStone, getColor(Stone));
+    setColor(Step, StepSandstone, getColor(Sandstone));
+    setColor(Step, StepWood, getColor(Wood));
 
-    MaterialDataColor[Step] = new color[16];
-    
-    for (int i = 0; i < 16; i++) {
-      MaterialDataColor[Step][i] = color(0, 0, 0, 255);
-    }
-
-    MaterialDataColor[Step][StepStone] = MaterialColor[Stone];
-    MaterialDataColor[Step][StepSandstone] = MaterialColor[Sandstone];
-    MaterialDataColor[Step][StepWood] = MaterialColor[Wood];
-    MaterialDataColor[Step][StepCobblestone] = MaterialColor[Cobblestone];
-
-    MaterialDataColor[DoubleStep] = new color[16];
-    
-    for (int i = 0; i < 16; i++) {
-      MaterialDataColor[DoubleStep][i] = color(0, 0, 0, 255);
-    }
-
-    MaterialDataColor[DoubleStep][StepStone] = MaterialColor[Stone];
-    MaterialDataColor[DoubleStep][StepSandstone] = MaterialColor[Sandstone];
-    MaterialDataColor[DoubleStep][StepWood] = MaterialColor[Wood];
-    MaterialDataColor[DoubleStep][StepCobblestone] = MaterialColor[Cobblestone];
+    setColor(DoubleStep, StepCobblestone, getColor(Cobblestone));
+    setColor(DoubleStep, StepStone, getColor(Stone));
+    setColor(DoubleStep, StepSandstone, getColor(Sandstone));
+    setColor(DoubleStep, StepWood, getColor(Wood));
   }
   
   void deinitialize_constants() {
-    delete [] MaterialColor;
-    delete [] MaterialSideColor;
+    delete [] MaterialColorData;
+  }
+  
+  void setColor(int material, int idx, color top,
+      color side, bool darken) {
+
+    MaterialColorData[material].count =
+      idx >= MaterialColorData[material].count ?
+      1+idx : MaterialColorData[material].count;
+
+    MaterialColorData[material].top[idx] = top;
+    if (side == SharedInvisColor) {
+      MaterialColorData[material].side[idx] = color(top);
+    } else {
+      MaterialColorData[material].side[idx] = color(side);
+    }
+    if (darken) {
+      MaterialColorData[material].side[idx].darken(0x20);
+    }
   }
 }

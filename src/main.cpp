@@ -1296,7 +1296,7 @@ int do_colors() {
   out << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
-    out << i << ": " << mc::MaterialName[i] << " = " << mc::MaterialColor[i] << endl;
+    out << i << ": " << mc::MaterialName[i] << " = " << mc::getColor(i) << endl;
   }
   
   return 0;

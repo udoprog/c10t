@@ -2,6 +2,7 @@
 #define FILEFORMAT_PNG
 
 #include <png.h>
+#include <zlib.h>
 
 #include "image/image_base.hpp"
 

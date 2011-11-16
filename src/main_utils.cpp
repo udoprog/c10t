@@ -333,6 +333,7 @@ struct option long_options[] =
     {"disable-skylight",                    no_argument,         &flag,   26},
     {"center",                              required_argument,   &flag,   30},
     {"graph-block",                         required_argument,   &flag,   31},
+    {"strip-sign-prefix",                   no_argument,         &flag,   32},
     {0,                                     0,                   0,       0}
 };
 
@@ -558,6 +559,10 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         {
             return false;
         }
+        break;
+
+      case 32:
+        s.strip_sign_prefix = true;
         break;
       }
       

@@ -60,6 +60,7 @@ struct settings_t {
   bool show_signs;
   bool show_warps;
   bool silent;
+  bool strip_sign_prefix;
   bool striped_terrain;
   bool use_split;
   bool write_js;
@@ -137,6 +138,7 @@ struct settings_t {
     this->show_players = false;
     this->show_coordinates = false;
     this->show_signs = false;
+    this->strip_sign_prefix = false;
     this->show_warps = false;
     this->require_all = false;
     this->striped_terrain = false;

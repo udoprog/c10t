@@ -322,7 +322,11 @@ inline void push_sign_markers(settings_t& s, text::font_face base_font, S& signs
       continue;
     }
     
-    markers.push_back(new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z));
+    if (!s.strip_sign_prefix) {
+      markers.push_back(new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z));
+    } else {
+      markers.push_back(new marker(lm.text.substr(s.show_signs_filter.size()), "sign", sign_font, lm.x, lm.y, lm.z));
+    }
   }
 }
 
@@ -1217,6 +1221,7 @@ int do_help() {
     << "  --show-signs[=PREFIX]     - Will draw out signs from all chunks, if PREFIX   " << endl
     << "                              is specified, only signs matching the prefix will" << endl
     << "                              be drawn                                         " << endl
+    << "  --strip-sign-prefix       - When drawing sign text, removes the match prefix " << endl
     << "  --show-warps=<file>       - Will draw out warp positions from the specified  " << endl
     << "                              warps.txt file, as used by hey0's mod            " << endl
     << "  --show-coordinates        - Will draw out each chunks expected coordinates   " << endl

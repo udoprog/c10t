@@ -71,6 +71,10 @@ struct color{
   {
     return !(r == c.r && g == c.g && b == c.b && a == c.a);
   }
+  bool operator==(const color &c) const
+  {
+    return r == c.r && g == c.g && b == c.b && a == c.a;
+  }
 };
 
 #endif /* COLOR_HPP */

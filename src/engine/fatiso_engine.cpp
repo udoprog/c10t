@@ -58,19 +58,8 @@ void fatiso_engine::render(level_ptr level, boost::shared_ptr<image_operations> 
         pos_t px, py;
         part_c.project_fatiso(p, px, py);
         
-        color top, side;
-        if (bt == mc::Wool) {
-          int md = b_d.get4(y);
-          top = mc::WoolColor[md];
-          side = mc::WoolColor[md];
-        } else if ((bt == mc::Step) || (bt == mc::DoubleStep)) {
-          int md = b_d.get4(y);
-          top = mc::StepColor[md];
-          side = mc::StepColor[md];
-        } else {
-          top = mc::MaterialColor[bt];
-          side = mc::MaterialSideColor[bt];
-        }
+        color top = blockColor_top(bt, y, b_d),
+             side = blockColor_side(bt, y, b_d);
         
         if (mc::MaterialModes[bt] == mc::Block) {
           int bp = px + iw * py;

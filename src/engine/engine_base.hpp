@@ -188,4 +188,12 @@ inline bool hell_ignore_block(settings_t& s, int y, int bt, BlockRotation& b_r, 
   return false;
 }
 
+inline color blockColor_top(int blockType, int y, BlockRotation blockData) {
+  return mc::getColor(blockType, blockData.get4(y));
+}
+
+inline color blockColor_side(int blockType, int y, BlockRotation blockData) {
+  return mc::getSideColor(blockType, blockData.get4(y));
+}
+
 #endif /* ENGINE_BASE */

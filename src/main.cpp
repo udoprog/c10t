@@ -1394,6 +1394,20 @@ int main(int argc, char *argv[]){
     }
   }
   
+  /* hell mode requires entering the subdirectory DIM-1 */
+  if (s.hellmode)
+  {
+    s.world_path = s.world_path / "DIM-1";
+  }
+
+  if (!fs::is_directory(s.world_path))
+  {
+    if (!fs::is_directory(s.world_path)) {
+      error << "Does not exist: " << s.world_path.string();
+      goto exit_error;
+    }
+  }
+  
   switch(s.action) {
     case GenerateWorld:
       /* do some nice sanity checking prior to generating since this might

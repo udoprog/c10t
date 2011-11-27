@@ -11,8 +11,7 @@ namespace mc {
   const char **MaterialName;
   color *MaterialColor;
   color *MaterialSideColor;
-  color *WoolColor;
-  color *StepColor;
+  color **MaterialDataColor;
 
   MaterialMode *MaterialModes;
 
@@ -21,14 +20,14 @@ namespace mc {
     MaterialColor = new color[MaterialCount];
     MaterialSideColor = new color[MaterialCount];
     MaterialModes = new enum MaterialMode[MaterialCount];
-    WoolColor = new color[WoolColorCount];
-    StepColor = new color[StepColorCount];
+    MaterialDataColor = new color*[MaterialCount];
 
     for (int i = 0; i < MaterialCount; i++) {
       MaterialName[i] = DefaultName;
       MaterialColor[i] = color(0, 0, 0, 0xff);
       MaterialSideColor[i] = color(0, 0, 0, 0xff);
       MaterialModes[i] = Block;
+      MaterialDataColor[i] = 0;
     }
     
     MaterialName[Air] = "Air";
@@ -480,27 +479,46 @@ namespace mc {
     MaterialSideColor[RedstoneTorchOff] = MaterialColor[Wood];
     MaterialSideColor[RedstoneTorchOn] = MaterialColor[Wood];
 
-    WoolColor[WoolWhite] = color(223, 223, 223, 255);
-    WoolColor[WoolOrange] = color(234, 128, 55, 255);
-    WoolColor[WoolMagenta] = color(191, 76, 201, 255);
-    WoolColor[WoolLightBlue] = color(105, 139, 212, 255);
-    WoolColor[WoolYellow] = color(195, 181, 28, 255);
-    WoolColor[WoolLightGreen] = color(59, 189, 48, 255);
-    WoolColor[WoolPink] = color(218, 132, 155, 255);
-    WoolColor[WoolGray] = color(67, 67, 67, 255);
-    WoolColor[WoolLightGray] = color(159, 166, 166, 255);
-    WoolColor[WoolCyan] = color(39, 117, 150, 255);
-    WoolColor[WoolPurple] = color(130, 54, 196, 255);
-    WoolColor[WoolBlue] = color(39, 51, 154, 255);
-    WoolColor[WoolBrown] = color(86, 51, 28, 255);
-    WoolColor[WoolDarkGreen] = color(56, 77, 24, 255);
-    WoolColor[WoolRed] = color(164, 45, 41, 255);
-    WoolColor[WoolBlack] = color(27, 23, 23, 255);
+    MaterialDataColor[Wool] = new color[16];
 
-    StepColor[StepStone] = MaterialColor[Stone];
-    StepColor[StepSandstone] = MaterialColor[Sandstone];
-    StepColor[StepWood] = MaterialColor[Wood];
-    StepColor[StepCobblestone] = MaterialColor[Cobblestone];
+    MaterialDataColor[Wool][WoolWhite] = color(223, 223, 223, 255);
+    MaterialDataColor[Wool][WoolOrange] = color(234, 128, 55, 255);
+    MaterialDataColor[Wool][WoolMagenta] = color(191, 76, 201, 255);
+    MaterialDataColor[Wool][WoolLightBlue] = color(105, 139, 212, 255);
+    MaterialDataColor[Wool][WoolYellow] = color(195, 181, 28, 255);
+    MaterialDataColor[Wool][WoolLightGreen] = color(59, 189, 48, 255);
+    MaterialDataColor[Wool][WoolPink] = color(218, 132, 155, 255);
+    MaterialDataColor[Wool][WoolGray] = color(67, 67, 67, 255);
+    MaterialDataColor[Wool][WoolLightGray] = color(159, 166, 166, 255);
+    MaterialDataColor[Wool][WoolCyan] = color(39, 117, 150, 255);
+    MaterialDataColor[Wool][WoolPurple] = color(130, 54, 196, 255);
+    MaterialDataColor[Wool][WoolBlue] = color(39, 51, 154, 255);
+    MaterialDataColor[Wool][WoolBrown] = color(86, 51, 28, 255);
+    MaterialDataColor[Wool][WoolDarkGreen] = color(56, 77, 24, 255);
+    MaterialDataColor[Wool][WoolRed] = color(164, 45, 41, 255);
+    MaterialDataColor[Wool][WoolBlack] = color(27, 23, 23, 255);
+
+    MaterialDataColor[Step] = new color[16];
+    
+    for (int i = 0; i < 16; i++) {
+      MaterialDataColor[Step][i] = color(0, 0, 0, 255);
+    }
+
+    MaterialDataColor[Step][StepStone] = MaterialColor[Stone];
+    MaterialDataColor[Step][StepSandstone] = MaterialColor[Sandstone];
+    MaterialDataColor[Step][StepWood] = MaterialColor[Wood];
+    MaterialDataColor[Step][StepCobblestone] = MaterialColor[Cobblestone];
+
+    MaterialDataColor[DoubleStep] = new color[16];
+    
+    for (int i = 0; i < 16; i++) {
+      MaterialDataColor[DoubleStep][i] = color(0, 0, 0, 255);
+    }
+
+    MaterialDataColor[DoubleStep][StepStone] = MaterialColor[Stone];
+    MaterialDataColor[DoubleStep][StepSandstone] = MaterialColor[Sandstone];
+    MaterialDataColor[DoubleStep][StepWood] = MaterialColor[Wood];
+    MaterialDataColor[DoubleStep][StepCobblestone] = MaterialColor[Cobblestone];
   }
   
   void deinitialize_constants() {

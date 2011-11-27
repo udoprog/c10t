@@ -205,6 +205,17 @@ bool do_write_palette(settings_t& s, const fs::path& path) {
     color mc = mc::MaterialColor[i];
     color msc = mc::MaterialSideColor[i];
     pal << left << setw(20) << mc::MaterialName[i] << " " << setw(16) << mc << " " << setw(16) << msc << '\n';
+
+    if (mc::MaterialDataColor[i]) {
+      for (int j = 0; j < 16; j++) {
+        color materialDataColor = mc::MaterialDataColor[i][j];
+        if (materialDataColor != color(0, 0, 0, 255)) {
+          std::ostringstream name;
+          name << mc::MaterialName[i] << ":" << j;
+          pal << left << setw(20) << name.str() << " " << setw(16) << materialDataColor << '\n';
+        }
+      }
+    }
   }
 
   if (pal.fail()) {
@@ -227,7 +238,7 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
     
     tokenizer tokens(line, sep);
     
-    int blockid = 0, i = 0;
+    int blockid = 0, i = 0, data = -1, dataPos = 0;
     color c;
     
     for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++i) {
@@ -240,6 +251,20 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
       
       switch(i) {
         case 0:
+          if ((dataPos = token.find(':')) != string::npos) {
+            data = lexical_cast<int>(token.substr(dataPos + 1));
+            if (data >= 16) {
+              return false;
+            }
+            if (!mc::MaterialDataColor[blockid]) {
+              mc::MaterialDataColor[blockid] = new color[16];
+              for (int j = 0; j < 16; j++) {
+                mc::MaterialDataColor[blockid][j] = color(0, 0, 0, 255);
+              }
+            }
+            token.resize(dataPos);
+          }
+
           if (!get_blockid(token, blockid)) {
             return false;
           }
@@ -249,6 +274,11 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
             return false;
           }
           
+          if (data >= 0) {
+            mc::MaterialDataColor[blockid][data] = c;
+            break;
+          }
+
           mc::MaterialColor[blockid] = c;
           c.darken(0x20);
           mc::MaterialSideColor[blockid] = c;
@@ -258,7 +288,9 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
             return false;
           }
           
-          mc::MaterialSideColor[blockid] = c;
+          if (data < 0) {
+            mc::MaterialSideColor[blockid] = c;
+          }
           break;
         default:
           break;

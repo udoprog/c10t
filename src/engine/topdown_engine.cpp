@@ -45,16 +45,7 @@ void topdown_engine::render(level_ptr level, boost::shared_ptr<image_operations>
           continue;
         }
         
-        color bc;
-        if (bt == mc::Wool) {
-          int md = b_d.get4(y);
-          bc = mc::WoolColor[md];
-        } else if ((bt == mc::Step) || (bt == mc::DoubleStep)) {
-          int md = b_d.get4(y);
-          bc = mc::StepColor[md];
-        } else {
-          bc = mc::MaterialColor[bt];
-        }
+        color bc = blockColor_top(bt, y, b_d);
 
         apply_shading(s, bl_r.get4(y + 1), sl_r.get4(y + 1), 0, y, bc);
         

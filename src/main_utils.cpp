@@ -136,7 +136,7 @@ bool do_side_color_set(const char *set_str) {
   if (mc::MaterialColorData[blockid].count > 0) {
     mc::MaterialColorData[blockid].side[0] = color(c);
   } else {
-    std::cerr << "Side colors cannot be set (program flow error)" << endl;
+    error << "Side colors cannot be set (program flow error)" << endl;
   }
   return true;
 }

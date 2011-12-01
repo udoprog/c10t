@@ -13,7 +13,7 @@ note: I don't support Windows and Mac builds since they are a major
 hurdle, but the build scripts are present under the dist/ folder.
 
   * [Linux x86](http://toolchain.eu/jenkins/job/c10t-snapshot/target=x86-linux/lastStableBuild/)
-  * [Linux x86\_64][http://toolchain.eu/jenkins/job/c10t-snapshot/target=x86_64-linux/lastBuild/)
+  * [Linux x86\_64](http://toolchain.eu/jenkins/job/c10t-snapshot/target=x86_64-linux/lastBuild/)
 
 Donations
 ---------

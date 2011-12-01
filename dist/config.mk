@@ -10,6 +10,7 @@ SOURCES+=src/main.cpp
 SOURCES+=src/main_utils.cpp
 SOURCES+=src/utf8.cpp
 SOURCES+=src/warps.cpp
+SOURCES+=src/altitude_graph.cpp
 SOURCES+=src/mc/region.cpp
 SOURCES+=src/mc/utils.cpp
 SOURCES+=src/mc/level.cpp
@@ -33,6 +34,7 @@ LDFLAGS+=${LIB}/libboost_system.a
 LDFLAGS+=${LIB}/libboost_filesystem.a
 LDFLAGS+=${LIB}/libfreetype.a
 LDFLAGS+=${LIB}/libz.a
+LDFLAGS+=${LIB}/libbz2.a
 
 OBJECTS=${SOURCES:.cpp=.o}
 CXXFLAGS+=-Isrc -I${USR}/include/freetype2 -Wall -fomit-frame-pointer -O2

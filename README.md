@@ -7,6 +7,14 @@ I wrote c10t entirely because i liked the tool Cartograph by ZomBuster, but I wa
 
 More Info: http://toolchain.eu/minecraft/c10t/
 
+Master SNAPSHOT builds
+----------------------
+note: I don't support Windows and Mac builds since they are a major
+hurdle, but the build scripts are present under the dist/ folder.
+
+  * [Linux x86](http://toolchain.eu/jenkins/job/c10t-snapshot/target=x86-linux/lastStableBuild/)
+  * [Linux x86\_64][http://toolchain.eu/jenkins/job/c10t-snapshot/target=x86_64-linux/lastBuild/)
+
 Donations
 ---------
 People asked where they could submit donations, you can do it at the "More Info" page (look at the bottom).

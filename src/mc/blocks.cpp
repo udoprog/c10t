@@ -134,6 +134,12 @@ namespace mc {
     MaterialName[Melon] = "Melon";
     MaterialName[PumpkinStem] = "PumpkinStem";
     MaterialName[MelonStem] = "MelonStem";
+    MaterialName[LilyPad] = "LilyPad";
+    MaterialName[NetherBrick] = "NetherBrick";
+    MaterialName[NetherBrickFence] = "NetherBrickFence";
+    MaterialName[NetherBrickStairs] = "NetherBrickStairs";
+    MaterialName[NetherWart] = "NetherWart";
+    MaterialName[Mycelium] = "Mycelium";
     MaterialName[Vines] = "Vines";
     MaterialName[FenceGate] = "FenceGate";
     MaterialName[BrickStairs] = "BrickStairs";
@@ -244,6 +250,12 @@ namespace mc {
     setColor(Melon, 0, color(50,200,45,192));
     setColor(PumpkinStem, 0, color(0x00, 0x00, 0x00, 0x00));
     setColor(MelonStem, 0, color(0x00, 0x00, 0x00, 0x00));
+    setColor(LilyPad, 0, color(50,89,45,128), color(50,89,45,128));
+    setColor(NetherBrick, 0, color(66,32,38,255));
+    setColor(NetherBrickFence, 0, color(66,32,38,200));
+    setColor(NetherBrickStairs, 0, getColor(NetherBrick));
+    setColor(NetherWart, 0, color(149,21,8,255));
+    setColor(Mycelium, 0, color(110,93,133,255));
     setColor(Vines, 0, color(50,89,45,128), color(50,89,45,128));
     setColor(FenceGate, 0, getColor(Fence));
     setColor(BrickStairs, 0, getColor(Brick));
@@ -355,6 +367,12 @@ namespace mc {
     MaterialModes[PumpkinStem] = Block;
     MaterialModes[MelonStem] = Block;
     MaterialModes[Vines] = Block;
+    MaterialModes[LilyPad] = Block; 
+    MaterialModes[Mycelium] = Block;
+    MaterialModes[NetherBrick] = Block;
+    MaterialModes[NetherBrickFence] = Block;
+    MaterialModes[NetherBrickStairs] = Block;
+    MaterialModes[NetherWart] = Block;
     MaterialModes[FenceGate] = Block;
     MaterialModes[BrickStairs] = Block;
     MaterialModes[StoneBrickStairs] = Block;

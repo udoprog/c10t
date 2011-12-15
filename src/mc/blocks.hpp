@@ -120,6 +120,12 @@ namespace mc {
     FenceGate = 0x6B,
     BrickStairs = 0x6C,
     StoneBrickStairs = 0x6D,
+    Mycelium = 0x6E,
+    LilyPad = 0x6F,
+    NetherBrick = 0x70,
+    NetherBrickFence = 0x71,
+    NetherBrickStairs = 0x72,
+    NetherWart = 0x73,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
     MaterialCount = 0x100

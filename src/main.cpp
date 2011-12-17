@@ -744,6 +744,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
          
         job.level = level;
         job.coord = rl.coord;
+        job.path = rl.level->get_region()->get_path();
         
         renderer.give(job);
         ++queued;

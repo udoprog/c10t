@@ -25,6 +25,7 @@ struct render_result {
   std::vector<mc::marker> signs;
   bool cache_hit;
   mc::utils::level_coord coord;
+  fs::path path;
   
   render_result() : fatal(false), fatal_why("(no error)") {}
 
@@ -37,6 +38,7 @@ struct render_job {
   boost::shared_ptr<mc::level> level;
   boost::shared_ptr<engine_base> engine;
   mc::utils::level_coord coord;
+  fs::path path;
 };
 
 class renderer : public threadworker<render_job, render_result> {
@@ -54,9 +56,9 @@ public:
     p.level = job.level;
     p.cache_hit = false;
 
-    /*p.path = job.path;
+    p.path = job.path;
     
-    cache_file cache(mc::utils::level_dir(s.cache_dir, job.xReal, job.zReal), p.path, s.cache_compress);
+    cache_file cache(mc::utils::level_dir(s.cache_dir, job.coord.get_x(), job.coord.get_z()), p.path, s.cache_compress);
     
     if (s.cache_use) {
       if (cache.exists()) {
@@ -67,12 +69,12 @@ public:
         
         cache.clear();
       }
-    }*/
+    }
     
     p.signs = job.level->get_signs();
     job.engine->render(job.level, p.operations);
     
-    /*if (s.cache_use) {
+    if (s.cache_use) {
       // create the necessary directories required when caching
       cache.create_directories();
       
@@ -81,7 +83,7 @@ public:
         // on failure, remove the cache file - this will prompt c10t to regenerate it next time
         cache.clear();
       }
-    }*/
+    }
     
     return p;
   }

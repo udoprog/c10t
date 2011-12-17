@@ -31,10 +31,6 @@ namespace mc {
   
   struct level_info {
     public:
-    private:
-      region_ptr _region;
-      utils::level_coord coord;
-    public:
       level_info() : coord() {
       }
 
@@ -68,6 +64,10 @@ namespace mc {
       int get_x() { return coord.get_x(); }
       int get_z() { return coord.get_z(); }
       const utils::level_coord get_coord() { return coord; }
+    private:
+      region_ptr _region;
+      utils::level_coord coord;
+      fs::path path;
   };
   
   class iterator_error : public std::exception {

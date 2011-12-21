@@ -126,6 +126,13 @@ namespace mc {
     NetherBrickFence = 0x71,
     NetherBrickStairs = 0x72,
     NetherWart = 0x73,
+    EnchantmentTable = 0x74,
+    BrewingStand = 0x75,
+    Cauldron = 0x76,
+    EndPortal = 0x77,
+    EndPortalFrame = 0x78,
+    EndStone = 0x79,
+    DragonEgg = 0x7A,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
     MaterialCount = 0x100

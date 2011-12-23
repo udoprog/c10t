@@ -8,7 +8,8 @@
 AltitudeGraph::AltitudeGraph(settings_t& _s)
     :  s(_s), width(800), height(600)
 {
-    for(int i = 0; i<128; i++)
+    altitudeRegistry.reset(new long[mc::MapY]);
+    for(int i = 0; i < mc::MapY; i++)
     {
          altitudeRegistry[i] = 0;
     }
@@ -40,7 +41,7 @@ void AltitudeGraph::createGraph()
 
     long maxVal = this->getMax();
 
-    int x_step = _w / 128;
+    int x_step = _w / mc::MapY;
 
     std::stringstream maxss;
     maxss << "MAX = " << maxVal;
@@ -51,7 +52,7 @@ void AltitudeGraph::createGraph()
 
     int x=0, y=0, x0=BORDER_X, y0=_h;
 
-    for(int i = 0; i<128; i++)
+    for(int i = 0; i < mc::MapY; i++)
     {
        x =  BORDER_X + x_step*i;
        y = _h - (int)( ( (float)altitudeRegistry[i] / (float)maxVal ) * (_h-BORDER_Y) );
@@ -65,7 +66,7 @@ void AltitudeGraph::createGraph()
     graphImg->drawLine(BORDER_X, _h, _w, _h, axiscolor);
 
     // draw axis labels
-    for(int i=0; i<128; i++)
+    for(int i=0; i < mc::MapY; i++)
     {
         color _axiscolor = axiscolor;
         x =  BORDER_X + x_step*i;
@@ -96,7 +97,7 @@ void AltitudeGraph::registerBloc(Byte value, int altitude)
 long AltitudeGraph::getMax()
 {
     long max = 0;
-    for(int i = 0; i<128; i++)
+    for(int i = 0; i < mc::MapY; i++)
     {
         if(max<altitudeRegistry[i])
             max = altitudeRegistry[i];

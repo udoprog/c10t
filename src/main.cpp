@@ -1033,8 +1033,8 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
             statistics[block] += 1;
             if(s.graph_block > 0 && blocks->values[i] == s.graph_block)
             {
-                // altitude is calculated as i%128... Kind of messy, but...
-                _stat->registerBloc(blocks->values[i], i%128);
+                // altitude is calculated as i % mc::MapY... Kind of messy, but...
+                _stat->registerBloc(blocks->values[i], i % mc::MapY);
             }
           }
           reporter.add(1);

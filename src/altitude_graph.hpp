@@ -10,6 +10,8 @@
 #include <iostream>
 #include <exception>
 
+#include <boost/scoped_array.hpp>
+
 #include "image/format/png.hpp"
 
 #include "global.hpp"
@@ -43,7 +45,7 @@ private:
     settings_t s;
     int width;
     int height;
-    long altitudeRegistry[128];
+    boost::scoped_array<long> altitudeRegistry;
 
 };
 

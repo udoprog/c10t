@@ -207,7 +207,7 @@ bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
       || x > s.max_x
       || z < s.min_z
       || z > s.max_z
-      || x2 + z2 >= r2;
+      || (x2 + z2) > r2;
 }
 
 template<typename T>
@@ -355,6 +355,9 @@ inline void push_coordinate_markers(settings_t& s, text::font_face base_font, mc
     std::stringstream ss;
     
     ss << "(" << l->get_x() * mc::MapX << ", " << l->get_z() * mc::MapZ << ")";
+    if (s.debug) {
+      out << "Pushing coordinate info " << ss.str() << endl;
+    }
     markers.push_back(new marker(ss.str(), "coord", coordinate_font, c.get_x() * mc::MapX, 0, c.get_z() * mc::MapZ));
   }
 }
@@ -501,11 +504,11 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     }
 
     if (s.show_signs) {
-      out << "will look for signs in levels";
+      out << "will look for signs in levels" << endl;
     }
 
     if (s.show_coordinates) {
-      out << "will store chunk coordinates";
+      out << "will store chunk coordinates" << endl;
     }
   }
     
@@ -546,7 +549,9 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
         
         if (coord_out_of_range(s, coord)) {
           ++filtered_levels;
-          out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          if (s.debug) {
+            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+          }
           continue;
         }
         
@@ -650,7 +655,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       }
       
       work_in_progress.reset(image);
-      
+
       nonstd::limited<streampos> c(1024 * 1024, cout_dot<streampos>, cout_mb_endl);
       
       try {
@@ -814,8 +819,11 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
 
     out << "image limits: "
         << engine->im_min_x << "x" << engine->im_min_y << " to "
-        << engine->im_max_x << "x" << engine->im_max_y <<
-           " will be the cropped image" << endl;
+        << engine->im_max_x << "x" << engine->im_max_y 
+        << " will be the cropped image ("
+        << (engine->im_max_x - engine->im_min_x) << "x"
+        << (engine->im_max_y - engine->im_min_y)
+        << ")" << endl;
 
     image_ptr cropped = image::crop(work_in_progress, engine->im_min_x, engine->im_max_x, engine->im_min_y, engine->im_max_y);
     work_in_progress = cropped;
@@ -1010,7 +1018,9 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
 
           if (coord_out_of_range(s, coord)) {
             ++filtered_levels;
-            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+            if (s.debug) {
+              out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
+            }
             continue;
           }
 
@@ -1146,7 +1156,6 @@ int do_help() {
     << endl
     << "  -n, --night               - Night-time rendering mode                        " << endl
     << "  -H, --heightmap           - Heightmap rendering mode (black to white)        " << endl
-    << "      --disable-skylight    - Disables skylight (faster rendering)             " << endl
     << endl
     << "Filtering options:" << endl
     << "  -e, --exclude <blockid>   - Exclude block-id from render (multiple occurences" << endl

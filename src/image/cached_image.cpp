@@ -89,11 +89,15 @@ void cached_image::blend_pixel(pos_t x, pos_t y, color &c)
   pos_t by = y - buffer_y;
   pos_t bp = bx + by * buffer_w;
 
-  if (!(bp < buffer_s)) {
-    return;
+  if (x >= buffer_x && y >= buffer_y && bp < buffer_s) {
+    buffer[bp].blend(c);
+  } else {
+    // Blend pixels that are "out of (the buffer's) scope"
+    color o;
+    get_pixel(x, y, o);
+    o.blend(c);
+    set_pixel(x, y, o);
   }
-  
-  buffer[bp].blend(c);
 }
 
 
@@ -101,7 +105,8 @@ void cached_image::align(pos_t x, pos_t y, pos_t w, pos_t h)
 {
   flush_buffer();
   
-  if (!(buffer_s <= w * h)) {
+  // reallocate buffer when the current buffer is too small
+  if (buffer_s < w * h) {
     buffer.reset(new color[w * h]);
     buffer_s = w * h;
   }

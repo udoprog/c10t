@@ -42,7 +42,6 @@ struct settings_t {
   bool cache_use;
   bool cavemode;
   bool debug;
-  bool disable_skylight;
   bool has_coordinate_color;
   bool has_player_color;
   bool has_sign_color;
@@ -174,7 +173,6 @@ struct settings_t {
     this->write_json = false;
     this->write_js = false;
     this->no_log = false;
-    this->disable_skylight = false;
     this->output_log = fs::system_complete(fs::path("c10t.log"));
     this->output_path = fs::system_complete(fs::path("out.png"));
     this->statistics_path = fs::system_complete(fs::path("statistics.txt"));

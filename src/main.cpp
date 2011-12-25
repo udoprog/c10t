@@ -207,7 +207,7 @@ bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
       || x > s.max_x
       || z < s.min_z
       || z > s.max_z
-      || (x2 + z2) > r2;
+      || (x2 + z2) > r2+1;
 }
 
 template<typename T>
@@ -768,8 +768,8 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
 
             // update image limits
             engine->update_image_limits(
-                x, y,
-                x + p.operations->max_x - 1,
+                x + 1, y,
+                x + p.operations->max_x,
                 y + p.operations->max_y - 1);
 
             work_in_progress->composite(x, y, p.operations);

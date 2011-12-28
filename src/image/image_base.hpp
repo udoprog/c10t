@@ -48,8 +48,6 @@ public:
     return (x * sizeof(color)) + (y * width * sizeof(color));
   }
   
-  bool save_png(const std::string filename, const char *title, progress_c);
-  
   void safe_blend_pixel(pos_t x, pos_t y, color &c);
 
   void get_line(pos_t y, color *c) {
@@ -57,8 +55,8 @@ public:
   }
 
   template<typename T>
-  bool save(const std::string str, typename T::opt_type opts) {
-    return T::save(this, str, opts);
+  void save(const std::string str, typename T::opt_type opts) {
+    T::save(this, str, opts);
   }
 
   void drawLine(pos_t x1, pos_t y1, pos_t x2, pos_t y2, color &c);

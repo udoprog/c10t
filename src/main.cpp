@@ -924,11 +924,13 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
           target = img;
         }
 
-        if (!target->save<png_format>(path_str, opts)) {
-          out << path << ": Could not save image";
+        try {
+          target->save<png_format>(path_str, opts);
+        } catch (format_exception& e) {
+          out << path.string() << ": " << e.what() << endl;
           continue;
         }
-        
+
         out << path << ": OK" << endl;
       }
       
@@ -947,9 +949,10 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     opts.center_y = center_y;
     opts.comment = C10T_COMMENT;
     
-    if (!work_in_progress->save<png_format>(output_path.string(), opts)) {
-      out << output_path << ": Could not save image";
-      error << strerror(errno);
+    try {
+      work_in_progress->save<png_format>(output_path.string(), opts);
+    } catch (format_exception& e) {
+      out << output_path.string() << ": " << e.what() << endl;
       return false;
     }
     

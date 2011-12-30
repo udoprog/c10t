@@ -247,7 +247,7 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
       
       switch(i) {
         case 0:
-          if ((dataPos = token.find(':')) != string::npos) {
+          if ((size_t)(dataPos = token.find(':')) != string::npos) {
             data = lexical_cast<int>(token.substr(dataPos + 1));
             if (data < 0 || data >= 16) {
               return false;
@@ -336,8 +336,7 @@ struct option long_options[] =
     {"write-json",                          required_argument,   &flag,   16},
     {"write-js",                            required_argument,   &flag,   26},
     {"write-markers",                       required_argument,   &flag,   21},
-    {"split",                               required_argument,   &flag,   17},
-    {"pixelsplit",                          required_argument,   &flag,   17},
+    {"split",                               required_argument,   0,       'p'},
     {"split-base",                          required_argument,   &flag,   27},
     {"show-warps",                          required_argument,   &flag,   18},
     {"warp-color",                          required_argument,   &flag,   19},
@@ -346,7 +345,6 @@ struct option long_options[] =
     {"statistics",                          optional_argument,   0,       'S'},
     {"log",                                 required_argument,   &flag,   24},
     {"no-log",                              no_argument,         &flag,   25},
-    {"disable-skylight",                    no_argument,         &flag,   26},
     {"center",                              required_argument,   &flag,   30},
     {"graph-block",                         required_argument,   &flag,   31},
     {"strip-sign-prefix",                   no_argument,         &flag,   32},
@@ -493,33 +491,6 @@ bool read_opts(settings_t& s, int argc, char* argv[])
           }
         }
         
-        break;
-      case 17:
-        {
-          std::list<std::string> result;
-          std::string split_string(optarg);
-          boost_split(result, split_string);
-
-          BOOST_FOREACH(std::string str, result) {
-            unsigned int split_int = 0;
-
-            try {
-              split_int = boost::lexical_cast<int>(str);
-            } catch(boost::bad_lexical_cast& e) {
-              error << "Cannot be converted to number: " << str;
-              return false;
-            }
-
-            if (!(split_int >= 1)) {
-              error << "split argument must be greater or equal to one";
-              return false;
-            }
-
-            s.split.push_back(split_int);
-          }
-          
-          s.use_split = true;
-        }
         break;
       case 27:
         try {
@@ -677,7 +648,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
     case 'R':
       s.max_radius = boost::lexical_cast<int>(optarg);
       
-      if (s.max_radius < 0) {
+      if (s.max_radius < 1) {
         error << "Radius must be greater than zero";
         return false;
       }
@@ -723,6 +694,33 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       
       if (optarg != NULL) {
         s.statistics_path = fs::system_complete(fs::path(optarg));
+      }
+      break;
+    case 'p':
+      {
+        std::list<std::string> result;
+        std::string split_string(optarg);
+        boost_split(result, split_string);
+
+        BOOST_FOREACH(std::string str, result) {
+          unsigned int split_int = 0;
+
+          try {
+            split_int = boost::lexical_cast<int>(str);
+          } catch(boost::bad_lexical_cast& e) {
+            error << "Cannot be converted to number: " << str;
+            return false;
+          }
+
+          if (!(split_int >= 1)) {
+            error << "split argument must be greater or equal to one";
+            return false;
+          }
+
+          s.split.push_back(split_int);
+        }
+          
+        s.use_split = true;
       }
       break;
     case '?':

@@ -40,5 +40,43 @@ include_directories("${CMAKE_SOURCE_DIR}/src/")
 #copy font.ttg to build directory as matter of convenience.
 #execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/font.ttf ${CMAKE_BINARY_DIR}/font.ttf)
 
-add_subdirectory(src)
+add_subdirectory(libs/unc)
+include_directories("${CMAKE_SOURCE_DIR}/libs/unc/src")
+
+add_subdirectory(src/image)
+add_subdirectory(src/nbt)
+add_subdirectory(src/mc)
+
+set(c10t_SOURCES src/algorithm.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/players.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/fileutils.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/dirlist.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/altitude_graph.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/warps.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/text.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/json.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/engine/topdown_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/engine/oblique_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/engine/obliqueangle_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/engine/isometric_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/engine/fatiso_engine.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/engine/functions.cpp)
+set(c10t_SOURCES ${c10t_SOURCES} src/engine/block_rotation.cpp)
+
+set(c10t_LIBRARIES ${c10t_LIBRARIES} unc uncdata c10t-image c10t-nbt c10t-mc)
+
+add_executable(c10t src/main.cpp src/main_utils.cpp ${c10t_SOURCES})
+add_executable(c10t-debug EXCLUDE_FROM_ALL src/main.cpp src/main_utils.cpp ${c10t_SOURCES})
+add_executable(nbt-inspect EXCLUDE_FROM_ALL src/nbt/nbt_inspect.cpp src/nbt/nbt.cpp)
+add_executable(region-inspect EXCLUDE_FROM_ALL src/mc/region_inspect.cpp)
+
+set_target_properties(c10t PROPERTIES COMPILE_FLAGS "-O3 -Wall")
+set_target_properties(c10t-debug PROPERTIES COMPILE_FLAGS "-Wall -pedantic -g")
+set_target_properties(nbt-inspect PROPERTIES COMPILE_FLAGS "-O3 -Wall -pedantic -g")
+
+target_link_libraries(c10t ${c10t_LIBRARIES})
+target_link_libraries(c10t-debug ${c10t_LIBRARIES})
+target_link_libraries(nbt-inspect ${ZLIB_LIBRARIES})
+target_link_libraries(region-inspect ${c10t_LIBRARIES})
+
 add_subdirectory(test)

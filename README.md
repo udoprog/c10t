@@ -53,7 +53,11 @@ Building from Source (using cmake)
 
     $ sudo apt-get install build-essential cmake libpng-dev zlib1g-dev libboost-all-dev libfreetype6-dev
 
-  2. Run:
+  2. Synchronize submodules (./libs):
+
+    git submodule update
+
+  3. Run:
 
     $ mkdir build
     $ cd build
@@ -66,7 +70,7 @@ Building from Source (using cmake)
    * If you wish to build all of these simply run `make` which defaults to target `all`.
    * If you wish to build any individual one run `make <target>` e.g. `make c10t-test`.
 
-  3. The executable (`c10t`) will be in the current directory.
+  4. The executable (`c10t`) will be in the current directory.
 
 There are a couple of available targets
 

@@ -7,8 +7,6 @@
 
 #include <ostream>
 
-#include "utf8.hpp"
-
 namespace json {
   enum json_type {
     String,
@@ -48,33 +46,7 @@ namespace json {
     const static enum json_type type = Array;
   };
   
-  static void encode_string(std::ostream& os, std::string s) {
-    std::vector<uint32_t> str = utf8_decode(s);
-
-    std::vector<uint32_t>::iterator it;
-    
-    os << "\"";
-
-    for (it = str.begin(); it != str.end(); it++) {
-      uint32_t c = *it;
-      
-      switch(c) {
-        case '"': os << "\\\""; break;
-        case '\\': os << "\\\\"; break;
-        case '/': os << "\\/"; break;
-        case '\b': os << "\\b"; break;
-        case '\f': os << "\\f"; break;
-        case '\n': os << "\\n"; break;
-        case '\r': os << "\\r"; break;
-        case '\t': os << "\\t"; break;
-        default:
-          utf8_encode(c, os);
-          break;
-      }
-    }
-
-    os << "\"";
-  }
+  void encode_string(std::ostream& os, std::string s);
 
   class basic_json {
     public:

@@ -1,6 +1,7 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
 #include "text.hpp"
+#include <unc/unc.hpp>
 
 namespace text {
   font_face::font_face(const fs::path font_path, int size, color base) : font_path(font_path), size(size), base(base), initialized(false)
@@ -73,9 +74,9 @@ namespace text {
 
     int pen_x = x, pen_y = y;
     
-    std::vector<uint32_t> text = utf8_decode(rawtext);
+    unc::ustring text = unc::decode<unc::utf8>(rawtext);
     
-    for (std::vector<uint32_t>::iterator it = text.begin(); it != text.end(); it++ ) {
+    for (unc::ustring::iterator it = text.begin(); it != text.end(); it++ ) {
       uint32_t cc = *it;
       
       if (cc == '\n') {

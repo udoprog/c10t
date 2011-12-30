@@ -1,0 +1,3 @@
+[submodule "libs/unc"]
+	path = libs/unc
+	url = git://github.com/udoprog/unc.git

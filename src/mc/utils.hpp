@@ -10,24 +10,6 @@
 namespace fs = boost::filesystem;
 
 namespace mc {
-  /*
-   * designates a text related to a position
-   * Possible usages:
-   *   Signs
-   *   Player Positions
-   *   Custom Markers
-   **/
-  struct marker {
-  public:
-    std::string text;
-    int x, y, z;
-    
-    marker(std::string text, int x, int y, int z) :
-        text(text), x(x), y(y), z(z)
-    {
-    }
-  };
-  
   namespace utils {
     /**
      * The fastest portable split I could find, only

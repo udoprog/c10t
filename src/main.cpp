@@ -42,6 +42,9 @@
 #include "mc/world.hpp"
 #include "mc/blocks.hpp"
 #include "mc/utils.hpp"
+#include "mc/rotated_level_info.hpp"
+#include "mc/level_info.hpp"
+#include "mc/region_iterator.hpp"
 
 #include "engine/engine_base.hpp"
 #include "engine/topdown_engine.hpp"
@@ -76,20 +79,6 @@ public:
   marker(std::string text, std::string type, text::font_face font, int x, int y, int z) :
       text(text), type(type), font(font), x(x), y(y), z(z)
   {  }
-};
-
-struct rotated_level_info {
-  mc::level_info_ptr level;
-  mc::utils::level_coord coord;
-  
-  rotated_level_info(mc::level_info_ptr level, mc::utils::level_coord coord)
-    : level(level), coord(coord)
-  {
-  }
-  
-  bool operator<(const rotated_level_info& other) const {
-    return coord < other.coord;
-  }
 };
 
 inline void cout_error(const string& message) {
@@ -286,14 +275,17 @@ inline void push_sign_markers(settings_t& s, text::font_face base_font, S& signs
   }
   
   BOOST_FOREACH(mc::marker lm, signs) {
-    if (!s.show_signs_filter.empty() && lm.text.find(s.show_signs_filter) == string::npos) {
+    if (!s.show_signs_filter.empty() && lm.get_text().find(s.show_signs_filter) == string::npos) {
       continue;
     }
     
     if (!s.strip_sign_prefix) {
-      markers.push_back(new marker(lm.text, "sign", sign_font, lm.x, lm.y, lm.z));
+      markers.push_back(new marker(lm.get_text(), "sign", sign_font,
+            lm.get_x(), lm.get_y(), lm.get_z()));
     } else {
-      markers.push_back(new marker(lm.text.substr(s.show_signs_filter.size()), "sign", sign_font, lm.x, lm.y, lm.z));
+      std::string text = lm.get_text().substr(s.show_signs_filter.size());
+      markers.push_back(new marker(text, "sign", sign_font,
+            lm.get_x(), lm.get_y(), lm.get_z()));
     }
   }
 }
@@ -316,9 +308,9 @@ inline void push_coordinate_markers(
     coordinate_font.set_color(s.coordinate_color);
   }
 
-  BOOST_FOREACH(rotated_level_info rl, levels) {
-    mc::utils::level_coord c = rl.coord;
-    boost::shared_ptr<mc::level_info> l = rl.level;
+  BOOST_FOREACH(mc::rotated_level_info rl, levels) {
+    mc::utils::level_coord c = rl.get_coord();
+    boost::shared_ptr<mc::level_info> l = rl.get_level();
     
     if (c.get_z() - 4 < world.min_z) continue;
     if (c.get_z() + 4 > world.max_z) continue;
@@ -403,15 +395,15 @@ void write_json_file(
   file.put("markers", markers_array);
   
   if (s.write_json) {
-    out << "Writing json information: " << s.write_json_path.string() << endl;
-    std::ofstream of(s.write_json_path.string().c_str());
+    out << "Writing json information: " << path_string(s.write_json_path) << endl;
+    std::ofstream of(path_string(s.write_json_path).c_str());
     of << file;
     of.close();
   }
 
   if (s.write_js) {
-    out << "Writing js (javascript `var c10t_json') information: " << s.write_js_path.string() << endl;
-    std::ofstream of(s.write_js_path.string().c_str());
+    out << "Writing js (javascript `var c10t_json') information: " << path_string(s.write_js_path) << endl;
+    std::ofstream of(path_string(s.write_js_path).c_str());
     of << "var c10t_json = " << file << ";";
     of.close();
   }
@@ -453,7 +445,7 @@ bool generate_map(
   mc::world world(world_path);
 
   // where to store level info
-  std::list<rotated_level_info> levels;
+  std::list<mc::rotated_level_info> levels;
   
   // this is the rendering engine that will be used.
   engine_ptr engine;
@@ -499,7 +491,7 @@ bool generate_map(
     
   {
     out << " --- SCANNING WORLD DIRECTORY --- " << endl;
-    out << "world: " << world_path.string() << endl;
+    out << "world: " << path_string(world_path) << endl;
   }
   
   /*
@@ -519,7 +511,7 @@ bool generate_map(
         region->read_header();
       } catch(mc::bad_region& e) {
         ++failed_regions;
-        out_log << region->get_path() << ": could not read header" << std::endl;
+        out_log << path_string(region->get_path()) << ": could not read header" << std::endl;
         continue;
       }
 
@@ -528,7 +520,7 @@ bool generate_map(
       region->read_coords(coords);
 
       BOOST_FOREACH(mc::utils::level_coord c, coords) {
-        mc::level_info_ptr level(new mc::level_info(region, c));
+        mc::level_info::level_info_ptr level(new mc::level_info(region, c));
         
         mc::utils::level_coord coord = level->get_coord();
         
@@ -540,11 +532,11 @@ bool generate_map(
           continue;
         }
         
-        rotated_level_info rlevel =
-          rotated_level_info(level, coord.rotate(s.rotation));
+        mc::rotated_level_info rlevel =
+          mc::rotated_level_info(level, coord.rotate(s.rotation));
         
         levels.push_back(rlevel);
-        world.update(rlevel.coord);
+        world.update(rlevel.get_coord());
         reporter.add(1);
       }
     }
@@ -576,29 +568,41 @@ bool generate_map(
     out << "  levels: " << levels.size() << endl;
     out << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
   }
+
+  engine_settings engine_s;
+
+  engine_s.rotation = s.rotation;
+  engine_s.night = s.night;
+  engine_s.heightmap = s.heightmap;
+  engine_s.striped_terrain = s.striped_terrain;
+  engine_s.hellmode = s.hellmode;
+  engine_s.cavemode = s.cavemode;
+  engine_s.top = s.top;
+  engine_s.bottom = s.bottom;
+  engine_s.excludes = s.excludes;
   
   /**
    * Depending on settings, choose which rendering engine to use.
    */
   switch (s.mode) {
     case Top:
-      engine.reset(new topdown_engine(s, world));
+      engine.reset(new topdown_engine(engine_s, world));
       break;
 
     case Oblique:
-      engine.reset(new oblique_engine(s, world));
+      engine.reset(new oblique_engine(engine_s, world));
       break;
 
     case ObliqueAngle:
-      engine.reset(new obliqueangle_engine(s, world));
+      engine.reset(new obliqueangle_engine(engine_s, world));
       break;
 
     case Isometric:
-      engine.reset(new isometric_engine(s, world));
+      engine.reset(new isometric_engine(engine_s, world));
       break;
 
     case FatIso:
-      engine.reset(new fatiso_engine(s, world));
+      engine.reset(new fatiso_engine(engine_s, world));
       break;
   }
   
@@ -678,7 +682,13 @@ bool generate_map(
 
     unsigned int world_size = levels.size();
   
-    renderer renderer(s, s.threads, world_size);
+    renderer_settings renderer_s;
+
+    renderer_s.cache_use = s.cache_use;
+    renderer_s.cache_dir = s.cache_dir;
+    renderer_s.cache_compress = s.cache_compress;
+
+    renderer renderer(renderer_s, s.threads, world_size);
 
     /**
      * The amount of currently enqueued jobs.
@@ -706,7 +716,7 @@ bool generate_map(
     mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
 
     std::list<render_result> render_results;
-    std::list<rotated_level_info>::iterator lvlit = levels.begin();
+    std::list<mc::rotated_level_info>::iterator lvlit = levels.begin();
   
     nonstd::limited<unsigned int> reporter(out, 50, out_dot<unsigned int>, cout_uintpart_endl);
     reporter.set_limit(world_size);
@@ -715,12 +725,12 @@ bool generate_map(
 
     while (lvlit != levels.end() || render_results.size() > 0) {
       while (queued < prebuffer && lvlit != levels.end()) {
-        rotated_level_info rl = *lvlit;
+        mc::rotated_level_info rl = *lvlit;
         lvlit++;
         
         render_job job;
         
-        boost::shared_ptr<mc::level> level(new mc::level(rl.level));
+        boost::shared_ptr<mc::level> level(new mc::level(rl.get_level()));
         
         job.engine = engine;
         job.level = level;
@@ -733,13 +743,13 @@ bool generate_map(
         }
          
         job.level = level;
-        job.coord = rl.coord;
-        job.path = rl.level->get_region()->get_path();
+        job.coord = rl.get_coord();
+        job.path = rl.get_level()->get_region()->get_path();
         
         renderer.give(job);
         ++queued;
         
-        if (s.debug) { out << rl.level->get_path() << ": queued OK" << endl; }
+        if (s.debug) { out << rl.get_level()->get_path() << ": queued OK" << endl; }
       }
 
       while (render_results.size() > 0) {
@@ -887,7 +897,7 @@ bool generate_map(
         image_ptr img(it->second);
 
         stringstream ss;
-        ss << boost::format(output_path.string()) % i % p.x % p.y;
+        ss << boost::format(path_string(output_path)) % i % p.x % p.y;
         fs::path path(ss.str());
         
         if (!fs::is_directory(path.parent_path())) {
@@ -900,7 +910,7 @@ bool generate_map(
         opts.center_y = center_y;
         opts.comment = C10T_COMMENT;
         
-        std::string path_str(path.string());
+        std::string path_str(path_string(path));
         
         if (s.split_base > 0) {
           target->clear();
@@ -913,7 +923,7 @@ bool generate_map(
         try {
           target->save<png_format>(path_str, opts);
         } catch (format_exception& e) {
-          out << path.string() << ": " << e.what() << endl;
+          out << path_string(path) << ": " << e.what() << endl;
           continue;
         }
 
@@ -926,7 +936,7 @@ bool generate_map(
   else {
     {
       out << " --- SAVING IMAGE --- " << endl;
-      out << "path: " << output_path.string() << endl;
+      out << "path: " << path_string(output_path) << endl;
     }
     
     png_format::opt_type opts;
@@ -936,9 +946,9 @@ bool generate_map(
     opts.comment = C10T_COMMENT;
     
     try {
-      work_in_progress->save<png_format>(output_path.string(), opts);
+      work_in_progress->save<png_format>(path_string(output_path), opts);
     } catch (format_exception& e) {
-      out << output_path.string() << ": " << e.what() << endl;
+      out << path_string(output_path) << ": " << e.what() << endl;
       return false;
     }
     
@@ -1006,7 +1016,7 @@ bool generate_statistics(
         region->read_coords(coords);
 
         BOOST_FOREACH(mc::utils::level_coord c, coords) {
-          mc::level_info_ptr level(new mc::level_info(region, c));
+          mc::level_info::level_info_ptr level(new mc::level_info(region, c));
 
           mc::utils::level_coord coord = level->get_coord();
 
@@ -1063,7 +1073,7 @@ bool generate_statistics(
       }
     }
 
-    ofstream stats(output_path.string().c_str());
+    ofstream stats(path_string(output_path).c_str());
 
     stats << "[WORLD]" << endl;
 
@@ -1359,7 +1369,7 @@ int main(int argc, char *argv[]){
   }
 
   if (!s.no_log) {
-    out_log.open(s.output_log.string().c_str());
+    out_log.open(path_string(s.output_log).c_str());
     out_log << "START LOG" << endl;
   }
   
@@ -1369,7 +1379,7 @@ int main(int argc, char *argv[]){
   
   if (s.cache_use) {
     if (!fs::is_directory(s.cache_dir)) {
-      error << "Directory required for caching: " << s.cache_dir.string();
+      error << "Directory required for caching: " << path_string(s.cache_dir);
       goto exit_error;
     }
     
@@ -1377,7 +1387,7 @@ int main(int argc, char *argv[]){
     s.cache_dir = s.cache_dir / s.cache_key;
     
     if (!fs::is_directory(s.cache_dir)) {
-      out << "Creating directory for caching: " << s.cache_dir.string() << endl;
+      out << "Creating directory for caching: " << path_string(s.cache_dir) << endl;
       fs::create_directory(s.cache_dir);
     }
     
@@ -1406,7 +1416,7 @@ int main(int argc, char *argv[]){
     fs::path level_dat = s.world_path / "level.dat";
     
     if (!fs::exists(level_dat)) {
-      error << "Does not exist: " << level_dat.string();
+      error << "Does not exist: " << path_string(level_dat);
       goto exit_error;
     }
   }
@@ -1420,7 +1430,7 @@ int main(int argc, char *argv[]){
   if (!fs::is_directory(s.world_path))
   {
     if (!fs::is_directory(s.world_path)) {
-      error << "Does not exist: " << s.world_path.string();
+      error << "Does not exist: " << path_string(s.world_path);
       goto exit_error;
     }
   }
@@ -1488,7 +1498,7 @@ int main(int argc, char *argv[]){
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << s.output_log.string() << endl;
+    out << "Log written to " << path_string(s.output_log) << endl;
     out_log << "END LOG" << endl;
     out_log.close();
   }
@@ -1505,7 +1515,7 @@ exit_error:
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << s.output_log.string() << endl;
+    out << "Log written to " << path_string(s.output_log) << endl;
     out_log << "END LOG" << endl;
     out_log.close();
   }

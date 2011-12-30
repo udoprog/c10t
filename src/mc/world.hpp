@@ -17,58 +17,12 @@
 
 #include <mc/utils.hpp>
 #include <mc/region.hpp>
-#include <sstream>
 
 namespace mc {
   namespace fs = boost::filesystem;
-  
-  bool directory_filter(const std::string& name);
-  bool file_filter(const std::string& name);
 
   class level_info;
-
-  typedef boost::shared_ptr<level_info> level_info_ptr;
-  
-  struct level_info {
-    public:
-      level_info() : coord() {
-      }
-
-      level_info(region_ptr _region, int x, int z) : _region(_region), coord(x, z) {
-      }
-      
-      level_info(region_ptr _region, utils::level_coord coord) : _region(_region) {
-        utils::level_coord rc = utils::path_to_region_coord(_region->get_path());
-        this->coord = utils::level_coord(rc.get_x() + coord.get_x(),
-                                         rc.get_z() + coord.get_z());
-      }
-
-      std::string get_path() {
-        std::stringstream ss;
-        ss << _region->get_path().string() << "(" << coord.get_x() << "," << coord.get_z() << ")";
-        return ss.str();
-      }
-
-      region_ptr get_region() {
-        return _region;
-      }
-      
-      bool operator<(const level_info& other) const {
-        return coord < other.coord;
-      }
-
-      level_info rotate(int degrees) {
-        return level_info(_region, coord.rotate(degrees));
-      }
-      
-      int get_x() { return coord.get_x(); }
-      int get_z() { return coord.get_z(); }
-      const utils::level_coord get_coord() { return coord; }
-    private:
-      region_ptr _region;
-      utils::level_coord coord;
-      fs::path path;
-  };
+  class region_iterator;
   
   class iterator_error : public std::exception {
     private:
@@ -86,32 +40,6 @@ namespace mc {
       }
   };
   
-  class region_iterator {
-    private:
-      fs::path root;
-      dirlist lister;
-      std::list<level_info> current_levels;
-      boost::shared_ptr<region> current_region;
-    public:
-      region_iterator(const fs::path path) : root(path), lister(path) {
-      }
-      
-      bool has_next()
-      {
-        if (!lister.has_next(directory_filter, file_filter)) {
-          return false;
-        }
-
-        fs::path next = lister.next();
-        current_region.reset(new region(next));
-        return true;
-      }
-      
-      boost::shared_ptr<region> next() {
-        return current_region;
-      }
-  };
-
   class world {
   public:
     fs::path world_path;

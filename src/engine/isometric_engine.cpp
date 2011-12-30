@@ -1,14 +1,18 @@
 #include "engine/isometric_engine.hpp"
+#include "engine/block_rotation.hpp"
+#include "engine/functions.hpp"
 
 #include "boost/scoped_array.hpp"
 
 void isometric_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  BlockRotation b_r(s, level->get_blocks());
-  BlockRotation b_d(s, level->get_data());
-  BlockRotation bl_r(s, level->get_blocklight());
-  BlockRotation sl_r(s, level->get_skylight());
-  BlockRotation hm_r(s, level->get_heightmap());
+  const engine_settings& s = get_settings();
+
+  block_rotation b_r(s.rotation, level->get_blocks());
+  block_rotation b_d(s.rotation, level->get_data());
+  block_rotation bl_r(s.rotation, level->get_blocklight());
+  block_rotation sl_r(s.rotation, level->get_skylight());
+  block_rotation hm_r(s.rotation, level->get_heightmap());
 
   pos_t iw, ih;
   
@@ -35,17 +39,19 @@ void isometric_engine::render(level_ptr level, boost::shared_ptr<image_operation
       int hmval = hm_r.get8();
       
       if (s.hellmode) {
-        for (int y = s.top; y >= s.bottom && hell_solid; y--) { hell_solid = !is_open(b_r.get8(y)); }
+        for (int y = s.top; y >= s.bottom && hell_solid; y--) {
+          hell_solid = !is_open(b_r.get8(y));
+        }
       }
       
       for (int y = s.top; y >= s.bottom; y--) {
         int bt = b_r.get8(y);
         
-        if (s.cavemode && cave_ignore_block(s, y, bt, b_r, cave_initial)) {
+        if (s.cavemode && cave_ignore_block(y, bt, b_r, cave_initial)) {
           continue;
         }
         
-        if (s.hellmode && !hell_solid && hell_ignore_block(s, y, bt, b_r, hell_initial)) {
+        if (s.hellmode && !hell_solid && hell_ignore_block(y, bt, b_r, hell_initial)) {
           continue;
         }
         

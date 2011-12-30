@@ -14,6 +14,7 @@
 #include "engine/engine_base.hpp"
 
 #include "threads/threadworker.hpp"
+#include "threads/renderer_settings.hpp"
 
 namespace fs = boost::filesystem;
 
@@ -43,9 +44,10 @@ struct render_job {
 
 class renderer : public threadworker<render_job, render_result> {
 public:
-  settings_t& s;
+  renderer_settings& r;
   
-  renderer(settings_t& s, int n, int total) : threadworker<render_job, render_result>(n, total), s(s) {
+  renderer(renderer_settings r, int n, int total)
+    : threadworker<render_job, render_result>(n, total), r(r) {
   }
   
   render_result work(render_job job) {
@@ -58,9 +60,9 @@ public:
 
     p.path = job.path;
     
-    cache_file cache(mc::utils::level_dir(s.cache_dir, job.coord.get_x(), job.coord.get_z()), p.path, s.cache_compress);
+    cache_file cache(mc::utils::level_dir(r.cache_dir, job.coord.get_x(), job.coord.get_z()), p.path, r.cache_compress);
     
-    if (s.cache_use) {
+    if (r.cache_use) {
       if (cache.exists()) {
         if (cache.read(p.operations)) {
           p.cache_hit = true;
@@ -74,7 +76,7 @@ public:
     p.signs = job.level->get_signs();
     job.engine->render(job.level, p.operations);
     
-    if (s.cache_use) {
+    if (r.cache_use) {
       // create the necessary directories required when caching
       cache.create_directories();
       

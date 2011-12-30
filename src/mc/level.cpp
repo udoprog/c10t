@@ -3,6 +3,8 @@
 #include "mc/level.hpp"
 
 #include "nbt/nbt.hpp"
+#include "mc/region.hpp"
+#include "mc/level_info.hpp"
 
 namespace mc {
   struct level_context {
@@ -145,7 +147,47 @@ namespace mc {
   }
 
   level::level(level_info_ptr _level_info) : _level_info(_level_info) {}
+      
+  std::vector<marker> level::get_signs() {
+    return signs;
+  }
 
+  std::string level::get_path() {
+    return _level_info->get_path();
+  }
+  
+  boost::shared_ptr<nbt::ByteArray>
+  level::get_blocks() {
+    return blocks;
+  }
+
+  boost::shared_ptr<nbt::ByteArray>
+  level::get_data() {
+    return data;
+  }
+
+  boost::shared_ptr<nbt::ByteArray>
+  level::get_skylight() {
+    return skylight;
+  }
+  
+  boost::shared_ptr<nbt::ByteArray>
+  level::get_heightmap() {
+    return heightmap;
+  }
+  
+  boost::shared_ptr<nbt::ByteArray>
+  level::get_blocklight() {
+    return blocklight;
+  }
+
+  bool level::operator<(const level& other) const {
+    return _level_info->get_coord() < other._level_info->get_coord();
+  }
+
+  /**
+   * might throw invalid_file if the file is not gramatically correct
+   */
   void level::read(dynamic_buffer& buffer)
   {
     level_context context;

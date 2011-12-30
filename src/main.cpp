@@ -534,7 +534,9 @@ bool generate_map(
         
         if (coord_out_of_range(s, coord)) {
           ++filtered_levels;
-          out_log << level->get_path() << ": (z,x) position out of limit (" << coord.get_z() << "," << coord.get_x() << ")" << std::endl;
+          out_log << level->get_path() << ": (z,x) position"
+                  << " (" << coord.get_z() << "," << coord.get_x() << ")"
+                  << " out of limit" << std::endl;
           continue;
         }
         
@@ -1010,7 +1012,9 @@ bool generate_statistics(
 
           if (coord_out_of_range(s, coord)) {
             ++filtered_levels;
-            out_log << level->get_path() << ": (z,x) position out of limit (" << coord.get_z() << "," << coord.get_x() << ")" << std::endl;
+            out_log << level->get_path() << ": (z,x) position"
+                    << " (" << coord.get_z() << "," << coord.get_x() << ")"
+                    << " out of limit" << std::endl;
             continue;
           }
 

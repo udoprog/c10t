@@ -53,8 +53,9 @@ Building from Source (using cmake)
 
     $ sudo apt-get install build-essential cmake libpng-dev zlib1g-dev libboost-all-dev libfreetype6-dev
 
-  2. Synchronize submodules (./libs):
+  2. Update submodules which contains some required dependencies (./libs):
 
+    git submodule init
     git submodule update
 
   3. Run:

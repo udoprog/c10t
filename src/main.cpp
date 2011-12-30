@@ -534,9 +534,7 @@ bool generate_map(
         
         if (coord_out_of_range(s, coord)) {
           ++filtered_levels;
-          if (s.debug) {
-            out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-          }
+          out_log << level->get_path() << ": (z,x) position out of limit (" << coord.get_z() << "," << coord.get_x() << ")" << std::endl;
           continue;
         }
         
@@ -926,7 +924,7 @@ bool generate_map(
   else {
     {
       out << " --- SAVING IMAGE --- " << endl;
-      out << "path: " << output_path << endl;
+      out << "path: " << output_path.string() << endl;
     }
     
     png_format::opt_type opts;
@@ -1012,9 +1010,7 @@ bool generate_statistics(
 
           if (coord_out_of_range(s, coord)) {
             ++filtered_levels;
-            if (s.debug) {
-              out_log << level->get_path() << ": position out of limit (" << coord.get_z() << "," << coord.get_z() << ")" << std::endl;
-            }
+            out_log << level->get_path() << ": (z,x) position out of limit (" << coord.get_z() << "," << coord.get_x() << ")" << std::endl;
             continue;
           }
 
@@ -1360,6 +1356,7 @@ int main(int argc, char *argv[]){
 
   if (!s.no_log) {
     out_log.open(s.output_log.string().c_str());
+    out_log << "START LOG" << endl;
   }
   
   if (s.memory_limit_default) {
@@ -1487,7 +1484,8 @@ int main(int argc, char *argv[]){
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << s.output_log << endl;
+    out << "Log written to " << s.output_log.string() << endl;
+    out_log << "END LOG" << endl;
     out_log.close();
   }
   
@@ -1503,7 +1501,8 @@ exit_error:
   mc::deinitialize_constants();
   
   if (!s.no_log) {
-    out << "Log written to " << s.output_log << endl;
+    out << "Log written to " << s.output_log.string() << endl;
+    out_log << "END LOG" << endl;
     out_log.close();
   }
   

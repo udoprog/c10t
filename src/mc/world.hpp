@@ -45,7 +45,7 @@ namespace mc {
 
       std::string get_path() {
         std::stringstream ss;
-        ss << _region->get_path() << "(" << coord.get_x() << "," << coord.get_z() << ")";
+        ss << _region->get_path().string() << "(" << coord.get_x() << "," << coord.get_z() << ")";
         return ss.str();
       }
 

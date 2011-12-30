@@ -39,7 +39,7 @@ bool dirlist::has_next(dir_filter_func dir_filter, file_filter_func file_filter)
         directories.push(itr->path());
       }
       else if (fs::is_regular_file(itr->status())) {
-        if (!file_filter(path_string(itr->path()))) {
+        if (!file_filter(path_string(itr->path().filename()))) {
           continue;
         }
         

@@ -59,10 +59,6 @@ struct nullstream: std::ostream {
   nullstream(): std::ios(0), std::ostream(0) {}
 };
 
-nullstream nil;
-std::ostream out(std::cout.rdbuf());
-std::ofstream out_log;
-
 const uint8_t ERROR_BYTE = 0x01;
 const uint8_t RENDER_BYTE = 0x10;
 const uint8_t COMP_BYTE = 0x20;
@@ -95,34 +91,6 @@ struct rotated_level_info {
     return coord < other.coord;
   }
 };
-
-void cout_progress_n(pos_t i, pos_t all) {
-  if (i == all) {
-    out << setw(6) << "done!" << endl;
-  }
-  else {
-    if (i % 50 == 0 && i > 0) {
-      out << "." << flush;
-      
-      if (i % 1000 == 0) {
-        out << setw(8) << i << " " << (i * 100) / all << "%" << endl;
-      }
-    }
-  } 
-}
-
-void cout_progress_ionly_n(pos_t i, pos_t all) {
-  if (all == 1) {
-    out << setw(6) << "done!" << endl;
-  }
-  else if (i % 50 == 0 && i > 0) {
-    out << "." << flush;
-    
-    if (i % 1000 == 0) {
-      out << setw(8) << i << " ?%" << endl;
-    }
-  } 
-}
 
 inline void cout_error(const string& message) {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(ERROR_BYTE)
@@ -199,8 +167,8 @@ bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
   int x = coord.get_x() - s.center_x;
   int z = coord.get_z() - s.center_z;
 
-  uint64_t x2 = x * x;
-  uint64_t z2 = z * z;
+  uint64_t x2 = uint64_t(x) * uint64_t(x);
+  uint64_t z2 = uint64_t(z) * uint64_t(z);
   uint64_t r2 = s.max_radius * s.max_radius;
     
   return x < s.min_x
@@ -211,20 +179,20 @@ bool coord_out_of_range(settings_t& s, mc::utils::level_coord& coord)
 }
 
 template<typename T>
-void cout_dot(T total) {
+void out_dot(ostream& out, T total) {
   if ( (unsigned int) total == 0) out << " done!";
   else out << "." << flush;
 }
 
-void cout_uint_endl(unsigned int total) {
+void cout_uint_endl(ostream& out, unsigned int total) {
   out << " " << setw(8) << total << " parts" << endl;
 }
 
-void cout_uintpart_endl(unsigned int progress, unsigned int total) {
+void cout_uintpart_endl(ostream& out, unsigned int progress, unsigned int total) {
   out << " " << setw(8) << progress << " parts " << (progress * 100) / total << "%" << endl;
 }
 
-void cout_mb_endl(streampos progress, streampos total) {
+void cout_mb_endl(ostream& out, streampos progress, streampos total) {
   out << " " << setw(8) << fixed << float(progress) / 1000000 << " MB " << (progress * 100) / total << "%" << endl;
 }
 
@@ -236,7 +204,7 @@ void cout_mb_endl(streampos progress, streampos total) {
  * Load all warps from a database and push them to a container.
  */
 template<typename T>
-inline void load_warps(fs::path warps_path, T& warps)
+inline void load_warps(ostream& out, fs::path warps_path, T& warps)
 {
   out << "warps: " << warps_path << ": " << flush;
   
@@ -254,7 +222,7 @@ inline void load_warps(fs::path warps_path, T& warps)
  * Load all players from a database and push them to a container.
  */
 template<typename T, typename S>
-inline void load_players(fs::path show_players_path, T& players, S& player_set)
+inline void load_players(ostream& out, fs::path show_players_path, T& players, S& player_set)
 {
   out << "players: " << show_players_path << ": " << flush;
   
@@ -334,7 +302,13 @@ inline void push_sign_markers(settings_t& s, text::font_face base_font, S& signs
  * Push all coordinates to a standard type of marker.
  */
 template<typename L, typename T>
-inline void push_coordinate_markers(settings_t& s, text::font_face base_font, mc::world& world, L& levels, T& markers)
+inline void push_coordinate_markers(
+    ostream& out,
+    settings_t& s,
+    text::font_face base_font,
+    mc::world& world,
+    L& levels,
+    T& markers)
 {
   text::font_face coordinate_font = base_font;
   
@@ -387,7 +361,12 @@ inline void push_warp_markers(settings_t& s, text::font_face base_font, W& warps
 }
 
 template<typename M>
-void write_json_file(settings_t& s, engine_ptr engine, mc::world& world, M& markers)
+void write_json_file(
+    ostream& out,
+    settings_t& s,
+    engine_ptr engine,
+    mc::world& world,
+    M& markers)
 {
   // calculate world center
   engine_base::pos_t center_x, center_y;
@@ -453,7 +432,13 @@ void write_json_file(settings_t& s, engine_ptr engine, mc::world& world, M& mark
  *   Try to distribute work evenly among threads.
  *
  */
-bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
+bool generate_map(
+    ostream& out,
+    ostream& out_log,
+    settings_t &s,
+    fs::path& world_path,
+    fs::path& output_path)
+{
   out << endl << "Generating PNG Map" << endl << endl;
   
   // all marker source information.
@@ -496,11 +481,11 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     out << " --- LOOKING FOR DATABASES --- " << endl;
     
     if (s.show_warps) {
-      load_warps(s.show_warps_path, warps);
+      load_warps(out, s.show_warps_path, warps);
     }
     
     if (s.show_players) {
-      load_players(world_path / "players", players, s.show_players_set);
+      load_players(out, world_path / "players", players, s.show_players_set);
     }
 
     if (s.show_signs) {
@@ -521,7 +506,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
    * Scan the world for regions containing levels.
    */
   {
-    nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
+    nonstd::continious<unsigned int> reporter(out, 100, out_dot<unsigned int>, cout_uint_endl);
     mc::region_iterator iterator = world.get_iterator();
 
     int failed_regions = 0;
@@ -656,7 +641,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
       
       work_in_progress.reset(image);
 
-      nonstd::limited<streampos> c(1024 * 1024, cout_dot<streampos>, cout_mb_endl);
+      nonstd::limited<streampos> c(out, 1024 * 1024, out_dot<streampos>, cout_mb_endl);
       
       try {
         image->build(c);
@@ -723,7 +708,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     std::list<render_result> render_results;
     std::list<rotated_level_info>::iterator lvlit = levels.begin();
   
-    nonstd::limited<unsigned int> reporter(50, cout_dot<unsigned int>, cout_uintpart_endl);
+    nonstd::limited<unsigned int> reporter(out, 50, out_dot<unsigned int>, cout_uintpart_endl);
     reporter.set_limit(world_size);
 
     renderer.start();
@@ -854,7 +839,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
     }
     
     if (s.show_coordinates) {
-      push_coordinate_markers(s, font, world, levels, markers);
+      push_coordinate_markers(out, s, font, world, levels, markers);
     }
     
     if (s.show_warps) {
@@ -869,7 +854,7 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
           " in order to write different types of markers to file");
     }
     
-    write_json_file(s, engine, world, markers);
+    write_json_file(out, s, engine, world, markers);
   }
   else {
     overlay_markers(s, work_in_progress, engine, markers);
@@ -963,7 +948,12 @@ bool generate_map(settings_t &s, fs::path& world_path, fs::path& output_path) {
   return true;
 }
 
-bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_path)
+bool generate_statistics(
+    std::ostream& out,
+    std::ostream& out_log,
+    settings_t &s,
+    fs::path& world_path,
+    fs::path& output_path)
 {
     out << endl << "Generating Statistics File" << endl << endl;
     std::vector<player> players;
@@ -986,12 +976,12 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
       out << " --- LOOKING FOR DATABASES --- " << endl;
 
       if (s.show_players) {
-        load_players(world_path / "players", players, s.show_players_set);
+        load_players(out, world_path / "players", players, s.show_players_set);
       }
     }
 
     {
-      nonstd::continious<unsigned int> reporter(100, cout_dot<unsigned int>, cout_uint_endl);
+      nonstd::continious<unsigned int> reporter(out, 100, out_dot<unsigned int>, cout_uint_endl);
       mc::region_iterator iterator = world.get_iterator();
 
       mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
@@ -1057,15 +1047,18 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
 
       reporter.done(0);
 
-      if (failed_regions > 0) {
+      if (failed_regions > 0)
+      {
         out << "SEE LOG: " << failed_regions << " region(s) failed!" << endl;
       }
 
-      if (filtered_levels > 0) {
+      if (filtered_levels > 0)
+      {
         out << "SEE LOG: " << filtered_levels << " level(s) filtered!" << endl;
       }
 
-      if (failed_levels > 0) {
+      if (failed_levels > 0)
+      {
         out << "SEE LOG: " << failed_levels << " level(s) failed!" << endl;
       }
     }
@@ -1111,7 +1104,7 @@ bool generate_statistics(settings_t &s, fs::path& world_path, fs::path& output_p
     return true;
 }
 
-int do_help() {
+int do_help(ostream& out) {
   out << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
   out << "" << endl;
   out << "Written by Udoprog et al." << endl;
@@ -1298,7 +1291,7 @@ int do_help() {
   return 0;
 }
 
-int do_version() {
+int do_version(ostream& out) {
   out << "c10t - a cartography tool for minecraft" << endl;
 # if defined(C10T_DISABLE_THREADS)
   out << endl;
@@ -1311,7 +1304,7 @@ int do_version() {
   return 0;
 }
 
-int do_colors() {
+int do_colors(ostream& out) {
   out << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
@@ -1323,6 +1316,8 @@ int do_colors() {
 
 int main(int argc, char *argv[]){
   nullstream nil;
+  ostream out(cout.rdbuf());
+  ofstream out_log;
   
   out.precision(2);
   out.setf(ios_base::fixed);
@@ -1337,11 +1332,11 @@ int main(int argc, char *argv[]){
 
   switch(s.action) {
     case Version:
-      return do_version();
+      return do_version(out);
     case Help:
-      return do_help();
+      return do_help(out);
     case ListColors:
-      return do_colors();
+      return do_colors(out);
     case WritePalette:
       if (!do_write_palette(s, s.palette_write_path)) {
         goto exit_error;
@@ -1355,9 +1350,17 @@ int main(int argc, char *argv[]){
     default: break;
   }
 
-  if (s.binary) out.rdbuf(out_log.rdbuf());
-  if (s.silent) out.rdbuf(nil.rdbuf());
-  if (!s.no_log) out_log.open(s.output_log.string().c_str());
+  if (s.binary) {
+    out.rdbuf(out_log.rdbuf());
+  }
+
+  if (s.silent) {
+    out.rdbuf(nil.rdbuf());
+  }
+
+  if (!s.no_log) {
+    out_log.open(s.output_log.string().c_str());
+  }
   
   if (s.memory_limit_default) {
     hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
@@ -1445,10 +1448,14 @@ int main(int argc, char *argv[]){
         }
       }
   
-      if (!generate_map(s, s.world_path, s.output_path)) goto exit_error;
+      if (!generate_map(out, out_log, s, s.world_path, s.output_path)) {
+        goto exit_error;
+      }
       break;
     case GenerateStatistics:
-      if (!generate_statistics(s, s.world_path, s.statistics_path)) goto exit_error;
+      if (!generate_statistics(out, out_log, s, s.world_path, s.statistics_path)) {
+        goto exit_error;
+      }
       break;
     default:
       error << "No action specified";

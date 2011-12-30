@@ -84,11 +84,11 @@ struct settings_t {
   fs::path write_json_path;
   fs::path write_js_path;
   int bottom;
-  int max_radius;
-  int min_x;
-  int max_x;
-  int min_z;
-  int max_z;
+  uint64_t max_radius;
+  int64_t min_x;
+  int64_t max_x;
+  int64_t min_z;
+  int64_t max_z;
   int top;
   int ttf_size;
   size_t memory_limit;

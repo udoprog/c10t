@@ -2,6 +2,7 @@
 #define NONSTD_ALGORITHM
 
 #include <stdlib.h>
+#include <ostream>
 
 namespace nonstd {
   template<typename T>
@@ -16,21 +17,12 @@ namespace nonstd {
   class continious : public reporting<T> {
     protected:
       const static uintmax_t LINE_WIDTH = 30;
-    private:
-      T chunks;
-      T total;
-      T limit;
-      
-      unsigned int line;
-      
-      typedef void (*progress)(T);
-      typedef void (*endline)(T);
-      
-      progress progress_f;
-      endline endline_f;
     public:
-      continious(T limit, progress progress_f, endline endline_f) :
-        chunks(0), total(0), limit(limit), line(0), 
+      typedef void (*progress_func)(std::ostream&, T);
+      typedef void (*endline_func)(std::ostream&, T);
+
+      continious(std::ostream& out, T limit, progress_func progress_f, endline_func endline_f) :
+        out(out), chunks(0), total(0), limit(limit), line(0), 
         progress_f(progress_f), endline_f(endline_f)
       {}
       
@@ -41,10 +33,10 @@ namespace nonstd {
           chunks -= limit;
           total += limit;
           
-          progress_f(total);
+          progress_f(out, total);
           
           if (!(line++ < LINE_WIDTH)) {
-            endline_f(total);
+            endline_f(out, total);
             line = 0;
           }
         }
@@ -55,32 +47,30 @@ namespace nonstd {
       
       void done(T last_part) {
         total += chunks + last_part;
-        endline_f(total);
+        endline_f(out, total);
       }
-  };
-  
-  template<typename T>
-  class limited : public reporting<T> {
-    protected:
-      const static uintmax_t LINE_WIDTH = 30;
     private:
+      std::ostream& out;
       T chunks;
       T total;
       T limit;
       
       unsigned int line;
       
-      typedef void (*progress)(T);
-      typedef void (*endline)(T, T);
-      
-      progress progress_f;
-      endline endline_f;
-
-      T total_limit;
-      bool total_limit_set;
+      progress_func progress_f;
+      endline_func endline_f;
+  };
+  
+  template<typename T>
+  class limited : public reporting<T> {
+    protected:
+      const static uintmax_t LINE_WIDTH = 30;
     public:
-      limited(T limit, progress progress_f, endline endline_f) :
-        chunks(0), total(0), limit(limit), line(0), 
+      typedef void (*progress_func)(std::ostream&, T);
+      typedef void (*endline_func)(std::ostream&, T, T);
+
+      limited(std::ostream& out, T limit, progress_func progress_f, endline_func endline_f) :
+        out(out), chunks(0), total(0), limit(limit), line(0), 
         progress_f(progress_f), endline_f(endline_f), total_limit(0), total_limit_set(false)
       {}
       
@@ -91,10 +81,10 @@ namespace nonstd {
           chunks -= limit;
           total += limit;
           
-          progress_f(total);
+          progress_f(out, total);
           
           if (line++ >= LINE_WIDTH) {
-            endline_f(total, total_limit);
+            endline_f(out, total, total_limit);
             line = 0;
           }
         }
@@ -107,8 +97,21 @@ namespace nonstd {
       
       void done(T last) {
         total += last;
-        endline_f(total_limit, total_limit);
+        endline_f(out, total_limit, total_limit);
       }
+    private:
+      std::ostream& out;
+      T chunks;
+      T total;
+      T limit;
+      
+      unsigned int line;
+      
+      progress_func progress_f;
+      endline_func endline_f;
+
+      T total_limit;
+      bool total_limit_set;
   };
 }
 

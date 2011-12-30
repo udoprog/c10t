@@ -646,10 +646,15 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       }
       break;
     case 'R':
-      s.max_radius = boost::lexical_cast<int>(optarg);
+      s.max_radius = boost::lexical_cast<uint64_t>(optarg);
       
       if (s.max_radius < 1) {
         error << "Radius must be greater than zero";
+        return false;
+      }
+
+      if (s.max_radius > 0xffffffff) {
+        error << "Radius too big";
         return false;
       }
       break;

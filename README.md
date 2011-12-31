@@ -50,21 +50,21 @@ Building from Source (using cmake)
 Ubuntu
 ###
 
-1. Install dependencies:
+ 1. Install dependencies:
 
-    $ sudo apt-get install build-essential cmake libpng-dev zlib1g-dev libboost-all-dev libfreetype6-dev
+     $ sudo apt-get install build-essential cmake libpng-dev zlib1g-dev libboost-all-dev libfreetype6-dev
 
-2. Update submodules which contains some required dependencies (./libs):
+ 2. Update submodules which contains some required dependencies (./libs):
 
-    git submodule init
-    git submodule update
+     git submodule init
+     git submodule update
 
-3. Run:
+ 3. Run:
 
-    $ mkdir build
-    $ cd build
-    $ cmake ..
-    $ make c10t
+     $ mkdir build
+     $ cd build
+     $ cmake ..
+     $ make c10t
 
  * CMake should generate a file called src/config.h from the input file src/config.h.cmake
   

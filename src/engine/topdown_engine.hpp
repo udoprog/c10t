@@ -6,7 +6,7 @@
 
 class topdown_engine : public engine_base<top_cube> {
   public:
-    topdown_engine(engine_settings& s, mc::world& world) : engine_base(s, world) {}
+    topdown_engine(engine_settings& s, mc::world& world) : engine_base<top_cube>(s, world) {}
     void render(level_ptr level, boost::shared_ptr<image_operations> operations);
 };
 

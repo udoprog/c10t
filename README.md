@@ -55,8 +55,8 @@ Building from Source (using cmake)
 
  2. Update submodules which contains some required dependencies (./libs):
 
-        git submodule init
-        git submodule update
+        $ git submodule init
+        $ git submodule update
 
  3. Run:
 
@@ -71,7 +71,7 @@ Building from Source (using cmake)
    * If you wish to build all of these simply run `make` which defaults to target `all`.
    * If you wish to build any individual one run `make <target>` e.g. `make c10t-test`.
 
-4. The executable (`c10t`) will be in the current directory.
+4. The executable should `c10t` be in the current directory.
 
 There are a couple of available targets
 

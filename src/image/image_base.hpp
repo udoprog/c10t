@@ -12,8 +12,6 @@
 #include "image/image_operations.hpp"
 #include "image/color.hpp"
 
-#include "2d/cube.hpp"
-
 class image_base;
 
 typedef boost::shared_ptr<image_base> image_ptr;

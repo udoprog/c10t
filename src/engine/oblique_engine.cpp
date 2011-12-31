@@ -6,10 +6,9 @@
 
 void oblique_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper)
 {
-  Cube part_c(mc::MapX + 1, mc::MapY + 1, mc::MapZ + 1);
-  
   pos_t iw, ih;
-  part_c.get_oblique_limits(iw, ih);
+
+  project_limits(iw, ih);
   
   const engine_settings& s = get_settings();
   
@@ -58,7 +57,7 @@ void oblique_engine::render(level_ptr level, boost::shared_ptr<image_operations>
         point p(x, y, z);
         
         pos_t px, py;
-        part_c.project_oblique(p, px, py);
+        project_position(p, px, py);
         
         color top = blockColor_top(bt, y, b_d),
              side = blockColor_side(bt, y, b_d);

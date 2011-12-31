@@ -59,7 +59,7 @@ void topdown_engine::render(level_ptr level, boost::shared_ptr<image_operations>
         pos_t px;
         pos_t py;
 
-        part_c.project_top(p, px, py);
+        project_position(p, px, py);
         
         oper->add_pixel(px, py, bc);
         

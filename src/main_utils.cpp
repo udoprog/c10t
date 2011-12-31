@@ -348,6 +348,7 @@ struct option long_options[] =
     {"center",                              required_argument,   &flag,   30},
     {"graph-block",                         required_argument,   &flag,   31},
     {"strip-sign-prefix",                   no_argument,         &flag,   32},
+    {"engine",                              required_argument,   &flag,   64},
     {0,                                     0,                   0,       0}
 };
 
@@ -554,6 +555,16 @@ bool read_opts(settings_t& s, int argc, char* argv[])
 
       case 32:
         s.strip_sign_prefix = true;
+        break;
+      case 64:
+        s.engine_path = fs::system_complete(fs::path(optarg));
+
+        if (!fs::is_regular_file(s.engine_path)) {
+          error << optarg << ": not a file";
+          return false;
+        }
+
+        s.engine_use = true;
         break;
       }
       

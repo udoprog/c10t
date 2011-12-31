@@ -3,6 +3,7 @@
 
 #include "mc/utils.hpp"
 #include "mc/world.hpp"
+#include "mc/level.hpp"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
@@ -11,7 +12,7 @@
 
 #include "cache.hpp"
 #include "image/image_operations.hpp"
-#include "engine/engine_base.hpp"
+#include "engine/engine_core.hpp"
 
 #include "threads/threadworker.hpp"
 #include "threads/renderer_settings.hpp"
@@ -37,7 +38,7 @@ struct render_result {
 
 struct render_job {
   boost::shared_ptr<mc::level> level;
-  boost::shared_ptr<engine_base> engine;
+  boost::shared_ptr<engine_core> engine;
   mc::utils::level_coord coord;
   fs::path path;
 };

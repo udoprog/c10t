@@ -46,7 +46,7 @@
 #include "mc/level_info.hpp"
 #include "mc/region_iterator.hpp"
 
-#include "engine/engine_base.hpp"
+#include "engine/engine_core.hpp"
 #include "engine/topdown_engine.hpp"
 #include "engine/oblique_engine.hpp"
 #include "engine/obliqueangle_engine.hpp"
@@ -54,6 +54,7 @@
 #include "engine/fatiso_engine.hpp"
 
 #include "main_utils.hpp"
+#include "dlopen.hpp"
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -96,7 +97,7 @@ inline void cout_end() {
  * This will allow us to composite the entire image later and calculate sizes then.
  */
 
-inline void populate_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_base> engine, boost::ptr_vector<marker>& markers) {
+inline void populate_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_core> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
   
   for (it = markers.begin(); it != markers.end(); it++) {
@@ -127,7 +128,13 @@ inline void populate_markers(settings_t& s, json::array* array, boost::shared_pt
   // don't bother to check for errors right now, but could be done using the "fail" accessor.
 }
 
-inline void overlay_markers(settings_t& s, image_ptr work_in_progress, engine_ptr engine, boost::ptr_vector<marker>& markers) {
+inline void overlay_markers(
+    settings_t& s,
+    image_ptr work_in_progress,
+    boost::shared_ptr<engine_core> engine,
+    boost::ptr_vector<marker>& markers
+    )
+{
   memory_image positionmark(5, 5);
   positionmark.fill(s.ttf_color);
   
@@ -356,12 +363,12 @@ template<typename M>
 void write_json_file(
     ostream& out,
     settings_t& s,
-    engine_ptr engine,
+    boost::shared_ptr<engine_core> engine,
     mc::world& world,
     M& markers)
 {
   // calculate world center
-  engine_base::pos_t center_x, center_y;
+  engine_core::pos_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
 
   json::object file;
@@ -448,7 +455,7 @@ bool generate_map(
   std::list<mc::rotated_level_info> levels;
   
   // this is the rendering engine that will be used.
-  engine_ptr engine;
+  boost::shared_ptr<engine_core> engine;
     
   // image to work against, could be backed by hard drive, or purely in memory.
   image_ptr work_in_progress;
@@ -581,29 +588,45 @@ bool generate_map(
   engine_s.bottom = s.bottom;
   engine_s.excludes = s.excludes;
   
-  /**
-   * Depending on settings, choose which rendering engine to use.
-   */
-  switch (s.mode) {
-    case Top:
-      engine.reset(new topdown_engine(engine_s, world));
-      break;
+  if (s.engine_use) {
+    dl_t* dl = dl_open(path_string(s.engine_path).c_str());
 
-    case Oblique:
-      engine.reset(new oblique_engine(engine_s, world));
-      break;
+    if (dl == NULL) {
+      error << "Failed to open library: " << path_string(s.engine_path) << endl;
+      return false;
+    }
 
-    case ObliqueAngle:
-      engine.reset(new obliqueangle_engine(engine_s, world));
-      break;
+    typedef void (*hello_f)();
 
-    case Isometric:
-      engine.reset(new isometric_engine(engine_s, world));
-      break;
+    hello_f hello = (hello_f)dl_sym(dl, "hello");
+    hello();
+    return true;
+  }
+  else {
+    /**
+     * Depending on settings, choose which rendering engine to use.
+     */
+    switch (s.mode) {
+      case Top:
+        engine.reset(new topdown_engine(engine_s, world));
+        break;
 
-    case FatIso:
-      engine.reset(new fatiso_engine(engine_s, world));
-      break;
+      case Oblique:
+        engine.reset(new oblique_engine(engine_s, world));
+        break;
+
+      case ObliqueAngle:
+        engine.reset(new obliqueangle_engine(engine_s, world));
+        break;
+
+      case Isometric:
+        engine.reset(new isometric_engine(engine_s, world));
+        break;
+
+      case FatIso:
+        engine.reset(new fatiso_engine(engine_s, world));
+        break;
+    }
   }
   
   /**
@@ -814,14 +837,14 @@ bool generate_map(
     }
 
     out << "image limits: "
-        << engine->im_min_x << "x" << engine->im_min_y << " to "
-        << engine->im_max_x << "x" << engine->im_max_y 
+        << engine->get_min_x() << "x" << engine->get_min_y() << " to "
+        << engine->get_max_x() << "x" << engine->get_max_y() 
         << " will be the cropped image ("
-        << (engine->im_max_x - engine->im_min_x) << "x"
-        << (engine->im_max_y - engine->im_min_y)
+        << (engine->get_max_x() - engine->get_min_x()) << "x"
+        << (engine->get_max_y() - engine->get_min_y())
         << ")" << endl;
 
-    image_ptr cropped = image::crop(work_in_progress, engine->im_min_x, engine->im_max_x, engine->im_min_y, engine->im_max_y);
+    image_ptr cropped = image::crop(work_in_progress, engine->get_min_x(), engine->get_max_x(), engine->get_min_y(), engine->get_max_y());
     work_in_progress = cropped;
   }
   
@@ -870,7 +893,7 @@ bool generate_map(
     overlay_markers(s, work_in_progress, engine, markers);
   }
 
-  engine_base::pos_t center_x, center_y;
+  engine_core::pos_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
   
   if (s.use_split) {
@@ -927,7 +950,7 @@ bool generate_map(
           continue;
         }
 
-        out << path << ": OK" << endl;
+        out << path_string(path) << ": OK" << endl;
       }
       
       ++i;
@@ -952,7 +975,7 @@ bool generate_map(
       return false;
     }
     
-    out << output_path << ": OK" << endl;
+    out << path_string(output_path) << ": OK" << endl;
   }
   
   return true;

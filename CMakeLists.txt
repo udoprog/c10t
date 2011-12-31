@@ -37,6 +37,7 @@ include_directories(${FREETYPE_INCLUDE_DIR_ft2build})
 include_directories(${Boost_INCLUDE_DIR})
 
 set(c10t_LIBRARIES
+  dl
   # internal libraries that could/should be externalized
   c10t-image
   c10t-nbt
@@ -56,7 +57,7 @@ if (BUILD_DEV_LIBS)
   set(c10t_LIBRARIES ${c10t_LIBRARIES}
     unc
     uncdata
-  )
+    )
 else (BUILD_DEV_LIBS)
   find_package(PkgConfig)
   pkg_check_modules(UNC unc)
@@ -72,6 +73,7 @@ add_subdirectory(test)
 
 set(c10t_SOURCES 
   src/main.cpp
+  src/dlopen.cpp
   src/main_utils.cpp
   src/algorithm.cpp
   src/players.cpp

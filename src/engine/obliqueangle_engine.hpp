@@ -1,35 +1,38 @@
 #ifndef OBLIQUEANGLE_ENGINE
 #define OBLIQUEANGLE_ENGINE
 
-#include "engine/engine_base.hpp"
+#include "engine/isometric_base.hpp"
 
-class obliqueangle_engine : public engine_base {
-  public:
-    obliqueangle_engine(engine_settings& s, mc::world& world) : engine_base(s, world) {}
-    void render(level_ptr level, boost::shared_ptr<image_operations> operations);
-    
-    void get_boundaries(pos_t& width, pos_t& height) {
-      mpos_c.get_obliqueangle_limits(width, height);
-    }
-    
-    void get_level_boundaries(pos_t& width, pos_t& height) {
-      part_c.get_obliqueangle_limits(width, height);
-    }
+class obliqueangle_engine : public isometric_base<obliqueangle_cube> {
+public:
+  obliqueangle_engine(engine_settings& s, mc::world& world);
 
-    void w2pt(int xPos, int zPos, pos_t& x, pos_t& y) {
-      pos_t posx = xPos - get_world().min_x;
-      pos_t posz = zPos - get_world().min_z;
-      
-      point pos(posx * mc::MapX, mc::MapY, posz * mc::MapZ);
-      
-      pos_c.project_obliqueangle(pos, x, y);
-    }
-    
-    void wp2pt(int xPos, int yPos, int zPos, pos_t& x, pos_t& y) {
-      point pos(xPos - get_world().min_xp, yPos, zPos - get_world().min_zp);
-      mpos_c.project_obliqueangle(pos, x, y);
-      engine_base::wp2pt(xPos, yPos, zPos, x, y);
-    }
+  void render_block(
+      image_operations_ptr o,
+      int bt,
+      pos_t px,
+      pos_t py,
+      color top,
+      color side
+      );
+
+  void render_halfblock(
+      image_operations_ptr o,
+      int bt,
+      pos_t px,
+      pos_t py,
+      color top,
+      color side
+      );
+
+  void render_torchblock(
+      image_operations_ptr o,
+      int bt,
+      pos_t px,
+      pos_t py,
+      color top,
+      color side
+      );
 };
 
 #endif /* OBLIQUE_ENGINE */

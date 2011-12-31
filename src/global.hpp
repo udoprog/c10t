@@ -83,6 +83,8 @@ struct settings_t {
   fs::path world_path;
   fs::path write_json_path;
   fs::path write_js_path;
+  fs::path engine_path;
+  bool engine_use;
   int bottom;
   uint64_t max_radius;
   int64_t min_x;
@@ -181,6 +183,8 @@ struct settings_t {
 
     this->center_x = 0;
     this->center_z = 0;
+
+    this->engine_use = false;
   }
 };
 

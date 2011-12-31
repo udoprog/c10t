@@ -84,70 +84,24 @@ private:
   const pos_t z;
 };
 
-class obliqueangle_cube {
+template<int F1 = 1, int F2 = 1, int F3 = 1>
+class angle_cube {
 public:
   typedef uint64_t pos_t;
 
-  obliqueangle_cube(const pos_t x, const pos_t y, const pos_t z) : x(x), y(y), z(z) {}
+  angle_cube(const pos_t x, const pos_t y, const pos_t z) : x(x), y(y), z(z) {}
   
   inline void project(point &p, pos_t &rx, pos_t &ry) const
   {
-    rx = (z - p.z - 1) + p.x;
-    ry = (y - p.y - 1) + p.z + p.x;
+    rx = F1 * ((z - p.z - 1) + p.x);
+    ry = F2 * (y - p.y - 1) + F3 * p.z + F3 * p.x;
   }
 
   inline void limits(pos_t &rx, pos_t &ry) const
   {
-    rx = z + x;
-    ry = y + z + x;
+    rx = F1 * (z + x);
+    ry = F2 * y + F3 * z + F3 * x;
   }
-private:
-  const pos_t x;
-  const pos_t y;
-  const pos_t z;
-};
-
-class isometric_cube {
-public:
-  typedef uint64_t pos_t;
-
-  isometric_cube(const pos_t x, const pos_t y, const pos_t z) : x(x), y(y), z(z) {}
-
-  inline void project(point &p, pos_t &rx, pos_t &ry) const
-  {
-    rx = 2 * ((z - p.z - 1) + p.x);
-    ry = 2 * (y - p.y - 1) + p.z + p.x;
-  }
-  
-  inline void limits(pos_t &rx, pos_t &ry) const
-  {
-    rx = 2 * (z + x);
-    ry = 2 * y + z + x;
-  }
-private:
-  const pos_t x;
-  const pos_t y;
-  const pos_t z;
-};
-
-class fatiso_cube {
-public:
-  typedef uint64_t pos_t;
-  
-  fatiso_cube(const pos_t x, const pos_t y, const pos_t z) : x(x), y(y), z(z) {}
-
-  inline void project(point &p, pos_t &rx, pos_t &ry) const
-  {
-    rx = 4 * ((z - p.z - 1) + p.x);
-    ry = 5 * (y - p.y - 1) + 2 * p.z + 2 * p.x;
-  }
-
-  inline void limits(pos_t &rx, pos_t &ry) const
-  {
-    rx = 4 * (z + x);
-    ry = 5 * y + 2 * z + 2 * x;
-  }
-  
 private:
   const pos_t x;
   const pos_t y;

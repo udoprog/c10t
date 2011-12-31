@@ -3,6 +3,8 @@
 
 #include "engine/isometric_base.hpp"
 
+typedef angle_cube<2,2,1> isometric_cube;
+
 class isometric_engine : public isometric_base<isometric_cube> {
 public:
   isometric_engine(engine_settings& s, mc::world& world);

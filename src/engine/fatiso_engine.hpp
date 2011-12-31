@@ -3,6 +3,8 @@
 
 #include "engine/isometric_base.hpp"
 
+typedef angle_cube<4,5,2> fatiso_cube;
+
 class fatiso_engine : public isometric_base<fatiso_cube> {
 public:
   fatiso_engine(engine_settings& s, mc::world& world);

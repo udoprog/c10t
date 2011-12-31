@@ -4,7 +4,7 @@ fatiso_engine::fatiso_engine(
     engine_settings& s,
     mc::world& world
     )
-  : isometric_base(s, world)
+  : isometric_base<fatiso_cube>(s, world)
 {
 }
 

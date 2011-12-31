@@ -4,7 +4,7 @@ obliqueangle_engine::obliqueangle_engine(
     engine_settings& s,
     mc::world& world
     )
-  : isometric_base(s, world)
+  : isometric_base<obliqueangle_cube>(s, world)
 {
 }
 

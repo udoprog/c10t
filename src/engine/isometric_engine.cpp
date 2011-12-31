@@ -4,7 +4,7 @@ isometric_engine::isometric_engine(
     engine_settings& s,
     mc::world& world
     )
-  : isometric_base(s, world)
+  : isometric_base<isometric_cube>(s, world)
 {
 }
 

@@ -47,18 +47,19 @@ inspiration.
 Building from Source (using cmake)
 ----------------------------------
 
-### Ubuntu ###
+Ubuntu
+###
 
-  1. Install dependencies:
+1. Install dependencies:
 
     $ sudo apt-get install build-essential cmake libpng-dev zlib1g-dev libboost-all-dev libfreetype6-dev
 
-  2. Update submodules which contains some required dependencies (./libs):
+2. Update submodules which contains some required dependencies (./libs):
 
     git submodule init
     git submodule update
 
-  3. Run:
+3. Run:
 
     $ mkdir build
     $ cd build
@@ -71,13 +72,14 @@ Building from Source (using cmake)
    * If you wish to build all of these simply run `make` which defaults to target `all`.
    * If you wish to build any individual one run `make <target>` e.g. `make c10t-test`.
 
-  4. The executable (`c10t`) will be in the current directory.
+4. The executable (`c10t`) will be in the current directory.
 
 There are a couple of available targets
 
  * ___c10t-debug___ - debug build with symbols, nice for debugging
  * ___c10t-lib___ - library that contains all c10t functions not in main or nbt_inspect
  * ___nbt-inspect___ - dumps the content of an nbt data file (basically anything in the world directory). Useful for writing tools.
+ * ___region-inspect___ - dumps the content of a mcr region file.
 
 Issues
 ------

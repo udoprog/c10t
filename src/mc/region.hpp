@@ -13,6 +13,7 @@
 #include <fstream>
 #include <cstring>
 #include <exception>
+#include <unistd.h>
 
 namespace fs = boost::filesystem;
 
@@ -67,6 +68,7 @@ namespace mc {
     inline unsigned int get_offset(unsigned int x, unsigned int z) const;
 
     chunk_offset read_chunk_offset(unsigned int x, unsigned int z) const;
+    time_t read_modification_time(unsigned int x, unsigned int z) const;
 
     template<typename T>
     void read_coords(T& coll) const

@@ -185,6 +185,11 @@ namespace mc {
     return _level_info->get_coord() < other._level_info->get_coord();
   }
 
+  time_t level::modification_time()
+  {
+    return _level_info->modification_time();
+  }
+
   /**
    * might throw invalid_file if the file is not gramatically correct
    */

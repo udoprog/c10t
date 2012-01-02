@@ -7,6 +7,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 #include <vector>
 
@@ -61,7 +62,12 @@ public:
 
     p.path = job.path;
     
-    cache_file cache(mc::utils::level_dir(r.cache_dir, job.coord.get_x(), job.coord.get_z()), p.path, r.cache_compress);
+    time_t mod = p.level->modification_time();
+    std::stringstream ss;
+    ss << boost::format("%d.%d.cmap") % job.coord.get_x() % job.coord.get_z();
+    std::string basename = ss.str();
+
+    cache_file cache(mc::utils::level_dir(r.cache_dir, job.coord.get_x(), job.coord.get_z()), basename, mod, r.cache_compress);
     
     if (r.cache_use) {
       if (cache.exists()) {

@@ -23,6 +23,7 @@ namespace mc {
       std::string get_path();
 
       region_ptr get_region();
+      time_t modification_time();
       
       bool operator<(const level_info& other) const;
 

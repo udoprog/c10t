@@ -20,6 +20,10 @@ namespace mc {
     return ss.str();
   }
 
+  time_t level_info::modification_time() {
+    return _region->read_modification_time(coord.get_x(), coord.get_z());
+  }
+
   region_ptr level_info::get_region() {
     return _region;
   }

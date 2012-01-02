@@ -41,6 +41,7 @@ namespace mc {
       std::vector<marker> get_signs();
 
       std::string get_path();
+      time_t modification_time();
       
       /*
        * might throw invalid_file if the file is not gramatically correct

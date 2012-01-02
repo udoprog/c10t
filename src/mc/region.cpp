@@ -142,6 +142,22 @@ namespace mc {
     return co;
   }
 
+  time_t region::read_modification_time(unsigned int x, unsigned int z) const
+  {
+    if (!header) {
+      throw bad_region(path, "header has not been loaded");
+    }
+
+    int o = get_offset(x, z) + RECORD_SIZE;
+
+    uint8_t buf[HEADER_RECORD_SIZE];
+
+    ::memcpy(reinterpret_cast<char*>(buf), &header[o], HEADER_RECORD_SIZE);
+
+    uint32_t mtime = ((buf[0] << 24) || (buf[1] << 16) || (buf[2] << 8)) || buf[3];
+    return mtime;
+  }
+
   uint32_t region::read_data(int x, int z, dynamic_buffer& buffer)
   {
     chunk_offset co = read_chunk_offset(x, z);

@@ -15,8 +15,6 @@ namespace fs = boost::filesystem;
 struct cache_hdr {
   bool compressed;
   std::time_t mod;
-  uintmax_t filesize;
-  size_t min_x, min_y;
   size_t max_x, max_y;
   size_t size;
 };
@@ -24,7 +22,7 @@ struct cache_hdr {
 class cache_file {
 private:
   const fs::path cache_dir;
-  const fs::path source_path;
+  const uint32_t source_write_time;
   const bool cache_compress;
   
   const fs::path cache_path;
@@ -32,10 +30,10 @@ private:
   typedef std::vector<image_operation>::size_type v_size_type;
   
 public:
-  cache_file(const fs::path cache_dir, const fs::path source_path, bool cache_compress)
-    : cache_dir(cache_dir), source_path(source_path), 
+  cache_file(const fs::path cache_dir, std::string basename, const uint32_t source_write_time, bool cache_compress)
+    : cache_dir(cache_dir), source_write_time(source_write_time), 
       cache_compress(cache_compress),
-      cache_path(cache_dir / (fs::basename(source_path) + ".cmap"))
+      cache_path(cache_dir / basename)
   {
   }
   
@@ -45,7 +43,7 @@ public:
   
   bool exists() {
     return fs::is_regular(cache_path)
-      && fs::last_write_time(cache_path) >= fs::last_write_time(source_path);
+      && fs::last_write_time(cache_path) >= source_write_time;
   }
 
   void clear() {
@@ -143,13 +141,10 @@ public:
     }
       
     if (hdr.compressed != cache_compress) return false;
-    if (hdr.mod != fs::last_write_time(source_path)) return false;
-    if (hdr.filesize != fs::file_size(source_path)) return false;
+    if (hdr.mod != source_write_time) return false;
     
     oper->max_x = hdr.max_x;
-    oper->min_x = hdr.min_x;
     oper->max_y = hdr.max_y;
-    oper->min_y = hdr.min_y;
     oper->operations.resize(hdr.size);
     
     //fs.read(reinterpret_cast<char*>(&(oper->operations.front())), sizeof(image_operation) * hdr.size);
@@ -182,11 +177,8 @@ public:
       
       hdr.compressed = cache_compress;
       hdr.max_x = oper->max_x;
-      hdr.min_x = oper->min_x;
       hdr.max_y = oper->max_y;
-      hdr.min_y = oper->min_y;
-      hdr.mod = fs::last_write_time(source_path);
-      hdr.filesize = fs::file_size(source_path);
+      hdr.mod = source_write_time;
       hdr.size = oper->operations.size();
       
       //fs.write(reinterpret_cast<char*>(&hdr), sizeof(cache_hdr));

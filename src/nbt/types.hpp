@@ -1,6 +1,9 @@
 #ifndef _NBT_TYPES_HPP
 #define _NBT_TYPES_HPP
 
+#include <stdint.h>
+#include <string>
+
 namespace nbt {
   typedef int8_t Byte;
   typedef int16_t Short;

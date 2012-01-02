@@ -711,7 +711,13 @@ bool generate_map(
     renderer_s.cache_dir = s.cache_dir;
     renderer_s.cache_compress = s.cache_compress;
 
-    renderer renderer(renderer_s, s.threads, world_size);
+    int effective_threads = s.threads - 1;
+
+    if (effective_threads <= 0) {
+      effective_threads = 0;
+    }
+
+    renderer renderer(renderer_s, effective_threads, world_size);
 
     /**
      * The amount of currently enqueued jobs.
@@ -726,7 +732,7 @@ bool generate_map(
      * This is done in steps to minimze memory usage, the size  of the steps steps
      * are decided by this parameter.
      */
-    unsigned int prebuffer = s.threads * s.prebuffer;
+    unsigned int prebuffer = effective_threads * s.prebuffer;
     
     int cache_hits = 0;
     int failed_levels = 0;
@@ -738,7 +744,6 @@ bool generate_map(
      */
     mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
 
-    std::list<render_result> render_results;
     std::list<mc::rotated_level_info>::iterator lvlit = levels.begin();
   
     nonstd::limited<unsigned int> reporter(out, 50, out_dot<unsigned int>, cout_uintpart_endl);
@@ -746,8 +751,9 @@ bool generate_map(
 
     renderer.start();
 
-    while (lvlit != levels.end() || render_results.size() > 0) {
-      while (queued < prebuffer && lvlit != levels.end()) {
+    while (lvlit != levels.end() || queued > 0) {
+      /* enqueue jobs here */
+      while (lvlit != levels.end() && queued < prebuffer) {
         mc::rotated_level_info rl = *lvlit;
         lvlit++;
         
@@ -775,54 +781,43 @@ bool generate_map(
         if (s.debug) { out << rl.get_level()->get_path() << ": queued OK" << endl; }
       }
 
-      while (render_results.size() > 0) {
-        render_results.sort();
+      render_result p = renderer.get();
+      --queued;
 
-        BOOST_FOREACH(render_result p, render_results) {
-          reporter.add(1);
+      if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
 
-          try {
-            pos_t x, y;
-            engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
-
-            // update image limits
-            engine->update_image_limits(
-                x + 1, y,
-                x + p.operations->max_x,
-                y + p.operations->max_y - 1);
-
-            work_in_progress->composite(x, y, p.operations);
-          } catch(std::ios::failure& e) {
-            out << s.swap_file << ": " << strerror(errno);
-            return false;
-          }
-        }
-
-        render_results.clear();
+      if (p.fatal) {
+        reporter.add(1);
+        out << p.level->get_path() << ": " << p.fatal_why << endl;
+        continue;
       }
 
-      while (queued > 0) {
-        render_result p = renderer.get();
-        --queued;
-
-        if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
-
-        if (p.fatal) {
-          reporter.add(1);
-          out << p.level->get_path() << ": " << p.fatal_why << endl;
-          continue;
-        }
-
-        if (p.cache_hit) {
-          ++cache_hits;
-        }
-        
-        if (p.signs.size() > 0) {
-          if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
-          signs.insert(signs.end(), p.signs.begin(), p.signs.end());
-        }
+      if (p.cache_hit) {
+        ++cache_hits;
+      }
       
-        render_results.push_back(p);
+      if (p.signs.size() > 0) {
+        if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
+        signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+      }
+
+      /* composite the result */
+      reporter.add(1);
+
+      try {
+        pos_t x, y;
+        engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
+
+        // update image limits
+        engine->update_image_limits(
+            x + 1, y,
+            x + p.operations->max_x,
+            y + p.operations->max_y - 1);
+
+        work_in_progress->composite(x, y, p.operations);
+      } catch(std::ios::failure& e) {
+        out << s.swap_file << ": " << strerror(errno);
+        return false;
       }
     }
     

@@ -1,5 +1,7 @@
 add_library(
   c10t-engine
+  isometric_base.cpp
+  flat_base.cpp
   topdown_engine.cpp
   oblique_engine.cpp
   obliqueangle_engine.cpp

@@ -74,12 +74,12 @@ google_js=$res/libc10t.google.js
 index_html=$res/index.html
 
 [ ! -f $google_js ] && {
-  echo "could not find: $C10T_GOOGLE_JS"
+  echo "could not find: $google_js"
   exit 1;
 }
 
 [ ! -f $index_html ] && {
-  echo "could not find: $C10T_GOOGLE_JS"
+  echo "could not find: $index_html"
   exit 1;
 }
 

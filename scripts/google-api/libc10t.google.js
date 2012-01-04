@@ -142,7 +142,7 @@ function new_map_type(m, o, ob) {
       name : "none",
       alt : "none",
       minZoom: 1, maxZoom: world.split,
-      tileSize: new google.maps.Size(256, 256)
+      tileSize: new google.maps.Size(world.split_base, world.split_base)
     },
     ob
   );

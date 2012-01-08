@@ -53,10 +53,19 @@ Building from Source (using cmake)
 
         $ sudo apt-get install build-essential cmake libpng-dev zlib1g-dev libboost-all-dev libfreetype6-dev
 
+    If libboost > 1.45 is not available by using your package manager, you need to install it from source. To do so download and untar it from www.boost.org and perform the following operations as root:
+
+        $ ./bootstrap --prefix=/usr
+        $ ./b2 install
+
+    If you have troubles installing boost, consult the Getting Started Guide on the website of the boost library.
+
  2. Update submodules which contains some required dependencies (./libs):
 
         $ git submodule init
         $ git submodule update
+
+    Make sure you have cloned the repository with git in order to submit these commands successfully.
 
  3. Run:
 

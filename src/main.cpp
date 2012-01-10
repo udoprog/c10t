@@ -394,6 +394,7 @@ void write_json_file(
   json_world->put("mn_z", new json::number(world.min_z * 16));
   json_world->put("mx_x", new json::number(world.max_x * 16));
   json_world->put("mx_z", new json::number(world.max_z * 16));
+  json_world->put("rot", new json::number(s.rotation));
   json_world->put("mode", new json::number(s.mode));
   json_world->put("split_base", new json::number(s.split_base));
   json_world->put("split", new json::number(s.split.size()));

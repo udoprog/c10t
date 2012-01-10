@@ -576,6 +576,7 @@ bool generate_map(
     out << "  min_z: " << world.min_z << endl;
     out << "  max_z: " << world.max_z << endl;
     out << "  levels: " << levels.size() << endl;
+    out << "  radius: " << s.max_radius << endl;
     out << "  chunk pos: " << world.chunk_x << "x" << world.chunk_y << endl;
   }
 

@@ -1420,7 +1420,7 @@ int main(int argc, char *argv[]){
     
     if (!fs::is_directory(s.cache_dir)) {
       out << "Creating directory for caching: " << path_string(s.cache_dir) << endl;
-      fs::create_directory(s.cache_dir);
+      fs::create_directories(s.cache_dir);
     }
     
     {

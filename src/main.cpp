@@ -369,7 +369,10 @@ void write_json_file(
 {
   // calculate world center
   engine_core::pos_t center_x, center_y;
-  engine->wp2pt(0, 0, 0, center_x, center_y);
+  mc::utils::level_coord coord =
+    mc::utils::level_coord(s.center_x*16, s.center_z*16).rotate(s.rotation);
+
+  engine->wp2pt(coord.get_x(), 0, coord.get_z(), center_x, center_y);
 
   json::object file;
   json::object* json_static = new json::object;

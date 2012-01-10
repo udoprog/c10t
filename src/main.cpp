@@ -1219,6 +1219,7 @@ int do_help(ostream& out) {
     << "  -R, --radius <int>        - Limit render to a specific radius, useful when   " << endl
     << "                              your map is absurdly large and you want a 'fast' " << endl
     << "                              limiting option.                                 " << endl
+    << "                              The default maximum radius is 1000 chunks.       " << endl
     << "      --center <x>,<z>      - Offset the map centering on limits by chunks <x> " << endl
     << "                              and <z>.                                         " << endl
     << endl

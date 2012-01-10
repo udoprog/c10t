@@ -1024,15 +1024,16 @@ bool generate_statistics(
       }
     }
 
+    int failed_regions = 0;
+    int filtered_levels = 0;
+    int failed_levels = 0;
+    int levels = 0;
+
     {
       nonstd::continious<unsigned int> reporter(out, 100, out_dot<unsigned int>, cout_uint_endl);
       mc::region_iterator iterator = world.get_iterator();
 
       mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
-
-      int failed_regions = 0;
-      int filtered_levels = 0;
-      int failed_levels = 0;
 
       while (iterator.has_next()) {
         mc::region_ptr region = iterator.next();
@@ -1053,6 +1054,7 @@ bool generate_statistics(
           mc::level_info::level_info_ptr level(new mc::level_info(region, c));
 
           mc::utils::level_coord coord = level->get_coord();
+          ++levels;
 
           if (coord_out_of_range(s, coord)) {
             ++filtered_levels;
@@ -1085,6 +1087,7 @@ bool generate_statistics(
                 _stat->registerBloc(blocks->values[i], i % mc::MapY);
             }
           }
+
           reporter.add(1);
         }
       }
@@ -1115,6 +1118,8 @@ bool generate_statistics(
     stats << "max_x " << world.max_x << endl;
     stats << "min_z " << world.min_z << endl;
     stats << "max_z " << world.max_z << endl;
+    stats << "chunks " << (levels-filtered_levels-failed_levels)
+                       << " of " << levels << endl;
 
     if (s.show_players) {
       stats << "[PLAYERS]" << endl;

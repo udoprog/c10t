@@ -60,14 +60,21 @@ Building from Source (using cmake)
 
     If you have troubles installing boost, consult the Getting Started Guide on the website of the boost library.
 
- 2. Update submodules which contains some required dependencies (./libs):
+ 2. Clone repository
+
+        $ git clone git@github.com:udoprog/c10t.git
+        $ cd c10t
+
+    You need to clone the repository in order to successfully execute the commands in step three. You can get support for git on the following web page:
+    http://schacon.github.com/git/gittutorial.html
+    Just scroll to the section "Using git for collaboration".
+
+ 3. Update submodules which contains some required dependencies (./libs):
 
         $ git submodule init
         $ git submodule update
 
-    Make sure you have cloned the repository with git in order to submit these commands successfully.
-
- 3. Run:
+ 4. Run:
 
         $ mkdir build
         $ cd build

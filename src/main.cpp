@@ -718,8 +718,8 @@ bool generate_map(
 
     int effective_threads = s.threads - 1;
 
-    if (effective_threads <= 0) {
-      effective_threads = 0;
+    if (effective_threads <= 1) {
+      effective_threads = 1;
     }
 
     renderer renderer(renderer_s, effective_threads, world_size);

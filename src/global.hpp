@@ -121,7 +121,9 @@ struct settings_t {
     this->excludes[mc::Air] = true;
 
 #   if !defined(C10T_DISABLE_THREADS)
-      this->threads = boost::thread::hardware_concurrency();
+      if ((this->threads = boost::thread::hardware_concurrency()) == 0) {
+        this->threads = 1;
+      }
 #   else
       this->threads = 1;
 #   endif

@@ -24,10 +24,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(Boost_USE_STATIC_LIBS TRUE)
 
 find_package(ZLIB REQUIRED)
-find_package(PNG REQUIRED)
-find_package(FreeType REQUIRED)
+find_package(PNG 1.2 REQUIRED)
+find_package(FreeType 2 REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost COMPONENTS thread filesystem system REQUIRED)
+find_package(Boost 1.46 COMPONENTS thread filesystem system REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${ZLIB_INCLUDE_DIR})

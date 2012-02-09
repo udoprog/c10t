@@ -25,9 +25,7 @@ Requirements
   * libz (?)
   * libpng (>= 1.2)
   * libfreetype (>= 2)
-  * libboost (thread, filesystem, system and test) (>= 1.40)
-
-Note: People have reported problem with boost 1.45, I personally have not been able to confirm this, if you ever encounter it, please report the bug as thorough as possible.
+  * libboost (thread, filesystem, system and test) (>= 1.46)
 
 Features
 --------
@@ -62,7 +60,7 @@ Building from Source (using cmake)
 
  2. Clone repository
 
-        $ git clone git@github.com:udoprog/c10t.git
+        $ git clone git://github.com:udoprog/c10t.git
         $ cd c10t
 
     You need to clone the repository in order to successfully execute the commands in step three. You can get support for git on the following web page:

@@ -51,7 +51,7 @@ Building from Source (using cmake)
 
         $ sudo apt-get install build-essential cmake libpng-dev zlib1g-dev libboost-all-dev libfreetype6-dev
 
-    If libboost > 1.45 is not available by using your package manager, you need to install it from source. To do so download and untar it from www.boost.org and perform the following operations as root:
+    If libboost >= 1.46 is not available by using your package manager, you need to install it from source. To do so download and untar it from www.boost.org and perform the following operations as root:
 
         $ ./bootstrap --prefix=/usr
         $ ./b2 install
@@ -60,7 +60,7 @@ Building from Source (using cmake)
 
  2. Clone repository
 
-        $ git clone git://github.com:udoprog/c10t.git
+        $ git clone git://github.com/udoprog/c10t.git
         $ cd c10t
 
     You need to clone the repository in order to successfully execute the commands in step three. You can get support for git on the following web page:

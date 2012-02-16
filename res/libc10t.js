@@ -9,12 +9,25 @@ function c10t(json) {
   this.mn_z = json.world.mn_z;
   this.mx_y = this.MapY;
   this.mn_y = 0;
+  this.cx = json.world.cx;
+  this.cy = json.world.cy;
   this.dx = json.world.dx;
   this.dz = json.world.dz;
   this.dy = this.MapY;
   
   this.mode = this.modes[json.world.mode];
-  this.project = this.projections[this.mode];
+  this.projection = this.projections[this.mode];
+  
+  this.project = function (x, y, z)
+  {
+    cropCompensation = this.projection(0, 0, 0);
+    coordinates = this.projection(x, y, z);
+    
+    coordinates[0] -= cropCompensation[0] - this.cx;
+    coordinates[1] -= cropCompensation[1] - this.cy;
+    
+    return coordinates;
+  }
 }
 
 c10t.prototype.modes = {

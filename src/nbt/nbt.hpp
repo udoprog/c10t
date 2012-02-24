@@ -613,9 +613,9 @@ namespace nbt {
           }
         }
 
-        delete [] stack;
-
         nbt_assert_error(exc_env, file, file->empty(), "input buffer is not empty");
+
+        delete [] stack;
       }
 
       void parse_buffer(const char* buffer, unsigned int size)

@@ -25,10 +25,10 @@ public:
     flat_base<C>::get_level_boundaries(iw, ih);
 
     // block type
-    block_rotation b_r(s.rotation, level->get_blocks());
-    block_rotation b_d(s.rotation, level->get_data());
-    block_rotation bl_r(s.rotation, level->get_blocklight());
-    block_rotation sl_r(s.rotation, level->get_skylight());
+    block_rotation<nbt::ByteArray, int> b_r(s.rotation, level->get_blocks());
+    block_rotation<nbt::ByteArray, int> b_d(s.rotation, level->get_data());
+    block_rotation<nbt::ByteArray, int> bl_r(s.rotation, level->get_blocklight());
+    block_rotation<nbt::ByteArray, int> sl_r(s.rotation, level->get_skylight());
     
     oper->set_limits(iw, ih);
     

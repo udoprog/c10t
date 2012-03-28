@@ -57,7 +57,7 @@ namespace mc {
       boost::shared_ptr<nbt::ByteArray>
       get_skylight();
       
-      boost::shared_ptr<nbt::ByteArray>
+      boost::shared_ptr<nbt::IntArray>
       get_heightmap();
       
       boost::shared_ptr<nbt::ByteArray>
@@ -73,7 +73,7 @@ namespace mc {
       boost::shared_ptr<nbt::ByteArray> blocks;
       boost::shared_ptr<nbt::ByteArray> data;
       boost::shared_ptr<nbt::ByteArray> skylight;
-      boost::shared_ptr<nbt::ByteArray> heightmap;
+      boost::shared_ptr<nbt::IntArray> heightmap;
       boost::shared_ptr<nbt::ByteArray> blocklight;
   };
 }

@@ -17,8 +17,8 @@ namespace mc {
     boost::shared_ptr<nbt::ByteArray> blocks;
     boost::shared_ptr<nbt::ByteArray> data;
     boost::shared_ptr<nbt::ByteArray> skylight;
-    boost::shared_ptr<nbt::ByteArray> heightmap;
     boost::shared_ptr<nbt::ByteArray> blocklight;
+    boost::shared_ptr<nbt::IntArray> heightmap;
     
     bool grammar_error;
     size_t grammar_error_where;
@@ -77,6 +77,13 @@ namespace mc {
     }
   }
 
+  void register_int_array(level_context* level, nbt::String name, nbt::IntArray* int_array) {
+    if (name.compare("HeightMap") == 0) {
+      level->heightmap.reset(int_array);
+      return;
+    }
+  }
+
   void register_byte_array(level_context* level, nbt::String name, nbt::ByteArray* byte_array) {
     if (!level->islevel) {
       delete byte_array;
@@ -95,11 +102,6 @@ namespace mc {
     
     if (name.compare("SkyLight") == 0) {
       level->skylight.reset(byte_array);
-      return;
-    }
-
-    if (name.compare("HeightMap") == 0) {
-      level->heightmap.reset(byte_array);
       return;
     }
     
@@ -171,7 +173,7 @@ namespace mc {
     return skylight;
   }
   
-  boost::shared_ptr<nbt::ByteArray>
+  boost::shared_ptr<nbt::IntArray>
   level::get_heightmap() {
     return heightmap;
   }
@@ -200,6 +202,7 @@ namespace mc {
     nbt::Parser<level_context> parser(&context);
     
     parser.register_byte_array = register_byte_array;
+    parser.register_int_array = register_int_array;
     parser.register_string = register_string;
     parser.register_int = register_int;
     parser.begin_compound = begin_compound;
@@ -229,6 +232,26 @@ namespace mc {
     
     if (!context.islevel) {
       throw invalid_file("not a level data file");
+    }
+
+    if (!context.blocks) {
+      throw invalid_file("missing 'Blocks' section");
+    }
+
+    if (!context.data) {
+      throw invalid_file("missing 'Data' section");
+    }
+
+    if (!context.skylight) {
+      throw invalid_file("missing 'SkyLight' section");
+    }
+
+    if (!context.heightmap) {
+      throw invalid_file("missing 'HeightMap' section");
+    }
+
+    if (!context.blocklight) {
+      throw invalid_file("missing 'BlockLight' section");
     }
     
     signs = context.signs;

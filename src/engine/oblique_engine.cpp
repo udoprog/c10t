@@ -12,10 +12,10 @@ void oblique_engine::render(level_ptr level, boost::shared_ptr<image_operations>
   
   const engine_settings& s = get_settings();
   
-  block_rotation b_r(s.rotation, level->get_blocks());
-  block_rotation b_d(s.rotation, level->get_data());
-  block_rotation bl_r(s.rotation, level->get_blocklight());
-  block_rotation sl_r(s.rotation, level->get_skylight());
+  block_rotation<nbt::ByteArray, int> b_r(s.rotation, level->get_blocks());
+  block_rotation<nbt::ByteArray, int> b_d(s.rotation, level->get_data());
+  block_rotation<nbt::ByteArray, int> bl_r(s.rotation, level->get_blocklight());
+  block_rotation<nbt::ByteArray, int> sl_r(s.rotation, level->get_skylight());
   
   pos_t bmt = iw * ih;
   

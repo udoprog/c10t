@@ -21,11 +21,11 @@ public:
   {
     const engine_settings& s = engine_base<C>::get_settings();
 
-    block_rotation b_r(s.rotation, level->get_blocks());
-    block_rotation b_d(s.rotation, level->get_data());
-    block_rotation bl_r(s.rotation, level->get_blocklight());
-    block_rotation sl_r(s.rotation, level->get_skylight());
-    block_rotation hm_r(s.rotation, level->get_heightmap());
+    block_rotation<nbt::ByteArray, int> b_r(s.rotation, level->get_blocks());
+    block_rotation<nbt::ByteArray, int> b_d(s.rotation, level->get_data());
+    block_rotation<nbt::ByteArray, int> bl_r(s.rotation, level->get_blocklight());
+    block_rotation<nbt::ByteArray, int> sl_r(s.rotation, level->get_skylight());
+    block_rotation<nbt::IntArray, int> hm_r(s.rotation, level->get_heightmap());
 
     pos_t image_width = 0;
     pos_t image_height = 0;

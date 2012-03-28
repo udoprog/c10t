@@ -29,7 +29,7 @@ inline bool is_open(int bt) {
   }
 }
 
-inline bool cave_ignore_block(int y, int bt, block_rotation& b_r, bool &cave_initial) {
+inline bool cave_ignore_block(int y, int bt, block_rotation<nbt::ByteArray, int>& b_r, bool &cave_initial) {
   if (cave_initial) {
     if (!is_open(bt)) {
       cave_initial = false;
@@ -46,7 +46,7 @@ inline bool cave_ignore_block(int y, int bt, block_rotation& b_r, bool &cave_ini
   return true;
 }
 
-inline bool hell_ignore_block(int y, int bt, block_rotation& b_r, bool &hell_initial) {
+inline bool hell_ignore_block(int y, int bt, block_rotation<nbt::ByteArray, int>& b_r, bool &hell_initial) {
   if (hell_initial) {
     if (is_open(bt)) {
       hell_initial = false;
@@ -59,11 +59,11 @@ inline bool hell_ignore_block(int y, int bt, block_rotation& b_r, bool &hell_ini
   return false;
 }
 
-inline color blockColor_top(int blockType, int y, block_rotation blockData) {
+inline color blockColor_top(int blockType, int y, block_rotation<nbt::ByteArray, int> blockData) {
   return mc::getColor(blockType, blockData.get4(y));
 }
 
-inline color blockColor_side(int blockType, int y, block_rotation blockData) {
+inline color blockColor_side(int blockType, int y, block_rotation<nbt::ByteArray, int> blockData) {
   return mc::getSideColor(blockType, blockData.get4(y));
 }
 

@@ -76,7 +76,13 @@ void register_byte(inspect_context* inspect, nbt::String name, nbt::Byte value) 
 
 void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteArray* value) {
   cout << setw(inspect->width) << ""
-       << "ByteArray(" << name << "): " << "(" << int(value->length) << "B binary)" << endl;
+       << "ByteArray(" << name << "): " << "(" << int(value->length) << " bytes)" << endl;
+  delete value;
+}
+
+void register_int_array(inspect_context* inspect, nbt::String name, nbt::IntArray* value) {
+  cout << setw(inspect->width) << ""
+       << "IntArray(" << name << "): " << "(" << int(value->length) << " ints)" << endl;
   delete value;
 }
 
@@ -108,12 +114,13 @@ int main(int argc, char* argv[]) {
   parser.register_int = register_int;
   parser.register_byte = register_byte;
   parser.register_byte_array = register_byte_array;
+  parser.register_int_array = register_int_array;
 
   mc::region region(argv[1]);
 
   list<level_coord> coords;
 
-  region.read_coords(coords);
+  std::cout << "Reading Header" << std::endl;
 
   try {
     region.read_header();
@@ -121,6 +128,8 @@ int main(int argc, char* argv[]) {
     std::cout << region.get_path() << ": " << e.what() << std::endl;
     return 1;
   }
+
+  region.read_coords(coords);
 
   mc::dynamic_buffer buffer(mc::region::CHUNK_MAX);
 

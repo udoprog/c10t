@@ -109,8 +109,8 @@ namespace mc {
       std::vector<string> parts;
       split(parts, fs::basename(path), '.');
       
-      if (parts.size() != 3 || extension.compare(".mcr") != 0) {
-        throw invalid_argument("level data file name does not match <x>.<z>.mcr");
+      if (parts.size() != 3 || extension.compare(".mca") != 0) {
+        throw invalid_argument("level data file name does not match <x>.<z>.mca");
       }
       
       try {

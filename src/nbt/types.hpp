@@ -21,6 +21,14 @@ namespace nbt {
     }
   };
 
+  struct IntArray {
+    Int length;
+    Int *values;
+    ~IntArray() {
+      delete [] values;
+    }
+  };
+
   struct stack_entry {
     Byte type;
     String name;

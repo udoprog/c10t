@@ -196,6 +196,7 @@ namespace nbt {
   const Byte TAG_String = 0x8;
   const Byte TAG_List = 0x9;
   const Byte TAG_Compound = 0xa;
+  const Byte TAG_Int_Array = 0xb;
   
   const std::string TAG_End_str("TAG_End");
   const std::string TAG_Byte_str("TAG_Byte");
@@ -208,6 +209,7 @@ namespace nbt {
   const std::string TAG_String_str("TAG_String");
   const std::string TAG_List_str("TAG_List");
   const std::string TAG_Compound_str("TAG_Compound");
+  const std::string TAG_Int_Array_str("TAG_Int_Array");
   
   const std::string tag_string_map[] = {
     TAG_End_str,
@@ -220,29 +222,26 @@ namespace nbt {
     TAG_Byte_Array_str,
     TAG_String_str,
     TAG_List_str,
-    TAG_Compound_str
+    TAG_Compound_str,
+    TAG_Int_Array_str
   };
   
   bool is_big_endian();
   
   template <class C>
   void default_begin_compound(C* context, nbt::String name) {
-    //std::cout << "TAG_Compound('" << name << "') BEGIN" << std::endl;
   }
 
   template <class C>
   void default_end_compound(C* context, String name) {
-    //std::cout << "TAG_Compound END" << std::endl;
   }
 
   template <class C>
   void default_begin_list(C* context, nbt::String name, nbt::Byte type, nbt::Int length) {
-    //std::cout << "TAG_List('" << name << "'): " << length << " items" << std::endl;
   }
 
   template <class C>
   void default_end_list(C* context, nbt::String name) {
-    //std::cout << "TAG_List END" << std::endl;
   }
 
   template <class C>
@@ -369,7 +368,10 @@ namespace nbt {
       
       inline Byte read_tagType(input_buffer_ptr file) {
         Byte type = read_byte(file);
-        nbt_assert_error(exc_env, file, type >= 0 && type <= TAG_Compound, "Not a valid tag type");
+
+        nbt_assert_error(exc_env, file, type >= 0 && type <= TAG_Int_Array,
+                "Not a valid tag type");
+
         return type;
       }
       
@@ -377,16 +379,41 @@ namespace nbt {
         Int length = read_int(file);
         nbt_assert_error(exc_env, file, file->flush(length) != -1,
           "Buffer to short to flush ByteArray");
+
       }
       
       inline void handle_byte_array(String name, input_buffer_ptr file) {
         Int length = read_int(file);
         Byte *values = new Byte[length];
-        nbt_assert_error(exc_env, file, file->read(values, length) == length, "Buffer to short to read ByteArray");
+
+        nbt_assert_error(exc_env, file, file->read(values, length) == length,
+                "Buffer to short to read ByteArray");
+
         ByteArray *array = new ByteArray();
         array->values = values;
         array->length = length;
         register_byte_array(context, name, array);
+      }
+
+      inline void flush_int_array(input_buffer_ptr file) {
+        Int length = read_int(file);
+
+        nbt_assert_error(exc_env, file, file->flush(length * sizeof(Int)) != -1,
+          "Buffer to short to flush IntArray");
+      }
+
+      inline void handle_int_array(String name, input_buffer_ptr file) {
+        Int length = read_int(file);
+        Int *values = new Int[length];
+
+        for (Int i = 0; i < length; i++) {
+            values[i] = read_int(file);
+        }
+
+        IntArray *array = new IntArray();
+        array->values = values;
+        array->length = length;
+        register_int_array(context, name, array);
       }
     public:
       typedef void (*begin_compound_t)(C*, String name);
@@ -403,6 +430,7 @@ namespace nbt {
       typedef void (*register_int_t)(C*, String name, Int l);
       typedef void (*register_byte_t)(C*, String name, Byte b);
       typedef void (*register_byte_array_t)(C*, String name, ByteArray* array);
+      typedef void (*register_int_array_t)(C*, String name, IntArray* array);
       typedef void (*error_handler_t)(C*, size_t where, const char *why);
       
       register_long_t register_long;
@@ -413,6 +441,7 @@ namespace nbt {
       register_int_t register_int;
       register_byte_t register_byte;
       register_byte_array_t register_byte_array;
+      register_int_array_t register_int_array;
 
       begin_compound_t begin_compound;
       end_compound_t end_compound;
@@ -430,6 +459,7 @@ namespace nbt {
         register_int(NULL),
         register_byte(NULL),
         register_byte_array(NULL),
+        register_int_array(NULL),
         begin_compound(&default_begin_compound<C>),
         end_compound(&default_end_compound<C>),
         begin_list(&default_begin_list<C>),
@@ -448,6 +478,7 @@ namespace nbt {
         register_int(NULL),
         register_byte(NULL),
         register_byte_array(NULL),
+        register_int_array(NULL),
         begin_compound(&default_begin_compound<C>),
         end_compound(&default_end_compound<C>),
         begin_list(&default_begin_list<C>),
@@ -605,6 +636,13 @@ namespace nbt {
               flush_byte_array(file);
             } else {
               handle_byte_array(name, file);
+            }
+            break;
+          case TAG_Int_Array:
+            if (register_int_array == NULL) {
+              flush_int_array(file);
+            } else {
+              handle_int_array(name, file);
             }
             break;
           default:

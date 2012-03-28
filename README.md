@@ -103,6 +103,10 @@ Issues
  * ALWAYS include the following information: Platform (e.g. Windows, Linux, Mac) and Architecture (x86, x86_64)
  * IF POSSIBLE include information which can help us reproduce the problem.
 
+Contributors
+------------
+    UniversE - for epic center calculation, and saving the api!
+
 Contributions
 -------------
     ZomBuster and Firemark - for their original work
@@ -119,4 +123,3 @@ Contributions
     Athemis - for fixing beta 1.2 compatibility.
     sn4kebite - for implementing Wool colors.
     ekryyn - for implementing the altitude graph!
-    UniversE - for epic center calculation, and saving the api!

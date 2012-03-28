@@ -11,7 +11,7 @@ bool dir_filter(const std::string& name)
 
 bool file_filter(const std::string& name) {
   if (name.length() < 8) return false;
-  if (name.compare(name.length() - 4, 4, ".mcr") != 0) return false;
+  if (name.compare(name.length() - 4, 4, ".mca") != 0) return false;
   if (name.compare(0, 2, "r.") != 0) return false;
   return true;
 }

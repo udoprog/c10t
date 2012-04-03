@@ -25,6 +25,11 @@ struct image_operation {
 class image_operations
 {
 public:
+  /*
+   * The depth of the image operations.
+   */
+  uint32_t z;
+
   pos_t min_x, min_y;
   pos_t max_x, max_y;
   
@@ -36,7 +41,7 @@ public:
   void set_limits(pos_t x, pos_t y);
   void optimize();
   
-  image_operations();
+  image_operations(uint32_t z);
   ~image_operations();
 };
 

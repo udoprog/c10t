@@ -17,33 +17,54 @@ struct color{
   float g;
   float b;
   float a;
+  int32_t z;
 
-  color(color *c) : r(c->r), g(c->g), b(c->b), a(c->a) { }
+  color(color *c)
+    : r(c->r),
+      g(c->g),
+      b(c->b),
+      a(c->a),
+      z(0)
+  {
+  }
 
-  color() : r(1.0f), g(1.0f), b(1.0f), a(0.0f) { }
+  color()
+    : r(1.0f),
+      g(1.0f),
+      b(1.0f),
+      a(0.0f),
+      z(0)
+  {
+  }
 
   color(int r, int g, int b, int a)
     : r(float(r) / 255.0f),
       g(float(g) / 255.0f),
       b(float(b) / 255.0f),
-      a(float(a) / 255.0f)
+      a(float(a) / 255.0f),
+      z(0)
   {
   }
 
-  color(float r, float g, float b, float a) :
-    r(r), g(g), b(b), a(a) {
+  color(float r, float g, float b, float a)
+    : r(r),
+      g(g),
+      b(b),
+      a(a),
+      z(0)
+  {
   }
 
   bool is_opaque() const {
-    return a == 0xff;
+    return a == 1.0f;
   }
 
   bool is_transparent() const {
-    return a != 0xff;
+    return a != 1.0f;
   }
 
   bool is_invisible() const {
-    return a == 0x00;
+    return a == 0.0f;
   }
 
   ~color(){

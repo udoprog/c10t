@@ -7,8 +7,8 @@
 
 #include <algorithm>
   
-image_operations::image_operations()
-    : min_x(0), min_y(0), max_x(0), max_y(0)
+image_operations::image_operations(uint32_t z)
+    : z(z), min_x(0), min_y(0), max_x(0), max_y(0)
 {
 }
 
@@ -26,13 +26,17 @@ void image_operations::add_pixel(pos_t x, pos_t y, color &c)
   if (!(y >= min_y)) { return; }
   if (!(x < max_x)) { return; }
   if (!(y < max_y)) { return; }
+
+  color n = color(c);
+
+  // tag with depth.
+  n.z = z;
   
   image_operation oper;
   
   oper.x = (uint16_t)x;
   oper.y = (uint16_t)y;
-  //oper.order = ++order;
-  oper.c = c;
+  oper.c = n;
   
   operations.push_back(oper);
 }
@@ -41,7 +45,8 @@ void image_operations::optimize()
 {
   bool* blocked = new bool[max_x*max_y];
 
-  for (int i = 0; i < max_x*max_y; i++) {
+  for (int i = 0; i < max_x*max_y; i++)
+  {
     blocked[i] = false;
   }
 
@@ -49,17 +54,17 @@ void image_operations::optimize()
   operations_vector new_operations;
 
   while (iter != operations.rend()) {
-    image_operation oper = *iter;
+    image_operation operation = *iter;
     iter++;
 
-    int offset = oper.y * max_x + oper.x;
+    int offset = operation.y * max_x + operation.x;
     
     if (blocked[offset]) {
       continue;
     }
 
-    blocked[offset] = oper.c.is_opaque();
-    new_operations.push_back(oper);
+    blocked[offset] = operation.c.is_opaque();
+    new_operations.push_back(operation);
   }
 
   std::reverse(new_operations.begin(), new_operations.end());

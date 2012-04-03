@@ -17,24 +17,24 @@ struct png_config {
 class png_format {
   public:
     typedef png_config opt_type;
-    
+
     static void save(image_base* image, const std::string& path, opt_type& opts)
     {
       FILE *fp;
       png_structp write_struct = NULL;
       png_infop info_struct = NULL;
-      png_bytep row = NULL;
+      png_bytep bytes_row = NULL;
       color* color_row = NULL;
-      
+
       fp = fopen(path.c_str(), "wb");
-      
+
       if (fp == NULL)
       {
         throw format_exception(strerror(errno));
       }
-      
+
       write_struct = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-      
+
       if (write_struct == NULL)
       {
         fclose(fp);
@@ -61,8 +61,8 @@ class png_format {
       {
         fclose(fp);
         png_destroy_write_struct(&write_struct, &info_struct);
-        free(row);
-        free(color_row);
+        delete [] bytes_row;
+        delete [] color_row;
         throw format_exception("unknown libpng error");
       }
 
@@ -71,7 +71,7 @@ class png_format {
       png_set_IHDR(write_struct, info_struct, image->get_width(), image->get_height(),
             8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
             PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-       
+
       if (!opts.comment.empty())
       {
          png_text title_text;
@@ -98,24 +98,25 @@ class png_format {
          title_text.text = const_cast<char*>(text.c_str());
          png_set_text(write_struct, info_struct, &title_text, 1);
       }
-      
+
       png_write_info(write_struct, info_struct);
 
-      row = (png_bytep) malloc(4 * image->get_width() * sizeof(png_byte));
-      color_row = (color*)malloc(image->get_width() * sizeof(color));
+      bytes_row = new png_byte[4 * image->get_width()];
+      color_row = new color[image->get_width()];
 
       for (size_t y = 0; y < image->get_height(); y++)
       {
         image->get_line(y, color_row);
 
-        for (int i = 0; i < image->get_width(); i++) {
-          row[i*4 + 0] = png_byte(color_row[i].r * 255.0f);
-          row[i*4 + 1] = png_byte(color_row[i].g * 255.0f);
-          row[i*4 + 2] = png_byte(color_row[i].b * 255.0f);
-          row[i*4 + 3] = png_byte(color_row[i].a * 255.0f);
+        for (int i = 0; i < image->get_width(); i++)
+        {
+          bytes_row[i*4 + 0] = png_byte(color_row[i].r * 255.0f);
+          bytes_row[i*4 + 1] = png_byte(color_row[i].g * 255.0f);
+          bytes_row[i*4 + 2] = png_byte(color_row[i].b * 255.0f);
+          bytes_row[i*4 + 3] = png_byte(color_row[i].a * 255.0f);
         }
 
-        png_write_row(write_struct, row);
+        png_write_row(write_struct, bytes_row);
       }
 
       png_write_end(write_struct, NULL);
@@ -123,8 +124,8 @@ class png_format {
       fclose(fp);
       png_free_data(write_struct, info_struct, PNG_FREE_ALL, -1);
       png_destroy_write_struct(&write_struct, &info_struct);
-      free(row);
-      free(color_row);
+      delete [] bytes_row;
+      delete [] color_row;
     }
 };
 

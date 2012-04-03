@@ -552,8 +552,8 @@ bool generate_map(
       }
     }
     
-    reporter.done(0);
     levels.sort();
+    reporter.done(0);
 
     if (failed_regions > 0) {
       out << "SEE LOG: " << failed_regions << " region(s) failed!" << endl;
@@ -732,16 +732,13 @@ bool generate_map(
     /*
      * prebuffer is the amount of pending jobs that will be given available to
      * all threads.
-     * As it stands now, all operations must be ordered, but can be rendered
-     * independantly and then sorted.
      * This is done in steps to minimze memory usage, the size  of the steps steps
      * are decided by this parameter.
      */
-    unsigned int prebuffer = effective_threads * s.prebuffer;
-    
+    unsigned int prebuffer = effective_threads * s.prebuffer * 4;
+
     int cache_hits = 0;
     int failed_levels = 0;
-
 
     /**
      * Define a dynamically growing buffer to read regions in.
@@ -749,91 +746,84 @@ bool generate_map(
      */
     mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
 
-    std::list<render_result> render_results;
-    std::list<mc::rotated_level_info>::iterator lvlit = levels.begin();
+    std::list<mc::rotated_level_info>::iterator level_iter = levels.begin();
   
     nonstd::limited<unsigned int> reporter(out, 50, out_dot<unsigned int>, cout_uintpart_endl);
     reporter.set_limit(world_size);
 
     renderer.start();
 
-    while (lvlit != levels.end() || render_results.size() > 0) {
-      while (queued < prebuffer && lvlit != levels.end()) {
-        mc::rotated_level_info rl = *lvlit;
-        lvlit++;
-        
-        render_job job;
-        
-        boost::shared_ptr<mc::level> level(new mc::level(rl.get_level()));
-        
-        job.engine = engine;
-        job.level = level;
-        
-        try {
-          level->read(region_buffer);
-        } catch(mc::invalid_file& e) {
-          out_log << level->get_path() << ": " << e.what() << endl;
-          continue;
-        }
-         
-        job.level = level;
-        job.coord = rl.get_coord();
-        job.path = rl.get_level()->get_region()->get_path();
-        
-        renderer.give(job);
-        ++queued;
-        
-        if (s.debug) { out << rl.get_level()->get_path() << ": queued OK" << endl; }
-      }
+    unsigned int prebuffer_limit = prebuffer / 2;
 
-      while (render_results.size() > 0) {
-        render_results.sort();
+    uint32_t id = 1;
 
-        BOOST_FOREACH(render_result p, render_results) {
-          reporter.add(1);
+    while (level_iter != levels.end() || queued > 0) {
+      if (queued < prebuffer_limit) {
+        while (level_iter != levels.end() && queued < prebuffer) {
+          mc::rotated_level_info rl = *(level_iter++);
+
+          render_job job;
+
+          boost::shared_ptr<mc::level> level(new mc::level(rl.get_level()));
+
+          job.engine = engine;
+          job.level = level;
+          job.order = id++;
 
           try {
-            pos_t x, y;
-            engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
-
-            // update image limits
-            engine->update_image_limits(
-                x + 1, y,
-                x + p.operations->max_x,
-                y + p.operations->max_y - 1);
-
-            work_in_progress->composite(x, y, p.operations);
-          } catch(std::ios::failure& e) {
-            out << s.swap_file << ": " << strerror(errno);
-            return false;
+            level->read(region_buffer);
+          } catch(mc::invalid_file& e) {
+            out_log << level->get_path() << ": " << e.what() << endl;
+            continue;
           }
-        }
 
-        render_results.clear();
+          job.level = level;
+          job.coord = rl.get_coord();
+          job.path = rl.get_level()->get_region()->get_path();
+
+          renderer.give(job);
+          ++queued;
+
+          if (s.debug) { out << rl.get_level()->get_path() << ": queued OK" << endl; }
+        }
       }
 
-      while (queued > 0) {
-        render_result p = renderer.get();
-        --queued;
+      render_result p = renderer.get();
+      --queued;
 
-        if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
+      if (s.debug) { out << p.level->get_path() << ": dequeued OK" << endl; }
 
-        if (p.fatal) {
-          reporter.add(1);
-          out << p.level->get_path() << ": " << p.fatal_why << endl;
-          continue;
-        }
+      if (p.fatal) {
+        reporter.add(1);
+        out << p.level->get_path() << ": " << p.fatal_why << endl;
+        continue;
+      }
 
-        if (p.cache_hit) {
-          ++cache_hits;
-        }
-        
-        if (p.signs.size() > 0) {
-          if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
-          signs.insert(signs.end(), p.signs.begin(), p.signs.end());
-        }
+      if (p.cache_hit) {
+        ++cache_hits;
+      }
       
-        render_results.push_back(p);
+      if (p.signs.size() > 0) {
+        if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
+        signs.insert(signs.end(), p.signs.begin(), p.signs.end());
+      }
+
+      reporter.add(1);
+
+      try {
+        pos_t x, y;
+        engine->w2pt(p.coord.get_x(), p.coord.get_z(), x, y);
+
+        // update image limits
+        engine->update_image_limits(
+            x + 1, y,
+            x + p.operations->max_x,
+            y + p.operations->max_y - 1);
+
+        work_in_progress->composite(x, y, p.operations);
+      } catch(std::ios::failure& e) {
+        out << s.swap_file << ": " << strerror(errno);
+        return false;
       }
     }
     

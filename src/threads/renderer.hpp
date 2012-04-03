@@ -38,6 +38,7 @@ struct render_result {
 };
 
 struct render_job {
+  int32_t order;
   boost::shared_ptr<mc::level> level;
   boost::shared_ptr<engine_core> engine;
   mc::utils::level_coord coord;
@@ -56,7 +57,7 @@ public:
     render_result p;
     
     p.coord = job.coord;
-    p.operations.reset(new image_operations);
+    p.operations.reset(new image_operations(job.order));
     p.level = job.level;
     p.cache_hit = false;
 

@@ -24,6 +24,7 @@ class png_format {
       png_structp write_struct = NULL;
       png_infop info_struct = NULL;
       png_bytep row = NULL;
+      color* color_row = NULL;
       
       fp = fopen(path.c_str(), "wb");
       
@@ -61,6 +62,7 @@ class png_format {
         fclose(fp);
         png_destroy_write_struct(&write_struct, &info_struct);
         free(row);
+        free(color_row);
         throw format_exception("unknown libpng error");
       }
 
@@ -100,22 +102,29 @@ class png_format {
       png_write_info(write_struct, info_struct);
 
       row = (png_bytep) malloc(4 * image->get_width() * sizeof(png_byte));
-      
+      color_row = (color*)malloc(image->get_width() * sizeof(color));
+
       for (size_t y = 0; y < image->get_height(); y++)
       {
-        //if (progress_c_cb != NULL) progress_c_cb(y, image->get_height());
-        image->get_line(y, reinterpret_cast<color*>(row));
+        image->get_line(y, color_row);
+
+        for (int i = 0; i < image->get_width(); i++) {
+          row[i*4 + 0] = png_byte(color_row[i].r * 255.0f);
+          row[i*4 + 1] = png_byte(color_row[i].g * 255.0f);
+          row[i*4 + 2] = png_byte(color_row[i].b * 255.0f);
+          row[i*4 + 3] = png_byte(color_row[i].a * 255.0f);
+        }
+
         png_write_row(write_struct, row);
       }
-      
-      //if (progress_c_cb != NULL) progress_c_cb(get_height(), get_height());
-      
+
       png_write_end(write_struct, NULL);
 
       fclose(fp);
       png_free_data(write_struct, info_struct, PNG_FREE_ALL, -1);
       png_destroy_write_struct(&write_struct, &info_struct);
       free(row);
+      free(color_row);
     }
 };
 

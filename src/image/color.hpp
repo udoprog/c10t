@@ -13,36 +13,46 @@
 #include <boost/lexical_cast.hpp>
 
 struct color{
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-  uint8_t a;
-  
+  float r;
+  float g;
+  float b;
+  float a;
+
   color(color *c) : r(c->r), g(c->g), b(c->b), a(c->a) { }
-  
-  color() : r(0xff), g(0xff), b(0xff), a(0x00) { }
-  
-  color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
+
+  color() : r(1.0f), g(1.0f), b(1.0f), a(0.0f) { }
+
+  color(int r, int g, int b, int a)
+    : r(float(r) / 255.0f),
+      g(float(g) / 255.0f),
+      b(float(b) / 255.0f),
+      a(float(a) / 255.0f)
+  {
+  }
+
+  color(float r, float g, float b, float a) :
     r(r), g(g), b(b), a(a) {
   }
-  
+
   bool is_opaque() const {
     return a == 0xff;
   }
-  
+
   bool is_transparent() const {
     return a != 0xff;
   }
-  
+
   bool is_invisible() const {
     return a == 0x00;
   }
-  
+
   ~color(){
   }
-  
-  void darken(uint8_t c);
-  void lighten(uint8_t c);
+
+  void darken(float c);
+  void darken(int c);
+  void lighten(float c);
+  void lighten(int c);
   void blend(const color &other);
 
   inline void read(color *buf) {
@@ -51,14 +61,14 @@ struct color{
     b = buf->b;
     a = buf->a;
   }
-  
+
   inline void write(color *buf) {
     buf->r = r;
     buf->g = g;
     buf->b = b;
     buf->a = a;
   }
-  
+
   friend std::ostream& operator<<(std::ostream& out, const color& c) // output
   {
     std::stringstream ss;
@@ -71,6 +81,7 @@ struct color{
   {
     return !(r == c.r && g == c.g && b == c.b && a == c.a);
   }
+
   bool operator==(const color &c) const
   {
     return r == c.r && g == c.g && b == c.b && a == c.a;

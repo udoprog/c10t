@@ -5,13 +5,13 @@
 #include <sstream>
 #include <string>
 
-uint8_t alpha_over_c(uint8_t u, uint8_t o, uint8_t ua, uint8_t oa);
+float alpha_over_c(float u, float o, float ua, float oa);
 
 /**
  * Takes two color values and does an alpha over blending without using floats.
  */
-inline uint8_t alpha_over_c(uint8_t ac, uint8_t aa, uint8_t bc, uint8_t ba) {
-  return ((ac * aa) + ((0xff * (bc * ba) - aa * (bc * ba)) / 0xff)) / 0xff;
+inline float alpha_over_c(float ac, float aa, float bc, float ba) {
+  return (ac * aa) + (bc * ba - aa * bc * ba);
 }
 
 void color::blend(const color &other) {
@@ -28,21 +28,29 @@ void color::blend(const color &other) {
   r = alpha_over_c(other.r, other.a, r, a);
   g = alpha_over_c(other.g, other.a, g, a);
   b = alpha_over_c(other.b, other.a, b, a);
-  a = a + (other.a * (0xff - a)) / 0xff;
-  r = ((r * 0xff) / a);
-  g = ((g * 0xff) / a);
-  b = ((b * 0xff) / a);
+  a = a + other.a * (1.0f - a);
+  r = ((r * 1.0f) / a);
+  g = ((g * 1.0f) / a);
+  b = ((b * 1.0f) / a);
 }
 
 // pull color down towards black
-void color::darken(uint8_t f) {
-  r = std::max((int)r - ((int)r * (int)f) / 0xff, 0x0);
-  g = std::max((int)g - ((int)g * (int)f) / 0xff, 0x0);
-  b = std::max((int)b - ((int)b * (int)f) / 0xff, 0x0);
+void color::darken(float f) {
+  r = std::max(r - (r * f), 0.0f);
+  g = std::max(g - (g * f), 0.0f);
+  b = std::max(b - (b * f), 0.0f);
 }
 
-void color::lighten(uint8_t f) {
-  r = std::min((int)r + ((int)r * (int)f) / 0xff, 0xff);
-  g = std::min((int)g + ((int)g * (int)f) / 0xff, 0xff);
-  b = std::min((int)b + ((int)b * (int)f) / 0xff, 0xff);
+void color::darken(int f) {
+  darken(float(f) / 255.0f);
+}
+
+void color::lighten(float f) {
+  r = std::min(r + (r * f), 1.0f);
+  g = std::min(g + (g * f), 1.0f);
+  b = std::min(b + (b * f), 1.0f);
+}
+
+void color::lighten(int f) {
+  lighten(float(f) / 255.0f);
 }

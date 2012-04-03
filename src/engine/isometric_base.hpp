@@ -67,9 +67,9 @@ public:
             color side = mc::get_side_color(block_type, block_data);
             
             int block_light = br_block_light.get4(y + 1);
-            int sky_light = br_sky_light.get4(y + 1, 15);
+            int sky_light = br_sky_light.get4(y + 1);
             
-            apply_shading(s, block_light, sky_light, 0, y, top);
+            //apply_shading(s, 0, sky_light, 0, y, top);
             //apply_shading(s, 0, 0, 0, y, side);
             
             switch(mc::MaterialModes[block_type]) {

@@ -13,9 +13,10 @@ public:
   block_rotation(int rotation, boost::shared_ptr<nbt::ByteArray> array);
 
   void set_xz(int x, int z);
-  int get8(int y);
-  int get4(int y);
   void transform_xz(int& x, int& z);
+
+  int get8(int y, int d=-1);
+  int get4(int y, int d=-1);
 private:
   int x, z;
   int rotation;

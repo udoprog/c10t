@@ -1,17 +1,18 @@
 #include "engine/functions.hpp"
 
-void apply_shading(const engine_settings& s, int bl, int sl, int hm, int y, color &c)
+void apply_shading(
+        const engine_settings& s,
+        int block_light,
+        int sky_light,
+        int height_map,
+        int y,
+        color &c)
 {
-  // if night, darken all colors not emitting light
-  if (bl == -1) {
-    bl = 0;
-  }
-  
   if(s.night) {
-    c.darken(0xa * (16 - bl));
+    c.darken(0x6 * (16 - block_light));
   }
-  else if (sl != -1 && y != s.top) {
-    c.darken(0xa * (16 - std::max(sl, bl)));
+  else if (sky_light != -1 && y != s.top) {
+    c.darken(0x6 * (16 - std::max(sky_light, block_light)));
   }
   
   //c.darken((mc::MapY - y));
@@ -25,8 +26,5 @@ void apply_shading(const engine_settings& s, int bl, int sl, int hm, int y, colo
   }
   else if (s.striped_terrain && y % 2 == 0) {
     c.darken(0xf);
-  }
-  else {
-    c.darken((mc::MapY - y));
   }
 }

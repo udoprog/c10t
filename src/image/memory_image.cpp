@@ -7,8 +7,8 @@
 // memory_image
 memory_image::memory_image(int w, int h) : image_base(w, h)
 {
-  colors = new uint8_t[sizeof(color) * w * h];
-  memset(colors, 0x0, sizeof(color) * w * h);
+  colors = new color[w * h];
+  memset(colors, 0x0, w * h);
 }
 
 memory_image::~memory_image()

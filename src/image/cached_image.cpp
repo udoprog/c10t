@@ -28,7 +28,7 @@ void cached_image::set_pixel(pos_t x, pos_t y, color& c)
   if (!(x < get_width())) { return; }
   if (!(y < get_height())) { return; }
   
-  fs.seekp(get_offset(x, y));
+  fs.seekp(sizeof(color) * get_offset(x, y));
   fs.write(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
@@ -37,7 +37,7 @@ void cached_image::get_pixel(pos_t x, pos_t y, color& c)
   if (!(x < get_width())) { return; }
   if (!(y < get_height())) { return; }
   
-  fs.seekg(get_offset(x, y));
+  fs.seekg(sizeof(color) * get_offset(x, y));
   fs.read(reinterpret_cast<char*>(&c), sizeof(color));
 }
 
@@ -47,7 +47,7 @@ void cached_image::get_line(pos_t y, pos_t x, pos_t width, color* c)
   if (!(x < get_width())) { return; }
   if (!(width + x < get_width())) { width = get_width() - x; }
   
-  fs.seekg(get_offset(x, y));
+  fs.seekg(sizeof(color) * get_offset(x, y));
   fs.read(reinterpret_cast<char*>(c), sizeof(color) * width);
 }
 
@@ -57,7 +57,7 @@ void cached_image::set_line(pos_t y, pos_t x, pos_t width, color* c)
   if (!(x < get_width())) { return; }
   if (!(width + x < get_width())) { width = get_width() - x; }
   
-  fs.seekp(get_offset(x, y));
+  fs.seekp(sizeof(color) * get_offset(x, y));
   fs.write(reinterpret_cast<char*>(c), sizeof(color) * width);
 }
 

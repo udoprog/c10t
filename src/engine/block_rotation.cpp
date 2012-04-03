@@ -13,20 +13,6 @@ void block_rotation::set_xz(int x, int z) {
   this->z = z;
 }
 
-/**
- */
-int block_rotation::get8(int y) {
-  int p = ((y * 16 + z) * 16 + x);
-  if (!(p >= 0 && p < array->length)) return -1;
-  return array->values[p];
-}
-
-int block_rotation::get4(int y) {
-  int p = ((y * 16 + z) * 16 + x) >> 1;
-  if (!(p >= 0 && p < array->length)) return -1;
-  return array->values[p];
-}
-
 void block_rotation::transform_xz(int& x, int& z) {
   int t = x;
 
@@ -44,4 +30,18 @@ void block_rotation::transform_xz(int& x, int& z) {
       z = 15 - t;
       break;
   };
+}
+
+/**
+ */
+int block_rotation::get8(int y, int d) {
+  int p = ((y * 16 + z) * 16 + x);
+  if (!(p >= 0 && p < array->length)) return d;
+  return array->values[p];
+}
+
+int block_rotation::get4(int y, int d) {
+  int p = ((y * 16 + z) * 16 + x) >> 1;
+  if (!(p >= 0 && p < array->length)) return d;
+  return ((array->values[p]) >> ((y % 2) * 4)) & 0xf;
 }

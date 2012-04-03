@@ -45,18 +45,18 @@ struct color{
   void lighten(uint8_t c);
   void blend(const color &other);
 
-  inline void read(uint8_t *buf) {
-    r = buf[0];
-    g = buf[1];
-    b = buf[2];
-    a = buf[3];
+  inline void read(color *buf) {
+    r = buf->r;
+    g = buf->g;
+    b = buf->b;
+    a = buf->a;
   }
   
-  inline void write(uint8_t *buf) {
-    buf[0] = r;
-    buf[1] = g;
-    buf[2] = b;
-    buf[3] = a;
+  inline void write(color *buf) {
+    buf->r = r;
+    buf->g = g;
+    buf->b = b;
+    buf->a = a;
   }
   
   friend std::ostream& operator<<(std::ostream& out, const color& c) // output

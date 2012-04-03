@@ -7,6 +7,8 @@
 
 #include <boost/foreach.hpp>
 
+#include <iostream>
+
 template<typename C>
 class flat_base : public engine_base<C> {
 public:
@@ -33,29 +35,36 @@ public:
     // block type
         
     BOOST_FOREACH(mc::Section_Compound Section, L->Sections) {
-      block_rotation blocks(s.rotation, Section.Blocks);
-      block_rotation data(s.rotation, Section.Data);
-      block_rotation block_light(s.rotation, Section.BlockLight);
-      block_rotation sky_light(s.rotation, Section.SkyLight);
+      block_rotation br_blocks(s.rotation, Section.Blocks);
+      block_rotation br_data(s.rotation, Section.Data);
+      block_rotation br_block_light(s.rotation, Section.BlockLight);
+      block_rotation br_sky_light(s.rotation, Section.SkyLight);
 
       for (int y = 0; y < 16; y++) {
         int abs_y = (Section.Y * 16) + y;
 
         for (int z = 0; z < mc::MapZ; z++) {
           for (int x = 0; x < mc::MapX; x++) {
-            blocks.set_xz(x, z);
-            data.set_xz(x, z);
-            block_light.set_xz(x, z);
-            sky_light.set_xz(x, z);
+            br_blocks.set_xz(x, z);
+            br_data.set_xz(x, z);
+            br_block_light.set_xz(x, z);
+            br_sky_light.set_xz(x, z);
 
             // do incremental color fill until color is opaque
-            int block_type = blocks.get8(y);
-            int block_data = data.get4(y);
+            int block_type = br_blocks.get8(y);
+            int block_data = br_data.get4(y);
+
+            if (s.excludes[block_type]) {
+              continue;
+            }
 
             color top =  mc::get_color(block_type, block_data);
             color side = mc::get_side_color(block_type, block_data);
 
-            //apply_shading(s, block_light.get4(y + 1), sky_light.get4(y + 1), 0, y, top);
+            int block_light = br_block_light.get4(y + 1);
+            int sky_light = br_sky_light.get4(y + 1, 15);
+
+            apply_shading(s, block_light, sky_light, 0, abs_y, top);
 
             point p(x, abs_y, z);
 
@@ -63,8 +72,6 @@ public:
             pos_t py;
 
             flat_base<C>::project_position(p, px, py);
-
-            //std::cout << px << "x" << py << ": " << bt << std::endl;
 
             switch(mc::MaterialModes[block_type]) {
             case mc::Block:

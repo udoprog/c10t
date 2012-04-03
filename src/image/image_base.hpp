@@ -24,8 +24,6 @@ protected:
 public:
   typedef void (*progress_c)(int , int);
   
-  static const short COLOR_TYPE = 4;
-  
   image_base(pos_t w, pos_t h) : w(w), h(h) {
   }
   
@@ -43,7 +41,7 @@ public:
   
   inline std::streampos get_offset(std::streampos x, std::streampos y) {
     std::streampos width = get_width();
-    return (x * sizeof(color)) + (y * width * sizeof(color));
+    return x + y * width;
   }
   
   void safe_blend_pixel(pos_t x, pos_t y, color &c);

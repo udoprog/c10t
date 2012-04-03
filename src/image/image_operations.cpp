@@ -3,7 +3,9 @@
 #include "image/image_operations.hpp"
 #include <string.h>
 
-#include <iostream>
+#include <boost/foreach.hpp>
+
+#include <algorithm>
   
 image_operations::image_operations()
     : min_x(0), min_y(0), max_x(0), max_y(0)
@@ -33,6 +35,38 @@ void image_operations::add_pixel(pos_t x, pos_t y, color &c)
   oper.c = c;
   
   operations.push_back(oper);
+}
+
+void image_operations::optimize()
+{
+  bool* blocked = new bool[max_x*max_y];
+
+  for (int i = 0; i < max_x*max_y; i++) {
+    blocked[i] = false;
+  }
+
+  operations_vector::reverse_iterator iter = operations.rbegin();
+  operations_vector new_operations;
+
+  while (iter != operations.rend()) {
+    image_operation oper = *iter;
+    iter++;
+
+    int offset = oper.y * max_x + oper.x;
+    
+    if (blocked[offset]) {
+      continue;
+    }
+
+    blocked[offset] = oper.c.is_opaque();
+    new_operations.push_back(oper);
+  }
+
+  std::reverse(new_operations.begin(), new_operations.end());
+
+  operations = new_operations;
+
+  delete [] blocked;
 }
 
 void image_operations::set_limits(pos_t x, pos_t y) 

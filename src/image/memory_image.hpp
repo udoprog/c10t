@@ -8,7 +8,7 @@
 
 class memory_image : public image_base {
 private:
-  uint8_t *colors;
+  color *colors;
 public:
   memory_image(int w, int h);
   

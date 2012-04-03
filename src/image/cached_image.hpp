@@ -54,7 +54,7 @@ public:
     streampos total =
       boost::numeric_cast<streampos>(get_width()) *
       boost::numeric_cast<streampos>(get_height()) *
-      COLOR_TYPE;
+      sizeof(color);
     
     streampos written = 0;
     

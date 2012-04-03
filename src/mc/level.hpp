@@ -17,7 +17,12 @@ namespace mc {
   namespace fs = boost::filesystem;
 
   class level_info;
+  class level;
   class region;
+
+  typedef boost::shared_ptr<level_info> level_info_ptr;
+  typedef boost::shared_ptr<level> level_ptr;
+  typedef boost::shared_ptr<region> region_ptr;
   
   class invalid_file : std::exception {
     private:
@@ -48,9 +53,6 @@ namespace mc {
   class level
   {
     public:
-      typedef boost::shared_ptr<level_info> level_info_ptr;
-      typedef boost::shared_ptr<region> region_ptr;
-
       level(level_info_ptr _level_info);
       ~level();
       

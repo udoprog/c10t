@@ -297,6 +297,8 @@ inline void push_sign_markers(settings_t& s, text::font_face base_font, S& signs
   }
 }
 
+typedef std::map<mc::utils::level_coord, mc::rotated_level_info> levels_map;
+
 /**
  * Push all coordinates to a standard type of marker.
  */
@@ -315,9 +317,10 @@ inline void push_coordinate_markers(
     coordinate_font.set_color(s.coordinate_color);
   }
 
-  BOOST_FOREACH(mc::rotated_level_info rl, levels) {
-    mc::utils::level_coord c = rl.get_coord();
-    boost::shared_ptr<mc::level_info> l = rl.get_level();
+  BOOST_FOREACH(levels_map::value_type value, levels)
+  {
+    mc::utils::level_coord c = value.second.get_coord();
+    boost::shared_ptr<mc::level_info> l = value.second.get_level();
     
     if (c.get_z() - 4 < world.min_z) continue;
     if (c.get_z() + 4 > world.max_z) continue;
@@ -456,7 +459,7 @@ bool generate_map(
   mc::world world(world_path);
 
   // where to store level info
-  std::list<mc::rotated_level_info> levels;
+  levels_map levels;
   
   // this is the rendering engine that will be used.
   boost::shared_ptr<engine_core> engine;
@@ -546,13 +549,13 @@ bool generate_map(
         mc::rotated_level_info rlevel =
           mc::rotated_level_info(level, coord.rotate(s.rotation));
         
-        levels.push_back(rlevel);
+        levels.insert( levels_map::value_type(rlevel.get_coord(), rlevel));
+
         world.update(rlevel.get_coord());
         reporter.add(1);
       }
     }
     
-    levels.sort();
     reporter.done(0);
 
     if (failed_regions > 0) {
@@ -603,8 +606,8 @@ bool generate_map(
 
     typedef void (*hello_f)();
 
-    hello_f hello = (hello_f)dl_sym(dl, "hello");
-    hello();
+    //hello_f hello = (hello_f)dl_sym(dl, "hello");
+    //hello();
     return true;
   }
   else {
@@ -746,7 +749,7 @@ bool generate_map(
      */
     mc::dynamic_buffer region_buffer(mc::region::CHUNK_MAX);
 
-    std::list<mc::rotated_level_info>::iterator level_iter = levels.begin();
+    levels_map::iterator level_iter = levels.begin();
   
     nonstd::limited<unsigned int> reporter(out, 50, out_dot<unsigned int>, cout_uintpart_endl);
     reporter.set_limit(world_size);
@@ -760,15 +763,12 @@ bool generate_map(
     while (level_iter != levels.end() || queued > 0) {
       if (queued < prebuffer_limit) {
         while (level_iter != levels.end() && queued < prebuffer) {
-          mc::rotated_level_info rl = *(level_iter++);
+          levels_map::value_type value = *(level_iter++);
 
-          render_job job;
+          mc::rotated_level_info rotated_level_info = value.second;
+          mc::level_info_ptr level_info = rotated_level_info.get_level();
 
-          boost::shared_ptr<mc::level> level(new mc::level(rl.get_level()));
-
-          job.engine = engine;
-          job.level = level;
-          job.order = id++;
+          mc::level_ptr level(new mc::level(level_info));
 
           try {
             level->read(region_buffer);
@@ -777,14 +777,20 @@ bool generate_map(
             continue;
           }
 
+          render_job job;
+
+          job.engine = engine;
+          job.order = id++;
           job.level = level;
-          job.coord = rl.get_coord();
-          job.path = rl.get_level()->get_region()->get_path();
+          job.coord = rotated_level_info.get_coord();
+          job.path = level_info->get_path();
 
           renderer.give(job);
           ++queued;
 
-          if (s.debug) { out << rl.get_level()->get_path() << ": queued OK" << endl; }
+          if (s.debug) {
+            out << job.path << ": queued OK" << endl;
+          }
         }
       }
 

@@ -108,7 +108,7 @@ class png_format {
       {
         image->get_line(y, color_row);
 
-        for (int i = 0; i < image->get_width(); i++)
+        for (unsigned int i = 0; i < image->get_width(); i++)
         {
           bytes_row[i*4 + 0] = png_byte(color_row[i].r * 255.0f);
           bytes_row[i*4 + 1] = png_byte(color_row[i].g * 255.0f);

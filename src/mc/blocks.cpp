@@ -8,14 +8,32 @@ namespace mc {
 
   const int MapX = 0x10;
   const int MapZ = 0x10;
-  const int MapY = 0x80;
+  const int MapY = 0x100;
 
   const char *DefaultName = "None";
   
   const char **MaterialName;
   MaterialColorT *MaterialColorData;
-  
   MaterialMode *MaterialModes;
+  
+  void set_color(int material, int data, color top, color side, bool darken)
+  {
+    MaterialColorData[material].count =
+      data >= MaterialColorData[material].count ?
+      1+data : MaterialColorData[material].count;
+
+    MaterialColorData[material].top[data] = top;
+
+    if (side == SharedInvisColor) {
+      MaterialColorData[material].side[data] = color(top);
+    } else {
+      MaterialColorData[material].side[data] = color(side);
+    }
+
+    if (darken) {
+      MaterialColorData[material].side[data].darken(0x20);
+    }
+  }
 
   void initialize_constants() {
     MaterialName = new const char*[MaterialCount];
@@ -27,7 +45,7 @@ namespace mc {
       MaterialColorData[i].top = new color[16];
       MaterialColorData[i].side = new color[16];
       MaterialColorData[i].count = 0;
-      setColor(i, 0, SharedDefaultColor);
+      set_color(i, 0, SharedDefaultColor);
       MaterialModes[i] = Block;
     }
 
@@ -154,128 +172,128 @@ namespace mc {
     MaterialName[PineLeaves] = "PineLeaves";
     MaterialName[BirchLeaves] = "BirchLeaves";
     
-    setColor(Air, 0, color(255,255,255,0), SharedInvisColor, false);
-    setColor(Stone, 0, color(128,128,128,255));
-    setColor(Dirt, 0, color(134,96,67,255));
-    setColor(Grass, 0, color(120,172,70,255), getColor(Dirt));
-    setColor(Cobblestone, 0, color(100,100,100,255));
-    setColor(Wood, 0, color(157,128,79,255));
-    setColor(Sapling, 0, color(120,120,120,0));
-    setColor(Bedrock, 0, color(84,84,84,255));
-    setColor(Water, 0, color(56,68,127,64), SharedInvisColor, false);
-    setColor(StationaryWater, 0, color(56,68,127,64), SharedInvisColor, false);
-    setColor(Lava, 0, color(255,90,0,255));
-    setColor(StationaryLava, 0, color(255,90,0,255));
-    setColor(Sand, 0, color(218,210,158,255));
-    setColor(Gravel, 0, color(136,126,126,255));
-    setColor(GoldOre, 0, color(143,140,125,255));
-    setColor(IronOre, 0, color(136,130,127,255));
-    setColor(CoalOre, 0, color(115,115,115,255));
-    setColor(Log, 0, color(102,81,51,255));
-    setColor(Leaves, 0, color(0x4a,0x83,0x42,0x80));
-    setColor(Sponge, 0, color(0xc3,0xc3,0x32,0xff));
-    setColor(Glass, 0, color(255,255,255,48));
-    setColor(LapisLazuliOre, 0, color(102,112,134,255));
-    setColor(LapisLazuliBlock, 0, color(29,71,165,255));
-    setColor(Dispenser, 0, color(107,107,107,255));
-    setColor(Sandstone, 0, getColor(Sand));
-    setColor(NoteBlock, 0, color(100,67,50,255));
-    setColor(Bed, 0, color(150,0,0,255));
-    setColor(PoweredRail, 0, color(120, 120, 120, 128), color(255,220,0,128));
-    setColor(DetectorRail, 0, getColor(PoweredRail), color(230,0,0,128));
-    setColor(StickyPistonBase, 0, color(157,192,79,255));
-    setColor(TallGrass, 0,
+    set_color(Air, 0, color(255,255,255,0), SharedInvisColor, false);
+    set_color(Stone, 0, color(128,128,128,255));
+    set_color(Dirt, 0, color(134,96,67,255));
+    set_color(Grass, 0, color(120,172,70,255), get_color(Dirt));
+    set_color(Cobblestone, 0, color(100,100,100,255));
+    set_color(Wood, 0, color(157,128,79,255));
+    set_color(Sapling, 0, color(120,120,120,0));
+    set_color(Bedrock, 0, color(84,84,84,255));
+    set_color(Water, 0, color(56,68,127,64), SharedInvisColor, false);
+    set_color(StationaryWater, 0, color(56,68,127,64), SharedInvisColor, false);
+    set_color(Lava, 0, color(255,90,0,255));
+    set_color(StationaryLava, 0, color(255,90,0,255));
+    set_color(Sand, 0, color(218,210,158,255));
+    set_color(Gravel, 0, color(136,126,126,255));
+    set_color(GoldOre, 0, color(143,140,125,255));
+    set_color(IronOre, 0, color(136,130,127,255));
+    set_color(CoalOre, 0, color(115,115,115,255));
+    set_color(Log, 0, color(102,81,51,255));
+    set_color(Leaves, 0, color(0x4a,0x83,0x42,0x80));
+    set_color(Sponge, 0, color(0xc3,0xc3,0x32,0xff));
+    set_color(Glass, 0, color(255,255,255,48));
+    set_color(LapisLazuliOre, 0, color(102,112,134,255));
+    set_color(LapisLazuliBlock, 0, color(29,71,165,255));
+    set_color(Dispenser, 0, color(107,107,107,255));
+    set_color(Sandstone, 0, get_color(Sand));
+    set_color(NoteBlock, 0, color(100,67,50,255));
+    set_color(Bed, 0, color(150,0,0,255));
+    set_color(PoweredRail, 0, color(120, 120, 120, 128), color(255,220,0,128));
+    set_color(DetectorRail, 0, get_color(PoweredRail), color(230,0,0,128));
+    set_color(StickyPistonBase, 0, color(157,192,79,255));
+    set_color(TallGrass, 0,
       color(0x90, 0xbc, 0x27, 0xff), color(0x90, 0xbc, 0x27, 0xff));
-    setColor(DeadShrub, 0, getColor(Wood));
-    setColor(PistonBase, 0, getColor(Wood));
-    setColor(PistonPlatform, 0, getColor(Air));
-    setColor(YellowFlower, 0, color(255,255,0,255));
-    setColor(RedRose, 0, color(255,0,0,255));
-    setColor(BrownMushroom, 0, SharedInvisColor);
-    setColor(RedMushroom, 0, SharedInvisColor);
-    setColor(GoldBlock, 0, color(0xff, 0xed, 0x8c, 0xff));
-    setColor(IronBlock, 0, color(0xd9, 0xd9, 0xd9, 0xff));
-    setColor(DoubleStep, 0, color(200,200,200,255));
-    setColor(Step, 0, color(200,200,200,255));
-    setColor(Brick, 0, color(0x56, 0x23, 0x17, 0xff));
-    setColor(TNT, 0, color(0xff, 0x0, 0x0, 0xff));
-    setColor(Bookcase, 0, color(0xbf, 0xa9, 0x74, 0xff));
-    setColor(MossyCobblestone, 0, color(0x7f, 0xae, 0x7d, 0xff));
-    setColor(Obsidian, 0, color(0x11, 0x0d, 0x1a, 0xff));
-    setColor(Torch, 0, color(0xff, 0xe1, 0x60,0xd0), SharedInvisColor, false);
-    setColor(Fire, 0, color(0xe0, 0xae, 0x15, 0xff));
-    setColor(MobSpawner, 0, color(0xff, 0xff, 0xff, 0x00));
-    setColor(WoodenStairs, 0, color(0xbf, 0xa9, 0x74, 0xff));
-    setColor(Chest, 0, color(0xbf, 0x87, 0x02, 0xff));
-    setColor(RedstoneWire, 0, color(0x6f, 0x01, 0x01, 0xff));
-    setColor(DiamondOre, 0, color(129,140,143,255));
-    setColor(DiamondBlock, 0, color(45,166,152,255));
-    setColor(Workbench, 0, color(0xa9, 0x6b, 0x00, 0xff));
-    setColor(Crops, 0, color(0x90, 0xbc, 0x27, 0xff));
-    setColor(Soil, 0, getColor(Dirt));
-    setColor(Furnace, 0, color(0xbc, 0xbc, 0xbc, 0xff));
-    setColor(BurningFurnace, 0, color(0xdd, 0xdd, 0xdd, 0xff));
-    setColor(SignPost, 0, SharedInvisColor);
-    setColor(WoodenDoor, 0, SharedInvisColor);
-    setColor(Ladder, 0, color(0xff, 0xc8, 0x8c, 0));
-    setColor(MinecartTracks, 0, getColor(PoweredRail));
-    setColor(CobblestoneStairs, 0, color(120, 120, 120, 128));
-    setColor(WallSign, 0, SharedInvisColor);
-    setColor(Lever, 0, SharedInvisColor);
-    setColor(StonePressurePlate, 0, color(120,120,120,255));
-    setColor(IronDoor, 0, SharedInvisColor);
-    setColor(WoodenPressurePlate, 0, SharedInvisColor);
-    setColor(RedstoneOre, 0, color(143,125,125,0xff));
-    setColor(GlowingRedstoneOre, 0, color(163,145,145,0xff));
-    setColor(RedstoneTorchOff, 0, color(181,140,64,32),SharedInvisColor,false);
-    setColor(RedstoneTorchOn, 0, color(255,0,0,0xb0), SharedInvisColor, false);
-    setColor(StoneButton, 0, SharedInvisColor);
-    setColor(Snow, 0, color(255, 255, 255, 255));
-    setColor(Ice, 0, color(120, 120, 255, 120));
-    setColor(SnowBlock, 0, color(255, 255, 255, 255));
-    setColor(Cactus, 0, color(85,107,47,255));
-    setColor(Clay, 0, color(0x90, 0x98, 0xa8, 0xff));
-    setColor(Reed, 0, color(193,234,150,255));
-    setColor(Jukebox, 0, color(0x7d, 0x42, 0x2c, 0xff));
-    setColor(Fence, 0, color(0x58, 0x36, 0x16, 200));
-    setColor(Pumpkin, 0, color(0xe3, 0x90, 0x1d, 0xff));
-    setColor(Bloodstone, 0, color(0xc2, 0x73, 0x73, 0xff));
-    setColor(Slowsand, 0, color(0x79, 0x61, 0x52, 0xff));
-    setColor(Lightstone, 0, color(0xff, 0xbc, 0x5e, 0xff));
-    setColor(Trapdoor, 0, getColor(WoodenPressurePlate));
-    setColor(Portal, 0, color(0x3c, 0x0d, 0x6a, 0x7f));
-    setColor(Jackolantern, 0, getColor(Pumpkin));
-    setColor(RedstoneRepeaterOn, 0, getColor(RedstoneWire));
-    setColor(RedstoneRepeaterOff, 0, getColor(RedstoneWire));
-    setColor(Cake, 0, color(228,205,206,255));
-    setColor(EggBlock, 0, getColor(Stone));
-    setColor(StoneBrick, 0, getColor(Stone));
-    setColor(HugeRedMushroom, 0, color(183,31,29,0xff));
-    setColor(HugeBrownMushroom, 0, color(206,174,123,0xff));
-    setColor(IronBars, 0, getColor(IronBlock));
-    setColor(GlassPane, 0, getColor(Glass));
-    setColor(Melon, 0, color(50,200,45,192));
-    setColor(PumpkinStem, 0, color(0x00, 0x00, 0x00, 0x00));
-    setColor(MelonStem, 0, color(0x00, 0x00, 0x00, 0x00));
-    setColor(LilyPad, 0, color(50,89,45,128), color(50,89,45,128));
-    setColor(NetherBrick, 0, color(66,32,38,255));
-    setColor(NetherBrickFence, 0, color(66,32,38,200));
-    setColor(NetherBrickStairs, 0, getColor(NetherBrick));
-    setColor(NetherWart, 0, color(149,21,8,255));
-    setColor(EnchantmentTable, 0, color(130,5,5,255));
-    setColor(BrewingStand, 0, color(124,118,51,255));
-    setColor(Cauldron, 0, color(49,49,49,255));
-    setColor(EndPortal, 0, color(35,60,99,128));
-    setColor(EndPortalFrame, 0, color(62,115,105,255));
-    setColor(EndStone, 0, color(203,206,148,255));
-    setColor(DragonEgg, 0, color(72,4,82,255));
-    setColor(Mycelium, 0, color(110,93,133,255));
-    setColor(Vines, 0, color(50,89,45,128), color(50,89,45,128));
-    setColor(FenceGate, 0, getColor(Fence));
-    setColor(BrickStairs, 0, getColor(Brick));
-    setColor(StoneBrickStairs, 0, getColor(Stone));
-    setColor(PineLeaves, 0, color(50,89,45,128));
-    setColor(BirchLeaves, 0, color(94,167,84,128));
+    set_color(DeadShrub, 0, get_color(Wood));
+    set_color(PistonBase, 0, get_color(Wood));
+    set_color(PistonPlatform, 0, get_color(Air));
+    set_color(YellowFlower, 0, color(255,255,0,255));
+    set_color(RedRose, 0, color(255,0,0,255));
+    set_color(BrownMushroom, 0, SharedInvisColor);
+    set_color(RedMushroom, 0, SharedInvisColor);
+    set_color(GoldBlock, 0, color(0xff, 0xed, 0x8c, 0xff));
+    set_color(IronBlock, 0, color(0xd9, 0xd9, 0xd9, 0xff));
+    set_color(DoubleStep, 0, color(200,200,200,255));
+    set_color(Step, 0, color(200,200,200,255));
+    set_color(Brick, 0, color(0x56, 0x23, 0x17, 0xff));
+    set_color(TNT, 0, color(0xff, 0x0, 0x0, 0xff));
+    set_color(Bookcase, 0, color(0xbf, 0xa9, 0x74, 0xff));
+    set_color(MossyCobblestone, 0, color(0x7f, 0xae, 0x7d, 0xff));
+    set_color(Obsidian, 0, color(0x11, 0x0d, 0x1a, 0xff));
+    set_color(Torch, 0, color(0xff, 0xe1, 0x60,0xd0), SharedInvisColor, false);
+    set_color(Fire, 0, color(0xe0, 0xae, 0x15, 0xff));
+    set_color(MobSpawner, 0, color(0xff, 0xff, 0xff, 0x00));
+    set_color(WoodenStairs, 0, color(0xbf, 0xa9, 0x74, 0xff));
+    set_color(Chest, 0, color(0xbf, 0x87, 0x02, 0xff));
+    set_color(RedstoneWire, 0, color(0x6f, 0x01, 0x01, 0xff));
+    set_color(DiamondOre, 0, color(129,140,143,255));
+    set_color(DiamondBlock, 0, color(45,166,152,255));
+    set_color(Workbench, 0, color(0xa9, 0x6b, 0x00, 0xff));
+    set_color(Crops, 0, color(0x90, 0xbc, 0x27, 0xff));
+    set_color(Soil, 0, get_color(Dirt));
+    set_color(Furnace, 0, color(0xbc, 0xbc, 0xbc, 0xff));
+    set_color(BurningFurnace, 0, color(0xdd, 0xdd, 0xdd, 0xff));
+    set_color(SignPost, 0, SharedInvisColor);
+    set_color(WoodenDoor, 0, SharedInvisColor);
+    set_color(Ladder, 0, color(0xff, 0xc8, 0x8c, 0));
+    set_color(MinecartTracks, 0, get_color(PoweredRail));
+    set_color(CobblestoneStairs, 0, color(120, 120, 120, 128));
+    set_color(WallSign, 0, SharedInvisColor);
+    set_color(Lever, 0, SharedInvisColor);
+    set_color(StonePressurePlate, 0, color(120,120,120,255));
+    set_color(IronDoor, 0, SharedInvisColor);
+    set_color(WoodenPressurePlate, 0, SharedInvisColor);
+    set_color(RedstoneOre, 0, color(143,125,125,0xff));
+    set_color(GlowingRedstoneOre, 0, color(163,145,145,0xff));
+    set_color(RedstoneTorchOff, 0, color(181,140,64,32),SharedInvisColor,false);
+    set_color(RedstoneTorchOn, 0, color(255,0,0,0xb0), SharedInvisColor, false);
+    set_color(StoneButton, 0, SharedInvisColor);
+    set_color(Snow, 0, color(255, 255, 255, 255));
+    set_color(Ice, 0, color(120, 120, 255, 120));
+    set_color(SnowBlock, 0, color(255, 255, 255, 255));
+    set_color(Cactus, 0, color(85,107,47,255));
+    set_color(Clay, 0, color(0x90, 0x98, 0xa8, 0xff));
+    set_color(Reed, 0, color(193,234,150,255));
+    set_color(Jukebox, 0, color(0x7d, 0x42, 0x2c, 0xff));
+    set_color(Fence, 0, color(0x58, 0x36, 0x16, 200));
+    set_color(Pumpkin, 0, color(0xe3, 0x90, 0x1d, 0xff));
+    set_color(Bloodstone, 0, color(0xc2, 0x73, 0x73, 0xff));
+    set_color(Slowsand, 0, color(0x79, 0x61, 0x52, 0xff));
+    set_color(Lightstone, 0, color(0xff, 0xbc, 0x5e, 0xff));
+    set_color(Trapdoor, 0, get_color(WoodenPressurePlate));
+    set_color(Portal, 0, color(0x3c, 0x0d, 0x6a, 0x7f));
+    set_color(Jackolantern, 0, get_color(Pumpkin));
+    set_color(RedstoneRepeaterOn, 0, get_color(RedstoneWire));
+    set_color(RedstoneRepeaterOff, 0, get_color(RedstoneWire));
+    set_color(Cake, 0, color(228,205,206,255));
+    set_color(EggBlock, 0, get_color(Stone));
+    set_color(StoneBrick, 0, get_color(Stone));
+    set_color(HugeRedMushroom, 0, color(183,31,29,0xff));
+    set_color(HugeBrownMushroom, 0, color(206,174,123,0xff));
+    set_color(IronBars, 0, get_color(IronBlock));
+    set_color(GlassPane, 0, get_color(Glass));
+    set_color(Melon, 0, color(50,200,45,192));
+    set_color(PumpkinStem, 0, color(0x00, 0x00, 0x00, 0x00));
+    set_color(MelonStem, 0, color(0x00, 0x00, 0x00, 0x00));
+    set_color(LilyPad, 0, color(50,89,45,128), color(50,89,45,128));
+    set_color(NetherBrick, 0, color(66,32,38,255));
+    set_color(NetherBrickFence, 0, color(66,32,38,200));
+    set_color(NetherBrickStairs, 0, get_color(NetherBrick));
+    set_color(NetherWart, 0, color(149,21,8,255));
+    set_color(EnchantmentTable, 0, color(130,5,5,255));
+    set_color(BrewingStand, 0, color(124,118,51,255));
+    set_color(Cauldron, 0, color(49,49,49,255));
+    set_color(EndPortal, 0, color(35,60,99,128));
+    set_color(EndPortalFrame, 0, color(62,115,105,255));
+    set_color(EndStone, 0, color(203,206,148,255));
+    set_color(DragonEgg, 0, color(72,4,82,255));
+    set_color(Mycelium, 0, color(110,93,133,255));
+    set_color(Vines, 0, color(50,89,45,128), color(50,89,45,128));
+    set_color(FenceGate, 0, get_color(Fence));
+    set_color(BrickStairs, 0, get_color(Brick));
+    set_color(StoneBrickStairs, 0, get_color(Stone));
+    set_color(PineLeaves, 0, color(50,89,45,128));
+    set_color(BirchLeaves, 0, color(94,167,84,128));
 
     MaterialModes[Air] = Block;
     MaterialModes[Stone] = Block;
@@ -404,53 +422,35 @@ namespace mc {
      * Start with the highest index to reduce allocation time complexity 
      * The order of the following entries does not matter.
      */
-    setColor(Wool, WoolBlack, color(27, 23, 23, 255));
-    setColor(Wool, WoolWhite, color(223, 223, 223, 255));
-    setColor(Wool, WoolOrange, color(234, 128, 55, 255));
-    setColor(Wool, WoolMagenta, color(191, 76, 201, 255));
-    setColor(Wool, WoolLightBlue, color(105, 139, 212, 255));
-    setColor(Wool, WoolYellow, color(195, 181, 28, 255));
-    setColor(Wool, WoolLightGreen, color(59, 189, 48, 255));
-    setColor(Wool, WoolPink, color(218, 132, 155, 255));
-    setColor(Wool, WoolGray, color(67, 67, 67, 255));
-    setColor(Wool, WoolLightGray, color(159, 166, 166, 255));
-    setColor(Wool, WoolCyan, color(39, 117, 150, 255));
-    setColor(Wool, WoolPurple, color(130, 54, 196, 255));
-    setColor(Wool, WoolBlue, color(39, 51, 154, 255));
-    setColor(Wool, WoolBrown, color(86, 51, 28, 255));
-    setColor(Wool, WoolDarkGreen, color(56, 77, 24, 255));
-    setColor(Wool, WoolRed, color(164, 45, 41, 255));
+    set_color(Wool, WoolBlack, color(27, 23, 23, 255));
+    set_color(Wool, WoolWhite, color(223, 223, 223, 255));
+    set_color(Wool, WoolOrange, color(234, 128, 55, 255));
+    set_color(Wool, WoolMagenta, color(191, 76, 201, 255));
+    set_color(Wool, WoolLightBlue, color(105, 139, 212, 255));
+    set_color(Wool, WoolYellow, color(195, 181, 28, 255));
+    set_color(Wool, WoolLightGreen, color(59, 189, 48, 255));
+    set_color(Wool, WoolPink, color(218, 132, 155, 255));
+    set_color(Wool, WoolGray, color(67, 67, 67, 255));
+    set_color(Wool, WoolLightGray, color(159, 166, 166, 255));
+    set_color(Wool, WoolCyan, color(39, 117, 150, 255));
+    set_color(Wool, WoolPurple, color(130, 54, 196, 255));
+    set_color(Wool, WoolBlue, color(39, 51, 154, 255));
+    set_color(Wool, WoolBrown, color(86, 51, 28, 255));
+    set_color(Wool, WoolDarkGreen, color(56, 77, 24, 255));
+    set_color(Wool, WoolRed, color(164, 45, 41, 255));
 
-    setColor(Step, StepCobblestone, getColor(Cobblestone));
-    setColor(Step, StepStone, getColor(Stone));
-    setColor(Step, StepSandstone, getColor(Sandstone));
-    setColor(Step, StepWood, getColor(Wood));
+    set_color(Step, StepCobblestone, get_color(Cobblestone));
+    set_color(Step, StepStone, get_color(Stone));
+    set_color(Step, StepSandstone, get_color(Sandstone));
+    set_color(Step, StepWood, get_color(Wood));
 
-    setColor(DoubleStep, StepCobblestone, getColor(Cobblestone));
-    setColor(DoubleStep, StepStone, getColor(Stone));
-    setColor(DoubleStep, StepSandstone, getColor(Sandstone));
-    setColor(DoubleStep, StepWood, getColor(Wood));
+    set_color(DoubleStep, StepCobblestone, get_color(Cobblestone));
+    set_color(DoubleStep, StepStone, get_color(Stone));
+    set_color(DoubleStep, StepSandstone, get_color(Sandstone));
+    set_color(DoubleStep, StepWood, get_color(Wood));
   }
   
   void deinitialize_constants() {
     delete [] MaterialColorData;
-  }
-  
-  void setColor(int material, int idx, color top,
-      color side, bool darken) {
-
-    MaterialColorData[material].count =
-      idx >= MaterialColorData[material].count ?
-      1+idx : MaterialColorData[material].count;
-
-    MaterialColorData[material].top[idx] = top;
-    if (side == SharedInvisColor) {
-      MaterialColorData[material].side[idx] = color(top);
-    } else {
-      MaterialColorData[material].side[idx] = color(side);
-    }
-    if (darken) {
-      MaterialColorData[material].side[idx].darken(0x20);
-    }
   }
 }

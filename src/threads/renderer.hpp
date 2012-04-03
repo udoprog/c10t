@@ -80,7 +80,7 @@ public:
       }
     }
     
-    p.signs = job.level->get_signs();
+    //p.signs = job.level->get_signs();
     job.engine->render(job.level, p.operations);
     
     if (r.cache_use) {

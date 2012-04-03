@@ -4,7 +4,8 @@
 #define __MC_LEVEL_HPP__
 
 #include <boost/filesystem.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 
 #include "mc/dynamic_buffer.hpp"
 #include "mc/utils.hpp"
@@ -28,18 +29,31 @@ namespace mc {
         return message;
       }
   };
+
+  struct Section_Compound {
+    boost::shared_ptr<nbt::ByteArray> Blocks;
+    boost::shared_ptr<nbt::ByteArray> Data;
+    boost::shared_ptr<nbt::ByteArray> SkyLight;
+    boost::shared_ptr<nbt::ByteArray> BlockLight;
+    nbt::Byte Y;
+  };
+
+  struct Level_Compound {
+    nbt::Int xPos;
+    nbt::Int zPos;
+    boost::shared_ptr<nbt::IntArray> HeightMap;
+    boost::ptr_vector<Section_Compound> Sections;
+  };
   
   class level
   {
     public:
       typedef boost::shared_ptr<level_info> level_info_ptr;
       typedef boost::shared_ptr<region> region_ptr;
-    public:
+
       level(level_info_ptr _level_info);
       ~level();
       
-      std::vector<marker> get_signs();
-
       std::string get_path();
       time_t modification_time();
       
@@ -48,20 +62,7 @@ namespace mc {
        */
       void read(dynamic_buffer& buffer);
       
-      boost::shared_ptr<nbt::ByteArray>
-      get_blocks();
-
-      boost::shared_ptr<nbt::ByteArray>
-      get_data();
-
-      boost::shared_ptr<nbt::ByteArray>
-      get_skylight();
-      
-      boost::shared_ptr<nbt::IntArray>
-      get_heightmap();
-      
-      boost::shared_ptr<nbt::ByteArray>
-      get_blocklight();
+      boost::shared_ptr<Level_Compound> get_level();
 
       bool operator<(const level& other) const;
     private:
@@ -69,12 +70,8 @@ namespace mc {
       
       // these must be public for the parser to be able to reach them.
       std::vector<marker> signs;
-      
-      boost::shared_ptr<nbt::ByteArray> blocks;
-      boost::shared_ptr<nbt::ByteArray> data;
-      boost::shared_ptr<nbt::ByteArray> skylight;
-      boost::shared_ptr<nbt::IntArray> heightmap;
-      boost::shared_ptr<nbt::ByteArray> blocklight;
+
+      boost::shared_ptr<Level_Compound> Level;
   };
 }
 

@@ -1,2 +1,47 @@
 #include "engine/block_rotation.hpp"
 
+block_rotation::block_rotation(
+    int rotation,
+    boost::shared_ptr<nbt::ByteArray> array)
+    : x(0), z(0), rotation(rotation), array(array)
+{
+}
+
+void block_rotation::set_xz(int x, int z) {
+  transform_xz(x, z);
+  this->x = x;
+  this->z = z;
+}
+
+/**
+ */
+int block_rotation::get8(int y) {
+  int p = ((y * 16 + z) * 16 + x);
+  if (!(p >= 0 && p < array->length)) return -1;
+  return array->values[p];
+}
+
+int block_rotation::get4(int y) {
+  int p = ((y * 16 + z) * 16 + x) >> 1;
+  if (!(p >= 0 && p < array->length)) return -1;
+  return array->values[p];
+}
+
+void block_rotation::transform_xz(int& x, int& z) {
+  int t = x;
+
+  switch (rotation) {
+    case 270:
+      x = 15 - z;
+      z = t;
+      break;
+    case 180:
+      z = 15 - z;
+      x = 15 - x;
+      break;
+    case 90:
+      x = z;
+      z = 15 - t;
+      break;
+  };
+}

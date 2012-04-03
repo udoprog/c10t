@@ -17,26 +17,26 @@ struct inspect_context {
 
 void begin_compound(inspect_context* inspect, nbt::String name) {
   cout << setw(inspect->width) << ""
-       << "BEGIN Compound(" << name << ")" << endl;
+       << "Compound(" << name << ") {" << endl;
   inspect->width += 2;
 }
 
 void end_compound(inspect_context* inspect, nbt::String name) {
   inspect->width -= 2;
   cout << setw(inspect->width) << ""
-       << "END Compound(" << name << ")" << endl;
+       << "}" << endl;
 }
 
 void begin_list(inspect_context* inspect, nbt::String name, nbt::Byte type, nbt::Int length) {
   cout << setw(inspect->width) << ""
-       << "BEGIN List(" << name << ", " << nbt::tag_string_map[type] << ", " << length << ")" << endl;
+       << "List(" << name << ", " << nbt::tag_string_map[type] << ", " << length << "): [" << endl;
   inspect->width += 2;
 }
 
 void end_list(inspect_context* inspect, nbt::String name) {
   inspect->width -= 2;
   cout << setw(inspect->width) << ""
-       << "END List(" << name << ")" << endl;
+       << "]" << endl;
 }
 
 void register_long(inspect_context* inspect, nbt::String name, nbt::Long value) {
@@ -76,13 +76,13 @@ void register_byte(inspect_context* inspect, nbt::String name, nbt::Byte value) 
 
 void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteArray* value) {
   cout << setw(inspect->width) << ""
-       << "ByteArray(" << name << "): " << "(" << int(value->length) << " bytes)" << endl;
+       << "ByteArray(" << name << "): " << "(" << dec << int(value->length) << " bytes)" << endl;
   delete value;
 }
 
 void register_int_array(inspect_context* inspect, nbt::String name, nbt::IntArray* value) {
   cout << setw(inspect->width) << ""
-       << "IntArray(" << name << "): " << "(" << int(value->length) << " ints)" << endl;
+       << "IntArray(" << name << "): " << "(" << dec << int(value->length) << " ints)" << endl;
   delete value;
 }
 

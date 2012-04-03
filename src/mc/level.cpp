@@ -6,181 +6,206 @@
 #include "mc/region.hpp"
 #include "mc/level_info.hpp"
 
-namespace mc {
-  struct level_context {
-    bool islevel;
-    bool in_te, in_sign;
-    nbt::Int sign_x, sign_y, sign_z;
-    std::string sign_text;
-    std::vector<marker> signs;
-    
-    boost::shared_ptr<nbt::ByteArray> blocks;
-    boost::shared_ptr<nbt::ByteArray> data;
-    boost::shared_ptr<nbt::ByteArray> skylight;
-    boost::shared_ptr<nbt::ByteArray> blocklight;
-    boost::shared_ptr<nbt::IntArray> heightmap;
-    
-    bool grammar_error;
-    size_t grammar_error_where;
-    const char* grammar_error_why;
+#include <boost/shared_array.hpp>
+#include <boost/shared_ptr.hpp>
 
-    level_context()
-      : islevel(false), in_te(false), in_sign(false),
-        grammar_error(false), grammar_error_where(0), grammar_error_why("")
+/*
+Compound() {
+  Compound(Level) {
+    List(Entities, TAG_Byte, 0): [ ]
+    ByteArray(Biomes): (256 bytes)
+    Long(LastUpdate): 7446079
+    Int(xPos): -1
+    Int(zPos): -1
+    List(TileEntities, TAG_Byte, 0): [ ]
+    Byte(TerrainPopulated): 0x1
+    IntArray(HeightMap): (256 ints)
+    List(Sections, TAG_Compound, 5): [
+      Compound() {
+        ByteArray(Data): (2048 bytes)
+        ByteArray(SkyLight): (2048 bytes)
+        ByteArray(BlockLight): (2048 bytes)
+        Byte(Y): 0x0
+        ByteArray(Blocks): (4096 bytes)
+      }
+      Compound() {
+        ByteArray(Data): (2048 bytes)
+        ByteArray(SkyLight): (2048 bytes)
+        ByteArray(BlockLight): (2048 bytes)
+        Byte(Y): 0x1
+        ByteArray(Blocks): (4096 bytes)
+      }
+      Compound() {
+        ByteArray(Data): (2048 bytes)
+        ByteArray(SkyLight): (2048 bytes)
+        ByteArray(BlockLight): (2048 bytes)
+        Byte(Y): 0x2
+        ByteArray(Blocks): (4096 bytes)
+      }
+      Compound() {
+        ByteArray(Data): (2048 bytes)
+        ByteArray(SkyLight): (2048 bytes)
+        ByteArray(BlockLight): (2048 bytes)
+        Byte(Y): 0x3
+        ByteArray(Blocks): (4096 bytes)
+      }
+      Compound() {
+        ByteArray(Data): (2048 bytes)
+        ByteArray(SkyLight): (2048 bytes)
+        ByteArray(BlockLight): (2048 bytes)
+        Byte(Y): 0x4
+        ByteArray(Blocks): (4096 bytes)
+      }
+    ]
+  }
+}
+*/
+
+namespace mc {
+  enum section_name {
+    Level,
+    Sections,
+    None
+  };
+
+  struct level_context {
+    boost::shared_ptr<Level_Compound> Level;
+    
+    bool error;
+    size_t error_where;
+    const char* error_why;
+
+    Section_Compound* tmp_Section;
+
+    section_name p[64];
+    int pos;
+
+    level_context() : error(false), error_where(0), error_why("")
     {
+      this->Level.reset(new Level_Compound);
+      this->pos = 0;
     }
   };
 
-  void begin_compound(level_context* level, nbt::String name) {
+  inline bool in_level_section(level_context* C) {
+    return   C->pos == 4
+          && C->p[0] == None
+          && C->p[1] == Level
+          && C->p[2] == Sections
+          && C->p[3] == None;
+  }
+
+  void begin_compound(level_context* C, nbt::String name) {
     if (name.compare("Level") == 0) {
-      level->islevel = true;
+      C->p[C->pos++] = Level;
       return;
+    }
+
+    C->p[C->pos++] = None;
+
+    if (in_level_section(C)) {
+        C->tmp_Section = new Section_Compound;
+        C->tmp_Section->Y = 0;
     }
   }
 
-  void register_string(level_context* level, nbt::String name, nbt::String value) {
-    if (!level->in_te) {
-      return;
-    }
-    
-    if (level->in_sign) {
-      if (level->sign_text.size() == 0) {
-        level->sign_text = value;
-      }
-      else {
-        level->sign_text += "\n" + value;
-      }
-      
-      return;
-    }
-    
-    if (name.compare("id") == 0 && value.compare("Sign") == 0) {
-      level->in_sign = true;
-    }
-  }
-
-  void register_int(level_context* level, nbt::String name, nbt::Int i) {
-    if (level->in_te) {
-      if (level->in_sign) {
-        if (name.compare("x") == 0) {
-          level->sign_x = i;
+  void end_compound(level_context* C, nbt::String name) {
+    if (in_level_section(C)) {
+        if (!C->tmp_Section->Data) {
+            std::cout << "missing Data" << std::endl;
         }
-        else if (name.compare("y") == 0) {
-          level->sign_y = i;
+
+        if (!C->tmp_Section->SkyLight) {
+            std::cout << "missing SkyLight" << std::endl;
         }
-        else if (name.compare("z") == 0) {
-          level->sign_z = i;
+
+        if (!C->tmp_Section->BlockLight) {
+            std::cout << "missing BlockLight" << std::endl;
         }
-      }
-      
-      return;
+
+        if (!C->tmp_Section->Blocks) {
+            std::cout << "missing Blocks" << std::endl;
+        }
+
+        C->Level->Sections.push_back(C->tmp_Section);
+        C->tmp_Section = NULL;
     }
+
+    --C->pos;
   }
 
-  void register_int_array(level_context* level, nbt::String name, nbt::IntArray* int_array) {
-    if (name.compare("HeightMap") == 0) {
-      level->heightmap.reset(int_array);
+  void begin_list(level_context* C, nbt::String name, nbt::Byte type, nbt::Int count) {
+    if (name.compare("Sections") == 0) {
+      C->p[C->pos++] = Sections;
       return;
     }
+
+    C->p[C->pos++] = None;
   }
 
-  void register_byte_array(level_context* level, nbt::String name, nbt::ByteArray* byte_array) {
-    if (!level->islevel) {
-      delete byte_array;
-      return;
-    }
-    
-    if (name.compare("Blocks") == 0) {
-      level->blocks.reset(byte_array);
-      return;
-    }
+  void end_list(level_context* C, nbt::String name) {
+    --C->pos;
+  }
 
-    if(name.compare("Data") == 0) {
-        level->data.reset(byte_array);
+  void register_string(level_context* C, nbt::String name, nbt::String value) {
+  }
+
+  void register_byte(level_context* C, nbt::String name, nbt::Byte value) {
+    if (in_level_section(C))
+    {
+      if (name.compare("Y") == 0) {
+        C->tmp_Section->Y = value;
         return;
+      }
     }
-    
-    if (name.compare("SkyLight") == 0) {
-      level->skylight.reset(byte_array);
-      return;
+  }
+
+  void register_int(level_context* C, nbt::String name, nbt::Int i) {
+  }
+
+  void register_int_array(level_context* C, nbt::String name, nbt::IntArray* int_array) {
+  }
+
+  void register_byte_array(level_context* C, nbt::String name, nbt::ByteArray* byte_array) {
+    if (in_level_section(C))
+    {
+      if (name.compare("Data") == 0) {
+        C->tmp_Section->Data.reset(byte_array);
+        return;
+      }
+
+      if (name.compare("SkyLight") == 0) {
+        C->tmp_Section->SkyLight.reset(byte_array);
+        return;
+      }
+
+      if (name.compare("BlockLight") == 0) {
+        C->tmp_Section->BlockLight.reset(byte_array);
+        return;
+      }
+
+      if (name.compare("Blocks") == 0) {
+        C->tmp_Section->Blocks.reset(byte_array);
+        return;
+      }
     }
-    
-    if (name.compare("BlockLight") == 0) {
-      level->blocklight.reset(byte_array);
-      return;
-    }
-    
+
     delete byte_array;
   }
 
-  void begin_list(level_context* level, nbt::String name, nbt::Byte type, nbt::Int count) {
-    if (name.compare("TileEntities") == 0) {
-      level->in_te = true;
-    }
-  }
-
-  void end_list(level_context* level, nbt::String name) {
-    if (name.compare("TileEntities") == 0) {
-      level->in_te = false;
-    }
-  }
-
-  void end_compound(level_context* level, nbt::String name) {
-    if (level->in_te) {
-      if (level->in_sign) {
-        level->in_sign = false;
-        marker m(level->sign_text, level->sign_x, level->sign_y, level->sign_z);
-        level->signs.push_back(m);
-        level->sign_text = "";
-        level->sign_x = 0;
-        level->sign_y = 0;
-        level->sign_z = 0;
-      }
-    }
-  }
-
-  void error_handler(level_context* level, size_t where, const char *why) {
-    level->grammar_error = true;
-    level->grammar_error_where = where;
-    level->grammar_error_why = why;
+  void error_handler(level_context* C, size_t where, const char *why) {
+    C->error = true;
+    C->error_where = where;
+    C->error_why = why;
   }
 
   level::~level(){
   }
 
   level::level(level_info_ptr _level_info) : _level_info(_level_info) {}
-      
-  std::vector<marker> level::get_signs() {
-    return signs;
-  }
 
   std::string level::get_path() {
     return _level_info->get_path();
-  }
-  
-  boost::shared_ptr<nbt::ByteArray>
-  level::get_blocks() {
-    return blocks;
-  }
-
-  boost::shared_ptr<nbt::ByteArray>
-  level::get_data() {
-    return data;
-  }
-
-  boost::shared_ptr<nbt::ByteArray>
-  level::get_skylight() {
-    return skylight;
-  }
-  
-  boost::shared_ptr<nbt::IntArray>
-  level::get_heightmap() {
-    return heightmap;
-  }
-  
-  boost::shared_ptr<nbt::ByteArray>
-  level::get_blocklight() {
-    return blocklight;
   }
 
   bool level::operator<(const level& other) const {
@@ -190,6 +215,10 @@ namespace mc {
   time_t level::modification_time()
   {
     return _level_info->modification_time();
+  }
+
+  boost::shared_ptr<Level_Compound> level::get_level() {
+    return Level;
   }
 
   /**
@@ -203,6 +232,7 @@ namespace mc {
     
     parser.register_byte_array = register_byte_array;
     parser.register_int_array = register_int_array;
+    parser.register_byte = register_byte;
     parser.register_string = register_string;
     parser.register_int = register_int;
     parser.begin_compound = begin_compound;
@@ -226,39 +256,14 @@ namespace mc {
 
     parser.parse_buffer(buffer.get(), len);
     
-    if (context.grammar_error) {
-      throw invalid_file(context.grammar_error_why);
+    if (context.error) {
+      throw invalid_file(context.error_why);
     }
     
-    if (!context.islevel) {
+    if (!context.Level) {
       throw invalid_file("not a level data file");
     }
 
-    if (!context.blocks) {
-      throw invalid_file("missing 'Blocks' section");
-    }
-
-    if (!context.data) {
-      throw invalid_file("missing 'Data' section");
-    }
-
-    if (!context.skylight) {
-      throw invalid_file("missing 'SkyLight' section");
-    }
-
-    if (!context.heightmap) {
-      throw invalid_file("missing 'HeightMap' section");
-    }
-
-    if (!context.blocklight) {
-      throw invalid_file("missing 'BlockLight' section");
-    }
-    
-    signs = context.signs;
-    blocks = context.blocks;
-    data = context.data;
-    skylight = context.skylight;
-    heightmap = context.heightmap;
-    blocklight = context.blocklight;
+    Level = context.Level;
   }
 }

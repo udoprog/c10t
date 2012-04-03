@@ -135,7 +135,7 @@ namespace mc {
     DragonEgg = 0x7A,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
-    MaterialCount = 0x100
+    MaterialCount = 0x1000
   };
 
   enum {
@@ -185,22 +185,22 @@ namespace mc {
   extern MaterialColorT *MaterialColorData;
   extern enum MaterialMode *MaterialModes;
 
-  inline color getColor(int material) {
+  inline color get_color(int material) {
     return MaterialColorData[material].top[0];
   }
 
-  inline color getSideColor(int material) {
+  inline color get_side_color(int material) {
     return MaterialColorData[material].side[0];
   }
 
-  inline color getColor(int material, int data) {
+  inline color get_color(int material, int data) {
     if (data >= MaterialColorData[material].count) {
       data = 0;
     }
     return MaterialColorData[material].top[data];
   }
 
-  inline color getSideColor(int material, int data) {
+  inline color get_side_color(int material, int data) {
     if (data >= MaterialColorData[material].count) {
       data = 0;
     }
@@ -213,8 +213,8 @@ namespace mc {
    * you specifiy the darken parameter as false.
    * Hint: use SharedInvisColor for the side value to copy the top color
    */
-  void setColor(int material, int idx, color top,
-    color side = SharedInvisColor, bool darken = true);
+  void set_color(int material, int idx, color top,
+          color side=SharedInvisColor, bool darken=true);
 }
 
 #endif /* _BLOCKS_H_ */

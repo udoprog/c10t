@@ -5,6 +5,8 @@
 #include "engine/block_rotation.hpp"
 #include "engine/functions.hpp"
 
+#include <boost/foreach.hpp>
+
 template<typename C>
 class flat_base : public engine_base<C> {
 public:
@@ -24,73 +26,56 @@ public:
     pos_t iw, ih;
     flat_base<C>::get_level_boundaries(iw, ih);
 
-    // block type
-    block_rotation<nbt::ByteArray, int> b_r(s.rotation, level->get_blocks());
-    block_rotation<nbt::ByteArray, int> b_d(s.rotation, level->get_data());
-    block_rotation<nbt::ByteArray, int> bl_r(s.rotation, level->get_blocklight());
-    block_rotation<nbt::ByteArray, int> sl_r(s.rotation, level->get_skylight());
-    
     oper->set_limits(iw, ih);
-    
-    for (int z = 0; z < mc::MapZ; z++) {
-      for (int x = 0; x < mc::MapX; x++) {
-        bool cave_initial = true;
-        bool hell_initial = true;
-        bool hell_solid = true;
-        
-        b_r.set_xz(x, z);
-        b_d.set_xz(x, z);
-        bl_r.set_xz(x, z);
-        sl_r.set_xz(x, z);
-        
-        if (s.hellmode) {
-          for (int y = s.top; y >= s.bottom && hell_solid; y--) {
-            hell_solid = !is_open(b_r.get8(y));
-          }
-        }
-        
-        // do incremental color fill until color is opaque
-        for (int y = s.top; y >= s.bottom; y--) {
-          int bt = b_r.get8(y);
-          
-          if (s.cavemode && cave_ignore_block(y, bt, b_r, cave_initial)) {
-            continue;
-          }
-          
-          if (s.hellmode && !hell_solid && hell_ignore_block(y, bt, b_r, hell_initial))
-          {
-            continue;
-          }
-          
-          if (s.excludes[bt]) {
-            continue;
-          }
-          
-          color top = blockColor_top(bt, y, b_d);
-          color side = blockColor_side(bt, y, b_d);
 
-          apply_shading(s, bl_r.get4(y + 1), sl_r.get4(y + 1), 0, y, top);
-          
-          point p(x, y, z);
-          
-          pos_t px;
-          pos_t py;
+    boost::shared_ptr<mc::Level_Compound> L = level->get_level();
 
-          flat_base<C>::project_position(p, px, py);
-          
-          switch(mc::MaterialModes[bt]) {
-          case mc::Block:
-            render_block(oper, bt, px, py, top, side);
-          case mc::HalfBlock:
-            render_halfblock(oper, bt, px, py, top, side);
-            break;
-          case mc::TorchBlock:
-            render_torchblock(oper, bt, px, py, top, side);
-            break;
-          }
-          
-          if (top.is_opaque()) {
-            break;
+    // block type
+        
+    BOOST_FOREACH(mc::Section_Compound Section, L->Sections) {
+      block_rotation blocks(s.rotation, Section.Blocks);
+      block_rotation data(s.rotation, Section.Data);
+      block_rotation block_light(s.rotation, Section.BlockLight);
+      block_rotation sky_light(s.rotation, Section.SkyLight);
+
+      for (int y = 0; y < 16; y++) {
+        int abs_y = (Section.Y * 16) + y;
+
+        for (int z = 0; z < mc::MapZ; z++) {
+          for (int x = 0; x < mc::MapX; x++) {
+            blocks.set_xz(x, z);
+            data.set_xz(x, z);
+            block_light.set_xz(x, z);
+            sky_light.set_xz(x, z);
+
+            // do incremental color fill until color is opaque
+            int block_type = blocks.get8(y);
+            int block_data = data.get4(y);
+
+            color top =  mc::get_color(block_type, block_data);
+            color side = mc::get_side_color(block_type, block_data);
+
+            //apply_shading(s, block_light.get4(y + 1), sky_light.get4(y + 1), 0, y, top);
+
+            point p(x, abs_y, z);
+
+            pos_t px;
+            pos_t py;
+
+            flat_base<C>::project_position(p, px, py);
+
+            //std::cout << px << "x" << py << ": " << bt << std::endl;
+
+            switch(mc::MaterialModes[block_type]) {
+            case mc::Block:
+              render_block(oper, block_type, px, py, top, side);
+            case mc::HalfBlock:
+              render_halfblock(oper, block_type, px, py, top, side);
+              break;
+            case mc::TorchBlock:
+              render_torchblock(oper, block_type, px, py, top, side);
+              break;
+            }
           }
         }
       }

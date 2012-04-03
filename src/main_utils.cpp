@@ -121,7 +121,7 @@ bool do_base_color_set(const char *set_str) {
     return false;
   }
 
-  mc::setColor(blockid, 0, c);
+  mc::set_color(blockid, 0, c);
   return true;
 }
 
@@ -264,7 +264,7 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
             return false;
           }
           
-          /* don't set color here so we only have ONE call to setColor below */
+          /* don't set color here so we only have ONE call to set_color below */
           break;
         case 2:
           if (!parse_color(token, side)) {
@@ -274,7 +274,7 @@ bool do_read_palette(settings_t& s, const fs::path& path) {
 	  /* colors read from the palette are unfortunately
            * darkened by default and we can't avoid this for now :(
            */
-          mc::setColor(blockid, data, top, side);
+          mc::set_color(blockid, data, top, side);
           break;
         default:
           break;

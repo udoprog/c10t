@@ -24,8 +24,6 @@ struct image_operation {
 
 class image_operations
 {
-private:
-  boost::shared_array<uint8_t> lookup;
 public:
   pos_t min_x, min_y;
   pos_t max_x, max_y;

@@ -1076,6 +1076,7 @@ bool generate_statistics(
             continue;
           }
 
+          /*
           boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
 
           for (int i = 0; i < blocks->length; i++) {
@@ -1087,6 +1088,7 @@ bool generate_statistics(
                 _stat->registerBloc(blocks->values[i], i % mc::MapY);
             }
           }
+          */
 
           reporter.add(1);
         }
@@ -1358,7 +1360,7 @@ int do_colors(ostream& out) {
   out << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
   
   for (int i = 0; i < mc::MaterialCount; i++) {
-    out << i << ": " << mc::MaterialName[i] << " = " << mc::getColor(i) << endl;
+    out << i << ": " << mc::MaterialName[i] << " = " << mc::get_color(i) << endl;
   }
   
   return 0;

@@ -26,11 +26,11 @@ void image_base::clear() {
 
 void image_base::composite(int x, int y, image_operations_ptr opers)
 {
-  std::vector<image_operation>::size_type i = opers->operations.size();
+  std::vector<image_operation>::size_type i = 0;
   
   align(x, y, opers->max_x, opers->max_y);
   
-  while (i--)
+  while (i++ < opers->operations.size())
   {
     image_operation op = opers->operations[i];
     blend_pixel(x + op.x, y + op.y, op.c);

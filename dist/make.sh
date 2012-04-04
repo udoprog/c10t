@@ -33,7 +33,7 @@ do_sync() {
 
   shift 2
 
-  echo "Syncing $src to $dir/$src"
+  echo "Syncing $src to $dir/$src \"$@\""
 
   while read file; do
     target="$dir/$file"
@@ -43,7 +43,7 @@ do_sync() {
       printf "%-40s -> %s\n" "$file" "$target"
       cp -p "$file" "$target"
     fi
-  done < <(find $src -type f $@)
+  done < <(find $src -type f "$@")
 }
 
 [[ ! -d dist/targets ]] && echo "Not in build directory" && exit 1
@@ -60,7 +60,8 @@ do_cp $dist_target $build_target/Makefile
 do_cp $dist_config $build_target/config.mk
 do_cp LICENSE.txt $build_target/LICENSE.txt
 do_cp README.md $build_target/README.md
-do_sync $dist_src $build_target -name "*.cpp" -o -name "*.hpp"
+do_sync $dist_src $build_target -name "*.cpp"
+do_sync $dist_src $build_target -name "*.hpp"
 do_sync $dist_scripts $build_target
 do_sync $dist_res $build_target
 

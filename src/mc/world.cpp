@@ -8,8 +8,6 @@
 #include "mc/region_iterator.hpp"
 #include "mc/level_info.hpp"
 
-#include <iostream>
-
 namespace mc {
   world::world(fs::path world_path)
     : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)

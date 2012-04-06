@@ -7,8 +7,6 @@
 
 #include <boost/foreach.hpp>
 
-#include <iostream>
-
 template<typename C>
 class flat_base : public engine_base<C> {
 public:
@@ -32,19 +30,31 @@ public:
 
     boost::shared_ptr<mc::Level_Compound> L = level->get_level();
 
+    bool* blocked = new bool[iw*ih];
+
+    for (unsigned int i = 0; i < iw*ih; i++) {
+      blocked[i] = false;
+    }
+
     // block type
         
-    BOOST_FOREACH(mc::Section_Compound Section, L->Sections) {
+    BOOST_REVERSE_FOREACH(mc::Section_Compound Section, L->Sections) {
       block_rotation br_blocks(s.rotation, Section.Blocks);
       block_rotation br_data(s.rotation, Section.Data);
       block_rotation br_block_light(s.rotation, Section.BlockLight);
       block_rotation br_sky_light(s.rotation, Section.SkyLight);
 
-      for (int y = 0; y < 16; y++) {
+      for (int y = 15; y >= 0; y--) {
         int abs_y = (Section.Y * 16) + y;
 
         for (int z = 0; z < mc::MapZ; z++) {
           for (int x = 0; x < mc::MapX; x++) {
+            unsigned int blocked_position = x * iw + z;
+
+            if (blocked[blocked_position]) {
+              continue;
+            }
+
             br_blocks.set_xz(x, z);
             br_data.set_xz(x, z);
             br_block_light.set_xz(x, z);
@@ -61,10 +71,12 @@ public:
             color top =  mc::get_color(block_type, block_data);
             color side = mc::get_side_color(block_type, block_data);
 
-            int block_light = br_block_light.get4(y + 1);
-            int sky_light = br_sky_light.get4(y + 1, 15);
+            blocked[blocked_position] = top.is_opaque();
 
-            apply_shading(s, block_light, sky_light, 0, abs_y, top);
+            /*int block_light = br_block_light.get4(y + 1);
+            int sky_light = br_sky_light.get4(y + 1, 15);*/
+
+            //apply_shading(s, block_light, sky_light, 0, abs_y, top);
 
             point p(x, abs_y, z);
 
@@ -87,6 +99,9 @@ public:
         }
       }
     }
+
+    delete [] blocked;
+    oper->reverse();
   }
 
   virtual void render_block(image_operations_ptr, int, pos_t, pos_t, color, color) = 0;

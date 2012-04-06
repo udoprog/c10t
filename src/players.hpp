@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include <set>
-#include <iostream>
 #include <exception>
 
 #include <boost/filesystem/operations.hpp>

@@ -12,6 +12,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+extern float color_i_to_f[0x100];
+
 struct color{
   float r;
   float g;
@@ -37,11 +39,20 @@ struct color{
   {
   }
 
+  color(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+    : r(color_i_to_f[r]),
+      g(color_i_to_f[g]),
+      b(color_i_to_f[b]),
+      a(color_i_to_f[a]),
+      z(0)
+  {
+  }
+
   color(int r, int g, int b, int a)
-    : r(float(r) / 255.0f),
-      g(float(g) / 255.0f),
-      b(float(b) / 255.0f),
-      a(float(a) / 255.0f),
+    : r(color_i_to_f[uint8_t(r)]),
+      g(color_i_to_f[uint8_t(g)]),
+      b(color_i_to_f[uint8_t(b)]),
+      a(color_i_to_f[uint8_t(a)]),
       z(0)
   {
   }

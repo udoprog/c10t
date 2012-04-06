@@ -26,8 +26,8 @@ bool dirlist::has_next(dir_filter_func dir_filter, file_filter_func file_filter)
     }
     
     fs::directory_iterator end_itr;
-    
-    for ( fs::directory_iterator itr( dir_path );
+
+    for ( fs::directory_iterator itr(dir_path);
           itr != end_itr;
           ++itr )
     {

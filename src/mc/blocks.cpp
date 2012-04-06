@@ -209,8 +209,8 @@ namespace mc {
     set_color(PistonPlatform, 0, get_color(Air));
     set_color(YellowFlower, 0, color(255,255,0,255));
     set_color(RedRose, 0, color(255,0,0,255));
-    set_color(BrownMushroom, 0, SharedInvisColor);
-    set_color(RedMushroom, 0, SharedInvisColor);
+    set_color(BrownMushroom, 0, color(200, 200, 0, 255));
+    set_color(RedMushroom, 0, color(255, 0, 0, 255));
     set_color(GoldBlock, 0, color(0xff, 0xed, 0x8c, 0xff));
     set_color(IronBlock, 0, color(0xd9, 0xd9, 0xd9, 0xff));
     set_color(DoubleStep, 0, color(200,200,200,255));
@@ -418,7 +418,8 @@ namespace mc {
     MaterialModes[PineLeaves] = Block;
     MaterialModes[BirchLeaves] = Block;
 
-    /* Special colors depending on data value
+    /* 
+     * Special colors depending on data value
      * Start with the highest index to reduce allocation time complexity 
      * The order of the following entries does not matter.
      */

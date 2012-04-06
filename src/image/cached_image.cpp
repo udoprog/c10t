@@ -78,8 +78,6 @@ void cached_image::read_buffer()
   }
 }
 
-#include <iostream>
-
 void cached_image::blend_pixel(pos_t x, pos_t y, color &c)
 {
   // do nothing if color is invisible

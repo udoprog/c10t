@@ -51,6 +51,16 @@ namespace mc {
         
         int get_x() const { return x; };
         int get_z() const { return z; };
+
+        level_coord add_x(int x)
+        {
+          return level_coord(this->x + x, this->z);
+        };
+
+        level_coord add_z(int z)
+        {
+          return level_coord(this->x, this->z + z);
+        };
         
         level_coord rotate(int rotation) const {
           int x = this->x;

@@ -1,5 +1,4 @@
 #include "altitude_graph.hpp"
-#include <iostream>
 #include "text.hpp"
 
 #define BORDER_X 50

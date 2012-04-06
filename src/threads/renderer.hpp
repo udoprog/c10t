@@ -84,7 +84,7 @@ public:
     //p.signs = job.level->get_signs();
     job.engine->render(job.level, p.operations);
 
-    p.operations->optimize();
+    //p.operations->optimize();
     
     if (r.cache_use) {
       // create the necessary directories required when caching

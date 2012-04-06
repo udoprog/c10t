@@ -45,19 +45,14 @@ void image_operations::optimize()
 {
   bool* blocked = new bool[max_x*max_y];
 
-  for (int i = 0; i < max_x*max_y; i++)
-  {
+  for (unsigned int i = 0; i < max_x*max_y; i++) {
     blocked[i] = false;
   }
 
-  operations_vector::reverse_iterator iter = operations.rbegin();
   operations_vector new_operations;
 
-  while (iter != operations.rend()) {
-    image_operation operation = *iter;
-    iter++;
-
-    int offset = operation.y * max_x + operation.x;
+  BOOST_REVERSE_FOREACH(image_operation operation, operations) {
+    int offset = operation.x * max_x + operation.y;
     
     if (blocked[offset]) {
       continue;
@@ -72,6 +67,11 @@ void image_operations::optimize()
   operations = new_operations;
 
   delete [] blocked;
+}
+
+void image_operations::reverse()
+{
+  std::reverse(operations.begin(), operations.end());
 }
 
 void image_operations::set_limits(pos_t x, pos_t y) 

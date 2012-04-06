@@ -2,8 +2,6 @@
 // (C) Copyright 2010 John-John Tedro et al.
 #include "players.hpp"
 
-#include <iostream>
-
 void error_handler(player *p, size_t where, const char* why) {
   p->error_where = where;
   p->error_why = why;

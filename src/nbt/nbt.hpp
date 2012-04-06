@@ -9,7 +9,6 @@
 #include <zlib.h>
 #include <setjmp.h>
 
-#include <iostream>
 #include <string.h>
 #include <exception>
 #include <string>

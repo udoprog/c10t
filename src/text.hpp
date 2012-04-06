@@ -17,8 +17,6 @@ namespace fs = boost::filesystem;
 #include "image/image_base.hpp"
 #include <assert.h>
 
-#include <iostream>
-
 namespace text {
   class text_error : public std::exception {
   private:

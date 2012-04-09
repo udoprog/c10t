@@ -64,7 +64,7 @@ public:
             int block_type = br_blocks.get8(y);
             int block_data = br_data.get4(y);
 
-            if (s.excludes[block_type]) {
+            if (block_type >=0 && s.excludes[block_type]) {
               continue;
             }
 

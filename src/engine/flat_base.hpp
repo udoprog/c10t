@@ -19,7 +19,7 @@ public:
   {
   }
 
-  void render(level_ptr level, image_operations_ptr oper)
+  void render(level_ptr level, image_operations_ptr oper, mc::utils::level_coord nonrotated_coord)
   {
     const engine_settings& s = flat_base<C>::get_settings();
 
@@ -64,7 +64,7 @@ public:
             int block_type = br_blocks.get8(y);
             int block_data = br_data.get4(y);
 
-            if (s.excludes[block_type]) {
+            if (block_type >=0 && s.excludes[block_type]) {
               continue;
             }
 

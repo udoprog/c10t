@@ -18,6 +18,7 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
+#include <boost/range/sub_range.hpp>
 
 #include "config.hpp"
 
@@ -38,6 +39,7 @@
 #include "json.hpp"
 #include "altitude_graph.hpp"
 #include "warps.hpp"
+#include "selectors.hpp"
 
 #include "mc/world.hpp"
 #include "mc/blocks.hpp"
@@ -96,7 +98,6 @@ inline void cout_end() {
  *
  * This will allow us to composite the entire image later and calculate sizes then.
  */
-
 inline void populate_markers(settings_t& s, json::array* array, boost::shared_ptr<engine_core> engine, boost::ptr_vector<marker>& markers) {
   boost::ptr_vector<marker>::iterator it;
   
@@ -508,6 +509,35 @@ bool generate_map(
     out << "world: " << path_string(world_path) << endl;
   }
   
+  pallchunksel selector(new all_criterium_chunk_selector()); // selector;
+  pchunksel in_range_pred (new predicate_criterium<in_range_predicate> (in_range_predicate(s)));
+  
+  selector->add_criterium(in_range_pred);
+  if (s.selector != 0 ) { selector->add_criterium(s.selector) ;};
+
+  panychunksel line_selector (new any_criterium_chunk_selector());
+  if(s.lines_to_follow.size()>0){
+        BOOST_FOREACH(std::list<point_surface> line_to_follow,s.lines_to_follow) {
+		typedef boost::iterator_range< std::list<point_surface>::iterator > ilist;
+		point_surface begin_line = line_to_follow.front(); 
+		
+		ilist points = boost::make_iterator_range(
+			(line_to_follow.begin())++, 
+			line_to_follow.end()
+		);
+
+		BOOST_FOREACH(point_surface end_line, points) {
+			is_chunk_on_line is(begin_line,end_line);
+			pchunksel p(new predicate_criterium<is_chunk_on_line>(is));
+			line_selector->add_criterium(p);
+			begin_line=end_line;
+	  	}
+
+		selector->add_criterium(line_selector);
+		out << "added line criterium" << endl;
+	}
+  } 
+  s.selector = selector; 
   /*
    * Scan the world for regions containing levels.
    */
@@ -528,26 +558,21 @@ bool generate_map(
         out_log << path_string(region->get_path()) << ": could not read header" << std::endl;
         continue;
       }
-
       std::list<mc::utils::level_coord> coords;
 
       region->read_coords(coords);
 
       BOOST_FOREACH(mc::utils::level_coord c, coords) {
         mc::level_info::level_info_ptr level(new mc::level_info(region, c));
-        
         mc::utils::level_coord coord = level->get_coord();
-        
-        if (coord_out_of_range(s, coord)) {
+
+        if (! selector->select_level(coord)){
           ++filtered_levels;
-          out_log << level->get_path() << ": (z,x) position"
-                  << " (" << coord.get_z() << "," << coord.get_x() << ")"
-                  << " out of limit" << std::endl;
           continue;
         }
         
         mc::rotated_level_info rlevel =
-          mc::rotated_level_info(level, coord.rotate(s.rotation));
+          mc::rotated_level_info(level, coord.rotate(s.rotation),coord);
         
         levels.insert( levels_map::value_type(rlevel.get_coord(), rlevel));
 
@@ -595,7 +620,8 @@ bool generate_map(
   engine_s.top = s.top;
   engine_s.bottom = s.bottom;
   engine_s.excludes = s.excludes;
-  
+  engine_s.selector = s.selector;
+ 
   if (s.engine_use) {
     dl_t* dl = dl_open(path_string(s.engine_path).c_str());
 
@@ -757,7 +783,6 @@ bool generate_map(
     renderer.start();
 
     unsigned int prebuffer_limit = prebuffer / 2;
-
     uint32_t id = 1;
 
     while (level_iter != levels.end() || queued > 0) {
@@ -784,6 +809,7 @@ bool generate_map(
           job.level = level;
           job.coord = rotated_level_info.get_coord();
           job.path = level_info->get_path();
+	  job.nonrotated_coord = rotated_level_info.get_original_coord();
 
           renderer.give(job);
           ++queued;
@@ -876,7 +902,7 @@ bool generate_map(
     
     if (s.show_signs && signs.size() > 0) {
       push_sign_markers(s, font, signs, markers);
-    }
+   }
     
     if (s.show_coordinates) {
       push_coordinate_markers(out, s, font, world, levels, markers);
@@ -1215,12 +1241,15 @@ int do_help(ostream& out) {
     << "  -t, --top <int>           - Splice from the top, must be less than 128       " << endl
     << "  -b, --bottom <int>        - Splice from the bottom, must be greater than or  " << endl
     << "                              equal to zero.                                   " << endl
-    << "  -L, --limits <int-list>   - Limit render to certain area. int-list form:     " << endl
+    << "  -L, --limits <int-list>   - Limit render to certain area. int-list form      " << endl
+    << "                              of chunk number in format                        " << endl
     << "                              North,South,East,West, e.g.                      " << endl
     << "                              -L 0,100,-10,20 limiting between 0 and 100 in the" << endl
     << "                              north-south direction and between -10 and 20 in  " << endl
     << "                              the east-west direction.                         " << endl
     << "                              Note: South and West are the positive directions." << endl
+    << "  -Z, --limits <int-list>   - limt render to certain chunk along a polygon line" << endl
+    << "                              area. int-list form                              " << endl
     << "  -R, --radius <int>        - Limit render to a specific radius, useful when   " << endl
     << "                              your map is absurdly large and you want a 'fast' " << endl
     << "                              limiting option.                                 " << endl
@@ -1377,7 +1406,6 @@ int main(int argc, char *argv[]){
   if (!read_opts(s, argc, argv)) {
     goto exit_error;
   }
-
   switch(s.action) {
     case Version:
       return do_version(out);
@@ -1396,7 +1424,7 @@ int main(int argc, char *argv[]){
       error << "No action specified, please type `c10t -h' for help";
       goto exit_error;
     default: break;
-  }
+ }
 
   if (s.binary) {
     out.rdbuf(out_log.rdbuf());

@@ -1,6 +1,6 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
-#include "image/image_base.hpp"
+#include "image_base.hpp"
 
 #include <cstring>
 
@@ -37,7 +37,7 @@ void image_base::composite(int x, int y, image_operations_ptr opers)
   }
 }
 
-void image_base::drawLine(pos_t x1, pos_t y1, pos_t x2, pos_t y2, color &c)
+void image_base::draw_line(pos_t x1, pos_t y1, pos_t x2, pos_t y2, color &c)
 {
     int sx, sy;
     int dx = abs(x2-x1);
@@ -65,8 +65,8 @@ void image_base::drawLine(pos_t x1, pos_t y1, pos_t x2, pos_t y2, color &c)
 
 void image_base::safe_blend_pixel(pos_t x, pos_t y, color &c)
 {
-  if (x >= w) return;
-  if (y >= h) return;
+  if (x >= width) return;
+  if (y >= height) return;
   blend_pixel(x, y, c);
 }
 

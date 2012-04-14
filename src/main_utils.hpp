@@ -9,7 +9,9 @@
 
 #include "image/color.hpp"
 
-#include "global.hpp"
+#include "settings_t.hpp"
+
+#include <boost/filesystem.hpp>
 
 class application_error : std::exception
 {
@@ -34,8 +36,8 @@ bool do_side_color_set(const char *set_str);
 bool parse_limits(const std::string& limits_str, settings_t& s);
 bool read_set(std::set<std::string>& set, const std::string s);
 
-bool do_write_palette(settings_t& s, const fs::path& path);
-bool do_read_palette(settings_t& s, const fs::path& path);
+bool do_write_palette(settings_t& s, const boost::filesystem::path& path);
+bool do_read_palette(settings_t& s, const boost::filesystem::path& path);
 
 bool read_opts(settings_t& s, int argc, char* argv[]);
 

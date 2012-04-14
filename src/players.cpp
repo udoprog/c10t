@@ -1,6 +1,9 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
+
 #include "players.hpp"
+
+namespace fs = boost::filesystem;
 
 void error_handler(player *p, size_t where, const char* why) {
   p->error_where = where;
@@ -44,6 +47,11 @@ player::player(const fs::path path) :
   parser.end_list = end_list;
   parser.register_double = register_double;
   parser.parse_file(path.string().c_str());
+}
+
+players_db::players_db(fs::path path, std::set<std::string> set)
+  : path(path), filter_set(set)
+{
 }
 
 void players_db::read(std::vector<player>& players) const

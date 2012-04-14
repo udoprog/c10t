@@ -10,6 +10,10 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 
+#include "mc/blocks.hpp"
+
+namespace fs = boost::filesystem;
+
 using namespace std;
 using namespace boost;
 

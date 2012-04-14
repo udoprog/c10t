@@ -4,12 +4,15 @@
 #include <unc/unc.hpp>
 
 namespace text {
-  font_face::font_face(const fs::path font_path, int size, color base) : font_path(font_path), size(size), base(base), initialized(false)
+  font_face::font_face(const fs::path font_path, int size, color base)
+      : font_path(font_path),
+        size(size),
+        base(base),
+        initialized(false)
   {
   }
 
-  void
-  font_face::init()
+  void font_face::init()
   {
     int error;
     
@@ -33,8 +36,7 @@ namespace text {
     initialized = true;
   }
 
-  void
-  font_face::set_size(int size)
+  void font_face::set_size(int size)
   {
     if (FT_Set_Pixel_Sizes(face, 0, size)) {
       throw text_error("Failed to set font resolution");
@@ -43,8 +45,7 @@ namespace text {
     this->size = size;
   }
   
-  void
-  font_face::draw_bitmap(image_ptr image, FT_Bitmap* bitmap, pos_t pen_x, pos_t pen_y) const
+  void font_face::draw_bitmap(image_ptr image, FT_Bitmap* bitmap, pos_t pen_x, pos_t pen_y) const
   {
     assert(bitmap->pixel_mode == FT_PIXEL_MODE_GRAY);
     
@@ -65,8 +66,7 @@ namespace text {
     }
   }
   
-  void
-  font_face::draw(image_ptr image, const std::string rawtext, int x, int y) const
+  void font_face::draw(image_ptr image, const std::string rawtext, int x, int y) const
   {
     FT_GlyphSlot slot = face->glyph;
 
@@ -95,14 +95,12 @@ namespace text {
     }
   }
 
-  void
-  font_face::set_color(color& c)
+  void font_face::set_color(color& c)
   {
     base = c;
   }
   
-  bool
-  font_face::is_initialized()
+  bool font_face::is_initialized()
   {
     return initialized;
   }

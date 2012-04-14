@@ -83,6 +83,11 @@ set(c10t_SOURCES
   src/warps.cpp
   src/text.cpp
   src/json.cpp
+  src/generate_map.cpp
+  src/generate_statistics.cpp
+  src/marker.cpp
+  src/nullstream.cpp
+  src/settings_t.cpp
   )
 
 add_executable(c10t ${c10t_SOURCES})

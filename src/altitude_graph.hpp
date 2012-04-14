@@ -11,24 +11,21 @@
 
 #include <boost/scoped_array.hpp>
 
-#include "image/format/png.hpp"
+#include "settings_t.hpp"
 
-#include "global.hpp"
 #include "players.hpp"
 
 #include "image/image_base.hpp"
 #include "image/memory_image.hpp"
 #include "image/cached_image.hpp"
 #include "image/algorithms.hpp"
+#include "image/format/png.hpp"
 
 #include "mc/world.hpp"
 #include "mc/blocks.hpp"
 #include "mc/utils.hpp"
 
 #include "nbt/nbt.hpp"
-
-using namespace std;
-namespace fs = boost::filesystem;
 
 class AltitudeGraph
 {

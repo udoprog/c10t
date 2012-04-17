@@ -10,7 +10,7 @@
 
 namespace mc {
   world::world(fs::path world_path)
-    : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0), min_y(INT_MIN)
+    : world_path(world_path), min_x(INT_MAX), min_z(INT_MAX), max_x(INT_MIN), max_z(INT_MIN), chunk_x(0), chunk_y(0)
   { }
   
   region_iterator world::get_iterator() {

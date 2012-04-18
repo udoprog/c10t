@@ -6,6 +6,7 @@
 
 #include "mc/level.hpp"
 #include "image/image_operations.hpp"
+#include "mc/utils.hpp"
 
 class engine_core;
 

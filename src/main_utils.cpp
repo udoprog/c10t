@@ -365,6 +365,8 @@ int flag;
 
 struct option long_options[] =
  {
+    {"center",       	    		    required_argument,   0,       'u'},
+    {"selector-spec",                       required_argument,   0,       'J'},
     {"world",                               required_argument,   0,       'w'},
     {"output",                              required_argument,   0,       'o'},
     {"top",                                 required_argument,   0,       't'},
@@ -444,7 +446,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
 
   bool exclude_all = false;
 
-  while ((c = getopt_long(argc, argv, "DNvxcnHqzZyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:Y:J:", long_options, &option_index)) != -1)
+  while ((c = getopt_long(argc, argv, "DNvxcnHqzZyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:Y:u:J:", long_options, &option_index)) != -1)
   {
     blockid = -1;
     
@@ -727,6 +729,14 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       }
       
       break;
+
+    case 'b':
+      s.bottom = atoi(optarg);
+      
+      if (!(s.bottom < s.top && s.bottom >= 0)) {
+        error << "Bottom limit must be between `0 - <top limit>', not " << s.bottom;
+        return false;
+      }
     case 'L':
       if (!parse_limits(optarg, s)) {
         return false;
@@ -749,18 +759,14 @@ bool read_opts(settings_t& s, int argc, char* argv[])
          return false;
       }
       break;
-     case 'Y':
+    case 'Y':
       if (!parse_polyline(optarg, s)) {
         error << "Invalid polyline format";
         return false;
       }
       break;
-
-   case 'b':
-      s.bottom = atoi(optarg);
-      
-      if (!(s.bottom < s.top && s.bottom >= 0)) {
-        error << "Bottom limit must be between `0 - <top limit>', not " << s.bottom;
+    case 'u':
+      if (!parse_center_point(optarg, s)) {
         return false;
       }
       

@@ -83,7 +83,7 @@ public:
     }
     
     job.engine->render(job.level, p.operations, job.nonrotated_coord);
-    
+   
     if (r.cache_use) {
       // create the necessary directories required when caching
       cache.create_directories();

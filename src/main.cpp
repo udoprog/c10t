@@ -572,7 +572,7 @@ bool generate_map(
         }
         
         mc::rotated_level_info rlevel =
-          mc::rotated_level_info(level, coord.rotate(s.rotation));
+          mc::rotated_level_info(level, coord.rotate(s.rotation),coord);
         
         levels.insert( levels_map::value_type(rlevel.get_coord(), rlevel));
 
@@ -620,7 +620,8 @@ bool generate_map(
   engine_s.top = s.top;
   engine_s.bottom = s.bottom;
   engine_s.excludes = s.excludes;
-  
+  engine_s.selector = s.selector;
+ 
   if (s.engine_use) {
     dl_t* dl = dl_open(path_string(s.engine_path).c_str());
 
@@ -808,6 +809,7 @@ bool generate_map(
           job.level = level;
           job.coord = rotated_level_info.get_coord();
           job.path = level_info->get_path();
+	  job.nonrotated_coord = rotated_level_info.get_original_coord();
 
           renderer.give(job);
           ++queued;

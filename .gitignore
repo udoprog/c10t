@@ -5,6 +5,7 @@ build
 *.a
 Makefile
 CMakeFiles
+CMakeCache.txt
 *.orig
 *.rej
 src/config.hpp

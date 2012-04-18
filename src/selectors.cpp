@@ -104,12 +104,14 @@ pchunksel analyse_json_and (wmValue & v,bool & error){
 			}
 		break;
 		default:
+			cout << "erreur de parsing dans le \"and\" : attendu un tableau";
 		error=true;
 	}
 	return andsel;
 }
 
 pchunksel analyse_json_or (wmValue & v,bool & error){
+	std::cout << "analysing unknown" << std::endl;
 	panychunksel anysel( new any_criterium_chunk_selector());
 	switch (v.type()) {
 		case array_type:
@@ -119,6 +121,7 @@ pchunksel analyse_json_or (wmValue & v,bool & error){
 
 		break;
 		default:
+		cout << "or error parsing" << std::endl;
 		error=true;
 	}
 	return anysel;
@@ -131,7 +134,6 @@ pchunksel analyse_json_unknown(wmValue & v, bool & error){
 	switch (v.type()){
 		case obj_type:
 		obj=v.get_obj();
-		// write_stream(v,std::cout,raw_utf8);
 		BOOST_FOREACH(wmConfig::Pair_type obj_,obj ){
 			wstring first = obj_.first ;
 			std::cout << "plop";
@@ -147,10 +149,13 @@ pchunksel analyse_json_unknown(wmValue & v, bool & error){
 		}else if(obj.count( L"not") > 0 ){
 			sel = analyse_json_not(obj[L"not"],error);
 		}else {
+		
+			cout << "JSon SPec Error : not niether a and, not or circle" << std::endl; 
 			error=true;
 		}
 		break;
 		default:
+			cout << "Json Spec Error : Object waited";
 			error=true;
 	}
 	return sel;

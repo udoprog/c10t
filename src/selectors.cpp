@@ -59,6 +59,7 @@ std::ostream & operator<<(std::ostream & out,point_surface  & p){
 }
 
 pchunksel analyse_json_unknown(wmValue & v, bool & error);
+
 point analyse_point(wmValue & v, bool & error){
 	wmObject obj = v.get_obj();
 
@@ -110,6 +111,22 @@ pchunksel analyse_json_and (wmValue & v,bool & error){
 	return andsel;
 }
 
+pchunksel analyse_json_line (wmValue & v,bool & error){
+	std::cout << "analysing line" << std::endl ;
+	panychunksel orsel( new any_criterium_chunk_selector());
+	switch (v.type()) {
+		case array_type:
+			BOOST_FOREACH(wmValue val, v.get_array() ){
+				orsel->add_criterium(analyse_json_unknown(val, error));
+			}
+		break;
+		default:
+			cout << "JSon Spec Error in \"line\" : attendu un tableau"; error=true;
+	}
+	return orsel;
+}
+
+
 pchunksel analyse_json_or (wmValue & v,bool & error){
 	std::cout << "analysing unknown" << std::endl;
 	panychunksel anysel( new any_criterium_chunk_selector());
@@ -148,6 +165,8 @@ pchunksel analyse_json_unknown(wmValue & v, bool & error){
 			sel = analyse_json_or(obj[L"or"],error);
 		}else if(obj.count( L"not") > 0 ){
 			sel = analyse_json_not(obj[L"not"],error);
+		}else if(obj.count( L"line") > 0 ){
+			sel = analyse_json_line(obj[L"line"],error);
 		}else {
 		
 			cout << "JSon SPec Error : not niether a and, not or circle" << std::endl; 

@@ -1,0 +1,19 @@
+[
+ {
+  "and":[
+    {
+        "circle":{
+            "center":{"X":1,"Y":1,"Z":1},
+            "diameter":150
+        }
+    },
+    {
+        "circle":{
+            "center":{"X":1,"Y":1,"Z":100},
+            "diameter":150
+        }
+
+    }
+    ]
+ }
+]

@@ -1,0 +1,28 @@
+[
+ {
+	"circle":{
+		"center":{"X":100,"Y":100,"Z":100},
+		"diameter":500
+        } 
+ },
+ {"not":
+ 
+	 {
+	  "or":[
+	    {
+		"circle":{
+		    "center":{"X":1,"Y":1,"Z":1},
+		    "diameter":150
+		}
+	    },
+	    {
+		"circle":{
+		    "center":{"X":200,"Y":200,"Z":200},
+		    "diameter":150
+		}
+
+	    }
+	    ]
+	 }
+  }
+]

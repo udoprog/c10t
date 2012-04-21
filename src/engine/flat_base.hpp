@@ -19,7 +19,7 @@ public:
   {
   }
 
-  void render(level_ptr level, image_operations_ptr oper)
+  void render(level_ptr level, image_operations_ptr oper, mc::utils::level_coord nonrotated_coord)
   {
     const engine_settings& s = flat_base<C>::get_settings();
 
@@ -79,6 +79,11 @@ public:
             //apply_shading(s, block_light, sky_light, 0, abs_y, top);
 
             point p(x, abs_y, z);
+
+	    point pabs(x + nonrotated_coord.get_x() * 16, y, z + nonrotated_coord.get_z() *16);
+            if(!s.selector->select_block(pabs)){
+              continue;
+            }
 
             pos_t px;
             pos_t py;

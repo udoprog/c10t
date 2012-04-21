@@ -15,8 +15,14 @@
 
 #include "mc/blocks.hpp"
 #include "image/color.hpp"
+#include "2d/cube.hpp"
+// #include "selectors.hpp"
 
 namespace fs = boost::filesystem;
+
+class chunk_selector;
+
+typedef boost::shared_ptr<chunk_selector> pchunksel;
 
 enum mode {
   Top = 0x0,
@@ -26,6 +32,7 @@ enum mode {
   FatIso = 0x4
 };
 
+
 enum action {
   None,
   Version,
@@ -34,6 +41,14 @@ enum action {
   GenerateStatistics,
   ListColors,
   WritePalette
+};
+
+struct point_surface{
+	int x;
+	int z;
+	point_surface(int x,int z): x(x),z(z){
+	}
+	point_surface():x(0),z(0){};
 };
 
 struct settings_t {
@@ -64,13 +79,17 @@ struct settings_t {
   bool use_split;
   bool write_js;
   bool write_json;
+  bool read_selector;
+
   boost::shared_array<bool> excludes;
+  
   color coordinate_color;
   color player_color;
   color sign_color;
   color ttf_color;
   color warp_color;
   enum mode mode;
+  
   fs::path cache_dir;
   fs::path output_log;
   fs::path output_path;
@@ -83,6 +102,8 @@ struct settings_t {
   fs::path world_path;
   fs::path write_json_path;
   fs::path write_js_path;
+
+
   fs::path engine_path;
   bool engine_use;
   int bottom;
@@ -111,6 +132,10 @@ struct settings_t {
 
   enum action action;
   
+  pchunksel selector;
+  std::list< std::list<point_surface> > lines_to_follow;
+  point_surface center;
+ 
   settings_t() {
     this->excludes.reset(new bool[mc::MaterialCount]);
     

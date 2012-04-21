@@ -1,10 +1,13 @@
 *~
 *.pyc
 build
+data
+debug
 *.cmake
 *.a
 Makefile
 CMakeFiles
+CMakeCache.txt
 *.orig
 *.rej
 src/config.hpp

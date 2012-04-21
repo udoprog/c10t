@@ -6,6 +6,7 @@
 
 #include "mc/level.hpp"
 #include "image/image_operations.hpp"
+#include "mc/utils.hpp"
 
 class engine_core;
 
@@ -23,7 +24,7 @@ public:
   virtual void wp2pt(int xPos, int yPos, int zPos, pos_t& x, pos_t& y) = 0;
   virtual void reset_image_limits() = 0;
   virtual void update_image_limits(pos_t x, pos_t y, pos_t max_x, pos_t max_y) = 0;
-  virtual void render(level_ptr, image_operations_ptr) = 0;
+  virtual void render(level_ptr, image_operations_ptr, mc::utils::level_coord) = 0;
 
   virtual pos_t get_min_x() = 0;
   virtual pos_t get_max_x() = 0;

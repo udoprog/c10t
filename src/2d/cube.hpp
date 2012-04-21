@@ -106,6 +106,7 @@ private:
   const pos_t x;
   const pos_t y;
   const pos_t z;
+
 };
 
 #endif /* _CUBE_H_ */

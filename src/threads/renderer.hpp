@@ -42,6 +42,7 @@ struct render_job {
   boost::shared_ptr<mc::level> level;
   boost::shared_ptr<engine_core> engine;
   mc::utils::level_coord coord;
+  mc::utils::level_coord nonrotated_coord;
   fs::path path;
 };
 
@@ -81,11 +82,8 @@ public:
       }
     }
     
-    //p.signs = job.level->get_signs();
-    job.engine->render(job.level, p.operations);
-
-    //p.operations->optimize();
-    
+    job.engine->render(job.level, p.operations, job.nonrotated_coord);
+   
     if (r.cache_use) {
       // create the necessary directories required when caching
       cache.create_directories();

@@ -4,6 +4,7 @@
 #include "engine/engine_base.hpp"
 #include "engine/block_rotation.hpp"
 #include "engine/functions.hpp"
+#include "selectors.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -19,7 +20,7 @@ public:
   {
   }
 
-  void render(level_ptr level, image_operations_ptr oper)
+  void render(level_ptr level, image_operations_ptr oper, mc::utils::level_coord nonrotated_coord)
   {
     const engine_settings& s = engine_base<C>::get_settings();
 
@@ -53,20 +54,25 @@ public:
             if (block_type >=0 && s.excludes[block_type]) {
               continue;
             }
-            
+
             point p(x, abs_y, z);
-            
+           
+	    point pabs(x + nonrotated_coord.get_x() * 16, y, z + nonrotated_coord.get_z() *16);
+        
+	    if(!s.selector->select_block(pabs)){
+              continue;
+            }
+ 
             pos_t px = 0;
             pos_t py = 0;
 
             engine_base<C>::project_position(p, px, py);
-
             int block_data = br_data.get4(y);
             
             color top = mc::get_color(block_type, block_data);
             color side = mc::get_side_color(block_type, block_data);
             
-            //int block_light = br_block_light.get4(y + 1);
+            //int block_light = br_block_light.get4(y 1);
             //int sky_light = br_sky_light.get4(y + 1);
             
             //apply_shading(s, block_light, sky_light, 0, y, top);

@@ -15,8 +15,15 @@
 
 #include "mc/blocks.hpp"
 #include "image/color.hpp"
+#include "2d/cube.hpp"
+// #include "selectors.hpp"
 
 namespace fs = boost::filesystem;
+
+class chunk_selector;
+
+typedef boost::shared_ptr<chunk_selector> pchunksel;
+
 
 enum mode {
   Top = 0x0,
@@ -26,6 +33,7 @@ enum mode {
   FatIso = 0x4
 };
 
+
 enum action {
   None,
   Version,
@@ -34,6 +42,14 @@ enum action {
   GenerateStatistics,
   ListColors,
   WritePalette
+};
+
+struct point_surface{
+	int x;
+	int z;
+	point_surface(int x,int z): x(x),z(z){
+	}
+	point_surface():x(0),z(0){};
 };
 
 struct settings_t {
@@ -111,6 +127,10 @@ struct settings_t {
 
   enum action action;
   
+  pchunksel selector;
+  std::list< std::list<point_surface> > lines_to_follow;
+  point_surface center;
+ 
   settings_t() {
     this->excludes.reset(new bool[mc::MaterialCount]);
     

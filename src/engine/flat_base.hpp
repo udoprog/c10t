@@ -19,7 +19,7 @@ public:
   {
   }
 
-  void render(level_ptr level, image_operations_ptr oper)
+  void render(level_ptr level, image_operations_ptr oper, mc::utils::level_coord nonrotated_coord)
   {
     const engine_settings& s = flat_base<C>::get_settings();
 

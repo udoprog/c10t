@@ -24,7 +24,6 @@ class chunk_selector;
 
 typedef boost::shared_ptr<chunk_selector> pchunksel;
 
-
 enum mode {
   Top = 0x0,
   Oblique = 0x1,
@@ -80,13 +79,17 @@ struct settings_t {
   bool use_split;
   bool write_js;
   bool write_json;
+  bool read_selector;
+
   boost::shared_array<bool> excludes;
+  
   color coordinate_color;
   color player_color;
   color sign_color;
   color ttf_color;
   color warp_color;
   enum mode mode;
+  
   fs::path cache_dir;
   fs::path output_log;
   fs::path output_path;
@@ -99,6 +102,8 @@ struct settings_t {
   fs::path world_path;
   fs::path write_json_path;
   fs::path write_js_path;
+
+
   fs::path engine_path;
   bool engine_use;
   int bottom;

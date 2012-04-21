@@ -11,6 +11,8 @@
 
 #include "global.hpp"
 
+using namespace std;
+
 class application_error : std::exception
 {
   private:
@@ -33,7 +35,9 @@ bool do_side_color_set(const char *set_str);
 // and fill in the min/max settings.
 bool parse_limits(const std::string& limits_str, settings_t& s);
 bool read_set(std::set<std::string>& set, const std::string s);
+bool parse_polyline(const string& limits_str, settings_t& s);
 
+ 
 bool do_write_palette(settings_t& s, const fs::path& path);
 bool do_read_palette(settings_t& s, const fs::path& path);
 

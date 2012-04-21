@@ -17,6 +17,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include <boost/tokenizer.hpp>
 #include <boost/foreach.hpp>
 #include <boost/range/sub_range.hpp>
 
@@ -508,31 +510,23 @@ bool generate_map(
     out << " --- SCANNING WORLD DIRECTORY --- " << endl;
     out << "world: " << path_string(world_path) << endl;
   }
-  
+
+
+  /* 
+   * building chunk and point selectors for the engines
+   */  
+
   pallchunksel selector(new all_criterium_chunk_selector()); // selector;
   pchunksel in_range_pred (new predicate_criterium<in_range_predicate> (in_range_predicate(s)));
-  
   selector->add_criterium(in_range_pred);
+  
   if (s.selector != 0 ) { selector->add_criterium(s.selector) ;};
+ 
+  // lines to restrict render were specified from the command line
 
-  panychunksel line_selector (new any_criterium_chunk_selector());
   if(s.lines_to_follow.size()>0){
         BOOST_FOREACH(std::list<point_surface> line_to_follow,s.lines_to_follow) {
-		typedef boost::iterator_range< std::list<point_surface>::iterator > ilist;
-		point_surface begin_line = line_to_follow.front(); 
-		
-		ilist points = boost::make_iterator_range(
-			(line_to_follow.begin())++, 
-			line_to_follow.end()
-		);
-
-		BOOST_FOREACH(point_surface end_line, points) {
-			is_chunk_on_line is(begin_line,end_line);
-			pchunksel p(new predicate_criterium<is_chunk_on_line>(is));
-			line_selector->add_criterium(p);
-			begin_line=end_line;
-	  	}
-
+		pchunksel line_selector = selector_factory::from_line_point_list(line_to_follow);
 		selector->add_criterium(line_selector);
 		out << "added line criterium" << endl;
 	}
@@ -558,23 +552,25 @@ bool generate_map(
         out_log << path_string(region->get_path()) << ": could not read header" << std::endl;
         continue;
       }
+      
       std::list<mc::utils::level_coord> coords;
 
       region->read_coords(coords);
 
       BOOST_FOREACH(mc::utils::level_coord c, coords) {
+
         mc::level_info::level_info_ptr level(new mc::level_info(region, c));
         mc::utils::level_coord coord = level->get_coord();
 
         if (! selector->select_level(coord)){
           ++filtered_levels;
           continue;
-        }
-        
+        }   
+
         mc::rotated_level_info rlevel =
           mc::rotated_level_info(level, coord.rotate(s.rotation),coord);
         
-        levels.insert( levels_map::value_type(rlevel.get_coord(), rlevel));
+        levels.insert(levels_map::value_type(rlevel.get_coord(), rlevel));
 
         world.update(rlevel.get_coord());
         reporter.add(1);
@@ -880,6 +876,8 @@ bool generate_map(
     image_ptr cropped = image::crop(work_in_progress, engine->get_min_x(), engine->get_max_x(), engine->get_min_y(), engine->get_max_y());
     work_in_progress = cropped;
   }
+  
+  
   
   if (use_any_database) {
     text::font_face font(s.ttf_path, s.ttf_size, s.ttf_color);
@@ -1390,7 +1388,6 @@ int do_colors(ostream& out) {
   
   return 0;
 }
-
 int main(int argc, char *argv[]){
   nullstream nil;
   ostream out(cout.rdbuf());

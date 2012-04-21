@@ -28,6 +28,7 @@ find_package(PNG 1.2 REQUIRED)
 find_package(FreeType 2 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost 1.46 COMPONENTS thread filesystem system REQUIRED)
+find_package(JsonSpirit)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${ZLIB_INCLUDE_DIR})
@@ -35,6 +36,7 @@ include_directories(${PNG_INCLUDE_DIR})
 include_directories(${FREETYPE_INCLUDE_DIR_freetype2})
 include_directories(${FREETYPE_INCLUDE_DIR_ft2build})
 include_directories(${Boost_INCLUDE_DIR})
+include_directories(${JSON_SPIRIT_PKGCONF_INCLUDE_DIRS})
 
 set(c10t_LIBRARIES
   dl
@@ -49,6 +51,7 @@ set(c10t_LIBRARIES
   ${CMAKE_THREAD_LIBS_INIT}
   ${Boost_LIBRARIES}
   ${FREETYPE_LIBRARY}
+  ${JSON_SPIRIT_PKGCONF_LIBRARY_DIRS}
   )
 
 if (BUILD_DEV_LIBS)

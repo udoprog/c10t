@@ -227,7 +227,8 @@ class is_chunk_on_line{
 
 class in_range_predicate {
 	settings_t & _s;
-	public:
+	
+        public:
 	in_range_predicate(settings_t & s):_s(s){
 	}
      	 
@@ -274,6 +275,7 @@ typedef predicate_criterium<in_circle_predicate> in_circle_criterium;
 class selector_factory {
 	public:
 	static pchunksel from_json_spec(std::string & );
+	static pchunksel from_line_point_list(const std::list<point_surface> & );
 };
 
 

@@ -4,7 +4,7 @@
 
 #include <boost/scoped_array.hpp>
 
-void oblique_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper, mc::utils::level_coord coord)
+void oblique_engine::render(level_ptr level, boost::shared_ptr<image_operations> oper , mc::utils::level_coord nonrotated_coord)
 {
   pos_t iw, ih;
 

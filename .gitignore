@@ -1,6 +1,8 @@
 *~
 *.pyc
 build
+data
+debug
 *.cmake
 *.a
 Makefile
@@ -9,9 +11,3 @@ CMakeCache.txt
 *.orig
 *.rej
 src/config.hpp
-data
-<<<<<<< HEAD
-=======
-debug
-
->>>>>>> don't remember :(

@@ -42,8 +42,8 @@ struct render_job {
   boost::shared_ptr<mc::level> level;
   boost::shared_ptr<engine_core> engine;
   mc::utils::level_coord coord;
-  fs::path path;
   mc::utils::level_coord nonrotated_coord;
+  fs::path path;
 };
 
 class renderer : public threadworker<render_job, render_result> {

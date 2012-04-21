@@ -1,19 +1,40 @@
 #include "selectors.hpp"
 
-#include "json_spirit/json_spirit_reader_template.h"
-#include "json_spirit/json_spirit_writer_template.h"
-
+#include <json_spirit_reader.h>
+#include <json_spirit_stream_reader.h>
 #include <boost/foreach.hpp>
 
 using namespace json_spirit;
 
+/*
+ * utility functions
+ */
 Interval get_chunk_coordinate(int chunk_coord){
 	return Interval(chunk_coord * 16, (chunk_coord + 1) * 16 - 1);
 }
 
+std::ostream & operator<<(std::ostream & out, Interval & i){
+	out << "[" << i.getmin() << "," << i.getmax() << "]" <<endl;
+	return out;
+}
+
+std::ostream & operator<<(std::ostream & out,point_surface  & p){
+	out << "[ x:" << p.x << ", z: " << p.z << "]" << endl;
+	return out;
+}
+
+template<typename Y>
+	Y sqr(Y val){ 
+		return val*val; 
+	}
+
+
+/*
+ * Predicte selectors implementations
+ */
+
 in_circle_predicate::in_circle_predicate(point_surface & ps, int _size):
 	size(_size),center(ps){
-
 }
 
 
@@ -27,39 +48,25 @@ bool in_circle_predicate::operator()(const mc::utils::level_coord & coord) {
 	int dist_x = x_chunk.distance(ps.x);
 	int dist_y = z_chunk.distance(ps.z);
 
-	// std::cout <<" in circle ?" <<std::endl;
 	distance_sqr = dist_x * dist_x + dist_y * dist_y ; 
 
-	// std::cout <<" d sqr :"<< distance_sqr << ", size" << size * size<<std::endl;
 	return distance_sqr <= size * size ; 
-	// distance of the chunk from the circle
 }
-
-template<typename Y>
-Y sqr(Y val)
-{ return val*val; }
 
 
 bool in_circle_predicate::operator()(const point & pt){
-	// std::cout << "in circle ?" << std::endl;
 	int distance_sqr = sqr(pt.x - center.x) + sqr ( pt.z - center.z);
-	// std::cout << pt.x << " " << pt.y << " "<< pt.z <<" " << distance_sqr << " " << sqr(size) << std::endl;
-	// std::cout << pt.x << " " << pt.z <<" " << distance_sqr << " " << sqr(size) << std::endl;
 	return distance_sqr <= sqr(size); 
 }
 
-std::ostream & operator<<(std::ostream & out, Interval & i){
-	out << "[" << i.getmin() << "," << i.getmax() << "]" <<endl;
-	return out;
-}
 
-std::ostream & operator<<(std::ostream & out,point_surface  & p){
-	out << "[ x:" << p.x << ", z: " << p.z << "]" << endl;
-	return out;
-}
+/*
+ * Chunk selector generators from JSon Spirit Values functions
+ */ 
 
 pchunksel analyse_json_unknown(wmValue & v, bool & error);
 
+// json point : needs (optionaly) a "X","Y","Z" triple of integers, defaults to 0.
 point analyse_point(wmValue & v, bool & error){
 	wmObject obj = v.get_obj();
 
@@ -67,7 +74,7 @@ point analyse_point(wmValue & v, bool & error){
 	int X,Y,Z ;
 	X=Y=Z=0;
 	std::wstring str_x(L"X") ; 
-	X = obj[std::wstring(str_x)].get_int(); // .get("X").get_int();
+	X = obj[std::wstring(str_x)].get_int();
 	std::wstring str_y(L"Y") ; 
 	Y = obj[std::wstring(str_y)].get_int();
 	std::wstring str_z(L"Z") ; 
@@ -76,8 +83,10 @@ point analyse_point(wmValue & v, bool & error){
 	return point(X,Y,Z);	
 }
 
+
+
+// circle : needed a "center" point and a "diameter" integer attributes
 pchunksel analyse_json_circle(wmValue & v, bool & error){
-	// pallchunksel sel(new all_criterium_chunk_selector());
 	std::cout << "analysing circle" << std::endl;
 	
 	point p = analyse_point(v.get_obj()[L"center"],error);
@@ -88,13 +97,14 @@ pchunksel analyse_json_circle(wmValue & v, bool & error){
 	return pchunksel(new in_circle_criterium(in_c)) ;
 }
 
+// not : needs a sub selector specification
 pchunksel analyse_json_not(wmValue & v, bool & error){
 	pchunksel inverse( analyse_json_unknown(v,error));
 	pchunksel sel(new not_in_criterium_chunk_selector(inverse));
 	return sel;
 }
 
-
+// and : needs an array of selectors
 pchunksel analyse_json_and (wmValue & v,bool & error){
 	std::cout << "analysing and" << std::endl ;
 	pallchunksel andsel( new all_criterium_chunk_selector());
@@ -105,28 +115,48 @@ pchunksel analyse_json_and (wmValue & v,bool & error){
 			}
 		break;
 		default:
-			cout << "erreur de parsing dans le \"and\" : attendu un tableau";
+			cout << "Json Spec error in \"and\" selector, table waited";
 		error=true;
 	}
 	return andsel;
 }
 
+// line : needs an array of point
 pchunksel analyse_json_line (wmValue & v,bool & error){
 	std::cout << "analysing line" << std::endl ;
-	panychunksel orsel( new any_criterium_chunk_selector());
+	std::list<point_surface> point_list;
 	switch (v.type()) {
 		case array_type:
-			BOOST_FOREACH(wmValue val, v.get_array() ){
-				orsel->add_criterium(analyse_json_unknown(val, error));
+			{
+				wmArray array = v.get_array();
+				if(array.size()<2){
+					cout << "Json Spec line error in \"line\" : not enough points in line, needs at list 2." << endl;
+					error=true;
+					break;
+				}
+				BOOST_FOREACH(wmValue val, array ){
+					point p = analyse_point(val,error);
+
+					if(error) 
+						break;
+
+					point_list.push_back(point_surface(p.x,p.z));
+				}
+				break;
 			}
-		break;
 		default:
-			cout << "JSon Spec Error in \"line\" : attendu un tableau"; error=true;
+			cout << "JSon Spec Error in \"line\" : Table waited."; 
+			error=true;
+		break;
 	}
-	return orsel;
+	pchunksel sel;
+	if(! error ) 
+		sel=selector_factory::from_line_point_list(point_list);
+	return sel;
 }
 
 
+// or : needs an array of selectors
 pchunksel analyse_json_or (wmValue & v,bool & error){
 	std::cout << "analysing unknown" << std::endl;
 	panychunksel anysel( new any_criterium_chunk_selector());
@@ -138,12 +168,13 @@ pchunksel analyse_json_or (wmValue & v,bool & error){
 
 		break;
 		default:
-		cout << "or error parsing" << std::endl;
+			cout << "JSon Spec Error parsing \"or\", Table waited." << std::endl;
 		error=true;
 	}
 	return anysel;
 }
 
+// unknown : guessing the type of selector and generating it accordingly.
 pchunksel analyse_json_unknown(wmValue & v, bool & error){
 	pchunksel sel;
 	wmObject obj;
@@ -180,11 +211,14 @@ pchunksel analyse_json_unknown(wmValue & v, bool & error){
 	return sel;
 }
 
+
+/* Chunk selector Factory : users API */
+
 pchunksel selector_factory::from_json_spec(std::string & filename){
 	std::wifstream json_file(filename.c_str());
 	bool error = false;
 	if (! json_file.good()){
-		std::cout << "bad json spec selector file : "<< filename <<" exiting" << std::endl; 
+		std::cout << "bad json spec selector path : "<< filename <<" " << std::endl <<"Exiting." << std::endl; 
 		exit(0);
 	}
 	wmValue value;
@@ -192,10 +226,30 @@ pchunksel selector_factory::from_json_spec(std::string & filename){
 	read_stream(json_file,value);
 	pchunksel p(analyse_json_and(value,error));
 	if(error){
-		std::cout << "erreur de parsing" << std::endl;
+		std::cout << "Error analysing Json file selector. Exiting." << std::endl;
 		exit(0);
 	}
 
 	return p;
+}
+
+pchunksel selector_factory::from_line_point_list(const std::list<point_surface> & point_list){
+	
+	typedef boost::iterator_range< std::list<point_surface>::const_iterator > ilist;
+	point_surface begin_line = point_list.front(); 
+	panychunksel line_selector(new any_criterium_chunk_selector());
+
+	ilist points = boost::make_iterator_range(
+		(point_list.begin())++, 
+		point_list.end()
+	);
+
+	BOOST_FOREACH(point_surface end_line, points) {
+		is_chunk_on_line is(begin_line,end_line);
+		pchunksel p(new predicate_criterium<is_chunk_on_line>(is));
+		line_selector->add_criterium(p);
+		begin_line=end_line;
+	}
+	return line_selector;
 }
 

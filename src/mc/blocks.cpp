@@ -35,11 +35,23 @@ namespace mc {
     }
   }
 
+  /*color get_color(int bt, int dv){
+    switch (bt){
+	case Wool:
+		return WoolColor[dv];
+	break;
+	case Step:
+		return StepColor[dv];
+	break;
+	default:
+		return MaterialColor[bt];
+    } 
+  }*/
+
   void initialize_constants() {
     MaterialName = new const char*[MaterialCount];
     MaterialColorData = new MaterialColorT[MaterialCount];
     MaterialModes = new enum MaterialMode[MaterialCount];
-
     for (int i = 0; i < MaterialCount; i++) {
       MaterialName[i] = DefaultName;
       MaterialColorData[i].top = new color[16];
@@ -48,7 +60,6 @@ namespace mc {
       set_color(i, 0, SharedDefaultColor);
       MaterialModes[i] = Block;
     }
-
     MaterialName[Air] = "Air";
     MaterialName[Stone] = "Stone";
     MaterialName[Grass] = "Grass";

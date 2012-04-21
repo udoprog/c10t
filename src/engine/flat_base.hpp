@@ -80,6 +80,11 @@ public:
 
             point p(x, abs_y, z);
 
+	    point pabs(x + nonrotated_coord.get_x() * 16, y, z + nonrotated_coord.get_z() *16);
+            if(!s.selector->select_block(pabs)){
+              continue;
+            }
+
             pos_t px;
             pos_t py;
 

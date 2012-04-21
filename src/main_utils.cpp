@@ -9,6 +9,8 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <iostream>
 #include <boost/foreach.hpp>
 
 #include "selectors.hpp"
@@ -163,11 +165,7 @@ bool parse_center_point(string point, settings_t & s){
 }
 
 bool read_json_selector_spec(string filename, settings_t & s){
-	bool error=false;
-
-	// s.selector_json_path = fs::path(filename);
 	s.selector = selector_factory::from_json_spec(filename);
-
 	return true;
 }
 
@@ -390,7 +388,7 @@ struct option long_options[] =
     {"oblique",                             no_argument,         0,       'q'},
     {"oblique-angle",                       no_argument,         0,       'y'},
     {"isometric",                           no_argument,         0,       'z'},
-    {"fatiso",                              no_argument,         0,       'Z'},
+    {"fatiso",                              no_argument,         0,       'Y'},
     {"cave-mode",                           no_argument,         0,       'c'},
     {"night",                               no_argument,         0,       'n'},
     {"heightmap",                           no_argument,         0,       'H'},
@@ -445,7 +443,6 @@ bool read_opts(settings_t& s, int argc, char* argv[])
   }
 
   bool exclude_all = false;
-
   while ((c = getopt_long(argc, argv, "DNvxcnHqzZyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:Y:u:J:", long_options, &option_index)) != -1)
   {
     blockid = -1;
@@ -729,7 +726,6 @@ bool read_opts(settings_t& s, int argc, char* argv[])
       }
       
       break;
-
     case 'b':
       s.bottom = atoi(optarg);
       
@@ -742,6 +738,10 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         return false;
       }
       break;
+    case 'u':
+      if (!parse_center_point(optarg, s)) {
+        return false;
+      }
     case 'R':
       s.max_radius = boost::lexical_cast<uint64_t>(optarg);
       
@@ -759,17 +759,12 @@ bool read_opts(settings_t& s, int argc, char* argv[])
          return false;
       }
       break;
+
     case 'Y':
       if (!parse_polyline(optarg, s)) {
         error << "Invalid polyline format";
         return false;
       }
-      break;
-    case 'u':
-      if (!parse_center_point(optarg, s)) {
-        return false;
-      }
-      
       break;
     case 'l':
       s.action = ListColors;

@@ -12,10 +12,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem.hpp>
 
-#include "global.hpp"
+#include "settings_t.hpp"
 #include "nbt/nbt.hpp"
-
-namespace fs = boost::filesystem;
 
 class players_db_exception : public std::exception {
   private:
@@ -29,7 +27,7 @@ class players_db_exception : public std::exception {
 
 class player {
 public:
-  fs::path path;
+  boost::filesystem::path path;
   std::string name;
   
   bool error;
@@ -39,15 +37,15 @@ public:
   int pos_c;
   nbt::Int xPos, yPos, zPos;
   
-  player(const fs::path path);
+  player(const boost::filesystem::path path);
 };
 
 class players_db {
   private:
-    const fs::path path;
+    const boost::filesystem::path path;
     const std::set<std::string> filter_set;
   public:
-    players_db(const fs::path path, std::set<std::string> set) : path(path), filter_set(set) {}
+    players_db(const boost::filesystem::path path, std::set<std::string> set);
     void read(std::vector<player>&) const;
 };
 

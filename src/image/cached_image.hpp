@@ -18,22 +18,6 @@
 namespace fs = boost::filesystem;
 
 class cached_image : public image_base {
-private:
-  const fs::path path;
-  std::fstream fs;
-  
-  pos_t l_total;
-  pos_t buffer_s;
-  bool buffer_set;
-  boost::scoped_array<color> buffer;
-  
-  pos_t buffer_w;
-  pos_t buffer_h;
-  pos_t buffer_x;
-  pos_t buffer_y;
-  
-  void read_buffer();
-  void flush_buffer();
 public:
   static const pos_t WRITE_SIZE = 4096 * 8;
   
@@ -51,11 +35,6 @@ public:
   {
     using namespace ::std;
     
-    streampos total =
-      boost::numeric_cast<streampos>(get_width()) *
-      boost::numeric_cast<streampos>(get_height()) *
-      sizeof(color);
-    
     streampos written = 0;
     
     streampos write_size = WRITE_SIZE;
@@ -63,10 +42,8 @@ public:
     boost::scoped_array<char> nil(new char[write_size]);
     ::memset(nil.get(), 0x0, write_size);
     
-    reporter.set_limit(total);
-    
-    while (written < total) {
-      streampos write = min(total, write_size);
+    while (written < size) {
+      streampos write = min(size, write_size);
       fs.write(nil.get(), write);
       written += write;
       
@@ -75,6 +52,8 @@ public:
     
     reporter.done(0);
   }
+
+  std::streampos get_size();
   
   void set_pixel(pos_t x, pos_t y, color&);
   void get_pixel(pos_t x, pos_t y, color&);
@@ -113,6 +92,23 @@ public:
    * Align whatever caching mechanism might be used to only expect blend requests for these areas.
    **/
   void align(pos_t x, pos_t y, pos_t w, pos_t h);
+private:
+  const fs::path path;
+  std::fstream fs;
+  
+  pos_t buffer_size;
+  bool buffer_set;
+  boost::scoped_array<color> buffer;
+
+  std::streampos size;
+
+  pos_t buffer_w;
+  pos_t buffer_h;
+  pos_t buffer_x;
+  pos_t buffer_y;
+
+  void read_buffer();
+  void flush_buffer();
 };
 
 #endif /* CACHED_IMAGE */

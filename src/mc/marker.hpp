@@ -20,7 +20,9 @@ namespace mc {
     int get_z();
   private:
     std::string text;
-    int x, y, z;
+    int x;
+    int y;
+    int z;
   };
 }
 

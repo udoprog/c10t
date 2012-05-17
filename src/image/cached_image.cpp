@@ -8,18 +8,32 @@
 cached_image::cached_image(const fs::path path, pos_t w, pos_t h, pos_t l_w, pos_t l_h) :
   image_base(w, h),
   path(path),
-  buffer_s((l_w + 1) * l_h),
+  buffer_size((l_w + 1) * l_h),
   buffer_set(false),
-  buffer(new color[buffer_s])
+  buffer(new color[buffer_size]),
+  buffer_w(0),
+  buffer_h(0),
+  buffer_x(0),
+  buffer_y(0)
 {
   using namespace ::std;
   fs.exceptions(ios::failbit | ios::badbit);
   fs.open(path.string().c_str(), ios::in | ios::out | ios::trunc);
+
+  this->size =
+    boost::numeric_cast<streampos>(get_width()) *
+    boost::numeric_cast<streampos>(get_height()) *
+    sizeof(color);
 }
 
 cached_image::~cached_image() {
   flush_buffer();
   fs.close();
+}
+
+std::streampos cached_image::get_size()
+{
+  return size;
 }
 
 // cached_image
@@ -87,7 +101,7 @@ void cached_image::blend_pixel(pos_t x, pos_t y, color &c)
   pos_t by = y - buffer_y;
   pos_t bp = bx + by * buffer_w;
 
-  if (x >= buffer_x && y >= buffer_y && bp < buffer_s) {
+  if (x >= buffer_x && y >= buffer_y && bp < buffer_size) {
     buffer[bp].blend(c);
   } else {
     // Blend pixels that are "out of (the buffer's) scope"
@@ -104,9 +118,9 @@ void cached_image::align(pos_t x, pos_t y, pos_t w, pos_t h)
   flush_buffer();
   
   // reallocate buffer when the current buffer is too small
-  if (buffer_s < w * h) {
+  if (buffer_size < w * h) {
     buffer.reset(new color[w * h]);
-    buffer_s = w * h;
+    buffer_size = w * h;
   }
   
   buffer_x = x, buffer_y = y;

@@ -1,6 +1,9 @@
 #include "altitude_graph.hpp"
 #include "text.hpp"
 
+using namespace std;
+namespace fs = boost::filesystem;
+
 #define BORDER_X 50
 #define BORDER_Y 50
 
@@ -55,14 +58,14 @@ void AltitudeGraph::createGraph()
     {
        x =  BORDER_X + x_step*i;
        y = _h - (int)( ( (float)altitudeRegistry[i] / (float)maxVal ) * (_h-BORDER_Y) );
-       graphImg->drawLine(x, y, x0, y0, fgcolor);
+       graphImg->draw_line(x, y, x0, y0, fgcolor);
        x0 = x;
        y0 = y;
     }
 
     // draw axis
-    graphImg->drawLine(BORDER_X, BORDER_Y, BORDER_X, _h, axiscolor);
-    graphImg->drawLine(BORDER_X, _h, _w, _h, axiscolor);
+    graphImg->draw_line(BORDER_X, BORDER_Y, BORDER_X, _h, axiscolor);
+    graphImg->draw_line(BORDER_X, _h, _w, _h, axiscolor);
 
     // draw axis labels
     for(int i=0; i < mc::MapY; i++)
@@ -80,7 +83,7 @@ void AltitudeGraph::createGraph()
         {
             size = 5;
         }
-        graphImg->drawLine(x, _h, x, _h+size, _axiscolor);
+        graphImg->draw_line(x, _h, x, _h+size, _axiscolor);
     }
 
     png_format::opt_type opts;

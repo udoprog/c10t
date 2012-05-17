@@ -266,202 +266,202 @@ int do_colors(ostream& out) {
 }
 
 int main(int argc, char *argv[]){
-  nullstream nil;
-  ostream out(cout.rdbuf());
-  ofstream out_log;
+    nullstream nil;
+    ostream out(cout.rdbuf());
+    ofstream out_log;
 
-  vector<string> hints;
-  
-  out.precision(2);
-  out.setf(ios_base::fixed);
-  
-  mc::initialize_constants();
+    vector<string> hints;
+    
+    out.precision(2);
+    out.setf(ios_base::fixed);
+    
+    mc::initialize_constants();
 
-  settings_t s;
-  
-  if (!read_opts(s, argc, argv)) {
-    goto exit_error;
-  }
+    settings_t s;
+    
+    if (!read_opts(s, argc, argv)) {
+        goto exit_error;
+    }
 
-  switch(s.action) {
+    switch(s.action) {
     case Version:
-      return do_version(out);
+        return do_version(out);
     case Help:
-      return do_help(out);
+        return do_help(out);
     case ListColors:
-      return do_colors(out);
+        return do_colors(out);
     case WritePalette:
-      if (!do_write_palette(s, s.palette_write_path)) {
-        goto exit_error;
-      }
-
-      out << "Successfully wrote palette to " << s.palette_write_path << endl;
-      return 0;
-    case None:
-      error << "No action specified, please type `c10t -h' for help";
-      goto exit_error;
-    default: break;
-  }
-
-  if (s.binary) {
-    out.rdbuf(out_log.rdbuf());
-  }
-
-  if (s.silent) {
-    out.rdbuf(nil.rdbuf());
-  }
-
-  if (!s.no_log) {
-    out_log.open(path_string(s.output_log).c_str());
-    out_log << "START LOG" << endl;
-  }
-  
-  if (s.memory_limit_default) {
-    hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
-  }
-  
-  if (s.cache_use) {
-    if (!fs::is_directory(s.cache_dir)) {
-      error << "Directory required for caching: " << path_string(s.cache_dir);
-      goto exit_error;
-    }
-    
-    // then create the subdirectory using cache_key
-    s.cache_dir = s.cache_dir / s.cache_key;
-    
-    if (!fs::is_directory(s.cache_dir)) {
-      out << "Creating directory for caching: " << path_string(s.cache_dir) << endl;
-      fs::create_directories(s.cache_dir);
-    }
-    
-    {
-      out << "Caching to directory: " << s.cache_dir << std::endl;
-      out << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")  << std::endl;
-    }
-  }
-  
-  if (!s.palette_read_path.empty()) {
-    if (!do_read_palette(s, s.palette_read_path)) {
-      goto exit_error;
-    }
-
-    out << "Sucessfully read palette from " << s.palette_read_path << endl;
-  }
-  
-  if (s.world_path.empty())
-  {
-    error << "You must specify a world to render using `-w <directory>'";
-    goto exit_error;
-  }
-  
-  if (!s.nocheck)
-  {
-    fs::path level_dat = s.world_path / "level.dat";
-    
-    if (!fs::exists(level_dat)) {
-      error << "Does not exist: " << path_string(level_dat);
-      goto exit_error;
-    }
-  }
-  
-  /* hell mode requires entering the subdirectory DIM-1 */
-  if (s.hellmode)
-  {
-    s.world_path = s.world_path / "DIM-1";
-  }
-
-  if (!fs::is_directory(s.world_path))
-  {
-    if (!fs::is_directory(s.world_path)) {
-      error << "Does not exist: " << path_string(s.world_path);
-      goto exit_error;
-    }
-  }
-  
-  switch(s.action) {
-    case GenerateWorld:
-      /* do some nice sanity checking prior to generating since this might
-       * catch a couple of errors */
-
-      if (s.output_path.empty()) {
-        error << "You must specify output file using `-o <file>'";
-        goto exit_error;
-      }
-      
-      if (!fs::is_directory(s.output_path.parent_path())) {
-        error << "Output directory does not exist: " << s.output_path;
-        goto exit_error;
-      }
-      
-      if (s.use_split) {
-        try {
-          boost::format(fs::basename(s.output_path)) % 0 % 0;
-        } catch (boost::io::too_many_args& e) {
-          error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
-          goto exit_error;
+        if (!do_write_palette(s, s.palette_write_path)) {
+            goto exit_error;
         }
-      }
-  
-      if (!generate_map(out, out_log, error, s, hints, s.world_path, s.output_path)) {
-        goto exit_error;
-      }
-      break;
-    case GenerateStatistics:
-      if (!generate_statistics(out, out_log, error, s, hints, s.world_path, s.statistics_path)) {
-        goto exit_error;
-      }
-      break;
+
+        out << "Successfully wrote palette to " << s.palette_write_path << endl;
+        return 0;
     default:
-      error << "No action specified";
-      goto exit_error;
-  }
-  
-  if (hints.size() > 0 || warnings.size() > 0) {
-    int i = 1;
-    
-    for (vector<std::string>::iterator it = warnings.begin(); it != warnings.end(); it++) {
-      out << "WARNING " << i++ << ": " << *it << endl;
-    }
-    
-    i = 1;
-    for (vector<std::string>::iterator it = hints.begin(); it != hints.end(); it++) {
-      out << "Hint " << i++ << ": " << *it << endl;
+    case None:
+        error << "No action specified, please type `c10t -h' for help";
+        goto exit_error;
     }
 
-    out << endl;
-  }
-  
-  if (s.binary) {
-    cout_end();
-  }
-  else {
-    out << argv[0] << ": all done!" << endl;
-  }
-  
-  mc::deinitialize_constants();
-  
-  if (!s.no_log) {
-    out << "Log written to " << path_string(s.output_log) << endl;
-    out_log << "END LOG" << endl;
-    out_log.close();
-  }
-  
-  return 0;
+    if (s.binary) {
+        out.rdbuf(out_log.rdbuf());
+    }
+
+    if (s.silent) {
+        out.rdbuf(nil.rdbuf());
+    }
+
+    if (!s.no_log) {
+        out_log.open(path_string(s.output_log).c_str());
+        out_log << "START LOG" << endl;
+    }
+    
+    if (s.memory_limit_default) {
+        hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
+    }
+    
+    if (s.cache_use) {
+        if (!fs::is_directory(s.cache_dir)) {
+            error << "Directory required for caching: " << path_string(s.cache_dir);
+            goto exit_error;
+        }
+        
+        // then create the subdirectory using cache_key
+        s.cache_dir = s.cache_dir / s.cache_key;
+        
+        if (!fs::is_directory(s.cache_dir)) {
+            out << "Creating directory for caching: " << path_string(s.cache_dir) << endl;
+            fs::create_directories(s.cache_dir);
+        }
+        
+        {
+            out << "Caching to directory: " << s.cache_dir << std::endl;
+            out << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")    << std::endl;
+        }
+    }
+    
+    if (!s.palette_read_path.empty()) {
+        if (!do_read_palette(s, s.palette_read_path)) {
+            goto exit_error;
+        }
+
+        out << "Sucessfully read palette from " << s.palette_read_path << endl;
+    }
+    
+    if (s.world_path.empty())
+    {
+        error << "You must specify a world to render using `-w <directory>'";
+        goto exit_error;
+    }
+    
+    if (!s.nocheck)
+    {
+        fs::path level_dat = s.world_path / "level.dat";
+        
+        if (!fs::exists(level_dat)) {
+            error << "Does not exist: " << path_string(level_dat);
+            goto exit_error;
+        }
+    }
+    
+    /* hell mode requires entering the subdirectory DIM-1 */
+    if (s.hellmode)
+    {
+        s.world_path = s.world_path / "DIM-1";
+    }
+
+    if (!fs::is_directory(s.world_path))
+    {
+        if (!fs::is_directory(s.world_path)) {
+            error << "Does not exist: " << path_string(s.world_path);
+            goto exit_error;
+        }
+    }
+    
+    switch(s.action) {
+    case GenerateWorld:
+        /* do some nice sanity checking prior to generating since this might
+         * catch a couple of errors */
+
+        if (s.output_path.empty()) {
+            error << "You must specify output file using `-o <file>'";
+            goto exit_error;
+        }
+        
+        if (!fs::is_directory(s.output_path.parent_path())) {
+            error << "Output directory does not exist: " << s.output_path;
+            goto exit_error;
+        }
+        
+        if (s.use_split) {
+            try {
+                boost::format(fs::basename(s.output_path)) % 0 % 0;
+            } catch (boost::io::too_many_args& e) {
+                error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
+                goto exit_error;
+            }
+        }
+
+        if (!generate_map(out, out_log, error, s, hints, s.world_path, s.output_path)) {
+            goto exit_error;
+        }
+        break;
+    case GenerateStatistics:
+        if (!generate_statistics(out, out_log, error, s, hints, s.world_path, s.statistics_path)) {
+            goto exit_error;
+        }
+        break;
+    default:
+        error << "No action specified";
+        goto exit_error;
+    }
+    
+    if (hints.size() > 0 || warnings.size() > 0) {
+        int i = 1;
+        
+        for (vector<std::string>::iterator it = warnings.begin(); it != warnings.end(); it++) {
+            out << "WARNING " << i++ << ": " << *it << endl;
+        }
+        
+        i = 1;
+        for (vector<std::string>::iterator it = hints.begin(); it != hints.end(); it++) {
+            out << "Hint " << i++ << ": " << *it << endl;
+        }
+
+        out << endl;
+    }
+    
+    if (s.binary) {
+        cout_end();
+    }
+    else {
+        out << argv[0] << ": all done!" << endl;
+    }
+    
+    mc::deinitialize_constants();
+    
+    if (!s.no_log) {
+        out << "Log written to " << path_string(s.output_log) << endl;
+        out_log << "END LOG" << endl;
+        out_log.close();
+    }
+    
+    return 0;
 exit_error:
-  if (s.binary) {
-    cout_error(error.str());
-  }
-  else {
-    out << argv[0] << ": " << error.str() << endl;
-  }
-  
-  mc::deinitialize_constants();
-  
-  if (!s.no_log) {
-    out << "Log written to " << path_string(s.output_log) << endl;
-    out_log << "END LOG" << endl;
-    out_log.close();
-  }
-  
-  return 1;
+    if (s.binary) {
+        cout_error(error.str());
+    }
+    else {
+        out << argv[0] << ": " << error.str() << endl;
+    }
+    
+    mc::deinitialize_constants();
+    
+    if (!s.no_log) {
+        out << "Log written to " << path_string(s.output_log) << endl;
+        out_log << "END LOG" << endl;
+        out_log.close();
+    }
+    
+    return 1;
 }

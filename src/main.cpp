@@ -297,10 +297,11 @@ int main(int argc, char *argv[]){
 
         out << "Successfully wrote palette to " << s.palette_write_path << endl;
         return 0;
-    default:
     case None:
         error << "No action specified, please type `c10t -h' for help";
         goto exit_error;
+    default:
+        break;
     }
 
     if (s.binary) {

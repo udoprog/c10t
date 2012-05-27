@@ -46,7 +46,7 @@ typedef std::map<mc::utils::level_coord, mc::rotated_level_info> levels_map;
 template<typename T>
 void dot(std::ostream& out, T total)
 {
-  if (total == 0x00)
+  if (total == (T) 0x00)
   {
     out << " done!";
   }

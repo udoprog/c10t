@@ -6,7 +6,7 @@ BIN=c10t
 
 include config.mk
 
-TARGET=x86_64-pc-linux-gnu
+TARGET=x86_64-linux-gnu
 USR=/usr
 
 local-package:

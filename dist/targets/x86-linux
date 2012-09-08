@@ -1,7 +1,7 @@
 ARCH=x86
 OS=linux
 
-TARGET=i686-pc-linux-gnu
+TARGET=i686-linux-gnu
 
 LDFLAGS=-pthread -static -static-libgcc
 BIN=c10t

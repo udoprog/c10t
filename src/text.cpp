@@ -60,7 +60,7 @@ namespace text {
     for (pos_t y = 0; y < s_bitmap_rows && y < image->get_height() + pen_y; y++) {
       for (pos_t x = 0; x < s_bitmap_width && x < image->get_width() + pen_x; x++) {
         color c(base);
-        c.a = buffer[x + y * bitmap->width];
+        c.a = color_i_to_f[buffer[x + y * bitmap->width]];
         image->safe_blend_pixel(pen_x + x, pen_y + y, c);
       }
     }

@@ -7,7 +7,7 @@ SOURCES=src/*.cpp src/nbt/*.cpp
 
 dist:
 	mkdir -p ${TARGET}
-	$(CC) ${SOURCES} -static -lz -lpng -lboost_thread -lpthread -o ${TARGET}/c10t
+	$(CC) ${SOURCES} -static -lz -lpng -lboost_thread-mt -lpthread -o ${TARGET}/c10t
 	cp README.md ${TARGET}/README
 	tar -cvf ${TARGET}.tar ${TARGET}
 	gzip ${TARGET}.tar

@@ -113,18 +113,27 @@ namespace nbt {
     const pos_t flush_buffer_size;
     char* flush_buffer;
     gzFile file;
+    enum
+    {
+      FILE_READY,
+      // Special case for resolving gzeof behaviour in empty test.
+      FLUSH_BUFFER_SINGLE_BYTE,
+      END_OF_FILE
+    } file_state;
   public:
     gzfile_buffer(const char* path)
       : path(path),
         flush_buffer_size(1024),
-        flush_buffer(new char[flush_buffer_size])
+        flush_buffer(new char[flush_buffer_size]),
+        file_state(FILE_READY)
     {
       file = gzopen(path, "rb");
     }
 
     virtual ~gzfile_buffer()
     {
-      if (file != NULL) {
+      if (file != NULL)
+      {
         gzclose(file);
       }
 
@@ -137,10 +146,19 @@ namespace nbt {
 
       pos_t read = 0;
 
-      while (read < len) {
+      if (file_state == FLUSH_BUFFER_SINGLE_BYTE)
+      {
+        c_target[0] = flush_buffer[0];
+        file_state = FILE_READY;
+        read++;
+      }
+
+      while (read < len)
+      {
         pos_t in = gzread(file, c_target + read, len - read);
 
-        if (in == 0) {
+        if (in == 0)
+        {
           return -1;
         }
 
@@ -152,7 +170,12 @@ namespace nbt {
 
     virtual pos_t tell()
     {
-      return gztell(file);
+    	  off_t offset = 0;
+    	  if (file_state == FLUSH_BUFFER_SINGLE_BYTE)
+    	  {
+    	    offset = -1;
+    	  }
+      return gztell(file) + offset;
     }
 
     virtual pos_t flush(pos_t len)
@@ -163,7 +186,8 @@ namespace nbt {
       {
         pos_t in = read(flush_buffer, std::min(len - flushed, flush_buffer_size));
 
-        if (in == -1) {
+        if (in == -1)
+        {
           return -1;
         }
 
@@ -175,6 +199,21 @@ namespace nbt {
 
     virtual bool empty()
     {
+      if (file_state == FILE_READY)
+      {
+      	 // gzeof will not return EOF until EOF has previously been detected
+      	 // during a read.
+      	 pos_t in = read(flush_buffer, 1);
+
+        if (in == -1)
+        {
+          file_state = END_OF_FILE;
+        }
+        else
+        {
+          file_state = FLUSH_BUFFER_SINGLE_BYTE;
+        }
+      }
       return gzeof(file) == 1;
     }
 

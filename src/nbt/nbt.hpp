@@ -170,11 +170,11 @@ namespace nbt {
 
     virtual pos_t tell()
     {
-    	  off_t offset = 0;
-    	  if (file_state == FLUSH_BUFFER_SINGLE_BYTE)
-    	  {
-    	    offset = -1;
-    	  }
+      off_t offset = 0;
+      if (file_state == FLUSH_BUFFER_SINGLE_BYTE)
+      {
+        offset = -1;
+      }
       return gztell(file) + offset;
     }
 

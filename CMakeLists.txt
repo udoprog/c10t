@@ -21,7 +21,8 @@ configure_file(${CMAKE_SOURCE_DIR}/src/config.hpp.cmake
 include_directories(${CMAKE_BINARY_DIR}/src)
 # output the binary to the build directory instead of in src/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(Boost_USE_STATIC_LIBS TRUE)
+
+OPTION(Boost_USE_STATIC_LIBS "Use static boost libs" TRUE)
 
 find_package(ZLIB REQUIRED)
 find_package(PNG 1.2 REQUIRED)

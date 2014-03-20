@@ -37,7 +37,7 @@ void block_rotation::transform_xz(int& x, int& z) {
 int block_rotation::get8(int y, int d) {
   int p = ((y * 16 + z) * 16 + x);
   if (!(p >= 0 && p < array->length)) return d;
-  return array->values[p];
+  return array->values[p] & 0xff;
 }
 
 int block_rotation::get4(int y, int d) {

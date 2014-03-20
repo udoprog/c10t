@@ -146,7 +146,7 @@ namespace nbt {
 
       pos_t read = 0;
 
-      if (file_state == FLUSH_BUFFER_SINGLE_BYTE)
+      if (file_state == FLUSH_BUFFER_SINGLE_BYTE && len > 0)
       {
         c_target[0] = flush_buffer[0];
         file_state = FILE_READY;

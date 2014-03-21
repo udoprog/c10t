@@ -104,10 +104,10 @@ bool parse_color(const string value, color& c)
         return false;
     }
     
-    c.r = cr;
-    c.g = cg;
-    c.b = cb;
-    c.a = ca;
+    c.r = color_i_to_f[cr];
+    c.g = color_i_to_f[cg];
+    c.b = color_i_to_f[cb];
+    c.a = color_i_to_f[ca];
     
     return true;
 }

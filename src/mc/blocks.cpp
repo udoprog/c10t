@@ -267,7 +267,7 @@ namespace mc {
     // NOTE: See below for Wool
     set_color(PistonMovedBlock, 0, SharedInvisColor);
     set_color(Dandelion, 0, color(255,255,0,255));
-    set_color(SmallFlowers, 0, color(255,0,0,255));
+    // NOTE: See below for SmallFlowers
     set_color(BrownMushroom, 0, color(200, 200, 0, 255));
     set_color(RedMushroom, 0, color(255, 0, 0, 255));
     set_color(GoldBlock, 0, color(0xff, 0xed, 0x8c, 0xff));
@@ -403,7 +403,7 @@ namespace mc {
     set_color(HardenedClay, 0, SharedInvisColor); // TODO
     set_color(CoalBlock, 0, SharedInvisColor); // TODO
     set_color(PackedIce, 0, SharedInvisColor); // TODO
-    set_color(LargeFlowers, 0, SharedInvisColor); // TODO
+    // NOTE: See below for LargeFlowers
     set_color(PineLeaves, 0, color(50,89,45,128));
     set_color(BirchLeaves, 0, color(94,167,84,128));
 
@@ -683,6 +683,18 @@ namespace mc {
     set_color(Wool, ColorDarkGreen, color(56, 77, 24, 255));
     set_color(Wool, ColorRed, color(164, 45, 41, 255));
 
+    // SmallFlowers (0x26)
+    // TODO Use different colors ...
+    set_color(SmallFlowers, SFlowersOxeyeDaisy, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersPoppy, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersBlueOrchid, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersAllium, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersAzureBluet, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersRedTulip, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersOrangeTulip, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersWhiteTulip, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersPinkTulip, get_color(Dandelion));
+
     // DoubleStoneSlab (0x2B)
     set_color(DoubleStoneSlab, SlabFullSandStone, get_color(Sandstone));
     set_color(DoubleStoneSlab, SlabStone, get_color(Stone));
@@ -712,7 +724,6 @@ namespace mc {
     set_color(StoneSlab, SlabReverse+SlabBrick, get_color(Brick));
     set_color(StoneSlab, SlabReverse+SlabStoneBrick, get_color(StoneBrick));
     set_color(StoneSlab, SlabReverse+SlabNether, get_color(NetherBrick));
-
 
     // StainedGlass (0x5F)
     set_color(StainedGlass, ColorBlack, color(27, 23, 23, 255));
@@ -831,6 +842,20 @@ namespace mc {
     set_color(Carpet, ColorBrown, get_color(Wool, ColorBrown));
     set_color(Carpet, ColorDarkGreen, get_color(Wool, ColorDarkGreen));
     set_color(Carpet, ColorRed, get_color(Wool, ColorRed));
+
+    // LargeFlowers (0xAF)
+    // TODO Use different colors ...
+    set_color(LargeFlowers, LFlowersTopHalf+1, color(255, 255, 255, 0), SharedInvisColor, false);
+    set_color(LargeFlowers, LFlowersTopHalf, color(255, 255, 255, 0), SharedInvisColor, false);
+    set_color(LargeFlowers, LFlowersPeony, get_color(Dandelion));
+    set_color(LargeFlowers, LFlowersSunflower, get_color(Dandelion));
+    set_color(LargeFlowers, LFlowersLilac, get_color(Dandelion));
+    set_color(LargeFlowers, LFlowersDoubleTallgrass, get_color(TallGrass));
+    set_color(LargeFlowers, LFlowersLargeFern, get_color(TallGrass));
+    set_color(LargeFlowers, LFlowersRoseBush, color(255, 0, 0, 255));
+    //set_color(LargeFlowers, LFlowersUnused1, color(255, 255, 255, 0), SharedInvisColor, false);
+    //set_color(LargeFlowers, LFlowersUnsued2, color(255, 255, 255, 0), SharedInvisColor, false);
+
   }
   
   void deinitialize_constants() {

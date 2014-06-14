@@ -265,6 +265,19 @@ namespace mc {
   };
 
   enum {
+    SFlowersPoppy = 0x00,
+    SFlowersBlueOrchid,
+    SFlowersAllium,
+    SFlowersAzureBluet,
+    SFlowersRedTulip,
+    SFlowersOrangeTulip,
+    SFlowersWhiteTulip,
+    SFlowersPinkTulip,
+    SFlowersOxeyeDaisy,
+    SFlowersColorCount
+  };
+
+  enum {
     SlabStone = 0x00,
     SlabSandstone,
     SlabWood,
@@ -300,6 +313,19 @@ namespace mc {
     Log2AcaciaBark,
     Log2DarkWoodBark,
     Log2ColorCount
+  };
+
+  enum {
+    LFlowersSunflower = 0x00,
+    LFlowersLilac,
+    LFlowersDoubleTallgrass,
+    LFlowersLargeFern,
+    LFlowersRoseBush,
+    LFlowersPeony,
+    LFlowersUnused1,
+    LFlowersUnsued2,
+    LFlowersTopHalf,
+    LFlowersColorCount
   };
 
   void initialize_constants();

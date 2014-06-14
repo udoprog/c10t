@@ -591,6 +591,16 @@ namespace mc {
      * Start with the highest index to reduce allocation time complexity 
      * The order of the following entries does not matter.
      */
+    // Dirt (0x03)
+    // TODO Use different colors?
+    set_color(Dirt, DirtPodzol, color(134, 96, 67, 255));
+    set_color(Dirt, DirtNormal, color(134, 96, 67, 255));
+    set_color(Dirt, DirtCoarse, color(134, 96, 67, 255));
+
+    // Sand (0x0C)
+    set_color(Sand, SandRed, color(186, 102, 44, 255));
+    set_color(Sand, SandNormal, color(218, 210, 158, 255));
+
     // Wool (0x23)
     set_color(Wool, ColorBlack, color(27, 23, 23, 255));
     set_color(Wool, ColorWhite, color(223, 223, 223, 255));

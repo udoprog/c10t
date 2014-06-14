@@ -195,6 +195,19 @@ namespace mc {
   };
 
   enum {
+    DirtNormal = 0x00,
+    DirtCoarse,
+    DirtPodzol,
+    DirtColorCount
+  };
+
+  enum {
+    SandNormal = 0x00,
+    SandRed,
+    SandColorCount
+  };
+
+  enum {
     ColorWhite = 0x00,
     ColorOrange,
     ColorMagenta,

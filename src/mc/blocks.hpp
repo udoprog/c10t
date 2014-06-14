@@ -195,23 +195,23 @@ namespace mc {
   };
 
   enum {
-    WoolWhite = 0x00,
-    WoolOrange,
-    WoolMagenta,
-    WoolLightBlue,
-    WoolYellow,
-    WoolLightGreen,
-    WoolPink,
-    WoolGray,
-    WoolLightGray,
-    WoolCyan,
-    WoolPurple,
-    WoolBlue,
-    WoolBrown,
-    WoolDarkGreen,
-    WoolRed,
-    WoolBlack,
-    WoolColorCount
+    ColorWhite = 0x00,
+    ColorOrange,
+    ColorMagenta,
+    ColorLightBlue,
+    ColorYellow,
+    ColorLightGreen,
+    ColorPink,
+    ColorGray,
+    ColorLightGray,
+    ColorCyan,
+    ColorPurple,
+    ColorBlue,
+    ColorBrown,
+    ColorDarkGreen,
+    ColorRed,
+    ColorBlack,
+    ColorColorCount
   };
 
   enum {

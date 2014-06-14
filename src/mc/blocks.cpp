@@ -272,8 +272,8 @@ namespace mc {
     set_color(RedMushroom, 0, color(255, 0, 0, 255));
     set_color(GoldBlock, 0, color(0xff, 0xed, 0x8c, 0xff));
     set_color(IronBlock, 0, color(0xd9, 0xd9, 0xd9, 0xff));
-    set_color(DoubleStoneSlab, 0, color(200,200,200,255));
-    set_color(StoneSlab, 0, color(200,200,200,255));
+    // NOTE: See below for DoubleStoneSlab
+    // NOTE: See below for StoneSlab
     set_color(Brick, 0, color(0x56, 0x23, 0x17, 0xff));
     set_color(TNT, 0, color(0xff, 0x0, 0x0, 0xff));
     set_color(Bookcase, 0, color(0xbf, 0xa9, 0x74, 0xff));
@@ -324,7 +324,7 @@ namespace mc {
     set_color(Cake, 0, color(228,205,206,255));
     set_color(RedstoneRepeaterOff, 0, get_color(RedstoneWire));
     set_color(RedstoneRepeaterOn, 0, get_color(RedstoneWire));
-    set_color(StainedGlass, 0, SharedInvisColor); // TODO
+    // NOTE: See below for StainedGlass
     set_color(Trapdoor, 0, get_color(WoodenPressurePlate));
     set_color(EggBlock, 0, get_color(Stone));
     set_color(StoneBrick, 0, get_color(Stone));
@@ -388,8 +388,8 @@ namespace mc {
     set_color(QuartzStairs, 0, SharedInvisColor); // TODO
     set_color(ActivatorRail, 0, SharedInvisColor); // TODO
     set_color(Dropper, 0, SharedInvisColor); // TODO
-    set_color(StainedClay, 0, SharedInvisColor); // TODO
-    set_color(StainedGlassPane, 0, SharedInvisColor); // TODO
+    // NOTE: See below for StainedClay
+    // NOTE: See below for StainedGlassPane
     set_color(Leaves2, 0, SharedInvisColor); // TODO
     set_color(Log2, 0, SharedInvisColor); // TODO
     set_color(AcaciaWoodStairs, 0, SharedInvisColor); // TODO
@@ -400,7 +400,6 @@ namespace mc {
     //set_color(UNUSED, 0, SharedInvisColor); // TODO
     //set_color(UNUSED, 0, SharedInvisColor); // TODO
     set_color(HayBlock, 0, SharedInvisColor); // TODO
-    set_color(Carpet, 0, SharedInvisColor); // TODO
     set_color(HardenedClay, 0, SharedInvisColor); // TODO
     set_color(CoalBlock, 0, SharedInvisColor); // TODO
     set_color(PackedIce, 0, SharedInvisColor); // TODO
@@ -592,32 +591,107 @@ namespace mc {
      * Start with the highest index to reduce allocation time complexity 
      * The order of the following entries does not matter.
      */
-    set_color(Wool, WoolBlack, color(27, 23, 23, 255));
-    set_color(Wool, WoolWhite, color(223, 223, 223, 255));
-    set_color(Wool, WoolOrange, color(234, 128, 55, 255));
-    set_color(Wool, WoolMagenta, color(191, 76, 201, 255));
-    set_color(Wool, WoolLightBlue, color(105, 139, 212, 255));
-    set_color(Wool, WoolYellow, color(195, 181, 28, 255));
-    set_color(Wool, WoolLightGreen, color(59, 189, 48, 255));
-    set_color(Wool, WoolPink, color(218, 132, 155, 255));
-    set_color(Wool, WoolGray, color(67, 67, 67, 255));
-    set_color(Wool, WoolLightGray, color(159, 166, 166, 255));
-    set_color(Wool, WoolCyan, color(39, 117, 150, 255));
-    set_color(Wool, WoolPurple, color(130, 54, 196, 255));
-    set_color(Wool, WoolBlue, color(39, 51, 154, 255));
-    set_color(Wool, WoolBrown, color(86, 51, 28, 255));
-    set_color(Wool, WoolDarkGreen, color(56, 77, 24, 255));
-    set_color(Wool, WoolRed, color(164, 45, 41, 255));
+    // Wool (0x23)
+    set_color(Wool, ColorBlack, color(27, 23, 23, 255));
+    set_color(Wool, ColorWhite, color(223, 223, 223, 255));
+    set_color(Wool, ColorOrange, color(234, 128, 55, 255));
+    set_color(Wool, ColorMagenta, color(191, 76, 201, 255));
+    set_color(Wool, ColorLightBlue, color(105, 139, 212, 255));
+    set_color(Wool, ColorYellow, color(195, 181, 28, 255));
+    set_color(Wool, ColorLightGreen, color(59, 189, 48, 255));
+    set_color(Wool, ColorPink, color(218, 132, 155, 255));
+    set_color(Wool, ColorGray, color(67, 67, 67, 255));
+    set_color(Wool, ColorLightGray, color(159, 166, 166, 255));
+    set_color(Wool, ColorCyan, color(39, 117, 150, 255));
+    set_color(Wool, ColorPurple, color(130, 54, 196, 255));
+    set_color(Wool, ColorBlue, color(39, 51, 154, 255));
+    set_color(Wool, ColorBrown, color(86, 51, 28, 255));
+    set_color(Wool, ColorDarkGreen, color(56, 77, 24, 255));
+    set_color(Wool, ColorRed, color(164, 45, 41, 255));
 
+    // DoubleStoneSlab (0x2B)
+    set_color(DoubleStoneSlab, StepCobblestone, get_color(Cobblestone));
+    set_color(DoubleStoneSlab, StepStone, get_color(Stone));
+    set_color(DoubleStoneSlab, StepSandstone, get_color(Sandstone));
+    set_color(DoubleStoneSlab, StepWood, get_color(Wood));
+
+    // StoneSlab (0x2C)
     set_color(StoneSlab, StepCobblestone, get_color(Cobblestone));
     set_color(StoneSlab, StepStone, get_color(Stone));
     set_color(StoneSlab, StepSandstone, get_color(Sandstone));
     set_color(StoneSlab, StepWood, get_color(Wood));
 
-    set_color(DoubleStoneSlab, StepCobblestone, get_color(Cobblestone));
-    set_color(DoubleStoneSlab, StepStone, get_color(Stone));
-    set_color(DoubleStoneSlab, StepSandstone, get_color(Sandstone));
-    set_color(DoubleStoneSlab, StepWood, get_color(Wood));
+    // StainedGlass (0x5F)
+    set_color(StainedGlass, ColorBlack, color(27, 23, 23, 255));
+    set_color(StainedGlass, ColorWhite, color(223, 223, 223, 255));
+    set_color(StainedGlass, ColorOrange, color(234, 128, 55, 255));
+    set_color(StainedGlass, ColorMagenta, color(191, 76, 201, 255));
+    set_color(StainedGlass, ColorLightBlue, color(105, 139, 212, 255));
+    set_color(StainedGlass, ColorYellow, color(195, 181, 28, 255));
+    set_color(StainedGlass, ColorLightGreen, color(59, 189, 48, 255));
+    set_color(StainedGlass, ColorPink, color(218, 132, 155, 255));
+    set_color(StainedGlass, ColorGray, color(67, 67, 67, 255));
+    set_color(StainedGlass, ColorLightGray, color(159, 166, 166, 255));
+    set_color(StainedGlass, ColorCyan, color(39, 117, 150, 255));
+    set_color(StainedGlass, ColorPurple, color(130, 54, 196, 255));
+    set_color(StainedGlass, ColorBlue, color(39, 51, 154, 255));
+    set_color(StainedGlass, ColorBrown, color(86, 51, 28, 255));
+    set_color(StainedGlass, ColorDarkGreen, color(56, 77, 24, 255));
+    set_color(StainedGlass, ColorRed, color(164, 45, 41, 255));
+
+    // StainedClay (0x9F)
+    set_color(StainedClay, ColorBlack, color(39, 24, 17, 255));
+    set_color(StainedClay, ColorWhite, color(210, 177, 161, 255));
+    set_color(StainedClay, ColorOrange, color(162, 82, 36, 255));
+    set_color(StainedClay, ColorMagenta, color(149, 89, 110, 255));
+    set_color(StainedClay, ColorLightBlue, color(117, 111, 140, 255));
+    set_color(StainedClay, ColorYellow, color(186, 134, 36, 255));
+    set_color(StainedClay, ColorLightGreen, color(102, 115, 48, 255));
+    set_color(StainedClay, ColorPink, color(163, 80, 80, 255));
+    set_color(StainedClay, ColorGray, color(57, 42, 35, 255));
+    set_color(StainedClay, ColorLightGray, color(135, 107, 98, 255));
+    set_color(StainedClay, ColorCyan, color(91, 95, 94, 255));
+    set_color(StainedClay, ColorPurple, color(119, 72, 87, 255));
+    set_color(StainedClay, ColorBlue, color(76, 62, 92, 255));
+    set_color(StainedClay, ColorBrown, color(77, 51, 36, 255));
+    set_color(StainedClay, ColorDarkGreen, color(76, 84, 43, 255));
+    set_color(StainedClay, ColorRed, color(142, 61, 47, 255));
+
+    // StainedGlassPane (0xA0)
+    set_color(StainedGlassPane, ColorBlack, get_color(StainedGlass, ColorBlack));
+    set_color(StainedGlassPane, ColorWhite, get_color(StainedGlass, ColorWhite));
+    set_color(StainedGlassPane, ColorOrange, get_color(StainedGlass, ColorOrange));
+    set_color(StainedGlassPane, ColorMagenta, get_color(StainedGlass, ColorMagenta));
+    set_color(StainedGlassPane, ColorLightBlue, get_color(StainedGlass, ColorLightBlue));
+    set_color(StainedGlassPane, ColorYellow, get_color(StainedGlass, ColorYellow));
+    set_color(StainedGlassPane, ColorLightGreen, get_color(StainedGlass, ColorLightGreen));
+    set_color(StainedGlassPane, ColorPink, get_color(StainedGlass, ColorPink));
+    set_color(StainedGlassPane, ColorGray, get_color(StainedGlass, ColorGray));
+    set_color(StainedGlassPane, ColorLightGray, get_color(StainedGlass, ColorLightGray));
+    set_color(StainedGlassPane, ColorCyan, get_color(StainedGlass, ColorCyan));
+    set_color(StainedGlassPane, ColorPurple, get_color(StainedGlass, ColorPurple));
+    set_color(StainedGlassPane, ColorBlue, get_color(StainedGlass, ColorBlue));
+    set_color(StainedGlassPane, ColorBrown, get_color(StainedGlass, ColorBrown));
+    set_color(StainedGlassPane, ColorDarkGreen, get_color(StainedGlass, ColorDarkGreen));
+    set_color(StainedGlassPane, ColorRed, get_color(StainedGlass, ColorRed));
+
+    // Carpet (0xAB)
+    set_color(Carpet, ColorBlack, get_color(Wool, ColorBlack));
+    set_color(Carpet, ColorWhite, get_color(Wool, ColorWhite));
+    set_color(Carpet, ColorOrange, get_color(Wool, ColorOrange));
+    set_color(Carpet, ColorMagenta, get_color(Wool, ColorMagenta));
+    set_color(Carpet, ColorLightBlue, get_color(Wool, ColorLightBlue));
+    set_color(Carpet, ColorYellow, get_color(Wool, ColorYellow));
+    set_color(Carpet, ColorLightGreen, get_color(Wool, ColorLightGreen));
+    set_color(Carpet, ColorPink, get_color(Wool, ColorPink));
+    set_color(Carpet, ColorGray, get_color(Wool, ColorGray));
+    set_color(Carpet, ColorLightGray, get_color(Wool, ColorLightGray));
+    set_color(Carpet, ColorCyan, get_color(Wool, ColorCyan));
+    set_color(Carpet, ColorPurple, get_color(Wool, ColorPurple));
+    set_color(Carpet, ColorBlue, get_color(Wool, ColorBlue));
+    set_color(Carpet, ColorBrown, get_color(Wool, ColorBrown));
+    set_color(Carpet, ColorDarkGreen, get_color(Wool, ColorDarkGreen));
+    set_color(Carpet, ColorRed, get_color(Wool, ColorRed));
   }
   
   void deinitialize_constants() {

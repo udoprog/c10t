@@ -234,7 +234,7 @@ namespace mc {
     set_color(Dirt, 0, get_side_color(Grass));
     set_color(Cobblestone, 0, color(100,100,100,255));
     set_color(Wood, 0, color(157,128,79,255));
-    set_color(Sapling, 0, color(120,120,120,0));
+    // NOTE: See below for Sapling
     set_color(Bedrock, 0, color(84,84,84,255));
     set_color(Water, 0, color(56,68,127,64), SharedInvisColor, false);
     set_color(StationaryWater, 0, color(56,68,127,64), SharedInvisColor, false);
@@ -282,7 +282,7 @@ namespace mc {
     set_color(Torch, 0, color(0xff, 0xe1, 0x60,0xd0), SharedInvisColor, false);
     set_color(Fire, 0, color(0xe0, 0xae, 0x15, 0xff));
     set_color(MobSpawner, 0, color(0xff, 0xff, 0xff, 0x00));
-    set_color(OakWoodStairs, 0, color(0xbf, 0xa9, 0x74, 0xff));
+    // NOTE: See below for OakWoodStairs
     set_color(Chest, 0, color(0xbf, 0x87, 0x02, 0xff));
     set_color(RedstoneWire, 0, color(0x6f, 0x01, 0x01, 0xff));
     set_color(DiamondOre, 0, color(129,140,143,255));
@@ -363,9 +363,9 @@ namespace mc {
     set_color(TripwireHook, 0, SharedInvisColor); // TODO
     set_color(Tripwire, 0, SharedInvisColor); // TODO
     set_color(EmeraldBlock, 0, SharedInvisColor); // TODO
-    set_color(SpruceWoodStairs, 0, SharedInvisColor); // TODO
-    set_color(BirchWoodStairs, 0, SharedInvisColor); // TODO
-    set_color(JungleWoodStairs, 0, SharedInvisColor); // TODO
+    // NOTE: See below for SpruceWoodStairs
+    // NOTE: See below for BirchWoodStairs
+    // NOTE: See below for JungleWoodStairs
     set_color(CommandBlock, 0, SharedInvisColor); // TODO
     set_color(Beacon, 0, SharedInvisColor); // TODO
     set_color(CobblestoneWall, 0, SharedInvisColor); // TODO
@@ -392,8 +392,8 @@ namespace mc {
     // NOTE: See below for StainedGlassPane
     set_color(Leaves2, 0, SharedInvisColor); // TODO
     set_color(Log2, 0, SharedInvisColor); // TODO
-    set_color(AcaciaWoodStairs, 0, SharedInvisColor); // TODO
-    set_color(DarkOakWoodStairs, 0, SharedInvisColor); // TODO
+    // NOTE: See below for AcaciaWoodStairs
+    // NOTE: See below for DarkOakWoodStairs
     //set_color(SlimeBlock, 0, SharedInvisColor); // TODO
     //set_color(Barrier, 0, SharedInvisColor); // TODO
     //set_color(IronTrapdoor, 0, SharedInvisColor); // TODO
@@ -597,9 +597,54 @@ namespace mc {
     set_color(Dirt, DirtNormal, color(134, 96, 67, 255));
     set_color(Dirt, DirtCoarse, color(134, 96, 67, 255));
 
+    // Wood (0x05)
+    // TODO Use different colors?
+    set_color(Wood, WoodDarkOak, color(157,128,79,255));
+    set_color(Wood, WoodOak, color(157,128,79,255));
+    set_color(Wood, WoodSpruce, color(157,128,79,255));
+    set_color(Wood, WoodBirch, color(157,128,79,255));
+    set_color(Wood, WoodJungle, color(157,128,79,255));
+    set_color(Wood, WoodAcacia, color(157,128,79,255));
+
+    // The stairs dependent on the wood color.
+    set_color(SpruceWoodStairs, 0, get_color(Wood, WoodSpruce));
+    set_color(OakWoodStairs, 0, get_color(Wood, WoodOak));
+    set_color(BirchWoodStairs, 0, get_color(Wood, WoodBirch));
+    set_color(JungleWoodStairs, 0, get_color(Wood, WoodJungle));
+    set_color(AcaciaWoodStairs, 0, get_color(Wood, WoodAcacia));
+    set_color(DarkOakWoodStairs, 0, get_color(Wood, WoodDarkOak));
+
+    // Sapling (0x06)
+    // TODO Use different colors?
+    set_color(Sapling, WoodDarkOak, color(120,120,120,0));
+    set_color(Sapling, WoodOak, color(120,120,120,0));
+    set_color(Sapling, WoodSpruce, color(120,120,120,0));
+    set_color(Sapling, WoodBirch, color(120,120,120,0));
+    set_color(Sapling, WoodJungle, color(120,120,120,0));
+    set_color(Sapling, WoodAcacia, color(120,120,120,0));
+
     // Sand (0x0C)
     set_color(Sand, SandRed, color(186, 102, 44, 255));
     set_color(Sand, SandNormal, color(218, 210, 158, 255));
+
+    // Log (0x11)
+    // TODO Use different colors?
+    set_color(Log, LogJungleBark, color(102,81,51,255));
+    set_color(Log, LogOakBark, color(102,81,51,255));
+    set_color(Log, LogSpruceBark, color(102,81,51,255));
+    set_color(Log, LogBirchBark, color(102,81,51,255));
+    set_color(Log, LogOakUp, color(102,81,51,255),  get_color(Log, LogOakBark));
+    set_color(Log, LogSpruceUp, color(102,81,51,255), get_color(Log, LogSpruceBark));
+    set_color(Log, LogBirchUp, color(102,81,51,255), get_color(Log, LogBirchBark));
+    set_color(Log, LogJungleUp, color(102,81,51,255), get_color(Log, LogJungleBark));
+    set_color(Log, LogOakEast, get_side_color(Log, LogOakUp), get_color(Log, LogOakUp));
+    set_color(Log, LogSpruceEast, get_side_color(Log, LogSpruceUp), get_color(Log, LogSpruceUp));
+    set_color(Log, LogBirchEast, get_side_color(Log, LogBirchUp), get_color(Log, LogBirchUp));
+    set_color(Log, LogJungleEast, get_side_color(Log, LogJungleUp), get_color(Log, LogJungleUp));
+    set_color(Log, LogOakNorth, get_side_color(Log, LogOakUp), get_color(Log, LogOakUp));
+    set_color(Log, LogSpruceNorth, get_side_color(Log, LogSpruceUp), get_color(Log, LogSpruceUp));
+    set_color(Log, LogBirchNorth, get_side_color(Log, LogBirchUp), get_color(Log, LogBirchUp));
+    set_color(Log, LogJungleNorth, get_side_color(Log, LogJungleUp), get_color(Log, LogJungleUp));
 
     // Wool (0x23)
     set_color(Wool, ColorBlack, color(27, 23, 23, 255));
@@ -684,6 +729,17 @@ namespace mc {
     set_color(StainedGlassPane, ColorBrown, get_color(StainedGlass, ColorBrown));
     set_color(StainedGlassPane, ColorDarkGreen, get_color(StainedGlass, ColorDarkGreen));
     set_color(StainedGlassPane, ColorRed, get_color(StainedGlass, ColorRed));
+
+    // Log2 (0xA2)
+    // TODO Use different colors?
+    set_color(Log2, Log2DarkWoodBark, get_color(Log, LogOakBark));
+    set_color(Log2, Log2AcaciaBark, get_color(Log, LogOakBark));
+    set_color(Log2, Log2AcaciaUp, get_color(Log, LogOakUp), get_color(Log2, Log2AcaciaBark));
+    set_color(Log2, Log2DarkWoodUp, get_color(Log, LogOakUp), get_color(Log2, Log2DarkWoodBark));
+    set_color(Log2, Log2AcaciaEast, get_color(Log2, Log2AcaciaBark), get_color(Log2, Log2AcaciaUp));
+    set_color(Log2, Log2DarkWoodEast, get_color(Log2, Log2DarkWoodBark), get_color(Log2, Log2DarkWoodUp));
+    set_color(Log2, Log2AcaciaNorth, get_color(Log2, Log2AcaciaBark), get_color(Log2, Log2AcaciaUp));
+    set_color(Log2, Log2DarkWoodNorth, get_color(Log2, Log2DarkWoodBark), get_color(Log2, Log2DarkWoodUp));
 
     // Carpet (0xAB)
     set_color(Carpet, ColorBlack, get_color(Wool, ColorBlack));

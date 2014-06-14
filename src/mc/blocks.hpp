@@ -202,9 +202,39 @@ namespace mc {
   };
 
   enum {
+    WoodOak = 0x00,
+    WoodSpruce,
+    WoodBirch,
+    WoodJungle,
+    WoodAcacia,
+    WoodDarkOak,
+    WoodColorCount
+  };
+
+  enum {
     SandNormal = 0x00,
     SandRed,
     SandColorCount
+  };
+
+  enum {
+    LogOakUp = 0x00,
+    LogSpruceUp,
+    LogBirchUp,
+    LogJungleUp,
+    LogOakEast,
+    LogSpruceEast,
+    LogBirchEast,
+    LogJungleEast,
+    LogOakNorth,
+    LogSpruceNorth,
+    LogBirchNorth,
+    LogJungleNorth,
+    LogOakBark,
+    LogSpruceBark,
+    LogBirchBark,
+    LogJungleBark,
+    LogColorCount
   };
 
   enum {
@@ -234,7 +264,19 @@ namespace mc {
     StepCobblestone,
     StepColorCount
   };
-  
+
+  enum {
+    Log2AcaciaUp = 0x00,
+    Log2DarkWoodUp,
+    Log2AcaciaEast,
+    Log2DarkWoodEast,
+    Log2AcaciaNorth,
+    Log2DarkWoodNorth,
+    Log2AcaciaBark,
+    Log2DarkWoodBark,
+    Log2ColorCount
+  };
+
   void initialize_constants();
   void deinitialize_constants();
 

@@ -238,6 +238,13 @@ namespace mc {
   };
 
   enum {
+    LeavesNormal = 0x00,
+    LeavesNoDecay = 0x04,
+    LeavesCheckDecay = 0x08,
+    LeavesNoDecayCheckDecay = 0x12
+  };
+
+  enum {
     ColorWhite = 0x00,
     ColorOrange,
     ColorMagenta,
@@ -263,6 +270,18 @@ namespace mc {
     StepWood,
     StepCobblestone,
     StepColorCount
+  };
+
+  enum {
+    WoodenSlabNormal = 0x00,
+    WoodenSlabReverse = 0x08
+  };
+
+  enum {
+    Leaves2Normal = 0x00 - WoodAcacia,
+    Leaves2NoDecay = 0x04 - WoodAcacia,
+    Leaves2CheckDecay = 0x08 - WoodAcacia,
+    Leaves2NoDecayCheckDecay = 0x12 - WoodAcacia
   };
 
   enum {

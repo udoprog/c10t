@@ -79,19 +79,21 @@ namespace mc {
     MaterialName[PoweredRail] = "PoweredRail";
     MaterialName[DetectorRail] = "DetectorRail";
     MaterialName[StickyPistonBase] = "StickyPistonBase";
+    MaterialName[Cobweb] = "Cobweb";
     MaterialName[TallGrass] = "TallGrass";
     MaterialName[DeadShrub] = "DeadShrub";
     MaterialName[PistonBase] = "PistonBase";
     MaterialName[PistonPlatform] = "PistonPlatform";
     MaterialName[Wool] = "Wool";
-    MaterialName[YellowFlower] = "YellowFlower";
-    MaterialName[RedRose] = "RedRose";
+    MaterialName[PistonMovedBlock] = "PistonMovedBlock";
+    MaterialName[Dandelion] = "Dandelion";
+    MaterialName[SmallFlowers] = "SmallFlowers";
     MaterialName[BrownMushroom] = "BrownMushroom";
     MaterialName[RedMushroom] = "RedMushroom";
     MaterialName[GoldBlock] = "GoldBlock";
     MaterialName[IronBlock] = "IronBlock";
-    MaterialName[DoubleStep] = "DoubleStep";
-    MaterialName[Step] = "Step";
+    MaterialName[DoubleStoneSlab] = "DoubleStoneSlab";
+    MaterialName[StoneSlab] = "StoneSlab";
     MaterialName[Brick] = "Brick";
     MaterialName[TNT] = "TNT";
     MaterialName[Bookcase] = "Bookcase";
@@ -100,7 +102,7 @@ namespace mc {
     MaterialName[Torch] = "Torch";
     MaterialName[Fire] = "Fire";
     MaterialName[MobSpawner] = "MobSpawner";
-    MaterialName[WoodenStairs] = "WoodenStairs";
+    MaterialName[OakWoodStairs] = "OakWoodStairs";
     MaterialName[Chest] = "Chest";
     MaterialName[RedstoneWire] = "RedstoneWire";
     MaterialName[DiamondOre] = "DiamondOre";
@@ -137,21 +139,27 @@ namespace mc {
     MaterialName[Bloodstone] = "Bloodstone";
     MaterialName[Slowsand] = "Slowsand";
     MaterialName[Lightstone] = "Lightstone";
-    MaterialName[Trapdoor] = "Trapdoor";
     MaterialName[Portal] = "Portal";
     MaterialName[Jackolantern] = "Jackolantern";
+    MaterialName[Cake] = "Cake";
     MaterialName[RedstoneRepeaterOn] = "RedstoneRepeaterOn";
     MaterialName[RedstoneRepeaterOff] = "RedstoneRepeaterOff";
-    MaterialName[Cake] = "Cake";
+    MaterialName[StainedGlass] = "StainedGlass";
+    MaterialName[Trapdoor] = "Trapdoor";
     MaterialName[EggBlock] = "EggBlock";
     MaterialName[StoneBrick] = "StoneBrick";
-    MaterialName[HugeRedMushroom] = "HugeRedMushroom";
     MaterialName[HugeBrownMushroom] = "HugeBrownMushroom";
+    MaterialName[HugeRedMushroom] = "HugeRedMushroom";
     MaterialName[IronBars] = "IronBars";
     MaterialName[GlassPane] = "GlassPane";
     MaterialName[Melon] = "Melon";
     MaterialName[PumpkinStem] = "PumpkinStem";
     MaterialName[MelonStem] = "MelonStem";
+    MaterialName[Vines] = "Vines";
+    MaterialName[FenceGate] = "FenceGate";
+    MaterialName[BrickStairs] = "BrickStairs";
+    MaterialName[StoneBrickStairs] = "StoneBrickStairs";
+    MaterialName[Mycelium] = "Mycelium";
     MaterialName[LilyPad] = "LilyPad";
     MaterialName[NetherBrick] = "NetherBrick";
     MaterialName[NetherBrickFence] = "NetherBrickFence";
@@ -164,18 +172,66 @@ namespace mc {
     MaterialName[EndPortalFrame] = "EndPortalFrame";
     MaterialName[EndStone] = "EndStone";
     MaterialName[DragonEgg] = "DragonEgg";
-    MaterialName[Mycelium] = "Mycelium";
-    MaterialName[Vines] = "Vines";
-    MaterialName[FenceGate] = "FenceGate";
-    MaterialName[BrickStairs] = "BrickStairs";
-    MaterialName[StoneBrickStairs] = "StoneBrickStairs";
+    MaterialName[RedstoneLampOff] = "RedstoneLampOff";
+    MaterialName[RedstoneLampOn] = "RedstoneLampOn";
+    MaterialName[WoodenDoubleSlab] = "WoodenDoubleSlab";
+    MaterialName[WoodenSlab] = "WoodenSlab";
+    MaterialName[Cocoa] = "Cocoa";
+    MaterialName[SandstoneStairs] = "SandstoneStairs";
+    MaterialName[EmeraldOre] = "EmeraldOre";
+    MaterialName[EmeraldChest] = "EmeraldChest";
+    MaterialName[TripwireHook] = "TripwireHook";
+    MaterialName[Tripwire] = "Tripwire";
+    MaterialName[EmeraldBlock] = "EmeraldBlock";
+    MaterialName[SpruceWoodStairs] = "SpruceWoodStairs";
+    MaterialName[BirchWoodStairs] = "BirchWoodStairs";
+    MaterialName[JungleWoodStairs] = "JungleWoodStairs";
+    MaterialName[CommandBlock] = "CommandBlock";
+    MaterialName[Beacon] = "Beacon";
+    MaterialName[CobblestoneWall] = "CobblestoneWall";
+    MaterialName[FlowerPot] = "FlowerPot";
+    MaterialName[Carrots] = "Carrots";
+    MaterialName[Potatoes] = "Potatoes";
+    MaterialName[WoodenButton] = "WoodenButton";
+    MaterialName[MobHead] = "MobHead";
+    MaterialName[Anvil] = "Anvil";
+    MaterialName[TrappedChest] = "TrappedChest";
+    MaterialName[WeightedPressurePlateLight] = "WeightedPressurePlateLight";
+    MaterialName[WeightedPressurePlateHeavy] = "WeightedPressurePlateHeavy";
+    MaterialName[RedstoneComparatorOff] = "RedstoneComparatorOff";
+    MaterialName[RedstoneComparatorOn] = "RedstoneComparatorOn";
+    MaterialName[DaylightSensor] = "DaylightSensor";
+    MaterialName[RedstoneBlock] = "RedstoneBlock";
+    MaterialName[NetherQuartzOre] = "QuartzOre";
+    MaterialName[Hopper] = "Hopper";
+    MaterialName[QuartzBlock] = "QuartzBlock";
+    MaterialName[QuartzStairs] = "QuartzStairs";
+    MaterialName[ActivatorRail] = "ActivatorRail";
+    MaterialName[Dropper] = "Dropper";
+    MaterialName[StainedClay] = "StainedClay";
+    MaterialName[StainedGlassPane] = "StainedGlassPane";
+    MaterialName[Leaves2] = "Leaves2";
+    MaterialName[Log2] = "Log2";
+    MaterialName[AcaciaWoodStairs] = "AcaciaWoodStairs";
+    MaterialName[DarkOakWoodStairs] = "DarkOakWoodStairs";
+    //MaterialName[SlimeBlock] = "SlimeBlock";
+    //MaterialName[Barrier] = "Barrier";
+    //MaterialName[IronTrapdoor] = "IronTrapdoor";
+    //MaterialName[UNUSED] = "UNUSED";
+    //MaterialName[UNUSED] = "UNUSED";
+    MaterialName[HayBlock] = "HayBlock";
+    MaterialName[Carpet] = "Carpet";
+    MaterialName[HardenedClay] = "HardenedClay";
+    MaterialName[CoalBlock] = "CoalBlock";
+    MaterialName[PackedIce] = "PackedIce";
+    MaterialName[LargeFlowers] = "LargeFlowers";
     MaterialName[PineLeaves] = "PineLeaves";
     MaterialName[BirchLeaves] = "BirchLeaves";
-    
+
     set_color(Air, 0, color(255,255,255,0), SharedInvisColor, false);
     set_color(Stone, 0, color(128,128,128,255));
-    set_color(Dirt, 0, color(134,96,67,255));
-    set_color(Grass, 0, color(120,172,70,255), get_color(Dirt));
+    set_color(Grass, 0, color(120,172,70,255), color(134,96,67,255));
+    set_color(Dirt, 0, get_side_color(Grass));
     set_color(Cobblestone, 0, color(100,100,100,255));
     set_color(Wood, 0, color(157,128,79,255));
     set_color(Sapling, 0, color(120,120,120,0));
@@ -202,19 +258,22 @@ namespace mc {
     set_color(PoweredRail, 0, color(120, 120, 120, 128), color(255,220,0,128));
     set_color(DetectorRail, 0, get_color(PoweredRail), color(230,0,0,128));
     set_color(StickyPistonBase, 0, color(157,192,79,255));
+    set_color(Cobweb, 0, SharedInvisColor); // TODO
     set_color(TallGrass, 0,
       color(0x90, 0xbc, 0x27, 0xff), color(0x90, 0xbc, 0x27, 0xff));
     set_color(DeadShrub, 0, get_color(Wood));
     set_color(PistonBase, 0, get_color(Wood));
     set_color(PistonPlatform, 0, get_color(Air));
-    set_color(YellowFlower, 0, color(255,255,0,255));
-    set_color(RedRose, 0, color(255,0,0,255));
+    // NOTE: See below for Wool
+    set_color(PistonMovedBlock, 0, SharedInvisColor);
+    set_color(Dandelion, 0, color(255,255,0,255));
+    set_color(SmallFlowers, 0, color(255,0,0,255));
     set_color(BrownMushroom, 0, color(200, 200, 0, 255));
     set_color(RedMushroom, 0, color(255, 0, 0, 255));
     set_color(GoldBlock, 0, color(0xff, 0xed, 0x8c, 0xff));
     set_color(IronBlock, 0, color(0xd9, 0xd9, 0xd9, 0xff));
-    set_color(DoubleStep, 0, color(200,200,200,255));
-    set_color(Step, 0, color(200,200,200,255));
+    set_color(DoubleStoneSlab, 0, color(200,200,200,255));
+    set_color(StoneSlab, 0, color(200,200,200,255));
     set_color(Brick, 0, color(0x56, 0x23, 0x17, 0xff));
     set_color(TNT, 0, color(0xff, 0x0, 0x0, 0xff));
     set_color(Bookcase, 0, color(0xbf, 0xa9, 0x74, 0xff));
@@ -223,7 +282,7 @@ namespace mc {
     set_color(Torch, 0, color(0xff, 0xe1, 0x60,0xd0), SharedInvisColor, false);
     set_color(Fire, 0, color(0xe0, 0xae, 0x15, 0xff));
     set_color(MobSpawner, 0, color(0xff, 0xff, 0xff, 0x00));
-    set_color(WoodenStairs, 0, color(0xbf, 0xa9, 0x74, 0xff));
+    set_color(OakWoodStairs, 0, color(0xbf, 0xa9, 0x74, 0xff));
     set_color(Chest, 0, color(0xbf, 0x87, 0x02, 0xff));
     set_color(RedstoneWire, 0, color(0x6f, 0x01, 0x01, 0xff));
     set_color(DiamondOre, 0, color(129,140,143,255));
@@ -260,21 +319,27 @@ namespace mc {
     set_color(Bloodstone, 0, color(0xc2, 0x73, 0x73, 0xff));
     set_color(Slowsand, 0, color(0x79, 0x61, 0x52, 0xff));
     set_color(Lightstone, 0, color(0xff, 0xbc, 0x5e, 0xff));
-    set_color(Trapdoor, 0, get_color(WoodenPressurePlate));
     set_color(Portal, 0, color(0x3c, 0x0d, 0x6a, 0x7f));
     set_color(Jackolantern, 0, get_color(Pumpkin));
-    set_color(RedstoneRepeaterOn, 0, get_color(RedstoneWire));
-    set_color(RedstoneRepeaterOff, 0, get_color(RedstoneWire));
     set_color(Cake, 0, color(228,205,206,255));
+    set_color(RedstoneRepeaterOff, 0, get_color(RedstoneWire));
+    set_color(RedstoneRepeaterOn, 0, get_color(RedstoneWire));
+    set_color(StainedGlass, 0, SharedInvisColor); // TODO
+    set_color(Trapdoor, 0, get_color(WoodenPressurePlate));
     set_color(EggBlock, 0, get_color(Stone));
     set_color(StoneBrick, 0, get_color(Stone));
-    set_color(HugeRedMushroom, 0, color(183,31,29,0xff));
     set_color(HugeBrownMushroom, 0, color(206,174,123,0xff));
+    set_color(HugeRedMushroom, 0, color(183,31,29,0xff));
     set_color(IronBars, 0, get_color(IronBlock));
     set_color(GlassPane, 0, get_color(Glass));
     set_color(Melon, 0, color(50,200,45,192));
     set_color(PumpkinStem, 0, color(0x00, 0x00, 0x00, 0x00));
     set_color(MelonStem, 0, color(0x00, 0x00, 0x00, 0x00));
+    set_color(Vines, 0, color(50,89,45,128), color(50,89,45,128));
+    set_color(FenceGate, 0, get_color(Fence));
+    set_color(BrickStairs, 0, get_color(Brick));
+    set_color(StoneBrickStairs, 0, get_color(Stone));
+    set_color(Mycelium, 0, color(110,93,133,255));
     set_color(LilyPad, 0, color(50,89,45,128), color(50,89,45,128));
     set_color(NetherBrick, 0, color(66,32,38,255));
     set_color(NetherBrickFence, 0, color(66,32,38,200));
@@ -287,11 +352,59 @@ namespace mc {
     set_color(EndPortalFrame, 0, color(62,115,105,255));
     set_color(EndStone, 0, color(203,206,148,255));
     set_color(DragonEgg, 0, color(72,4,82,255));
-    set_color(Mycelium, 0, color(110,93,133,255));
-    set_color(Vines, 0, color(50,89,45,128), color(50,89,45,128));
-    set_color(FenceGate, 0, get_color(Fence));
-    set_color(BrickStairs, 0, get_color(Brick));
-    set_color(StoneBrickStairs, 0, get_color(Stone));
+    set_color(RedstoneLampOff, 0, SharedInvisColor); // TODO
+    set_color(RedstoneLampOn, 0, SharedInvisColor); // TODO
+    set_color(WoodenDoubleSlab, 0, SharedInvisColor); // TODO
+    set_color(WoodenSlab, 0, SharedInvisColor); // TODO
+    set_color(Cocoa, 0, SharedInvisColor); // TODO
+    set_color(SandstoneStairs, 0, SharedInvisColor); // TODO
+    set_color(EmeraldOre, 0, SharedInvisColor); // TODO
+    set_color(EmeraldChest, 0, SharedInvisColor); // TODO
+    set_color(TripwireHook, 0, SharedInvisColor); // TODO
+    set_color(Tripwire, 0, SharedInvisColor); // TODO
+    set_color(EmeraldBlock, 0, SharedInvisColor); // TODO
+    set_color(SpruceWoodStairs, 0, SharedInvisColor); // TODO
+    set_color(BirchWoodStairs, 0, SharedInvisColor); // TODO
+    set_color(JungleWoodStairs, 0, SharedInvisColor); // TODO
+    set_color(CommandBlock, 0, SharedInvisColor); // TODO
+    set_color(Beacon, 0, SharedInvisColor); // TODO
+    set_color(CobblestoneWall, 0, SharedInvisColor); // TODO
+    set_color(FlowerPot, 0, SharedInvisColor); // TODO
+    set_color(Carrots, 0, SharedInvisColor); // TODO
+    set_color(Potatoes, 0, SharedInvisColor); // TODO
+    set_color(WoodenButton, 0, SharedInvisColor); // TODO
+    set_color(MobHead, 0, SharedInvisColor); // TODO
+    set_color(Anvil, 0, SharedInvisColor); // TODO
+    set_color(TrappedChest, 0, SharedInvisColor); // TODO
+    set_color(WeightedPressurePlateLight, 0, SharedInvisColor); // TODO
+    set_color(WeightedPressurePlateHeavy, 0, SharedInvisColor); // TODO
+    set_color(RedstoneComparatorOff, 0, SharedInvisColor); // TODO
+    set_color(RedstoneComparatorOn, 0, SharedInvisColor); // TODO
+    set_color(DaylightSensor, 0, SharedInvisColor); // TODO
+    set_color(RedstoneBlock, 0, SharedInvisColor); // TODO
+    set_color(NetherQuartzOre, 0, SharedInvisColor); // TODO
+    set_color(Hopper, 0, SharedInvisColor); // TODO
+    set_color(QuartzBlock, 0, SharedInvisColor); // TODO
+    set_color(QuartzStairs, 0, SharedInvisColor); // TODO
+    set_color(ActivatorRail, 0, SharedInvisColor); // TODO
+    set_color(Dropper, 0, SharedInvisColor); // TODO
+    set_color(StainedClay, 0, SharedInvisColor); // TODO
+    set_color(StainedGlassPane, 0, SharedInvisColor); // TODO
+    set_color(Leaves2, 0, SharedInvisColor); // TODO
+    set_color(Log2, 0, SharedInvisColor); // TODO
+    set_color(AcaciaWoodStairs, 0, SharedInvisColor); // TODO
+    set_color(DarkOakWoodStairs, 0, SharedInvisColor); // TODO
+    //set_color(SlimeBlock, 0, SharedInvisColor); // TODO
+    //set_color(Barrier, 0, SharedInvisColor); // TODO
+    //set_color(IronTrapdoor, 0, SharedInvisColor); // TODO
+    //set_color(UNUSED, 0, SharedInvisColor); // TODO
+    //set_color(UNUSED, 0, SharedInvisColor); // TODO
+    set_color(HayBlock, 0, SharedInvisColor); // TODO
+    set_color(Carpet, 0, SharedInvisColor); // TODO
+    set_color(HardenedClay, 0, SharedInvisColor); // TODO
+    set_color(CoalBlock, 0, SharedInvisColor); // TODO
+    set_color(PackedIce, 0, SharedInvisColor); // TODO
+    set_color(LargeFlowers, 0, SharedInvisColor); // TODO
     set_color(PineLeaves, 0, color(50,89,45,128));
     set_color(BirchLeaves, 0, color(94,167,84,128));
 
@@ -325,19 +438,21 @@ namespace mc {
     MaterialModes[PoweredRail] = Block;
     MaterialModes[DetectorRail] = Block;
     MaterialModes[StickyPistonBase] = Block;
+    MaterialModes[Cobweb] = Block;
     MaterialModes[TallGrass] = Block;
     MaterialModes[DeadShrub] = TorchBlock;
     MaterialModes[PistonBase] = Block;
     MaterialModes[PistonPlatform] = Block;
     MaterialModes[Wool] = Block;
-    MaterialModes[YellowFlower] = Block;
-    MaterialModes[RedRose] = Block;
+    MaterialModes[PistonMovedBlock] = Block;
+    MaterialModes[Dandelion] = Block;
+    MaterialModes[SmallFlowers] = Block;
     MaterialModes[BrownMushroom] = Block;
     MaterialModes[RedMushroom] = Block;
     MaterialModes[GoldBlock] = Block;
     MaterialModes[IronBlock] = Block;
-    MaterialModes[DoubleStep] = Block;
-    MaterialModes[Step] = HalfBlock;
+    MaterialModes[DoubleStoneSlab] = Block;
+    MaterialModes[StoneSlab] = HalfBlock;
     MaterialModes[Brick] = Block;
     MaterialModes[TNT] = Block;
     MaterialModes[Bookcase] = Block;
@@ -346,7 +461,7 @@ namespace mc {
     MaterialModes[Torch] = TorchBlock;
     MaterialModes[Fire] = Block;
     MaterialModes[MobSpawner] = Block;
-    MaterialModes[WoodenStairs] = Block;
+    MaterialModes[OakWoodStairs] = Block;
     MaterialModes[Chest] = Block;
     MaterialModes[RedstoneWire] = Block;
     MaterialModes[DiamondOre] = Block;
@@ -383,24 +498,28 @@ namespace mc {
     MaterialModes[Bloodstone] = Block;
     MaterialModes[Slowsand] = Block;
     MaterialModes[Lightstone] = Block;
-    MaterialModes[Trapdoor] = HalfBlock;
     MaterialModes[Portal] = Block;
     MaterialModes[Jackolantern] = Block;
     MaterialModes[Cake] = HalfBlock;
-    MaterialModes[RedstoneRepeaterOn] = Block;
     MaterialModes[RedstoneRepeaterOff] = Block;
+    MaterialModes[RedstoneRepeaterOn] = Block;
+    MaterialModes[StainedGlass] = Block;
+    MaterialModes[Trapdoor] = HalfBlock;
     MaterialModes[EggBlock] = Block;
     MaterialModes[StoneBrick] = Block;
-    MaterialModes[HugeRedMushroom] = Block;
     MaterialModes[HugeBrownMushroom] = Block;
+    MaterialModes[HugeRedMushroom] = Block;
     MaterialModes[IronBars] = Block;
     MaterialModes[GlassPane] = Block;
     MaterialModes[Melon] = Block;
     MaterialModes[PumpkinStem] = Block;
     MaterialModes[MelonStem] = Block;
     MaterialModes[Vines] = Block;
-    MaterialModes[LilyPad] = Block; 
+    MaterialModes[FenceGate] = Block;
+    MaterialModes[BrickStairs] = Block;
+    MaterialModes[StoneBrickStairs] = Block;
     MaterialModes[Mycelium] = Block;
+    MaterialModes[LilyPad] = Block; 
     MaterialModes[NetherBrick] = Block;
     MaterialModes[NetherBrickFence] = Block;
     MaterialModes[NetherBrickStairs] = Block;
@@ -412,9 +531,59 @@ namespace mc {
     MaterialModes[EndPortalFrame] = Block;
     MaterialModes[EndStone] = Block;
     MaterialModes[DragonEgg] = Block;
-    MaterialModes[FenceGate] = Block;
-    MaterialModes[BrickStairs] = Block;
-    MaterialModes[StoneBrickStairs] = Block;
+    MaterialModes[RedstoneLampOff] = Block;
+    MaterialModes[RedstoneLampOn] = Block;
+    MaterialModes[WoodenDoubleSlab] = Block;
+    MaterialModes[WoodenSlab] = HalfBlock;
+    MaterialModes[Cocoa] = Block; // TODO
+    MaterialModes[SandstoneStairs] = Block;
+    MaterialModes[EmeraldOre] = Block;
+    MaterialModes[EmeraldChest] = Block;
+    MaterialModes[TripwireHook] = Block;
+    MaterialModes[Tripwire] = HalfBlock; // TODO
+    MaterialModes[EmeraldBlock] = Block;
+    MaterialModes[SpruceWoodStairs] = Block;
+    MaterialModes[BirchWoodStairs] = Block;
+    MaterialModes[JungleWoodStairs] = Block;
+    MaterialModes[CommandBlock] = Block;
+    MaterialModes[Beacon] = Block;
+    MaterialModes[CobblestoneWall] = Block;
+    MaterialModes[FlowerPot] = Block; // TODO
+    MaterialModes[Carrots] = Block;
+    MaterialModes[Potatoes] = Block;
+    MaterialModes[WoodenButton] = Block;
+    MaterialModes[MobHead] = Block;
+    MaterialModes[Anvil] = Block;
+    MaterialModes[TrappedChest] = Block;
+    MaterialModes[WeightedPressurePlateLight] = HalfBlock;
+    MaterialModes[WeightedPressurePlateHeavy] = HalfBlock;
+    MaterialModes[RedstoneComparatorOff] = Block;
+    MaterialModes[RedstoneComparatorOn] = Block;
+    MaterialModes[DaylightSensor] = HalfBlock; // TODO
+    MaterialModes[RedstoneBlock] = Block;
+    MaterialModes[NetherQuartzOre] = Block;
+    MaterialModes[Hopper] = Block;
+    MaterialModes[QuartzBlock] = Block;
+    MaterialModes[QuartzStairs] = Block;
+    MaterialModes[ActivatorRail] = Block;
+    MaterialModes[Dropper] = Block;
+    MaterialModes[StainedClay] = Block;
+    MaterialModes[StainedGlassPane] = Block;
+    MaterialModes[Leaves2] = Block;
+    MaterialModes[Log2] = Block;
+    MaterialModes[AcaciaWoodStairs] = Block;
+    MaterialModes[DarkOakWoodStairs] = Block;
+    //MaterialModes[SlimeBlock] = Block;
+    //MaterialModes[Barrier] = Block;
+    //MaterialModes[IronTrapdoor] = HalfBlock;
+    //MaterialModes[UNUSED] = Block;
+    //MaterialModes[UNUSED] = Block;
+    MaterialModes[HayBlock] = Block;
+    MaterialModes[Carpet] = HalfBlock;
+    MaterialModes[HardenedClay] = Block;
+    MaterialModes[CoalBlock] = Block;
+    MaterialModes[PackedIce] = Block;
+    MaterialModes[LargeFlowers] = Block;
     MaterialModes[PineLeaves] = Block;
     MaterialModes[BirchLeaves] = Block;
 
@@ -440,15 +609,15 @@ namespace mc {
     set_color(Wool, WoolDarkGreen, color(56, 77, 24, 255));
     set_color(Wool, WoolRed, color(164, 45, 41, 255));
 
-    set_color(Step, StepCobblestone, get_color(Cobblestone));
-    set_color(Step, StepStone, get_color(Stone));
-    set_color(Step, StepSandstone, get_color(Sandstone));
-    set_color(Step, StepWood, get_color(Wood));
+    set_color(StoneSlab, StepCobblestone, get_color(Cobblestone));
+    set_color(StoneSlab, StepStone, get_color(Stone));
+    set_color(StoneSlab, StepSandstone, get_color(Sandstone));
+    set_color(StoneSlab, StepWood, get_color(Wood));
 
-    set_color(DoubleStep, StepCobblestone, get_color(Cobblestone));
-    set_color(DoubleStep, StepStone, get_color(Stone));
-    set_color(DoubleStep, StepSandstone, get_color(Sandstone));
-    set_color(DoubleStep, StepWood, get_color(Wood));
+    set_color(DoubleStoneSlab, StepCobblestone, get_color(Cobblestone));
+    set_color(DoubleStoneSlab, StepStone, get_color(Stone));
+    set_color(DoubleStoneSlab, StepSandstone, get_color(Sandstone));
+    set_color(DoubleStoneSlab, StepWood, get_color(Wood));
   }
   
   void deinitialize_constants() {

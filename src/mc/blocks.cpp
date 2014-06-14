@@ -684,16 +684,35 @@ namespace mc {
     set_color(Wool, ColorRed, color(164, 45, 41, 255));
 
     // DoubleStoneSlab (0x2B)
-    set_color(DoubleStoneSlab, StepCobblestone, get_color(Cobblestone));
-    set_color(DoubleStoneSlab, StepStone, get_color(Stone));
-    set_color(DoubleStoneSlab, StepSandstone, get_color(Sandstone));
-    set_color(DoubleStoneSlab, StepWood, get_color(Wood));
+    set_color(DoubleStoneSlab, SlabFullSandStone, get_color(Sandstone));
+    set_color(DoubleStoneSlab, SlabStone, get_color(Stone));
+    set_color(DoubleStoneSlab, SlabSandstone, get_color(Sandstone));
+    set_color(DoubleStoneSlab, SlabWood, get_color(Wood));
+    set_color(DoubleStoneSlab, SlabCobblestone, get_color(Cobblestone));
+    set_color(DoubleStoneSlab, SlabBrick, get_color(Brick));
+    set_color(DoubleStoneSlab, SlabStoneBrick, get_color(StoneBrick));
+    set_color(DoubleStoneSlab, SlabNether, get_color(NetherBrick));
+    set_color(DoubleStoneSlab, SlabQuartz, get_color(QuartzBlock));
+    set_color(DoubleStoneSlab, SlabFullStone, get_color(Stone));
 
     // StoneSlab (0x2C)
-    set_color(StoneSlab, StepCobblestone, get_color(Cobblestone));
-    set_color(StoneSlab, StepStone, get_color(Stone));
-    set_color(StoneSlab, StepSandstone, get_color(Sandstone));
-    set_color(StoneSlab, StepWood, get_color(Wood));
+    set_color(StoneSlab, SlabReverse+SlabQuartz, get_color(QuartzBlock));
+    set_color(StoneSlab, SlabStone, get_color(Stone));
+    set_color(StoneSlab, SlabSandstone, get_color(Sandstone));
+    set_color(StoneSlab, SlabWood, get_color(Wood));
+    set_color(StoneSlab, SlabCobblestone, get_color(Cobblestone));
+    set_color(StoneSlab, SlabBrick, get_color(Brick));
+    set_color(StoneSlab, SlabStoneBrick, get_color(StoneBrick));
+    set_color(StoneSlab, SlabNether, get_color(NetherBrick));
+    set_color(StoneSlab, SlabQuartz, get_color(QuartzBlock));
+    set_color(StoneSlab, SlabReverse+SlabStone, get_color(Stone));
+    set_color(StoneSlab, SlabReverse+SlabSandstone, get_color(Sandstone));
+    set_color(StoneSlab, SlabReverse+SlabWood, get_color(Wood));
+    set_color(StoneSlab, SlabReverse+SlabCobblestone, get_color(Cobblestone));
+    set_color(StoneSlab, SlabReverse+SlabBrick, get_color(Brick));
+    set_color(StoneSlab, SlabReverse+SlabStoneBrick, get_color(StoneBrick));
+    set_color(StoneSlab, SlabReverse+SlabNether, get_color(NetherBrick));
+
 
     // StainedGlass (0x5F)
     set_color(StainedGlass, ColorBlack, color(27, 23, 23, 255));

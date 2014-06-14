@@ -265,11 +265,17 @@ namespace mc {
   };
 
   enum {
-    StepStone = 0x00,
-    StepSandstone,
-    StepWood,
-    StepCobblestone,
-    StepColorCount
+    SlabStone = 0x00,
+    SlabSandstone,
+    SlabWood,
+    SlabCobblestone,
+    SlabBrick,
+    SlabStoneBrick,
+    SlabNether,
+    SlabQuartz,
+    SlabReverse,
+    SlabFullStone = SlabReverse,
+    SlabFullSandStone
   };
 
   enum {

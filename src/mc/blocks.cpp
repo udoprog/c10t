@@ -625,22 +625,22 @@ namespace mc {
     set_color(Sand, SandNormal, color(218, 210, 158, 255));
 
     // Log (0x11)
-    set_color(Log, LogJungleBark, color(66, 49, 20, 255));
-    set_color(Log, LogOakBark, color(69, 56, 35, 255));
-    set_color(Log, LogSpruceBark, color(31, 21, 8, 255));
-    set_color(Log, LogBirchBark, color(153, 149, 144, 255));
-    set_color(Log, LogOakUp, color(184, 148, 95, 255),  get_color(Log, LogOakBark));
-    set_color(Log, LogSpruceUp, color(128, 95, 56, 255), get_color(Log, LogSpruceBark));
-    set_color(Log, LogBirchUp, color(207, 185, 125, 255), get_color(Log, LogBirchBark));
-    set_color(Log, LogJungleUp, color(188, 142, 98, 255), get_color(Log, LogJungleBark));
-    set_color(Log, LogOakEast, get_side_color(Log, LogOakUp), get_color(Log, LogOakUp));
-    set_color(Log, LogSpruceEast, get_side_color(Log, LogSpruceUp), get_color(Log, LogSpruceUp));
-    set_color(Log, LogBirchEast, get_side_color(Log, LogBirchUp), get_color(Log, LogBirchUp));
-    set_color(Log, LogJungleEast, get_side_color(Log, LogJungleUp), get_color(Log, LogJungleUp));
-    set_color(Log, LogOakNorth, get_side_color(Log, LogOakUp), get_color(Log, LogOakUp));
-    set_color(Log, LogSpruceNorth, get_side_color(Log, LogSpruceUp), get_color(Log, LogSpruceUp));
-    set_color(Log, LogBirchNorth, get_side_color(Log, LogBirchUp), get_color(Log, LogBirchUp));
-    set_color(Log, LogJungleNorth, get_side_color(Log, LogJungleUp), get_color(Log, LogJungleUp));
+    set_color(Log, LogOnlyBark+WoodJungle, color(66, 49, 20, 255));
+    set_color(Log, LogOnlyBark+WoodOak, color(69, 56, 35, 255));
+    set_color(Log, LogOnlyBark+WoodSpruce, color(31, 21, 8, 255));
+    set_color(Log, LogOnlyBark+WoodBirch, color(153, 149, 144, 255));
+    set_color(Log, LogUpDown+WoodOak, color(184, 148, 95, 255),  get_color(Log, LogOnlyBark+WoodOak));
+    set_color(Log, LogUpDown+WoodSpruce, color(128, 95, 56, 255), get_color(Log, LogOnlyBark+WoodSpruce));
+    set_color(Log, LogUpDown+WoodBirch, color(207, 185, 125, 255), get_color(Log, LogOnlyBark+WoodBirch));
+    set_color(Log, LogUpDown+WoodJungle, color(188, 142, 98, 255), get_color(Log, LogOnlyBark+WoodJungle));
+    set_color(Log, LogEastWest+WoodOak, get_side_color(Log, LogUpDown+WoodOak), get_color(Log, LogUpDown+WoodOak));
+    set_color(Log, LogEastWest+WoodSpruce, get_side_color(Log, LogUpDown+WoodSpruce), get_color(Log, LogUpDown+WoodSpruce));
+    set_color(Log, LogEastWest+WoodBirch, get_side_color(Log, LogUpDown+WoodBirch), get_color(Log, LogUpDown+WoodBirch));
+    set_color(Log, LogEastWest+WoodJungle, get_side_color(Log, LogUpDown+WoodJungle), get_color(Log, LogUpDown+WoodJungle));
+    set_color(Log, LogNorthSouth+WoodOak, get_side_color(Log, LogUpDown+WoodOak), get_color(Log, LogUpDown+WoodOak));
+    set_color(Log, LogNorthSouth+WoodSpruce, get_side_color(Log, LogUpDown+WoodSpruce), get_color(Log, LogUpDown+WoodSpruce));
+    set_color(Log, LogNorthSouth+WoodBirch, get_side_color(Log, LogUpDown+WoodBirch), get_color(Log, LogUpDown+WoodBirch));
+    set_color(Log, LogNorthSouth+WoodJungle, get_side_color(Log, LogUpDown+WoodJungle), get_color(Log, LogUpDown+WoodJungle));
 
     // Leaves (0x12)
     set_color(Leaves, LeavesNoDecayCheckDecay+WoodJungle, color(58, 147, 19, 128));
@@ -808,14 +808,14 @@ namespace mc {
     set_color(Leaves2, Leaves2NoDecayCheckDecay+WoodAcacia, get_color(Leaves2, Leaves2Normal+WoodAcacia));
 
     // Log2 (0xA2)
-    set_color(Log2, Log2DarkWoodBark, color(28, 19, 6, 255));
-    set_color(Log2, Log2AcaciaBark, color(67, 63, 56, 255));
-    set_color(Log2, Log2AcaciaUp, color(183, 92, 56, 255), get_color(Log2, Log2AcaciaBark));
-    set_color(Log2, Log2DarkWoodUp, color(96, 74, 45, 255), get_color(Log2, Log2DarkWoodBark));
-    set_color(Log2, Log2AcaciaEast, get_color(Log2, Log2AcaciaBark), get_color(Log2, Log2AcaciaUp));
-    set_color(Log2, Log2DarkWoodEast, get_color(Log2, Log2DarkWoodBark), get_color(Log2, Log2DarkWoodUp));
-    set_color(Log2, Log2AcaciaNorth, get_color(Log2, Log2AcaciaBark), get_color(Log2, Log2AcaciaUp));
-    set_color(Log2, Log2DarkWoodNorth, get_color(Log2, Log2DarkWoodBark), get_color(Log2, Log2DarkWoodUp));
+    set_color(Log2, Log2OnlyBark+WoodDarkOak, color(28, 19, 6, 255));
+    set_color(Log2, Log2OnlyBark+WoodAcacia, color(67, 63, 56, 255));
+    set_color(Log2, Log2UpDown+WoodAcacia, color(183, 92, 56, 255), get_color(Log2, Log2OnlyBark+WoodAcacia));
+    set_color(Log2, Log2UpDown+WoodDarkOak, color(96, 74, 45, 255), get_color(Log2, Log2OnlyBark+WoodDarkOak));
+    set_color(Log2, Log2EastWest+WoodAcacia, get_color(Log2, Log2OnlyBark+WoodAcacia), get_color(Log2, Log2UpDown+WoodAcacia));
+    set_color(Log2, Log2EastWest+WoodDarkOak, get_color(Log2, Log2OnlyBark+WoodDarkOak), get_color(Log2, Log2UpDown+WoodDarkOak));
+    set_color(Log2, Log2NorthSouth+WoodAcacia, get_color(Log2, Log2OnlyBark+WoodAcacia), get_color(Log2, Log2UpDown+WoodAcacia));
+    set_color(Log2, Log2NorthSouth+WoodOak, get_color(Log2, Log2OnlyBark+WoodDarkOak), get_color(Log2, Log2UpDown+WoodDarkOak));
 
     // Carpet (0xAB)
     set_color(Carpet, ColorBlack, get_color(Wool, ColorBlack));

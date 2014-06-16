@@ -218,23 +218,10 @@ namespace mc {
   };
 
   enum {
-    LogOakUp = 0x00,
-    LogSpruceUp,
-    LogBirchUp,
-    LogJungleUp,
-    LogOakEast,
-    LogSpruceEast,
-    LogBirchEast,
-    LogJungleEast,
-    LogOakNorth,
-    LogSpruceNorth,
-    LogBirchNorth,
-    LogJungleNorth,
-    LogOakBark,
-    LogSpruceBark,
-    LogBirchBark,
-    LogJungleBark,
-    LogColorCount
+    LogUpDown = 0x00 - WoodOak,
+    LogEastWest = 0x04 - WoodOak,
+    LogNorthSouth = 0x08 - WoodOak,
+    LogOnlyBark = 0x0C - WoodOak
   };
 
   enum {
@@ -304,15 +291,10 @@ namespace mc {
   };
 
   enum {
-    Log2AcaciaUp = 0x00,
-    Log2DarkWoodUp,
-    Log2AcaciaEast,
-    Log2DarkWoodEast,
-    Log2AcaciaNorth,
-    Log2DarkWoodNorth,
-    Log2AcaciaBark,
-    Log2DarkWoodBark,
-    Log2ColorCount
+    Log2UpDown = 0x00 - WoodAcacia,
+    Log2EastWest = 0x02 - WoodAcacia,
+    Log2NorthSouth = 0x04 - WoodAcacia,
+    Log2OnlyBark = 0x06 - WoodAcacia
   };
 
   enum {

@@ -142,8 +142,8 @@ namespace mc {
     MaterialName[Portal] = "Portal";
     MaterialName[Jackolantern] = "Jackolantern";
     MaterialName[Cake] = "Cake";
-    MaterialName[RedstoneRepeaterOn] = "RedstoneRepeaterOn";
     MaterialName[RedstoneRepeaterOff] = "RedstoneRepeaterOff";
+    MaterialName[RedstoneRepeaterOn] = "RedstoneRepeaterOn";
     MaterialName[StainedGlass] = "StainedGlass";
     MaterialName[Trapdoor] = "Trapdoor";
     MaterialName[EggBlock] = "EggBlock";
@@ -179,7 +179,7 @@ namespace mc {
     MaterialName[Cocoa] = "Cocoa";
     MaterialName[SandstoneStairs] = "SandstoneStairs";
     MaterialName[EmeraldOre] = "EmeraldOre";
-    MaterialName[EmeraldChest] = "EmeraldChest";
+    MaterialName[EnderChest] = "EnderChest";
     MaterialName[TripwireHook] = "TripwireHook";
     MaterialName[Tripwire] = "Tripwire";
     MaterialName[EmeraldBlock] = "EmeraldBlock";
@@ -258,7 +258,7 @@ namespace mc {
     set_color(PoweredRail, 0, color(120, 120, 120, 128), color(255,220,0,128));
     set_color(DetectorRail, 0, get_color(PoweredRail), color(230,0,0,128));
     set_color(StickyPistonBase, 0, color(157,192,79,255));
-    set_color(Cobweb, 0, SharedInvisColor); // TODO
+    set_color(Cobweb, 0, color(237, 237, 237, 128));
     set_color(TallGrass, 0,
       color(0x90, 0xbc, 0x27, 0xff), color(0x90, 0xbc, 0x27, 0xff));
     set_color(DeadShrub, 0, get_color(Wood));
@@ -352,42 +352,42 @@ namespace mc {
     set_color(EndPortalFrame, 0, color(62,115,105,255));
     set_color(EndStone, 0, color(203,206,148,255));
     set_color(DragonEgg, 0, color(72,4,82,255));
-    set_color(RedstoneLampOff, 0, SharedInvisColor); // TODO
-    set_color(RedstoneLampOn, 0, SharedInvisColor); // TODO
+    set_color(RedstoneLampOff, 0, color(145, 90, 57, 255));
+    set_color(RedstoneLampOn, 0, color(203, 152, 70, 255));
     // NOTE: See below for WoodenDoubleSlab
     // NOTE: See below for WoodenSlab
-    set_color(Cocoa, 0, SharedInvisColor); // TODO
-    set_color(SandstoneStairs, 0, SharedInvisColor); // TODO
-    set_color(EmeraldOre, 0, SharedInvisColor); // TODO
-    set_color(EmeraldChest, 0, SharedInvisColor); // TODO
-    set_color(TripwireHook, 0, SharedInvisColor); // TODO
-    set_color(Tripwire, 0, SharedInvisColor); // TODO
-    set_color(EmeraldBlock, 0, SharedInvisColor); // TODO
+    set_color(Cocoa, 0, color(190, 116, 45, 255));
+    set_color(SandstoneStairs, 0, get_color(Sandstone));
+    set_color(EmeraldOre, 0, color(94, 124, 105, 255));
+    set_color(EnderChest, 0, color(42, 58, 60, 255), color(35, 49, 33, 255));
+    set_color(TripwireHook, 0, get_color(WoodenButton));
+    set_color(Tripwire, 0, SharedInvisColor);
+    set_color(EmeraldBlock, 0, color(84, 218, 123, 255));
     // NOTE: See below for SpruceWoodStairs
     // NOTE: See below for BirchWoodStairs
     // NOTE: See below for JungleWoodStairs
-    set_color(CommandBlock, 0, SharedInvisColor); // TODO
-    set_color(Beacon, 0, SharedInvisColor); // TODO
-    set_color(CobblestoneWall, 0, SharedInvisColor); // TODO
-    set_color(FlowerPot, 0, SharedInvisColor); // TODO
-    set_color(Carrots, 0, SharedInvisColor); // TODO
-    set_color(Potatoes, 0, SharedInvisColor); // TODO
-    set_color(WoodenButton, 0, SharedInvisColor); // TODO
-    set_color(MobHead, 0, SharedInvisColor); // TODO
-    set_color(Anvil, 0, SharedInvisColor); // TODO
-    set_color(TrappedChest, 0, SharedInvisColor); // TODO
-    set_color(WeightedPressurePlateLight, 0, SharedInvisColor); // TODO
-    set_color(WeightedPressurePlateHeavy, 0, SharedInvisColor); // TODO
-    set_color(RedstoneComparatorOff, 0, SharedInvisColor); // TODO
-    set_color(RedstoneComparatorOn, 0, SharedInvisColor); // TODO
-    set_color(DaylightSensor, 0, SharedInvisColor); // TODO
-    set_color(RedstoneBlock, 0, SharedInvisColor); // TODO
-    set_color(NetherQuartzOre, 0, SharedInvisColor); // TODO
-    set_color(Hopper, 0, SharedInvisColor); // TODO
-    set_color(QuartzBlock, 0, SharedInvisColor); // TODO
-    set_color(QuartzStairs, 0, SharedInvisColor); // TODO
-    set_color(ActivatorRail, 0, SharedInvisColor); // TODO
-    set_color(Dropper, 0, SharedInvisColor); // TODO
+    set_color(CommandBlock, 0, color(186, 118, 74, 255));
+    set_color(Beacon, 0, color(196, 255, 254, 255));
+    set_color(CobblestoneWall, 0, get_color(Cobblestone));
+    set_color(FlowerPot, 0, SharedInvisColor);
+    set_color(Carrots, 0, color(2, 161, 0, 255));
+    set_color(Potatoes, 0, color(0, 174, 25, 255));
+    set_color(WoodenButton, 0, SharedInvisColor);
+    set_color(MobHead, 0, SharedInvisColor);
+    set_color(Anvil, 0, color(66, 62, 62, 255));
+    set_color(TrappedChest, 0, get_color(Chest));
+    set_color(WeightedPressurePlateLight, 0, color(239, 225, 64, 255));
+    set_color(WeightedPressurePlateHeavy, 0, color(224, 224, 224, 255));
+    set_color(RedstoneComparatorOff, 0, get_color(RedstoneRepeaterOff));
+    set_color(RedstoneComparatorOn, 0, get_color(RedstoneRepeaterOn));
+    set_color(DaylightSensor, 0, color(194, 179, 158, 255), color(29, 23, 14, 255));
+    set_color(RedstoneBlock, 0, color(150, 24, 7, 255));
+    set_color(NetherQuartzOre, 0, color(190, 143, 136, 255));
+    set_color(Hopper, 0, color(55, 55, 55, 255));
+    set_color(QuartzBlock, 0, color(217, 213, 206, 255));
+    set_color(QuartzStairs, 0, get_color(QuartzBlock));
+    set_color(ActivatorRail, 0, get_color(PoweredRail));
+    set_color(Dropper, 0, get_color(Dispenser));
     // NOTE: See below for StainedClay
     // NOTE: See below for StainedGlassPane
     // NOTE: See below for Leaves2
@@ -399,10 +399,10 @@ namespace mc {
     //set_color(IronTrapdoor, 0, SharedInvisColor); // MC 1.8! Not implemented yet.
     //set_color(UNUSED, 0, SharedInvisColor); // Not implemented yet.
     //set_color(UNUSED, 0, SharedInvisColor); // Not implemented yet.
-    set_color(HayBlock, 0, SharedInvisColor); // TODO
-    set_color(HardenedClay, 0, SharedInvisColor); // TODO
-    set_color(CoalBlock, 0, SharedInvisColor); // TODO
-    set_color(PackedIce, 0, SharedInvisColor); // TODO
+    set_color(HayBlock, 0, color(192, 160, 14, 255));
+    set_color(HardenedClay, 0, color(140, 86, 63, 255));
+    set_color(CoalBlock, 0, color(20, 20, 20, 255));
+    set_color(PackedIce, 0, get_color(Ice));
     // NOTE: See below for LargeFlowers
     set_color(PineLeaves, 0, color(50,89,45,128));
     set_color(BirchLeaves, 0, color(94,167,84,128));
@@ -534,10 +534,10 @@ namespace mc {
     MaterialModes[RedstoneLampOn] = Block;
     MaterialModes[WoodenDoubleSlab] = Block;
     MaterialModes[WoodenSlab] = HalfBlock;
-    MaterialModes[Cocoa] = Block; // TODO
+    MaterialModes[Cocoa] = Block;
     MaterialModes[SandstoneStairs] = Block;
     MaterialModes[EmeraldOre] = Block;
-    MaterialModes[EmeraldChest] = Block;
+    MaterialModes[EnderChest] = Block;
     MaterialModes[TripwireHook] = Block;
     MaterialModes[Tripwire] = HalfBlock; // TODO Is this correct?
     MaterialModes[EmeraldBlock] = Block;
@@ -592,19 +592,17 @@ namespace mc {
      * The order of the following entries does not matter.
      */
     // Dirt (0x03)
-    // TODO Use different colors?
-    set_color(Dirt, DirtPodzol, color(134, 96, 67, 255));
+    set_color(Dirt, DirtPodzol, color(108, 67, 29, 255));
     set_color(Dirt, DirtNormal, color(134, 96, 67, 255));
     set_color(Dirt, DirtCoarse, color(134, 96, 67, 255));
 
     // Wood (0x05)
-    // TODO Use different colors?
-    set_color(Wood, WoodDarkOak, color(157,128,79,255));
-    set_color(Wood, WoodOak, color(157,128,79,255));
-    set_color(Wood, WoodSpruce, color(157,128,79,255));
-    set_color(Wood, WoodBirch, color(157,128,79,255));
-    set_color(Wood, WoodJungle, color(157,128,79,255));
-    set_color(Wood, WoodAcacia, color(157,128,79,255));
+    set_color(Wood, WoodDarkOak, color(68, 44, 22, 255));
+    set_color(Wood, WoodOak, color(157, 128, 79, 255));
+    set_color(Wood, WoodSpruce, color(126, 93, 93, 255));
+    set_color(Wood, WoodBirch, color(212, 201, 139, 255));
+    set_color(Wood, WoodJungle, color(182, 133, 99, 255));
+    set_color(Wood, WoodAcacia, color(186, 102, 54, 255));
 
     // The stairs dependent on the wood color.
     set_color(SpruceWoodStairs, 0, get_color(Wood, WoodSpruce));
@@ -615,7 +613,6 @@ namespace mc {
     set_color(DarkOakWoodStairs, 0, get_color(Wood, WoodDarkOak));
 
     // Sapling (0x06)
-    // TODO Use different colors?
     set_color(Sapling, WoodDarkOak, color(120,120,120,0));
     set_color(Sapling, WoodOak, color(120,120,120,0));
     set_color(Sapling, WoodSpruce, color(120,120,120,0));
@@ -628,15 +625,14 @@ namespace mc {
     set_color(Sand, SandNormal, color(218, 210, 158, 255));
 
     // Log (0x11)
-    // TODO Use different colors?
-    set_color(Log, LogJungleBark, color(102,81,51,255));
-    set_color(Log, LogOakBark, color(102,81,51,255));
-    set_color(Log, LogSpruceBark, color(102,81,51,255));
-    set_color(Log, LogBirchBark, color(102,81,51,255));
-    set_color(Log, LogOakUp, color(102,81,51,255),  get_color(Log, LogOakBark));
-    set_color(Log, LogSpruceUp, color(102,81,51,255), get_color(Log, LogSpruceBark));
-    set_color(Log, LogBirchUp, color(102,81,51,255), get_color(Log, LogBirchBark));
-    set_color(Log, LogJungleUp, color(102,81,51,255), get_color(Log, LogJungleBark));
+    set_color(Log, LogJungleBark, color(66, 49, 20, 255));
+    set_color(Log, LogOakBark, color(69, 56, 35, 255));
+    set_color(Log, LogSpruceBark, color(31, 21, 8, 255));
+    set_color(Log, LogBirchBark, color(153, 149, 144, 255));
+    set_color(Log, LogOakUp, color(184, 148, 95, 255),  get_color(Log, LogOakBark));
+    set_color(Log, LogSpruceUp, color(128, 95, 56, 255), get_color(Log, LogSpruceBark));
+    set_color(Log, LogBirchUp, color(207, 185, 125, 255), get_color(Log, LogBirchBark));
+    set_color(Log, LogJungleUp, color(188, 142, 98, 255), get_color(Log, LogJungleBark));
     set_color(Log, LogOakEast, get_side_color(Log, LogOakUp), get_color(Log, LogOakUp));
     set_color(Log, LogSpruceEast, get_side_color(Log, LogSpruceUp), get_color(Log, LogSpruceUp));
     set_color(Log, LogBirchEast, get_side_color(Log, LogBirchUp), get_color(Log, LogBirchUp));
@@ -647,12 +643,11 @@ namespace mc {
     set_color(Log, LogJungleNorth, get_side_color(Log, LogJungleUp), get_color(Log, LogJungleUp));
 
     // Leaves (0x12)
-    // TODO Use different colors?
-    set_color(Leaves, LeavesNoDecayCheckDecay+WoodJungle, color(0x4a,0x83,0x42,0x80));
+    set_color(Leaves, LeavesNoDecayCheckDecay+WoodJungle, color(58, 147, 19, 128));
     set_color(Leaves, LeavesNormal+WoodOak, color(0x4a,0x83,0x42,0x80));
     set_color(Leaves, LeavesNormal+WoodSpruce, color(50,89,45,128));
     set_color(Leaves, LeavesNormal+WoodBirch, color(94,167,84,128));
-    set_color(Leaves, LeavesNormal+WoodJungle, color(0x4a,0x83,0x42,0x80));
+    set_color(Leaves, LeavesNormal+WoodJungle, color(58, 147, 19, 128));
     set_color(Leaves, LeavesNoDecay+WoodOak, get_color(Leaves, LeavesNormal+WoodOak));
     set_color(Leaves, LeavesNoDecay+WoodSpruce, get_color(Leaves, LeavesNormal+WoodSpruce));
     set_color(Leaves, LeavesNoDecay+WoodBirch, get_color(Leaves, LeavesNormal+WoodBirch));
@@ -684,16 +679,15 @@ namespace mc {
     set_color(Wool, ColorRed, color(164, 45, 41, 255));
 
     // SmallFlowers (0x26)
-    // TODO Use different colors ...
-    set_color(SmallFlowers, SFlowersOxeyeDaisy, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersPoppy, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersBlueOrchid, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersAllium, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersAzureBluet, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersRedTulip, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersOrangeTulip, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersWhiteTulip, get_color(Dandelion));
-    set_color(SmallFlowers, SFlowersPinkTulip, get_color(Dandelion));
+    set_color(SmallFlowers, SFlowersOxeyeDaisy, color(210, 199, 30, 255));
+    set_color(SmallFlowers, SFlowersPoppy, color(209, 6, 9, 255));
+    set_color(SmallFlowers, SFlowersBlueOrchid, color(28, 146, 214, 255));
+    set_color(SmallFlowers, SFlowersAllium, color(191, 117, 251, 255));
+    set_color(SmallFlowers, SFlowersAzureBluet, color(216, 222, 230, 255));
+    set_color(SmallFlowers, SFlowersRedTulip, color(208, 54, 18, 255));
+    set_color(SmallFlowers, SFlowersOrangeTulip, color(222, 115, 31, 255));
+    set_color(SmallFlowers, SFlowersWhiteTulip, color(231, 231, 231, 255));
+    set_color(SmallFlowers, SFlowersPinkTulip, color(234, 190, 234, 255));
 
     // DoubleStoneSlab (0x2B)
     set_color(DoubleStoneSlab, SlabFullSandStone, get_color(Sandstone));
@@ -804,10 +798,9 @@ namespace mc {
     set_color(StainedGlassPane, ColorRed, get_color(StainedGlass, ColorRed));
 
     // Leaves2 (0xA1)
-    // TODO Use different colors?
-    set_color(Leaves2, Leaves2NoDecayCheckDecay+WoodDarkOak, color(0x4a,0x83,0x42,0x80));
-    set_color(Leaves2, Leaves2Normal+WoodAcacia, color(0x4a,0x83,0x42,0x80));
-    set_color(Leaves2, Leaves2Normal+WoodDarkOak, color(0x4a,0x83,0x42,0x80));
+    set_color(Leaves2, Leaves2NoDecayCheckDecay+WoodDarkOak, color(52, 131, 18, 128));
+    set_color(Leaves2, Leaves2Normal+WoodAcacia, color(58, 145, 19, 128));
+    set_color(Leaves2, Leaves2Normal+WoodDarkOak, color(52, 131, 18, 128));
     set_color(Leaves2, Leaves2NoDecay+WoodAcacia, get_color(Leaves2, Leaves2Normal+WoodAcacia));
     set_color(Leaves2, Leaves2NoDecay+WoodDarkOak, get_color(Leaves2, Leaves2Normal+WoodDarkOak));
     set_color(Leaves2, Leaves2CheckDecay+WoodAcacia, get_color(Leaves2, Leaves2Normal+WoodAcacia));
@@ -815,11 +808,10 @@ namespace mc {
     set_color(Leaves2, Leaves2NoDecayCheckDecay+WoodAcacia, get_color(Leaves2, Leaves2Normal+WoodAcacia));
 
     // Log2 (0xA2)
-    // TODO Use different colors?
-    set_color(Log2, Log2DarkWoodBark, get_color(Log, LogOakBark));
-    set_color(Log2, Log2AcaciaBark, get_color(Log, LogOakBark));
-    set_color(Log2, Log2AcaciaUp, get_color(Log, LogOakUp), get_color(Log2, Log2AcaciaBark));
-    set_color(Log2, Log2DarkWoodUp, get_color(Log, LogOakUp), get_color(Log2, Log2DarkWoodBark));
+    set_color(Log2, Log2DarkWoodBark, color(28, 19, 6, 255));
+    set_color(Log2, Log2AcaciaBark, color(67, 63, 56, 255));
+    set_color(Log2, Log2AcaciaUp, color(183, 92, 56, 255), get_color(Log2, Log2AcaciaBark));
+    set_color(Log2, Log2DarkWoodUp, color(96, 74, 45, 255), get_color(Log2, Log2DarkWoodBark));
     set_color(Log2, Log2AcaciaEast, get_color(Log2, Log2AcaciaBark), get_color(Log2, Log2AcaciaUp));
     set_color(Log2, Log2DarkWoodEast, get_color(Log2, Log2DarkWoodBark), get_color(Log2, Log2DarkWoodUp));
     set_color(Log2, Log2AcaciaNorth, get_color(Log2, Log2AcaciaBark), get_color(Log2, Log2AcaciaUp));
@@ -844,15 +836,15 @@ namespace mc {
     set_color(Carpet, ColorRed, get_color(Wool, ColorRed));
 
     // LargeFlowers (0xAF)
-    // TODO Use different colors ...
+    // TODO Do I need "LFlowersTopHalf+LFlowersSunflower" etc?
     set_color(LargeFlowers, LFlowersTopHalf+1, color(255, 255, 255, 0), SharedInvisColor, false);
     set_color(LargeFlowers, LFlowersTopHalf, color(255, 255, 255, 0), SharedInvisColor, false);
-    set_color(LargeFlowers, LFlowersPeony, get_color(Dandelion));
-    set_color(LargeFlowers, LFlowersSunflower, get_color(Dandelion));
-    set_color(LargeFlowers, LFlowersLilac, get_color(Dandelion));
+    set_color(LargeFlowers, LFlowersSunflower, color(241, 228, 36, 255));
+    set_color(LargeFlowers, LFlowersLilac, color(159, 120, 164, 255));
     set_color(LargeFlowers, LFlowersDoubleTallgrass, get_color(TallGrass));
     set_color(LargeFlowers, LFlowersLargeFern, get_color(TallGrass));
     set_color(LargeFlowers, LFlowersRoseBush, color(255, 0, 0, 255));
+    set_color(LargeFlowers, LFlowersPeony, color(222, 165, 247, 255));
     //set_color(LargeFlowers, LFlowersUnused1, color(255, 255, 255, 0), SharedInvisColor, false);
     //set_color(LargeFlowers, LFlowersUnsued2, color(255, 255, 255, 0), SharedInvisColor, false);
 

@@ -106,8 +106,8 @@ namespace mc {
     Portal = 0x5A,
     Jackolantern = 0x5B,
     Cake = 0x5C,
-    RedstoneRepeaterOn = 0x5D, // TODO Unpowered = 0x5D ?!
-    RedstoneRepeaterOff = 0x5E, // TODO Powered = 0x5E ?!
+    RedstoneRepeaterOff = 0x5D,
+    RedstoneRepeaterOn = 0x5E,
     StainedGlass = 0x5F,
     Trapdoor = 0x60,
     EggBlock = 0x61,
@@ -143,7 +143,7 @@ namespace mc {
     Cocoa = 0x7F,
     SandstoneStairs = 0x80,
     EmeraldOre = 0x81,
-    EmeraldChest = 0x82,
+    EnderChest = 0x82,
     TripwireHook = 0x83,
     Tripwire = 0x84,
     EmeraldBlock = 0x85,

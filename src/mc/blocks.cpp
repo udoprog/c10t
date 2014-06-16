@@ -539,7 +539,7 @@ namespace mc {
     MaterialModes[EmeraldOre] = Block;
     MaterialModes[EmeraldChest] = Block;
     MaterialModes[TripwireHook] = Block;
-    MaterialModes[Tripwire] = HalfBlock; // TODO
+    MaterialModes[Tripwire] = HalfBlock; // TODO Is this correct?
     MaterialModes[EmeraldBlock] = Block;
     MaterialModes[SpruceWoodStairs] = Block;
     MaterialModes[BirchWoodStairs] = Block;
@@ -547,7 +547,7 @@ namespace mc {
     MaterialModes[CommandBlock] = Block;
     MaterialModes[Beacon] = Block;
     MaterialModes[CobblestoneWall] = Block;
-    MaterialModes[FlowerPot] = Block; // TODO
+    MaterialModes[FlowerPot] = Block; // TODO Is this correct?
     MaterialModes[Carrots] = Block;
     MaterialModes[Potatoes] = Block;
     MaterialModes[WoodenButton] = Block;
@@ -558,7 +558,7 @@ namespace mc {
     MaterialModes[WeightedPressurePlateHeavy] = HalfBlock;
     MaterialModes[RedstoneComparatorOff] = Block;
     MaterialModes[RedstoneComparatorOn] = Block;
-    MaterialModes[DaylightSensor] = HalfBlock; // TODO
+    MaterialModes[DaylightSensor] = HalfBlock; // TODO Is this correct?
     MaterialModes[RedstoneBlock] = Block;
     MaterialModes[NetherQuartzOre] = Block;
     MaterialModes[Hopper] = Block;

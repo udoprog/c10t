@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(c10t)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules;${CMAKE_MODULE_PATH}")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}")
 
 # attempt to find out which revision we are building from
 execute_process(COMMAND git rev-list HEAD -n1 --abbrev-commit
@@ -26,7 +26,7 @@ OPTION(Boost_USE_STATIC_LIBS "Use static boost libs" TRUE)
 
 find_package(ZLIB REQUIRED)
 find_package(PNG 1.2 REQUIRED)
-find_package(FreeType 2 REQUIRED)
+find_package(Freetype 2 REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost 1.46 COMPONENTS thread filesystem system REQUIRED)
 

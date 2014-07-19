@@ -104,7 +104,7 @@ struct color{
   friend std::ostream& operator<<(std::ostream& out, const color& c) // output
   {
     std::stringstream ss;
-    ss << (int)c.r << "," << (int)c.g << "," << (int)c.b << "," << (int)c.a;
+    ss << (int)roundf(c.r*255.0f) << "," << (int)roundf(c.g*255.0f) << "," << (int)roundf(c.b*255.0f) << "," << (int)roundf(c.a*255.0f);
     out << ss.str();
     return out;
   }

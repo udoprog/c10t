@@ -94,6 +94,20 @@ public:
             case mc::TorchBlock:
               render_torchblock(oper, block_type, px, py, top, side);
               break;
+            case mc::LargeFlowerBlock:
+              // Check if the requested block is the top block
+              if(block_data & 0x08) {
+                // Small sanity check
+                if(br_blocks.get8(y-1) == mc::LargeFlowers) {
+                  // Minecraft currently doesn't set the lower bits to the
+                  // corresponding type so we have to do this here.
+                  block_data = br_data.get4(y-1) | 0x08;
+                  top =  mc::get_color(block_type, block_data);
+                  side = mc::get_side_color(block_type, block_data);
+                }
+              }
+              render_block(oper, block_type, px, py, top, side);
+              break;
             }
           }
         }

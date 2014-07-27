@@ -9,7 +9,8 @@ namespace mc {
   enum MaterialMode {
     Block,
     HalfBlock,
-    TorchBlock
+    TorchBlock,
+    LargeFlowerBlock
   };
   
   enum {
@@ -306,8 +307,7 @@ namespace mc {
     LFlowersPeony,
     LFlowersUnused1,
     LFlowersUnsued2,
-    LFlowersTopHalf,
-    LFlowersColorCount
+    LFlowersTopHalf = 0x08
   };
 
   void initialize_constants();

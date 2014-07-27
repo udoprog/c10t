@@ -582,7 +582,7 @@ namespace mc {
     MaterialModes[HardenedClay] = Block;
     MaterialModes[CoalBlock] = Block;
     MaterialModes[PackedIce] = Block;
-    MaterialModes[LargeFlowers] = Block;
+    MaterialModes[LargeFlowers] = LargeFlowerBlock;
     MaterialModes[PineLeaves] = Block;
     MaterialModes[BirchLeaves] = Block;
 
@@ -836,17 +836,22 @@ namespace mc {
     set_color(Carpet, ColorRed, get_color(Wool, ColorRed));
 
     // LargeFlowers (0xAF)
-    // TODO Do I need "LFlowersTopHalf+LFlowersSunflower" etc?
-    set_color(LargeFlowers, LFlowersTopHalf+1, color(255, 255, 255, 0), SharedInvisColor, false);
-    set_color(LargeFlowers, LFlowersTopHalf, color(255, 255, 255, 0), SharedInvisColor, false);
-    set_color(LargeFlowers, LFlowersSunflower, color(241, 228, 36, 255));
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersUnsued2, color(255, 255, 255, 0), SharedInvisColor, false);
+    set_color(LargeFlowers, LFlowersSunflower, color(66, 108, 43, 255));
     set_color(LargeFlowers, LFlowersLilac, color(159, 120, 164, 255));
     set_color(LargeFlowers, LFlowersDoubleTallgrass, get_color(TallGrass));
     set_color(LargeFlowers, LFlowersLargeFern, get_color(TallGrass));
-    set_color(LargeFlowers, LFlowersRoseBush, color(255, 0, 0, 255));
-    set_color(LargeFlowers, LFlowersPeony, color(222, 165, 247, 255));
-    //set_color(LargeFlowers, LFlowersUnused1, color(255, 255, 255, 0), SharedInvisColor, false);
-    //set_color(LargeFlowers, LFlowersUnsued2, color(255, 255, 255, 0), SharedInvisColor, false);
+    set_color(LargeFlowers, LFlowersRoseBush, color(190, 26, 18, 255));
+    set_color(LargeFlowers, LFlowersPeony, color(69, 96, 73, 255));
+    set_color(LargeFlowers, LFlowersUnused1, color(255, 255, 255, 0), SharedInvisColor, false);
+    set_color(LargeFlowers, LFlowersUnsued2, color(255, 255, 255, 0), SharedInvisColor, false);
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersSunflower, color(230, 187, 33, 255));
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersLilac, get_color(LargeFlowers, LFlowersLilac));
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersDoubleTallgrass, get_color(TallGrass));
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersLargeFern, get_color(TallGrass));
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersRoseBush, get_color(LargeFlowers, LFlowersRoseBush));
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersPeony, color(222, 165, 247, 255));
+    set_color(LargeFlowers, LFlowersTopHalf+LFlowersUnused1, color(255, 255, 255, 0), SharedInvisColor, false);
 
   }
   

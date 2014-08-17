@@ -293,9 +293,9 @@ namespace mc {
 
   enum {
     Log2UpDown = 0x00 - WoodAcacia,
-    Log2EastWest = 0x02 - WoodAcacia,
-    Log2NorthSouth = 0x04 - WoodAcacia,
-    Log2OnlyBark = 0x06 - WoodAcacia
+    Log2EastWest = 0x04 - WoodAcacia,
+    Log2NorthSouth = 0x08 - WoodAcacia,
+    Log2OnlyBark = 0x0C - WoodAcacia
   };
 
   enum {

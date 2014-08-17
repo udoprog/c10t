@@ -815,7 +815,7 @@ namespace mc {
     set_color(Log2, Log2EastWest+WoodAcacia, get_color(Log2, Log2OnlyBark+WoodAcacia), get_color(Log2, Log2UpDown+WoodAcacia));
     set_color(Log2, Log2EastWest+WoodDarkOak, get_color(Log2, Log2OnlyBark+WoodDarkOak), get_color(Log2, Log2UpDown+WoodDarkOak));
     set_color(Log2, Log2NorthSouth+WoodAcacia, get_color(Log2, Log2OnlyBark+WoodAcacia), get_color(Log2, Log2UpDown+WoodAcacia));
-    set_color(Log2, Log2NorthSouth+WoodOak, get_color(Log2, Log2OnlyBark+WoodDarkOak), get_color(Log2, Log2UpDown+WoodDarkOak));
+    set_color(Log2, Log2NorthSouth+WoodDarkOak, get_color(Log2, Log2OnlyBark+WoodDarkOak), get_color(Log2, Log2UpDown+WoodDarkOak));
 
     // Carpet (0xAB)
     set_color(Carpet, ColorBlack, get_color(Wool, ColorBlack));

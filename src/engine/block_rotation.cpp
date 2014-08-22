@@ -40,8 +40,14 @@ int block_rotation::get8(int y, int d) {
   return array->values[p] & 0xff;
 }
 
+/**
+ * Data values are packed two by two and the position LSB decides which
+ * half-byte contains the requested block data value.
+ */
 int block_rotation::get4(int y, int d) {
-  int p = ((y * 16 + z) * 16 + x) >> 1;
+  int tmp = (y * 16 + z) * 16 + x;
+  int p = tmp >> 1;
+  int b = tmp & 0x1;
   if (!(p >= 0 && p < array->length)) return d;
-  return ((array->values[p]) >> ((x % 2) * 4)) & 0xf;
+  return (array->values[p] >> (b * 4)) & 0xf;
 }

@@ -214,11 +214,6 @@ namespace mc {
     MaterialName[Log2] = "Log2";
     MaterialName[AcaciaWoodStairs] = "AcaciaWoodStairs";
     MaterialName[DarkOakWoodStairs] = "DarkOakWoodStairs";
-    //MaterialName[SlimeBlock] = "SlimeBlock";
-    //MaterialName[Barrier] = "Barrier";
-    //MaterialName[IronTrapdoor] = "IronTrapdoor";
-    //MaterialName[UNUSED] = "UNUSED";
-    //MaterialName[UNUSED] = "UNUSED";
     MaterialName[HayBlock] = "HayBlock";
     MaterialName[Carpet] = "Carpet";
     MaterialName[HardenedClay] = "HardenedClay";
@@ -394,11 +389,6 @@ namespace mc {
     // NOTE: See below for Log2
     // NOTE: See below for AcaciaWoodStairs
     // NOTE: See below for DarkOakWoodStairs
-    //set_color(SlimeBlock, 0, SharedInvisColor); // MC 1.8! Not implemented yet.
-    //set_color(Barrier, 0, SharedInvisColor); // MC 1.8! Not implemented yet.
-    //set_color(IronTrapdoor, 0, SharedInvisColor); // MC 1.8! Not implemented yet.
-    //set_color(UNUSED, 0, SharedInvisColor); // Not implemented yet.
-    //set_color(UNUSED, 0, SharedInvisColor); // Not implemented yet.
     set_color(HayBlock, 0, color(192, 160, 14, 255));
     set_color(HardenedClay, 0, color(140, 86, 63, 255));
     set_color(CoalBlock, 0, color(20, 20, 20, 255));
@@ -572,11 +562,6 @@ namespace mc {
     MaterialModes[Log2] = Block;
     MaterialModes[AcaciaWoodStairs] = Block;
     MaterialModes[DarkOakWoodStairs] = Block;
-    //MaterialModes[SlimeBlock] = Block;
-    //MaterialModes[Barrier] = Block;
-    //MaterialModes[IronTrapdoor] = HalfBlock;
-    //MaterialModes[UNUSED] = Block;
-    //MaterialModes[UNUSED] = Block;
     MaterialModes[HayBlock] = Block;
     MaterialModes[Carpet] = HalfBlock;
     MaterialModes[HardenedClay] = Block;

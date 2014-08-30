@@ -9,7 +9,8 @@ namespace mc {
   enum MaterialMode {
     Block,
     HalfBlock,
-    TorchBlock
+    TorchBlock,
+    LargeFlowerBlock
   };
   
   enum {
@@ -43,19 +44,21 @@ namespace mc {
     PoweredRail = 0x1B,
     DetectorRail = 0x1C,
     StickyPistonBase = 0x1D,
+    Cobweb = 0x1E,
     TallGrass = 0x1F,
     DeadShrub = 0x20,
     PistonBase = 0x21,
     PistonPlatform = 0x22,
     Wool = 0x23,
-    YellowFlower = 0x25,
-    RedRose = 0x26,
+    PistonMovedBlock = 0x24,
+    Dandelion = 0x25,
+    SmallFlowers = 0x26,
     BrownMushroom = 0x27,
     RedMushroom = 0x28,
     GoldBlock = 0x29,
     IronBlock = 0x2A,
-    DoubleStep = 0x2B,
-    Step = 0x2C,
+    DoubleStoneSlab = 0x2B,
+    StoneSlab = 0x2C,
     Brick = 0x2D,
     TNT = 0x2E,
     Bookcase = 0x2F,
@@ -64,7 +67,7 @@ namespace mc {
     Torch = 0x32,
     Fire = 0x33,
     MobSpawner = 0x34,
-    WoodenStairs = 0x35,
+    OakWoodStairs = 0x35,
     Chest = 0x36,
     RedstoneWire = 0x37,
     DiamondOre = 0x38,
@@ -104,8 +107,9 @@ namespace mc {
     Portal = 0x5A,
     Jackolantern = 0x5B,
     Cake = 0x5C,
-    RedstoneRepeaterOn = 0x5D,
-    RedstoneRepeaterOff = 0x5E,
+    RedstoneRepeaterOff = 0x5D,
+    RedstoneRepeaterOn = 0x5E,
+    StainedGlass = 0x5F,
     Trapdoor = 0x60,
     EggBlock = 0x61,
     StoneBrick = 0x62,
@@ -133,39 +137,174 @@ namespace mc {
     EndPortalFrame = 0x78,
     EndStone = 0x79,
     DragonEgg = 0x7A,
+    RedstoneLampOff = 0x7B,
+    RedstoneLampOn = 0x7C,
+    WoodenDoubleSlab = 0x7D,
+    WoodenSlab = 0x7E,
+    Cocoa = 0x7F,
+    SandstoneStairs = 0x80,
+    EmeraldOre = 0x81,
+    EnderChest = 0x82,
+    TripwireHook = 0x83,
+    Tripwire = 0x84,
+    EmeraldBlock = 0x85,
+    SpruceWoodStairs = 0x86,
+    BirchWoodStairs = 0x87,
+    JungleWoodStairs = 0x88,
+    CommandBlock = 0x89,
+    Beacon = 0x8A,
+    CobblestoneWall = 0x8B,
+    FlowerPot = 0x8C,
+    Carrots = 0x8D,
+    Potatoes = 0x8E,
+    WoodenButton = 0x8F,
+    MobHead = 0x90,
+    Anvil = 0x91,
+    TrappedChest = 0x92,
+    WeightedPressurePlateLight = 0x93,
+    WeightedPressurePlateHeavy = 0x94,
+    RedstoneComparatorOff = 0x95,
+    RedstoneComparatorOn = 0x96,
+    DaylightSensor = 0x97,
+    RedstoneBlock = 0x98,
+    NetherQuartzOre = 0x99,
+    Hopper = 0x9A,
+    QuartzBlock = 0x9B,
+    QuartzStairs = 0x9C,
+    ActivatorRail = 0x9D,
+    Dropper = 0x9E,
+    StainedClay = 0x9F,
+    StainedGlassPane = 0xA0,
+    Leaves2 = 0xA1,
+    Log2 = 0xA2,
+    AcaciaWoodStairs = 0xA3,
+    DarkOakWoodStairs = 0xA4,
+    HayBlock = 0xAA,
+    Carpet = 0xAB,
+    HardenedClay = 0xAC,
+    CoalBlock = 0xAD,
+    PackedIce = 0xAE,
+    LargeFlowers = 0xAF,
     PineLeaves = 0xEC,
     BirchLeaves = 0xED,
     MaterialCount = 0x1000
   };
 
   enum {
-    WoolWhite = 0x00,
-    WoolOrange,
-    WoolMagenta,
-    WoolLightBlue,
-    WoolYellow,
-    WoolLightGreen,
-    WoolPink,
-    WoolGray,
-    WoolLightGray,
-    WoolCyan,
-    WoolPurple,
-    WoolBlue,
-    WoolBrown,
-    WoolDarkGreen,
-    WoolRed,
-    WoolBlack,
-    WoolColorCount
+    DirtNormal = 0x00,
+    DirtCoarse,
+    DirtPodzol,
+    DirtColorCount
   };
 
   enum {
-    StepStone = 0x00,
-    StepSandstone,
-    StepWood,
-    StepCobblestone,
-    StepColorCount
+    WoodOak = 0x00,
+    WoodSpruce,
+    WoodBirch,
+    WoodJungle,
+    WoodAcacia,
+    WoodDarkOak,
+    WoodColorCount
   };
-  
+
+  enum {
+    SandNormal = 0x00,
+    SandRed,
+    SandColorCount
+  };
+
+  enum {
+    LogUpDown = 0x00 - WoodOak,
+    LogEastWest = 0x04 - WoodOak,
+    LogNorthSouth = 0x08 - WoodOak,
+    LogOnlyBark = 0x0C - WoodOak
+  };
+
+  enum {
+    LeavesNormal = 0x00,
+    LeavesNoDecay = 0x04,
+    LeavesCheckDecay = 0x08,
+    LeavesNoDecayCheckDecay = 0x0C
+  };
+
+  enum {
+    ColorWhite = 0x00,
+    ColorOrange,
+    ColorMagenta,
+    ColorLightBlue,
+    ColorYellow,
+    ColorLightGreen,
+    ColorPink,
+    ColorGray,
+    ColorLightGray,
+    ColorCyan,
+    ColorPurple,
+    ColorBlue,
+    ColorBrown,
+    ColorDarkGreen,
+    ColorRed,
+    ColorBlack,
+    ColorColorCount
+  };
+
+  enum {
+    SFlowersPoppy = 0x00,
+    SFlowersBlueOrchid,
+    SFlowersAllium,
+    SFlowersAzureBluet,
+    SFlowersRedTulip,
+    SFlowersOrangeTulip,
+    SFlowersWhiteTulip,
+    SFlowersPinkTulip,
+    SFlowersOxeyeDaisy,
+    SFlowersColorCount
+  };
+
+  enum {
+    SlabStone = 0x00,
+    SlabSandstone,
+    SlabWood,
+    SlabCobblestone,
+    SlabBrick,
+    SlabStoneBrick,
+    SlabNether,
+    SlabQuartz,
+    SlabReverse,
+    SlabFullStone = SlabReverse,
+    SlabFullSandStone
+  };
+
+  enum {
+    WoodenSlabNormal = 0x00,
+    WoodenSlabReverse = 0x08
+  };
+
+  enum {
+    Leaves2Normal = 0x00 - WoodAcacia,
+    Leaves2NoDecay = 0x04 - WoodAcacia,
+    Leaves2CheckDecay = 0x08 - WoodAcacia,
+    Leaves2NoDecayCheckDecay = 0x0C - WoodAcacia
+  };
+
+  enum {
+    Log2UpDown = 0x00 - WoodAcacia,
+    Log2EastWest = 0x04 - WoodAcacia,
+    Log2NorthSouth = 0x08 - WoodAcacia,
+    Log2OnlyBark = 0x0C - WoodAcacia
+  };
+
+  enum {
+    LFlowersSunflower = 0x00,
+    LFlowersLilac,
+    LFlowersDoubleTallgrass,
+    LFlowersLargeFern,
+    LFlowersRoseBush,
+    LFlowersPeony,
+    LFlowersUnused1,
+    LFlowersUnsued2,
+    LFlowersTopHalf = 0x08
+  };
+
   void initialize_constants();
   void deinitialize_constants();
 

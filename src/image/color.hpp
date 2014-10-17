@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <assert.h>
+#include <math.h>
 
 #include <string>
 #include <sstream>

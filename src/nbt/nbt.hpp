@@ -14,6 +14,7 @@
 #include <string>
 #include <stack>
 #include <list>
+#include <iostream>
 
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/shared_ptr.hpp>

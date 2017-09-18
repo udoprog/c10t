@@ -12,7 +12,7 @@ namespace mc {
     TorchBlock,
     LargeFlowerBlock
   };
-  
+
   enum {
     Air = 0x00,
     Stone = 0x01,
@@ -179,15 +179,99 @@ namespace mc {
     Log2 = 0xA2,
     AcaciaWoodStairs = 0xA3,
     DarkOakWoodStairs = 0xA4,
+    SlimeBlock = 0xA5,
+    Barrier = 0xA6,
+    IronTrapdoor = 0xA7,
+    PrismarineBlock = 0xA8,
+    SeaLantern = 0xA9,
     HayBlock = 0xAA,
     Carpet = 0xAB,
-    HardenedClay = 0xAC,
+    HardenedClay = 0xAC, // Terracotta
     CoalBlock = 0xAD,
     PackedIce = 0xAE,
     LargeFlowers = 0xAF,
-    PineLeaves = 0xEC,
-    BirchLeaves = 0xED,
+    RedSandstone = 0xB3,
+    RedSandstoneStairs = 0xB4,
+    RedSandstoneSlab = 0xB6,
+
+    FenceGateSprouce = 0xB7,   // FIXME
+    FenceGateBrich = 0xB8,     // FIXME
+    FenceGateJungle = 0xB9,    // FIXME
+    FenceGateDarkOak = 0xBA,   // FIXME
+    FenceGateAcacia = 0xBB,    // FIXME
+    FenceSprouce = 0xBC,       // FIXME
+    FenceBrich = 0xBD,         // FIXME
+    FenceJungle = 0xBE,        // FIXME
+    FenceDarkOak = 0xBF,       // FIXME
+    FenceAcacia = 0xC0,        // FIXME
+
+    Endrod = 0xC6,             // FIXME
+    ChorusPlant = 0xC7,        // FIXME
+    ChorusFlower = 0xC8,       // FIXME
+    PurpurBlock = 0xC9,        // FIXME
+    PurpurPillar = 0xCA,       // FIXME
+    PurpurStairs = 0xCB,       // FIXME
+    PurpurSlab = 0xCD,         // FIXME
+    EndStoneBricks = 0xCE,     // FIXME
+    GrassPath = 0xD0,          // FIXME
+    CommandBlockRepeating = 0xD2,// FIXME
+    CommandBlockChain = 0xD3,  // FIXME
+    MagmaBlock = 0xD5,         // FIXME
+    NetherWartBlock = 0xD6,    // FIXME
+    RedNetherBrick = 0xD7,     // FIXME
+    BoneBlock = 0xD8,          // FIXME
+    StructureVoid = 0xD9,      // FIXME
+    Observer = 0xDA,           // FIXME
+    ShulkerBoxWhite = 0xDB,    // FIXME
+    ShulkerBoxOrange = 0xDC,   // FIXME
+    ShulkerBoxMagenta = 0xDD,  // FIXME
+    ShulkerBoxLightBlue = 0xDE,// FIXME
+    ShulkerBoxYellow = 0xDF,   // FIXME
+    ShulkerBoxLime = 0xE0,     // FIXME
+    ShulkerBoxPink = 0xE1,     // FIXME
+    ShulkerBoxGray = 0xE2,     // FIXME
+    ShulkerBoxLightGray = 0xE3,// FIXME
+    ShulkerBoxCyan = 0xE4,     // FIXME
+    ShulkerBoxPurple = 0xE5,   // FIXME
+    ShulkerBoxBlue = 0xE6,     // FIXME
+    ShulkerBoxBrown = 0xE7,    // FIXME
+    ShulkerBoxGreen = 0xE8,    // FIXME
+    ShulkerBoxRed = 0xE9,      // FIXME
+    ShulkerBoxBlack = 0xEA,    // FIXME
+    GlazedTerracottaWhite = 0xEB,    // FIXME
+    GlazedTerracottaOrange = 0xEC,   // FIXME
+    GlazedTerracottaMagenta = 0xED,  // FIXME
+    GlazedTerracottaLightBlue = 0xEE,// FIXME
+    GlazedTerracottaYellow = 0xEF,   // FIXME
+    GlazedTerracottaLime = 0xF0,     // FIXME
+    GlazedTerracottaPink = 0xF1,     // FIXME
+    GlazedTerracottaGray = 0xF2,     // FIXME
+    GlazedTerracottaLightGray = 0xF3,// FIXME
+    GlazedTerracottaCyan = 0xF4,     // FIXME
+    GlazedTerracottaPurple = 0xF5,   // FIXME
+    GlazedTerracottaBlue = 0xF6,     // FIXME
+    GlazedTerracottaBrown = 0xF7,    // FIXME
+    GlazedTerracottaGreen = 0xF8,    // FIXME
+    GlazedTerracottaRed = 0xF9,      // FIXME
+    GlazedTerracottaBlack = 0xFA,    // FIXME
+    Concrete = 0xFB,       // FIXME
+    ConcretePowder = 0xFC, // FIXME
+    StructureBlock = 0xFF, // FIXME
+    // Removed very old leaf ids, possibly from before MC1.2 or there about.
+    //PineLeaves = 0xEC,
+    //BirchLeaves = 0xED,
     MaterialCount = 0x1000
+  };
+
+  enum {
+    StoneNormal = 0x00,
+    StoneGranite,
+    StonePolishedGranite,
+    StoneDiorite,
+    StonePolishedDiorite,
+    StoneAndesite,
+    StonePolishedAndesite,
+    StoneColorCount
   };
 
   enum {
@@ -217,7 +301,8 @@ namespace mc {
     LogUpDown = 0x00 - WoodOak,
     LogEastWest = 0x04 - WoodOak,
     LogNorthSouth = 0x08 - WoodOak,
-    LogOnlyBark = 0x0C - WoodOak
+    LogOnlyBark = 0x0C - WoodOak,
+    LogAlignmentCount
   };
 
   enum {
@@ -294,6 +379,13 @@ namespace mc {
   };
 
   enum {
+    PPrismarine = 0x00,
+    PPrismarineBrick,
+    PDarkPrismarine,
+    PPrismarineCount
+  };
+
+  enum {
     LFlowersSunflower = 0x00,
     LFlowersLilac,
     LFlowersDoubleTallgrass,
@@ -345,7 +437,7 @@ namespace mc {
     }
     return MaterialColorData[material].side[data];
   }
-  
+
   /**
    * Sets the color values for a material at the specified index.
    * Notice: the side color is drakened with value 50 automatically, unless

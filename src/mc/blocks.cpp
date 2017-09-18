@@ -11,11 +11,11 @@ namespace mc {
   const int MapY = 0x100;
 
   const char *DefaultName = "None";
-  
+
   const char **MaterialName;
   MaterialColorT *MaterialColorData;
   MaterialMode *MaterialModes;
-  
+
   void set_color(int material, int data, color top, color side, bool darken)
   {
     MaterialColorData[material].count =
@@ -214,17 +214,35 @@ namespace mc {
     MaterialName[Log2] = "Log2";
     MaterialName[AcaciaWoodStairs] = "AcaciaWoodStairs";
     MaterialName[DarkOakWoodStairs] = "DarkOakWoodStairs";
+    MaterialName[SlimeBlock] = "SlimeBlock";
+    MaterialName[Barrier] = "Berrier";
+    MaterialName[IronTrapdoor] = "IronTrapdoor";
+    MaterialName[PrismarineBlock] = "Prismarine";
+    MaterialName[SeaLantern] = "SeaLantern";
     MaterialName[HayBlock] = "HayBlock";
     MaterialName[Carpet] = "Carpet";
-    MaterialName[HardenedClay] = "HardenedClay";
+    MaterialName[HardenedClay] = "HardenedClay"; // Terracotta
     MaterialName[CoalBlock] = "CoalBlock";
     MaterialName[PackedIce] = "PackedIce";
     MaterialName[LargeFlowers] = "LargeFlowers";
-    MaterialName[PineLeaves] = "PineLeaves";
-    MaterialName[BirchLeaves] = "BirchLeaves";
+    MaterialName[RedSandstone] = "RedSandstone";
+    MaterialName[RedSandstoneStairs] = "RedSandstoneStairs";
+    MaterialName[RedSandstoneSlab] = "RedSandstoneSlab";
+    MaterialName[FenceGateSprouce] = "SprouceFenceGate";
+    MaterialName[FenceGateBrich] = "BrichFenceGate";
+    MaterialName[FenceGateJungle] = "JungleFenceGate";
+    MaterialName[FenceGateDarkOak] = "DarkOakFenceGate";
+    MaterialName[FenceGateAcacia] = "AcaciaFenceGate";
+    MaterialName[FenceSprouce] = "SprouceFence";
+    MaterialName[FenceBrich] = "BrichFence";
+    MaterialName[FenceJungle] = "JungleFence";
+    MaterialName[FenceDarkOak] = "DarkOakFence";
+    MaterialName[FenceAcacia] = "AcaciaFence";
+    //MaterialName[PineLeaves] = "PineLeaves";
+    //MaterialName[BirchLeaves] = "BirchLeaves";
 
     set_color(Air, 0, color(255,255,255,0), SharedInvisColor, false);
-    set_color(Stone, 0, color(128,128,128,255));
+    // NOTE: See below for Stone
     set_color(Grass, 0, color(120,172,70,255), color(134,96,67,255));
     set_color(Dirt, 0, get_side_color(Grass));
     set_color(Cobblestone, 0, color(100,100,100,255));
@@ -389,13 +407,31 @@ namespace mc {
     // NOTE: See below for Log2
     // NOTE: See below for AcaciaWoodStairs
     // NOTE: See below for DarkOakWoodStairs
+    set_color(SlimeBlock, 0, color(114, 188, 105, 200));
+    set_color(Barrier, 0, color(255, 0, 0, 0), SharedInvisColor, false);
+    set_color(IronTrapdoor, 0, get_color(WeightedPressurePlateHeavy));
+    // NOTE: See below for PrismarineBlock
+    set_color(SeaLantern, 0, color(68, 121, 104, 255));
     set_color(HayBlock, 0, color(192, 160, 14, 255));
     set_color(HardenedClay, 0, color(140, 86, 63, 255));
     set_color(CoalBlock, 0, color(20, 20, 20, 255));
     set_color(PackedIce, 0, get_color(Ice));
     // NOTE: See below for LargeFlowers
-    set_color(PineLeaves, 0, color(50,89,45,128));
-    set_color(BirchLeaves, 0, color(94,167,84,128));
+    set_color(RedSandstone, 0, color(166, 85, 30, 255));
+    set_color(RedSandstoneStairs, 0, get_color(RedSandstone));
+    set_color(RedSandstoneSlab, 0, get_color(RedSandstone));
+    set_color(FenceGateSprouce, 0, color(102, 77, 46, 200));
+    set_color(FenceGateBrich, 0, color(193, 177, 122, 200));
+    set_color(FenceGateJungle, 0, color(152, 109, 76, 200));
+    set_color(FenceGateDarkOak, 0, color(60, 39, 18, 200));
+    set_color(FenceGateAcacia, 0, color(168, 91, 50, 200));
+    set_color(FenceSprouce, 0, get_color(FenceGateSprouce));
+    set_color(FenceBrich, 0, get_color(FenceGateBrich));
+    set_color(FenceJungle, 0, get_color(FenceGateJungle));
+    set_color(FenceDarkOak, 0, get_color(FenceGateDarkOak));
+    set_color(FenceAcacia, 0, get_color(FenceGateAcacia));
+    //set_color(PineLeaves, 0, color(50,89,45,128));
+    //set_color(BirchLeaves, 0, color(94,167,84,128));
 
     MaterialModes[Air] = Block;
     MaterialModes[Stone] = Block;
@@ -508,7 +544,7 @@ namespace mc {
     MaterialModes[BrickStairs] = Block;
     MaterialModes[StoneBrickStairs] = Block;
     MaterialModes[Mycelium] = Block;
-    MaterialModes[LilyPad] = Block; 
+    MaterialModes[LilyPad] = Block;
     MaterialModes[NetherBrick] = Block;
     MaterialModes[NetherBrickFence] = Block;
     MaterialModes[NetherBrickStairs] = Block;
@@ -562,20 +598,47 @@ namespace mc {
     MaterialModes[Log2] = Block;
     MaterialModes[AcaciaWoodStairs] = Block;
     MaterialModes[DarkOakWoodStairs] = Block;
+    MaterialModes[SlimeBlock] = Block;
+    MaterialModes[Barrier] = Block;
+    MaterialModes[IronTrapdoor] = HalfBlock;
+    MaterialModes[PrismarineBlock] = Block;
+    MaterialModes[SeaLantern] = Block;
     MaterialModes[HayBlock] = Block;
     MaterialModes[Carpet] = HalfBlock;
     MaterialModes[HardenedClay] = Block;
     MaterialModes[CoalBlock] = Block;
     MaterialModes[PackedIce] = Block;
     MaterialModes[LargeFlowers] = LargeFlowerBlock;
-    MaterialModes[PineLeaves] = Block;
-    MaterialModes[BirchLeaves] = Block;
+    MaterialModes[RedSandstone] = Block;
+    MaterialModes[RedSandstoneStairs] = Block;
+    MaterialModes[RedSandstoneSlab] = HalfBlock;
+    MaterialModes[FenceGateSprouce] = Block;
+    MaterialModes[FenceGateBrich] = Block;
+    MaterialModes[FenceGateJungle] = Block;
+    MaterialModes[FenceGateDarkOak] = Block;
+    MaterialModes[FenceGateAcacia] = Block;
+    MaterialModes[FenceSprouce] = Block;
+    MaterialModes[FenceBrich] = Block;
+    MaterialModes[FenceJungle] = Block;
+    MaterialModes[FenceDarkOak] = Block;
+    MaterialModes[FenceAcacia] = Block;
+    //MaterialModes[PineLeaves] = Block;
+    //MaterialModes[BirchLeaves] = Block;
 
-    /* 
+    /*
      * Special colors depending on data value
-     * Start with the highest index to reduce allocation time complexity 
+     * Start with the highest index to reduce allocation time complexity
      * The order of the following entries does not matter.
      */
+    // Stone (0x01)
+    set_color(Stone, StonePolishedAndesite, color(119, 119, 124, 255));
+    set_color(Stone, StoneNormal, color(128, 128, 128, 255));
+    set_color(Stone, StoneGranite, color(153, 113, 98, 255));
+    set_color(Stone, StonePolishedGranite, color(133, 88, 75, 255));
+    set_color(Stone, StoneDiorite, color(162, 161, 169, 255));
+    set_color(Stone, StonePolishedDiorite, color(158, 158, 167, 255));
+    set_color(Stone, StoneAndesite, color(114, 114, 119, 255));
+
     // Dirt (0x03)
     set_color(Dirt, DirtPodzol, color(108, 67, 29, 255));
     set_color(Dirt, DirtNormal, color(134, 96, 67, 255));
@@ -802,6 +865,11 @@ namespace mc {
     set_color(Log2, Log2NorthSouth+WoodAcacia, get_color(Log2, Log2OnlyBark+WoodAcacia), get_color(Log2, Log2UpDown+WoodAcacia), false);
     set_color(Log2, Log2NorthSouth+WoodDarkOak, get_color(Log2, Log2OnlyBark+WoodDarkOak), get_color(Log2, Log2UpDown+WoodDarkOak), false);
 
+    // PrismarineBlock (0xA8)
+    set_color(PrismarineBlock, PDarkPrismarine, color(59, 87, 75, 255));
+    set_color(PrismarineBlock, PPrismarine, color(69, 122, 123, 255));
+    set_color(PrismarineBlock, PPrismarineBrick, color(69, 123, 108, 255));
+
     // Carpet (0xAB)
     set_color(Carpet, ColorBlack, get_color(Wool, ColorBlack));
     set_color(Carpet, ColorWhite, get_color(Wool, ColorWhite));
@@ -839,7 +907,7 @@ namespace mc {
     set_color(LargeFlowers, LFlowersTopHalf+LFlowersUnused1, color(255, 255, 255, 0), SharedInvisColor, false);
 
   }
-  
+
   void deinitialize_constants() {
     delete [] MaterialColorData;
   }

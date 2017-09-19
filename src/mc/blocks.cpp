@@ -238,6 +238,11 @@ namespace mc {
     MaterialName[FenceJungle] = "JungleFence";
     MaterialName[FenceDarkOak] = "DarkOakFence";
     MaterialName[FenceAcacia] = "AcaciaFence";
+    MaterialName[DoorSpruce] = "SpruceDoor";
+    MaterialName[DoorBirch] = "BirchDoor";
+    MaterialName[DoorJungle] = "JungleDoor";
+    MaterialName[DoorAcacia] = "AcaciaDoor";
+    MaterialName[DoorDarkOak] = "DarkOakDoor";
     //MaterialName[PineLeaves] = "PineLeaves";
     //MaterialName[BirchLeaves] = "BirchLeaves";
 
@@ -430,6 +435,11 @@ namespace mc {
     set_color(FenceJungle, 0, get_color(FenceGateJungle));
     set_color(FenceDarkOak, 0, get_color(FenceGateDarkOak));
     set_color(FenceAcacia, 0, get_color(FenceGateAcacia));
+    set_color(DoorSpruce, 0, SharedInvisColor);
+    set_color(DoorBirch, 0, SharedInvisColor);
+    set_color(DoorJungle, 0, SharedInvisColor);
+    set_color(DoorAcacia, 0, SharedInvisColor);
+    set_color(DoorDarkOak, 0, SharedInvisColor);
     //set_color(PineLeaves, 0, color(50,89,45,128));
     //set_color(BirchLeaves, 0, color(94,167,84,128));
 
@@ -622,6 +632,11 @@ namespace mc {
     MaterialModes[FenceJungle] = Block;
     MaterialModes[FenceDarkOak] = Block;
     MaterialModes[FenceAcacia] = Block;
+    MaterialModes[DoorSpruce] = Block;
+    MaterialModes[DoorBirch] = Block;
+    MaterialModes[DoorJungle] = Block;
+    MaterialModes[DoorAcacia] = Block;
+    MaterialModes[DoorDarkOak] = Block;
     //MaterialModes[PineLeaves] = Block;
     //MaterialModes[BirchLeaves] = Block;
 

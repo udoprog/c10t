@@ -73,12 +73,12 @@ namespace mc {
     DiamondOre = 0x38,
     DiamondBlock = 0x39,
     Workbench = 0x3A,
-    Crops = 0x3B,
+    Crops = 0x3B, // Wheat
     Soil = 0x3C,
     Furnace = 0x3D,
     BurningFurnace = 0x3E,
     SignPost = 0x3F,
-    WoodenDoor = 0x40,
+    WoodenDoor = 0x40, // Oak wood door
     Ladder = 0x41,
     MinecartTracks = 0x42,
     CobblestoneStairs = 0x43,
@@ -193,17 +193,21 @@ namespace mc {
     RedSandstone = 0xB3,
     RedSandstoneStairs = 0xB4,
     RedSandstoneSlab = 0xB6,
-
-    FenceGateSprouce = 0xB7,   // FIXME
-    FenceGateBrich = 0xB8,     // FIXME
-    FenceGateJungle = 0xB9,    // FIXME
-    FenceGateDarkOak = 0xBA,   // FIXME
-    FenceGateAcacia = 0xBB,    // FIXME
-    FenceSprouce = 0xBC,       // FIXME
-    FenceBrich = 0xBD,         // FIXME
-    FenceJungle = 0xBE,        // FIXME
-    FenceDarkOak = 0xBF,       // FIXME
-    FenceAcacia = 0xC0,        // FIXME
+    FenceGateSprouce = 0xB7,
+    FenceGateBrich = 0xB8,
+    FenceGateJungle = 0xB9,
+    FenceGateDarkOak = 0xBA,
+    FenceGateAcacia = 0xBB,
+    FenceSprouce = 0xBC,
+    FenceBrich = 0xBD,
+    FenceJungle = 0xBE,
+    FenceDarkOak = 0xBF,
+    FenceAcacia = 0xC0,
+    DoorSpruce = 0xC1,
+    DoorBirch = 0xC2,
+    DoorJungle = 0xC3,
+    DoorAcacia = 0xC4,
+    DoorDarkOak = 0xC5,
 
     Endrod = 0xC6,             // FIXME
     ChorusPlant = 0xC7,        // FIXME
@@ -213,9 +217,12 @@ namespace mc {
     PurpurStairs = 0xCB,       // FIXME
     PurpurSlab = 0xCD,         // FIXME
     EndStoneBricks = 0xCE,     // FIXME
+    CropsBeetroot = 0xCF,      // FIXME
     GrassPath = 0xD0,          // FIXME
+    EndGateway = 0xD1,         // FIXME
     CommandBlockRepeating = 0xD2,// FIXME
     CommandBlockChain = 0xD3,  // FIXME
+
     MagmaBlock = 0xD5,         // FIXME
     NetherWartBlock = 0xD6,    // FIXME
     RedNetherBrick = 0xD7,     // FIXME

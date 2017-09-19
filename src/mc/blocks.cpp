@@ -459,7 +459,7 @@ namespace mc {
     set_color(PurpurBlock, 0, color(104, 58, 103, 255));
     set_color(PurpurPillar, 0, color(166, 124, 166, 255));
     set_color(PurpurStairs, 0, color(140, 105, 142, 255));
-    set_color(PurpurStairs, 0, get_color(PurpurBlock));
+    set_color(PurpurSlab, 0, get_color(PurpurBlock));
     set_color(EndStoneBricks, 0, color(223, 229, 170, 255));
     set_color(CropsBeetroot, 0, color(76, 108, 49, 255));
     set_color(GrassPath, 0, color(149, 125, 71, 255));

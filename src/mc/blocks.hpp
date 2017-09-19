@@ -208,21 +208,21 @@ namespace mc {
     DoorJungle = 0xC3,
     DoorAcacia = 0xC4,
     DoorDarkOak = 0xC5,
+    Endrod = 0xC6,
+    ChorusPlant = 0xC7,
+    ChorusFlower = 0xC8,
+    PurpurBlock = 0xC9,
+    PurpurPillar = 0xCA,
+    PurpurStairs = 0xCB,
+    PurpurSlab = 0xCD,
+    EndStoneBricks = 0xCE,
+    CropsBeetroot = 0xCF,
+    GrassPath = 0xD0,
+    EndGateway = 0xD1,
+    CommandBlockRepeating = 0xD2,
+    CommandBlockChain = 0xD3,
 
-    Endrod = 0xC6,             // FIXME
-    ChorusPlant = 0xC7,        // FIXME
-    ChorusFlower = 0xC8,       // FIXME
-    PurpurBlock = 0xC9,        // FIXME
-    PurpurPillar = 0xCA,       // FIXME
-    PurpurStairs = 0xCB,       // FIXME
-    PurpurSlab = 0xCD,         // FIXME
-    EndStoneBricks = 0xCE,     // FIXME
-    CropsBeetroot = 0xCF,      // FIXME
-    GrassPath = 0xD0,          // FIXME
-    EndGateway = 0xD1,         // FIXME
-    CommandBlockRepeating = 0xD2,// FIXME
-    CommandBlockChain = 0xD3,  // FIXME
-
+    FrostedIce = 0xD4,         // FIXME
     MagmaBlock = 0xD5,         // FIXME
     NetherWartBlock = 0xD6,    // FIXME
     RedNetherBrick = 0xD7,     // FIXME

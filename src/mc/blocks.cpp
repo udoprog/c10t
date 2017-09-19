@@ -243,6 +243,19 @@ namespace mc {
     MaterialName[DoorJungle] = "JungleDoor";
     MaterialName[DoorAcacia] = "AcaciaDoor";
     MaterialName[DoorDarkOak] = "DarkOakDoor";
+    MaterialName[Endrod] = "Endrod";
+    MaterialName[ChorusPlant] = "ChorusPlant";
+    MaterialName[ChorusFlower] = "ChorusFlower";
+    MaterialName[PurpurBlock] = "PurpurBlock";
+    MaterialName[PurpurPillar] = "PurpurPillar";
+    MaterialName[PurpurStairs] = "PurpurStairs";
+    MaterialName[PurpurSlab] = "PurpurSlab";
+    MaterialName[EndStoneBricks] = "EndStoneBricks";
+    MaterialName[CropsBeetroot] = "CropsBeetroot";
+    MaterialName[GrassPath] = "GrassPath";
+    MaterialName[EndGateway] = "EndGateway";
+    MaterialName[CommandBlockRepeating] = "CommandBlockRepeating";
+    MaterialName[CommandBlockChain] = "CommandBlockChain";
     //MaterialName[PineLeaves] = "PineLeaves";
     //MaterialName[BirchLeaves] = "BirchLeaves";
 
@@ -440,6 +453,19 @@ namespace mc {
     set_color(DoorJungle, 0, SharedInvisColor);
     set_color(DoorAcacia, 0, SharedInvisColor);
     set_color(DoorDarkOak, 0, SharedInvisColor);
+    set_color(Endrod, 0, color(94, 73, 131, 140));
+    set_color(ChorusPlant, 0, color(116, 70, 124, 255));
+    set_color(ChorusFlower, 0, color(108, 84, 108, 255));
+    set_color(PurpurBlock, 0, color(104, 58, 103, 255));
+    set_color(PurpurPillar, 0, color(166, 124, 166, 255));
+    set_color(PurpurStairs, 0, color(140, 105, 142, 255));
+    set_color(PurpurStairs, 0, get_color(PurpurBlock));
+    set_color(EndStoneBricks, 0, color(223, 229, 170, 255));
+    set_color(CropsBeetroot, 0, color(76, 108, 49, 255));
+    set_color(GrassPath, 0, color(149, 125, 71, 255));
+    set_color(EndGateway, 0, color(15, 15, 25, 255));
+    set_color(CommandBlockRepeating, 0, color(135, 122, 152, 255));
+    set_color(CommandBlockChain, 0, color(114, 135, 131, 255));
     //set_color(PineLeaves, 0, color(50,89,45,128));
     //set_color(BirchLeaves, 0, color(94,167,84,128));
 
@@ -637,6 +663,19 @@ namespace mc {
     MaterialModes[DoorJungle] = Block;
     MaterialModes[DoorAcacia] = Block;
     MaterialModes[DoorDarkOak] = Block;
+    MaterialModes[Endrod] = Block; // maybe LargeFlowerBlock or similar
+    MaterialModes[ChorusPlant] = Block;
+    MaterialModes[ChorusFlower] = Block;
+    MaterialModes[PurpurBlock] = Block;
+    MaterialModes[PurpurPillar] = Block;
+    MaterialModes[PurpurStairs] = Block;
+    MaterialModes[PurpurSlab] = HalfBlock;
+    MaterialModes[EndStoneBricks] = Block;
+    MaterialModes[CropsBeetroot] = Block;
+    MaterialModes[GrassPath] = Block;
+    MaterialModes[EndGateway] = Block;
+    MaterialModes[CommandBlockRepeating] = Block;
+    MaterialModes[CommandBlockChain] = Block;
     //MaterialModes[PineLeaves] = Block;
     //MaterialModes[BirchLeaves] = Block;
 

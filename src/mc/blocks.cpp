@@ -437,7 +437,8 @@ namespace mc {
     set_color(CoalBlock, 0, color(20, 20, 20, 255));
     set_color(PackedIce, 0, get_color(Ice));
     // NOTE: See below for LargeFlowers
-    set_color(RedSandstone, 0, color(166, 85, 30, 255));
+    set_color(RedSandstoneDoubleSlab, 0, color(166, 85, 30, 255));
+    set_color(RedSandstone, 0, get_color(RedSandstoneDoubleSlab));
     set_color(RedSandstoneStairs, 0, get_color(RedSandstone));
     set_color(RedSandstoneSlab, 0, get_color(RedSandstone));
     set_color(FenceGateSprouce, 0, color(102, 77, 46, 200));
@@ -461,6 +462,7 @@ namespace mc {
     set_color(PurpurBlock, 0, color(104, 58, 103, 255));
     set_color(PurpurPillar, 0, color(166, 124, 166, 255));
     set_color(PurpurStairs, 0, color(140, 105, 142, 255));
+    set_color(PurpurDoubleSlab, 0, get_color(PurpurBlock));
     set_color(PurpurSlab, 0, get_color(PurpurBlock));
     set_color(EndStoneBricks, 0, color(223, 229, 170, 255));
     set_color(CropsBeetroot, 0, color(76, 108, 49, 255));
@@ -651,6 +653,7 @@ namespace mc {
     MaterialModes[LargeFlowers] = LargeFlowerBlock;
     MaterialModes[RedSandstone] = Block;
     MaterialModes[RedSandstoneStairs] = Block;
+    MaterialModes[RedSandstoneDoubleSlab] = Block;
     MaterialModes[RedSandstoneSlab] = HalfBlock;
     MaterialModes[FenceGateSprouce] = Block;
     MaterialModes[FenceGateBrich] = Block;
@@ -673,6 +676,7 @@ namespace mc {
     MaterialModes[PurpurBlock] = Block;
     MaterialModes[PurpurPillar] = Block;
     MaterialModes[PurpurStairs] = Block;
+    MaterialModes[PurpurDoubleSlab] = Block;
     MaterialModes[PurpurSlab] = HalfBlock;
     MaterialModes[EndStoneBricks] = Block;
     MaterialModes[CropsBeetroot] = Block;

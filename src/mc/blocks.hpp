@@ -221,8 +221,8 @@ namespace mc {
     EndGateway = 0xD1,
     CommandBlockRepeating = 0xD2,
     CommandBlockChain = 0xD3,
+    FrostedIce = 0xD4,
 
-    FrostedIce = 0xD4,         // FIXME
     MagmaBlock = 0xD5,         // FIXME
     NetherWartBlock = 0xD6,    // FIXME
     RedNetherBrick = 0xD7,     // FIXME

@@ -228,6 +228,7 @@ namespace mc {
     RedNetherBrick = 0xD7,     // FIXME
     BoneBlock = 0xD8,          // FIXME
     StructureVoid = 0xD9,      // FIXME
+
     Observer = 0xDA,           // FIXME
     ShulkerBoxWhite = 0xDB,    // FIXME
     ShulkerBoxOrange = 0xDC,   // FIXME
@@ -263,7 +264,8 @@ namespace mc {
     GlazedTerracottaBlack = 0xFA,    // FIXME
     Concrete = 0xFB,       // FIXME
     ConcretePowder = 0xFC, // FIXME
-    StructureBlock = 0xFF, // FIXME
+
+    StructureBlock = 0xFF,
     // Removed very old leaf ids, possibly from before MC1.2 or there about.
     //PineLeaves = 0xEC,
     //BirchLeaves = 0xED,

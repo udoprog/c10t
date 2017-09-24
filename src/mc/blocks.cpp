@@ -256,6 +256,7 @@ namespace mc {
     MaterialName[EndGateway] = "EndGateway";
     MaterialName[CommandBlockRepeating] = "CommandBlockRepeating";
     MaterialName[CommandBlockChain] = "CommandBlockChain";
+    MaterialName[StructureBlock] = "StructureBlock";
     //MaterialName[PineLeaves] = "PineLeaves";
     //MaterialName[BirchLeaves] = "BirchLeaves";
 
@@ -466,6 +467,7 @@ namespace mc {
     set_color(EndGateway, 0, color(15, 15, 25, 255));
     set_color(CommandBlockRepeating, 0, color(135, 122, 152, 255));
     set_color(CommandBlockChain, 0, color(114, 135, 131, 255));
+    set_color(StructureBlock, 0, color(98, 74, 98, 255));
     //set_color(PineLeaves, 0, color(50,89,45,128));
     //set_color(BirchLeaves, 0, color(94,167,84,128));
 
@@ -676,6 +678,7 @@ namespace mc {
     MaterialModes[EndGateway] = Block;
     MaterialModes[CommandBlockRepeating] = Block;
     MaterialModes[CommandBlockChain] = Block;
+    MaterialModes[StructureBlock] = Block;
     //MaterialModes[PineLeaves] = Block;
     //MaterialModes[BirchLeaves] = Block;
 

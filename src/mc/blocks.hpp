@@ -224,12 +224,11 @@ namespace mc {
     CommandBlockRepeating = 0xD2,
     CommandBlockChain = 0xD3,
     FrostedIce = 0xD4,
-
-    MagmaBlock = 0xD5,         // FIXME
-    NetherWartBlock = 0xD6,    // FIXME
-    RedNetherBrick = 0xD7,     // FIXME
-    BoneBlock = 0xD8,          // FIXME
-    StructureVoid = 0xD9,      // FIXME
+    MagmaBlock = 0xD5,
+    NetherWartBlock = 0xD6,
+    RedNetherBrick = 0xD7,
+    BoneBlock = 0xD8,
+    StructureVoid = 0xD9,
 
     Observer = 0xDA,           // FIXME
     ShulkerBoxWhite = 0xDB,    // FIXME
@@ -248,6 +247,7 @@ namespace mc {
     ShulkerBoxGreen = 0xE8,    // FIXME
     ShulkerBoxRed = 0xE9,      // FIXME
     ShulkerBoxBlack = 0xEA,    // FIXME
+
     GlazedTerracottaWhite = 0xEB,    // FIXME
     GlazedTerracottaOrange = 0xEC,   // FIXME
     GlazedTerracottaMagenta = 0xED,  // FIXME

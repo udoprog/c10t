@@ -257,6 +257,11 @@ namespace mc {
     MaterialName[CommandBlockRepeating] = "CommandBlockRepeating";
     MaterialName[CommandBlockChain] = "CommandBlockChain";
     MaterialName[FrostedIce] = "FrostedIce";
+    MaterialName[MagmaBlock] = "MagmaBlock";
+    MaterialName[NetherWartBlock] = "NetherWartBlock";
+    MaterialName[RedNetherBrick] = "RedNetherBrick";
+    MaterialName[BoneBlock] = "BoneBlock";
+    MaterialName[StructureVoid] = "StructureVoid";
     MaterialName[StructureBlock] = "StructureBlock";
     //MaterialName[PineLeaves] = "PineLeaves";
     //MaterialName[BirchLeaves] = "BirchLeaves";
@@ -471,6 +476,11 @@ namespace mc {
     set_color(CommandBlockRepeating, 0, color(135, 122, 152, 255));
     set_color(CommandBlockChain, 0, color(114, 135, 131, 255));
     set_color(FrostedIce, 0, get_color(Ice));
+    set_color(MagmaBlock, 0, color(132, 64, 26, 255));
+    set_color(NetherWartBlock, 0, color(107, 60, 60, 255));
+    set_color(RedNetherBrick, 0, color(106, 59, 62, 255));
+    set_color(BoneBlock, 0, color(218, 214, 193, 255));
+    set_color(StructureVoid, 0, SharedInvisColor);
     set_color(StructureBlock, 0, color(98, 74, 98, 255));
     //set_color(PineLeaves, 0, color(50,89,45,128));
     //set_color(BirchLeaves, 0, color(94,167,84,128));
@@ -685,6 +695,11 @@ namespace mc {
     MaterialModes[CommandBlockRepeating] = Block;
     MaterialModes[CommandBlockChain] = Block;
     MaterialModes[FrostedIce] = Block;
+    MaterialModes[MagmaBlock] = Block;
+    MaterialModes[NetherWartBlock] = Block;
+    MaterialModes[RedNetherBrick] = Block;
+    MaterialModes[BoneBlock] = Block;
+    MaterialModes[StructureVoid] = Block;
     MaterialModes[StructureBlock] = Block;
     //MaterialModes[PineLeaves] = Block;
     //MaterialModes[BirchLeaves] = Block;

@@ -40,8 +40,8 @@ void image_base::composite(int x, int y, image_operations_ptr opers)
 void image_base::draw_line(pos_t x1, pos_t y1, pos_t x2, pos_t y2, color &c)
 {
     int sx, sy;
-    int dx = abs(x2-x1);
-    int dy = abs(y2-y1);
+    int dx = (x1<x2) ? x2-x1 : x1-x2;
+    int dy = (y1<y2) ? y2-y1 : y1-y2;
     sx = (x1<x2) ? 1 : -1 ;
     sy = (y1<y2) ? 1 : -1 ;
     int err = dx-dy;

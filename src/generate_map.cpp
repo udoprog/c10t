@@ -575,10 +575,6 @@ bool generate_map(
       return false;
     }
 
-    typedef void (*hello_f)();
-
-    //hello_f hello = (hello_f)dl_sym(dl, "hello");
-    //hello();
     return true;
   }
   else {

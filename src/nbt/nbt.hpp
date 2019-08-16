@@ -506,7 +506,7 @@ namespace nbt {
       register_byte_t register_byte;
       register_byte_array_t register_byte_array;
       register_int_array_t register_int_array;
-      register_int_array_t register_long_array;
+      register_long_array_t register_long_array;
 
       begin_compound_t begin_compound;
       end_compound_t end_compound;

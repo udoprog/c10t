@@ -194,6 +194,8 @@ namespace mc {
   }
 
   void register_long_array(level_context* C, nbt::String name, nbt::LongArray* long_array) {
+
+    delete long_array;
   }
   
   void error_handler(level_context* C, size_t where, const char *why) {

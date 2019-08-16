@@ -50,6 +50,7 @@ namespace json {
 
   class basic_json {
     public:
+      virtual ~basic_json() {};
       virtual void write(std::ostream& os) = 0;
       virtual json_type get_type() = 0;
   };

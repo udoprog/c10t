@@ -461,7 +461,7 @@ namespace nbt {
       inline void flush_long_array(input_buffer_ptr file) {
         Int length = read_int(file);
  
-        nbt_assert_error(exc_env, file, file->flush(length * sizeof(Int)) != -1,
+        nbt_assert_error(exc_env, file, file->flush(length * sizeof(Long)) != -1,
           "Buffer to short to flush LongArray");
       }
 

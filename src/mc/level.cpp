@@ -193,6 +193,33 @@ namespace mc {
     delete byte_array;
   }
 
+  void register_long_array(level_context* C, nbt::String name, nbt::LongArray* long_array) {
+    if (in_level_section(C))
+    {
+      if (name.compare("Data") == 0) {
+        C->tmp_Section->Data.reset(long_array);
+        return;
+      }
+
+      if (name.compare("SkyLight") == 0) {
+        C->tmp_Section->SkyLight.reset(long_array);
+        return;
+      }
+
+      if (name.compare("BlockLight") == 0) {
+        C->tmp_Section->BlockLight.reset(long_array);
+        return;
+      }
+
+      if (name.compare("Blocks") == 0) {
+        C->tmp_Section->Blocks.reset(long_array);
+        return;
+      }
+    }
+
+    delete long_array;
+  }
+  
   void error_handler(level_context* C, size_t where, const char *why) {
     C->error = true;
     C->error_where = where;
@@ -232,6 +259,7 @@ namespace mc {
     
     parser.register_byte_array = register_byte_array;
     parser.register_int_array = register_int_array;
+    parser.register_long_array = register_long_array;
     parser.register_byte = register_byte;
     parser.register_string = register_string;
     parser.register_int = register_int;

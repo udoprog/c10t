@@ -411,7 +411,7 @@ namespace nbt {
       inline Byte read_tagType(input_buffer_ptr file) {
         Byte type = read_byte(file);
 
-        nbt_assert_error(exc_env, file, type >= 0 && type <= TAG_Int_Array,
+        nbt_assert_error(exc_env, file, type >= 0 && type <= TAG_Long_Array,
                 "Not a valid tag type");
 
         return type;

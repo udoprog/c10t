@@ -29,6 +29,15 @@ namespace nbt {
     }
   };
 
+ 
+  struct LongArray {
+    Int length;
+    Long *values;
+    ~LongArray() {
+      delete [] values;
+    }
+  };
+
   struct stack_entry {
     Byte type;
     String name;

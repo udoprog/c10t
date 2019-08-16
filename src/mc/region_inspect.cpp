@@ -88,7 +88,7 @@ void register_int_array(inspect_context* inspect, nbt::String name, nbt::IntArra
 
 void register_long_array(inspect_context* inspect, nbt::String name, nbt::LongArray* value) {
   cout << setw(inspect->width) << ""
-       << "LongArray(" << name << "): " << "(" << dec << int(value->length) << " ints)" << endl;
+       << "LongArray(" << name << "): " << "(" << dec << int(value->length) << " longs)" << endl;
   delete value;
 }
 

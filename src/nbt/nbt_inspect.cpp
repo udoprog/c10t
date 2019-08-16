@@ -76,7 +76,6 @@ void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteAr
   delete value;
 }
 
-
 void register_long_array(inspect_context* inspect, nbt::String name, nbt::LongArray* value) {
   cout << setw(inspect->width) << ""
        << "LongArray(" << name << "): " << "(binary blob)" << endl;

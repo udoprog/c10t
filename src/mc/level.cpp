@@ -20,41 +20,14 @@ Compound() {
     List(TileEntities, TAG_Compound, 0): [ ]
     Byte(TerrainPopulated): 0x1
     IntArray(HeightMap): (256 ints)
-    List(Sections, TAG_Compound, 5): [
+    List(Sections, TAG_Compound, 1): [
       Compound() {
         ByteArray(Data): (2048 bytes)
         ByteArray(SkyLight): (2048 bytes)
         ByteArray(BlockLight): (2048 bytes)
         Byte(Y): 0x0
         ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x1
-        ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x2
-        ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x3
-        ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x4
-        ByteArray(Blocks): (4096 bytes)
+        ByteArray(BlockStates): (4096 bytes)
       }
     ]
   }

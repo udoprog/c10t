@@ -22,11 +22,9 @@ Compound() {
     IntArray(HeightMap): (256 ints)
     List(Sections, TAG_Compound, 1): [
       Compound() {
-        ByteArray(Data): (2048 bytes)
         ByteArray(SkyLight): (2048 bytes)
         ByteArray(BlockLight): (2048 bytes)
         Byte(Y): 0x0
-        ByteArray(Blocks): (4096 bytes)
         ByteArray(BlockStates): (4096 bytes)
       }
     ]

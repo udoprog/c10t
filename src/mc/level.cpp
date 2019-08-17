@@ -17,7 +17,7 @@ Compound() {
     Long(LastUpdate): 7446079
     Int(xPos): -1
     Int(zPos): -1
-    List(TileEntities, TAG_Byte, 0): [ ]
+    List(TileEntities, TAG_Compound, 0): [ ]
     Byte(TerrainPopulated): 0x1
     IntArray(HeightMap): (256 ints)
     List(Sections, TAG_Compound, 5): [

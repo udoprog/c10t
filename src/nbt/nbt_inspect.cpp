@@ -76,6 +76,12 @@ void register_byte_array(inspect_context* inspect, nbt::String name, nbt::ByteAr
   delete value;
 }
 
+void register_long_array(inspect_context* inspect, nbt::String name, nbt::LongArray* value) {
+  cout << setw(inspect->width) << ""
+       << "LongArray(" << name << "): " << "(binary blob)" << endl;
+  delete value;
+}
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     return 1;
@@ -98,7 +104,8 @@ int main(int argc, char* argv[]) {
   parser.register_int = register_int;
   parser.register_byte = register_byte;
   parser.register_byte_array = register_byte_array;
-
+  parser.register_long_array = register_long_array;
+  
   parser.parse_file(argv[1]);
   return 0;
 }

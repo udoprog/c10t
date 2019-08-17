@@ -86,6 +86,12 @@ void register_int_array(inspect_context* inspect, nbt::String name, nbt::IntArra
   delete value;
 }
 
+void register_long_array(inspect_context* inspect, nbt::String name, nbt::LongArray* value) {
+  cout << setw(inspect->width) << ""
+       << "LongArray(" << name << "): " << "(" << dec << int(value->length) << " longs)" << endl;
+  delete value;
+}
+
 void error_handler(inspect_context* ctx, size_t where, const char* why) {
   std::cout << where << ":" << why << std::endl;
 }
@@ -115,6 +121,7 @@ int main(int argc, char* argv[]) {
   parser.register_byte = register_byte;
   parser.register_byte_array = register_byte_array;
   parser.register_int_array = register_int_array;
+  parser.register_long_array = register_long_array;
 
   mc::region region(argv[1]);
 

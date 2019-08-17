@@ -17,44 +17,15 @@ Compound() {
     Long(LastUpdate): 7446079
     Int(xPos): -1
     Int(zPos): -1
-    List(TileEntities, TAG_Byte, 0): [ ]
+    List(TileEntities, TAG_Compound, 0): [ ]
     Byte(TerrainPopulated): 0x1
     IntArray(HeightMap): (256 ints)
-    List(Sections, TAG_Compound, 5): [
+    List(Sections, TAG_Compound, 1): [
       Compound() {
-        ByteArray(Data): (2048 bytes)
         ByteArray(SkyLight): (2048 bytes)
         ByteArray(BlockLight): (2048 bytes)
         Byte(Y): 0x0
-        ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x1
-        ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x2
-        ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x3
-        ByteArray(Blocks): (4096 bytes)
-      }
-      Compound() {
-        ByteArray(Data): (2048 bytes)
-        ByteArray(SkyLight): (2048 bytes)
-        ByteArray(BlockLight): (2048 bytes)
-        Byte(Y): 0x4
-        ByteArray(Blocks): (4096 bytes)
+        ByteArray(BlockStates): (4096 bytes)
       }
     ]
   }
@@ -193,6 +164,11 @@ namespace mc {
     delete byte_array;
   }
 
+  void register_long_array(level_context* C, nbt::String name, nbt::LongArray* long_array) {
+
+    delete long_array;
+  }
+  
   void error_handler(level_context* C, size_t where, const char *why) {
     C->error = true;
     C->error_where = where;
@@ -232,6 +208,7 @@ namespace mc {
     
     parser.register_byte_array = register_byte_array;
     parser.register_int_array = register_int_array;
+    parser.register_long_array = register_long_array;
     parser.register_byte = register_byte;
     parser.register_string = register_string;
     parser.register_int = register_int;

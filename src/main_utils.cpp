@@ -17,8 +17,6 @@
 
 bool parse_color(const std::string value, color& c);
 bool parse_set(const char* set_str, int& blockid, color& c);
-bool do_base_color_set(const char *set_str);
-bool do_side_color_set(const char *set_str);
 
 // Convert a string such as "-30,40,50,30" to the corresponding N,S,E,W integers,
 // and fill in the min/max settings.
@@ -687,9 +685,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
                 s.engine_use = true;
                 break;
             case 65:
-                // TODO: this must be done after load
-                if (!do_side_color_set(optarg)) return false;
-                break;
+                s.side_color_overrides.push_back(optarg);
             }
 
             continue;
@@ -825,9 +821,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
             s.palette_read_path = optarg;
             break;
         case 'B':
-            // TODO: this must be done after load
-            if (!do_base_color_set(optarg)) return false;
-            break;
+            s.top_color_overrides.push_back(optarg);
         case 'S':
             s.action = GenerateStatistics;
 

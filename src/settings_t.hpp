@@ -61,6 +61,8 @@ struct settings_t {
   bool enable_all_blocks;
   std::list<std::string> included;
   std::list<std::string> excluded;
+  std::list<std::string> top_color_overrides;
+  std::list<std::string> side_color_overrides;
   color coordinate_color;
   color player_color;
   color sign_color;

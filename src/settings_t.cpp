@@ -4,15 +4,7 @@
 
 settings_t::settings_t(fs::path& install_path)
 {
-/*
-  this->excludes.reset(new bool[mc::MaterialCount]);
-
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    this->excludes[i] = false;
-  }
-
-  this->excludes[mc::Air] = true;
-*/
+  this->excluded.push_back("minecraft:air");
 
   this->threads = 1;
   this->prebuffer = 4;
@@ -72,7 +64,6 @@ settings_t::settings_t(fs::path& install_path)
   this->output_path = fs::system_complete(fs::path("out.png"));
   this->statistics_path = fs::system_complete(fs::path("statistics.txt"));
   this->palette_read_path = install_path /= fs::path("palette.json");
-  //this->graph_block = -1;
   this->action = None;
 
   this->center_x = 0;

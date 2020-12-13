@@ -192,7 +192,7 @@ int do_help(ostream& out) {
     << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable  " << endl
     << "                              during broad phase by getting x/y/z positions    " << endl
     << "                              from a quick parsing                             " << endl
-    << "  --no-alpha                - Set non-invisible blocks colors alpha channel to " << endl
+    << "  --no-alpha                - Set non-invisible blocks color alpha channel to  " << endl
     << "                              fully opaque (solid)                             " << endl
     << "  --striped-terrain         - Darken every other block on a vertical basis     " << endl
     << "                              which helps to distinguish heights               " << endl
@@ -290,6 +290,7 @@ int main(int argc, char *argv[]){
         }
         material->enabled = false;
     }
+
     BOOST_FOREACH(std::string include, s.included) {
         mc::MaterialT *material;
         if (!get_blocktype(include, material)) {
@@ -297,6 +298,20 @@ int main(int argc, char *argv[]){
             goto exit_error;
         }
         material->enabled = true;
+    }
+
+    BOOST_FOREACH(std::string top_override, s.top_color_overrides) {
+        if (!do_base_color_set(top_override.c_str())) {
+            error << "Invalid top color override " << top_override << endl;
+            goto exit_error;
+        }
+    }
+
+    BOOST_FOREACH(std::string side_override, s.side_color_overrides) {
+        if (!do_side_color_set(side_override.c_str())) {
+            error << "Invalid side color override " << side_override << endl;
+            goto exit_error;
+        }
     }
 
     if(s.disable_alpha) {

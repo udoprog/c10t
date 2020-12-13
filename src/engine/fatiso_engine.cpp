@@ -21,7 +21,7 @@ void fatiso_engine::render_block(
   color toplight(top);
   color sidelight(side);
 
-  if (bt == mc::Grass) {
+  if (bt == mc::LegacyBlocks::Grass) {
     topdark.darken(0x20);
     toplight.darken(0x10);
     sidelight.lighten(0x20);

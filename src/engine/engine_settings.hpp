@@ -12,7 +12,6 @@ struct engine_settings {
   bool cavemode;
   int top;
   int bottom;
-  boost::shared_array<bool> excludes;
 };
 
 #endif /* _ENGINE_ENGINE_SETTINGS_HPP */

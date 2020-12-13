@@ -57,7 +57,11 @@ void AltitudeGraph::createGraph()
     for(int i = 0; i < mc::MapY; i++)
     {
        x =  BORDER_X + x_step*i;
-       y = _h - (int)( ( (float)altitudeRegistry[i] / (float)maxVal ) * (_h-BORDER_Y) );
+       if (maxVal == 0) {
+           y = _h;
+       } else {
+           y = _h - (int)( ( (float)altitudeRegistry[i] / (float)maxVal ) * (_h-BORDER_Y) );
+       }
        graphImg->draw_line(x, y, x0, y0, fgcolor);
        x0 = x;
        y0 = y;
@@ -90,8 +94,7 @@ void AltitudeGraph::createGraph()
     graphImg->save<png_format>(s.statistics_path.string() + "_graph.png", opts);
 }
 
-
-void AltitudeGraph::registerBloc(Byte value, int altitude)
+void AltitudeGraph::registerBloc(mc::MaterialT *material, int altitude)
 {
     altitudeRegistry[altitude] += 1;
 }
@@ -101,7 +104,7 @@ long AltitudeGraph::getMax()
     long max = 0;
     for(int i = 0; i < mc::MapY; i++)
     {
-        if(max<altitudeRegistry[i])
+        if(max < altitudeRegistry[i])
             max = altitudeRegistry[i];
     }
     return max;

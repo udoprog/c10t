@@ -5,7 +5,6 @@
 #include <set>
 
 #include <boost/filesystem.hpp>
-#include <boost/shared_array.hpp>
 
 #include "image/color.hpp"
 #include "mc/utils.hpp"
@@ -29,7 +28,7 @@ enum action {
 };
 
 struct settings_t {
-  settings_t();
+  settings_t(fs::path& install_path);
 
   bool binary;
   bool cache_compress;
@@ -58,13 +57,17 @@ struct settings_t {
   bool use_split;
   bool write_js;
   bool write_json;
-  boost::shared_array<bool> excludes;
+  bool disable_alpha;
+  bool enable_all_blocks;
+  std::list<std::string> included;
+  std::list<std::string> excluded;
   color coordinate_color;
   color player_color;
   color sign_color;
   color ttf_color;
   color warp_color;
   enum mode mode;
+  boost::filesystem::path install_path;
   boost::filesystem::path cache_dir;
   boost::filesystem::path output_log;
   boost::filesystem::path output_path;
@@ -98,7 +101,7 @@ struct settings_t {
   unsigned int split_base;
   unsigned int threads;
 
-  int graph_block;
+  std::string graph_block;
 
   int center_x;
   int center_z;

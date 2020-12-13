@@ -82,7 +82,7 @@ int do_help(ostream& out) {
     << "  -S, --statistics <output> - create a statistics file of the entire world     " << endl
     << "      --graph-block <blockid>                                                  " << endl
     << "                            - make graph for block repartition by altitude     " << endl
-    << "                              with filename <output>_graph.png               " << endl
+    << "                              with filename <output>_graph.png                 " << endl
     << endl
     << "  --log [file]              - Specify another location for logging warnings,   " << endl
     << "                              defaults to `c10t.log'                           " << endl
@@ -145,18 +145,20 @@ int do_help(ostream& out) {
     << "      --prebuffer <int>     - Specify how many jobs to prebuffer for each      " << endl
     << "                              individual thread                                " << endl
     << "                                                                               " << endl
-    << "  -B <set>                  - Specify the base color for a specific block id   " << endl
-    << "                              <set> has the format <blockid>=<color>           " << endl
-    << "                              <8 digit hex> specifies the RGBA values as       " << endl
-    << "                              `<int>,<int>,<int>[,<int>]'. The side color will " << endl
-    << "                              be a darkened variant of the base                " << endl
-    << "                              example: `-B Grass=0,255,0,120'                  " << endl
-    << "                              NOTE: Use only for experimentation, for a more   " << endl
-    << "                                    permanent solution, use color palette files" << endl
-    // this has been commented out since it is planned to be integrated for '-B' as a token scanning
-    /*<< "  --side <set>              - Specify the side color for a specific block id   " << endl
-    << "                              this uses the same format as '-B' only the color " << endl
-    << "                              is applied to the side of the block              " << endl*/
+    << "  -B <set>                  - Specify the base color for a specific block name " << endl
+    << "                              or legacy id; <set> has the format               " << endl
+    << "                              `<block>=<color>'; <8 digit hex> specifies the   " << endl
+    << "                              RGBA values as `<int>,<int>,<int>[,<int>]'.      " << endl
+    << "                              example: `-B minecraft:grass=0,255,0,120'        " << endl
+    << "                              example: `-B 2=0,255,0,120'                      " << endl
+    << "                              DEPRECATED: Use json palette files instead       " << endl
+    << "  --side <set>              - Specify the side color for a specific block name " << endl
+    << "                              or legacy id; <set> has the format               " << endl
+    << "                              `<block>=<color>'; <8 digit hex> specifies the   " << endl
+    << "                              RGBA values as `<int>,<int>,<int>[,<int>]'.      " << endl
+    << "                              example: `--side minecraft:grass=0,255,0,120'    " << endl
+    << "                              example: `--side 2=0,255,0,120'                  " << endl
+    << "                              DEPRECATED: Use json palette files instead       " << endl
     << "  -p, --split 'px1 px2 ..'  - Split the render into parts which must be pxX    " << endl
     << "                              pixels squared. `output' name must contain three " << endl
     << "                              format specifiers `%d' for `level' x and y       " << endl
@@ -183,14 +185,15 @@ int do_help(ostream& out) {
     << "  --show-warps=<file>       - Will draw out warp positions from the specified  " << endl
     << "                              warps.txt file, as used by hey0's mod            " << endl
     << "  --show-coordinates        - Will draw out each chunks expected coordinates   " << endl
-    << "  -P <file>                 - use <file> as palette, each line should take the " << endl
-    << "                              form: <block-id> ' ' <color> ' ' <color>         " << endl
-    << "  -W <file>                 - write the default color palette to <file>, this  " << endl
-    << "                              is useful for figuring out how to write your own " << endl
+    << "  -P <file>                 - Use <file> as custom palette, in JSON format     " << endl
+    << "  -W <file>                 - Dump default palette to <file>, in JSON format   " << endl
+    << "                              The default palette is no longer built-it and is " << endl
+    << "                              available as `palette.json'                      " << endl
     << "  --pedantic-broad-phase    - Will enforce that all level chunks are parsable  " << endl
     << "                              during broad phase by getting x/y/z positions    " << endl
     << "                              from a quick parsing                             " << endl
-    << "  --no-alpha                - Set all colors alpha channel to opaque (solid)   " << endl
+    << "  --no-alpha                - Set non-invisible blocks colors alpha channel to " << endl
+    << "                              fully opaque (solid)                             " << endl
     << "  --striped-terrain         - Darken every other block on a vertical basis     " << endl
     << "                              which helps to distinguish heights               " << endl
     << "  --write-json <file>       - Write markers to <file> in JSON format instead of" << endl
@@ -255,32 +258,56 @@ int do_version(ostream& out) {
   return 0;
 }
 
-int do_colors(ostream& out) {
-  out << "List of material Colors (total: " << mc::MaterialCount << ")" << endl;
-  
-  for (int i = 0; i < mc::MaterialCount; i++) {
-    out << i << ": " << mc::MaterialName[i] << " = " << mc::get_color(i) << endl;
-  }
-  
-  return 0;
-}
-
 int main(int argc, char *argv[]){
     nullstream nil;
     ostream out(cout.rdbuf());
     ofstream out_log;
 
     vector<string> hints;
-    
+
     out.precision(2);
     out.setf(ios_base::fixed);
-    
+
     mc::initialize_constants();
 
-    settings_t s;
-    
+    fs::path executable_dir = fs::system_complete(fs::path(argv[0]).remove_filename());
+    settings_t s(executable_dir);
+
     if (!read_opts(s, argc, argv)) {
         goto exit_error;
+    }
+
+    if (!do_read_palette(s, s.palette_read_path)) {
+        goto exit_error;
+    }
+    out << "Successfully read palette from " << s.palette_read_path << endl;
+
+    BOOST_FOREACH(std::string exclude, s.excluded) {
+        mc::MaterialT *material;
+        if (!get_blocktype(exclude, material)) {
+            error << "Unkown material for exclusion " << exclude << endl;
+            goto exit_error;
+        }
+        material->enabled = false;
+    }
+    BOOST_FOREACH(std::string include, s.included) {
+        mc::MaterialT *material;
+        if (!get_blocktype(include, material)) {
+            error << "Unkown material for inclusion " << include << endl;
+            goto exit_error;
+        }
+        material->enabled = true;
+    }
+
+    if(s.disable_alpha) {
+        for (size_t i = 0; i < mc::MaterialTable.size(); i++) {
+            if (!mc::MaterialTable[i].top.is_invisible()) {
+                mc::MaterialTable[i].top.a = color_i_to_f[255];
+            }
+            if (!mc::MaterialTable[i].side.is_invisible()) {
+                mc::MaterialTable[i].side.a = color_i_to_f[255];
+            }
+        }
     }
 
     switch(s.action) {
@@ -316,55 +343,47 @@ int main(int argc, char *argv[]){
         out_log.open(path_string(s.output_log).c_str());
         out_log << "START LOG" << endl;
     }
-    
+
     if (s.memory_limit_default) {
         hints.push_back("To use less memory, specify a memory limit with `-M <MB>', if it is reached c10t will swap to disk instead");
     }
-    
+
     if (s.cache_use) {
         if (!fs::is_directory(s.cache_dir)) {
             error << "Directory required for caching: " << path_string(s.cache_dir);
             goto exit_error;
         }
-        
+
         // then create the subdirectory using cache_key
         s.cache_dir = s.cache_dir / s.cache_key;
-        
+
         if (!fs::is_directory(s.cache_dir)) {
             out << "Creating directory for caching: " << path_string(s.cache_dir) << endl;
             fs::create_directories(s.cache_dir);
         }
-        
+
         {
             out << "Caching to directory: " << s.cache_dir << std::endl;
             out << "Cache compression: " << (s.cache_compress ? "ON" : "OFF")    << std::endl;
         }
     }
-    
-    if (!s.palette_read_path.empty()) {
-        if (!do_read_palette(s, s.palette_read_path)) {
-            goto exit_error;
-        }
 
-        out << "Sucessfully read palette from " << s.palette_read_path << endl;
-    }
-    
     if (s.world_path.empty())
     {
         error << "You must specify a world to render using `-w <directory>'";
         goto exit_error;
     }
-    
+
     if (!s.nocheck)
     {
         fs::path level_dat = s.world_path / "level.dat";
-        
+
         if (!fs::exists(level_dat)) {
             error << "Does not exist: " << path_string(level_dat);
             goto exit_error;
         }
     }
-    
+
     /* hell mode requires entering the subdirectory DIM-1 */
     if (s.hellmode)
     {
@@ -378,7 +397,7 @@ int main(int argc, char *argv[]){
             goto exit_error;
         }
     }
-    
+
     switch(s.action) {
     case GenerateWorld:
         /* do some nice sanity checking prior to generating since this might
@@ -388,12 +407,12 @@ int main(int argc, char *argv[]){
             error << "You must specify output file using `-o <file>'";
             goto exit_error;
         }
-        
+
         if (!fs::is_directory(s.output_path.parent_path())) {
             error << "Output directory does not exist: " << s.output_path;
             goto exit_error;
         }
-        
+
         if (s.use_split) {
             try {
                 boost::format(fs::basename(s.output_path)) % 0 % 0;
@@ -416,14 +435,14 @@ int main(int argc, char *argv[]){
         error << "No action specified";
         goto exit_error;
     }
-    
+
     if (hints.size() > 0 || warnings.size() > 0) {
         int i = 1;
-        
+
         for (vector<std::string>::iterator it = warnings.begin(); it != warnings.end(); it++) {
             out << "WARNING " << i++ << ": " << *it << endl;
         }
-        
+
         i = 1;
         for (vector<std::string>::iterator it = hints.begin(); it != hints.end(); it++) {
             out << "Hint " << i++ << ": " << *it << endl;
@@ -431,22 +450,22 @@ int main(int argc, char *argv[]){
 
         out << endl;
     }
-    
+
     if (s.binary) {
         cout_end();
     }
     else {
         out << argv[0] << ": all done!" << endl;
     }
-    
+
     mc::deinitialize_constants();
-    
+
     if (!s.no_log) {
         out << "Log written to " << path_string(s.output_log) << endl;
         out_log << "END LOG" << endl;
         out_log.close();
     }
-    
+
     return 0;
 exit_error:
     if (s.binary) {
@@ -455,14 +474,14 @@ exit_error:
     else {
         out << argv[0] << ": " << error.str() << endl;
     }
-    
+
     mc::deinitialize_constants();
-    
+
     if (!s.no_log) {
         out << "Log written to " << path_string(s.output_log) << endl;
         out_log << "END LOG" << endl;
         out_log.close();
     }
-    
+
     return 1;
 }

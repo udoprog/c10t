@@ -8,8 +8,8 @@
 #include <string>
 
 #include "image/color.hpp"
-
 #include "settings_t.hpp"
+#include "mc/blocks.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -28,7 +28,11 @@ class application_error : std::exception
 bool do_write_palette(settings_t& s, const boost::filesystem::path& path);
 bool do_read_palette(settings_t& s, const boost::filesystem::path& path);
 
+bool get_blocktype(const std::string& block_string, mc::MaterialT*& block_type);
+
 bool read_opts(settings_t& s, int argc, char* argv[]);
+
+int do_colors(std::ostream& out);
 
 extern std::vector<std::string> hints;
 extern std::vector<std::string> warnings;

@@ -2,19 +2,21 @@
 
 #include "mc/blocks.hpp"
 
-settings_t::settings_t()
+settings_t::settings_t(fs::path& install_path)
 {
+/*
   this->excludes.reset(new bool[mc::MaterialCount]);
-  
+
   for (int i = 0; i < mc::MaterialCount; i++) {
     this->excludes[i] = false;
   }
 
   this->excludes[mc::Air] = true;
+*/
 
   this->threads = 1;
   this->prebuffer = 4;
-  
+
   this->split_base = 0;
   this->use_split = false;
   this->cavemode = false;
@@ -63,10 +65,14 @@ settings_t::settings_t()
   this->write_json = false;
   this->write_js = false;
   this->no_log = false;
+  this->disable_alpha = false;
+  this->enable_all_blocks = true;
+  this->install_path = install_path;
   this->output_log = fs::system_complete(fs::path("c10t.log"));
   this->output_path = fs::system_complete(fs::path("out.png"));
   this->statistics_path = fs::system_complete(fs::path("statistics.txt"));
-  this->graph_block = -1;
+  this->palette_read_path = install_path /= fs::path("palette.json");
+  //this->graph_block = -1;
   this->action = None;
 
   this->center_x = 0;
@@ -83,7 +89,7 @@ bool settings_t::coord_out_of_range(mc::utils::level_coord& coord)
   uint64_t x2 = uint64_t(x) * uint64_t(x);
   uint64_t z2 = uint64_t(z) * uint64_t(z);
   uint64_t r2 = max_radius * max_radius;
-    
+
   return x < min_x
       || x > max_x
       || z < min_z

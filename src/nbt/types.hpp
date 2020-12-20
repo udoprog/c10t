@@ -12,31 +12,19 @@ namespace nbt {
   typedef std::string String;
   typedef float Float;
   typedef double Double;
-  
-  struct ByteArray {
+
+  template<typename T>
+  struct Array {
     Int length;
-    Byte *values;
-    ~ByteArray() {
+    T *values;
+    ~Array() {
       delete [] values;
     }
   };
 
-  struct IntArray {
-    Int length;
-    Int *values;
-    ~IntArray() {
-      delete [] values;
-    }
-  };
-
- 
-  struct LongArray {
-    Int length;
-    Long *values;
-    ~LongArray() {
-      delete [] values;
-    }
-  };
+  typedef Array<Byte> ByteArray;
+  typedef Array<Int> IntArray;
+  typedef Array<Long> LongArray;
 
   struct stack_entry {
     Byte type;

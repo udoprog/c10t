@@ -1,0 +1,3651 @@
+[
+  {
+    "namespace": "minecraft",
+    "material": "air",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": false,
+    "legacy_id": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "stone",
+    "mode": "block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": 1,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "granite",
+    "mode": "block",
+    "top_color": [153, 113, 98, 255],
+    "darken": true,
+    "legacy_id": 1,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "polished_granite",
+    "mode": "block",
+    "top_color": [133, 88, 75, 255],
+    "darken": true,
+    "legacy_id": 1,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "diorite",
+    "mode": "block",
+    "top_color": [162, 161, 169, 255],
+    "darken": true,
+    "legacy_id": 1,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "polished_diorite",
+    "mode": "block",
+    "top_color": [158, 158, 167, 255],
+    "darken": true,
+    "legacy_id": 1,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "andesite",
+    "mode": "block",
+    "top_color": [114, 114, 119, 255],
+    "darken": true,
+    "legacy_id": 1,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "polished_andesite",
+    "mode": "block",
+    "top_color": [119, 119, 124, 255],
+    "darken": true,
+    "legacy_id": 1,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "grass_block",
+    "mode": "block",
+    "top_color": [120, 172, 70, 255],
+    "side_color": [134, 96, 67, 255],
+    "darken": true,
+    "legacy_id": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dirt",
+    "mode": "block",
+    "top_color": [134, 96, 67, 255],
+    "darken": true,
+    "legacy_id": 3,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "coarse_dirt",
+    "mode": "block",
+    "top_color": [134, 96, 67, 255],
+    "darken": true,
+    "legacy_id": 3,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "podzol",
+    "mode": "block",
+    "top_color": [108, 67, 29, 255],
+    "darken": true,
+    "legacy_id": 3,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cobblestone",
+    "mode": "block",
+    "top_color": [100, 100, 100, 255],
+    "darken": true,
+    "legacy_id": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_planks",
+    "mode": "block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": 5,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_planks",
+    "mode": "block",
+    "top_color": [102, 77, 46, 255],
+    "darken": true,
+    "legacy_id": 5,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_planks",
+    "mode": "block",
+    "top_color": [193, 177, 122, 255],
+    "darken": true,
+    "legacy_id": 5,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_planks",
+    "mode": "block",
+    "top_color": [152, 109, 76, 255],
+    "darken": true,
+    "legacy_id": 5,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_planks",
+    "mode": "block",
+    "top_color": [168, 91, 50, 255],
+    "darken": true,
+    "legacy_id": 5,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_planks",
+    "mode": "block",
+    "top_color": [60, 39, 18, 255],
+    "darken": true,
+    "legacy_id": 5,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_sapling",
+    "mode": "block",
+    "top_color": [74, 131, 66, 128],
+    "darken": true,
+    "legacy_id": 6,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_sapling",
+    "mode": "block",
+    "top_color": [50, 89, 45, 128],
+    "darken": true,
+    "legacy_id": 6,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_sapling",
+    "mode": "block",
+    "top_color": [94, 167, 84, 128],
+    "darken": true,
+    "legacy_id": 6,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_sapling",
+    "mode": "block",
+    "top_color": [58, 147, 19, 128],
+    "darken": true,
+    "legacy_id": 6,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_sapling",
+    "mode": "block",
+    "top_color": [58, 145, 19, 128],
+    "darken": true,
+    "legacy_id": 6,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_sapling",
+    "mode": "block",
+    "top_color": [52, 131, 18, 128],
+    "darken": true,
+    "legacy_id": 6,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "bedrock",
+    "mode": "block",
+    "top_color": [84, 84, 84, 255],
+    "darken": true,
+    "legacy_id": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "flowing_water",
+    "mode": "block",
+    "top_color": [56, 68, 127, 64],
+    "darken": false,
+    "legacy_id": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "water",
+    "mode": "block",
+    "top_color": [56, 68, 127, 64],
+    "darken": false,
+    "legacy_id": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "flowing_lava",
+    "mode": "block",
+    "top_color": [255, 90, 0, 255],
+    "darken": false,
+    "legacy_id": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lava",
+    "mode": "block",
+    "top_color": [255, 90, 0, 255],
+    "darken": false,
+    "legacy_id": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sand",
+    "mode": "block",
+    "top_color": [218, 210, 158, 255],
+    "darken": true,
+    "legacy_id": 12,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_sand",
+    "mode": "block",
+    "top_color": [186, 102, 44, 255],
+    "darken": true,
+    "legacy_id": 12,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gravel",
+    "mode": "block",
+    "top_color": [136, 126, 126, 255],
+    "darken": true,
+    "legacy_id": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gold_ore",
+    "mode": "block",
+    "top_color": [143, 140, 125, 255],
+    "darken": true,
+    "legacy_id": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "iron_ore",
+    "mode": "block",
+    "top_color": [136, 130, 127, 255],
+    "darken": true,
+    "legacy_id": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "coal_ore",
+    "mode": "block",
+    "top_color": [115, 115, 115, 255],
+    "darken": true,
+    "legacy_id": 16
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_log",
+    "mode": "log_block",
+    "top_color": [184, 148, 95, 255],
+    "side_color": [101, 80, 49, 255],
+    "darken": false,
+    "legacy_id": 17,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_log",
+    "mode": "log_block",
+    "top_color": [106, 82, 48, 255],
+    "side_color": [45, 28, 12, 255],
+    "darken": false,
+    "legacy_id": 17,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_log",
+    "mode": "log_block",
+    "top_color": [183, 164, 118, 255],
+    "side_color": [201, 201, 196, 255],
+    "darken": false,
+    "legacy_id": 17,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_log",
+    "mode": "log_block",
+    "top_color": [155, 120, 75, 255],
+    "side_color": [86, 67, 27, 255],
+    "darken": false,
+    "legacy_id": 17,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_leaves",
+    "mode": "legacy_leaf_block",
+    "top_color": [74, 131, 66, 128],
+    "darken": true,
+    "legacy_id": 18,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_leaves",
+    "mode": "legacy_leaf_block",
+    "top_color": [50, 89, 45, 128],
+    "darken": true,
+    "legacy_id": 18,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_leaves",
+    "mode": "legacy_leaf_block",
+    "top_color": [94, 167, 84, 128],
+    "darken": true,
+    "legacy_id": 18,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_leaves",
+    "mode": "legacy_leaf_block",
+    "top_color": [58, 147, 19, 128],
+    "darken": true,
+    "legacy_id": 18,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sponge",
+    "mode": "block",
+    "top_color": [195, 195, 50, 255],
+    "darken": true,
+    "legacy_id": 19
+  },
+  {
+    "namespace": "minecraft",
+    "material": "glass",
+    "mode": "block",
+    "top_color": [255, 255, 255, 48],
+    "darken": true,
+    "legacy_id": 20
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lapis_ore",
+    "mode": "block",
+    "top_color": [102, 112, 134, 255],
+    "darken": true,
+    "legacy_id": 21
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lapis_block",
+    "mode": "block",
+    "top_color": [29, 71, 165, 255],
+    "darken": true,
+    "legacy_id": 22
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dispenser",
+    "mode": "block",
+    "top_color": [107, 107, 107, 255],
+    "darken": true,
+    "legacy_id": 23
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sandstone",
+    "mode": "block",
+    "top_color": [218, 210, 158, 255],
+    "darken": true,
+    "legacy_id": 24
+  },
+  {
+    "namespace": "minecraft",
+    "material": "note_block",
+    "mode": "block",
+    "top_color": [100, 67, 50, 255],
+    "darken": true,
+    "legacy_id": 25
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_bed",
+    "mode": "block",
+    "top_color": [223, 223, 223, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_bed",
+    "mode": "block",
+    "top_color": [234, 128, 55, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_bed",
+    "mode": "block",
+    "top_color": [191, 76, 201, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_bed",
+    "mode": "block",
+    "top_color": [105, 139, 212, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_bed",
+    "mode": "block",
+    "top_color": [195, 181, 28, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_bed",
+    "mode": "block",
+    "top_color": [59, 189, 48, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_bed",
+    "mode": "block",
+    "top_color": [218, 132, 155, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_bed",
+    "mode": "block",
+    "top_color": [67, 67, 67, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_gray_bed",
+    "mode": "block",
+    "top_color": [159, 166, 166, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_bed",
+    "mode": "block",
+    "top_color": [39, 117, 150, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_bed",
+    "mode": "block",
+    "top_color": [130, 54, 196, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_bed",
+    "mode": "block",
+    "top_color": [39, 51, 154, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_bed",
+    "mode": "block",
+    "top_color": [86, 51, 28, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_bed",
+    "mode": "block",
+    "top_color": [56, 77, 24, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_bed",
+    "mode": "block",
+    "top_color": [164, 45, 41, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_bed",
+    "mode": "block",
+    "top_color": [27, 23, 23, 255],
+    "darken": true,
+    "legacy_id": 26,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "powered_rail",
+    "mode": "block",
+    "top_color": [120, 120, 120, 128],
+    "side_color": [255, 220, 0, 128],
+    "darken": false,
+    "legacy_id": 27
+  },
+  {
+    "namespace": "minecraft",
+    "material": "detector_rail",
+    "mode": "block",
+    "top_color": [120, 120, 120, 128],
+    "side_color": [230, 0, 0, 128],
+    "darken": false,
+    "legacy_id": 28
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sticky_piston",
+    "mode": "block",
+    "top_color": [157, 192, 79, 255],
+    "darken": true,
+    "legacy_id": 29
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cobweb",
+    "mode": "block",
+    "top_color": [237, 237, 237, 128],
+    "darken": true,
+    "legacy_id": 30
+  },
+  {
+    "namespace": "minecraft",
+    "material": "grass",
+    "mode": "block",
+    "top_color": [144, 188, 39, 255],
+    "side_color": [144, 188, 39, 255],
+    "darken": false,
+    "legacy_id": 31
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dead_bush",
+    "mode": "block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": 32
+  },
+  {
+    "namespace": "minecraft",
+    "material": "piston",
+    "mode": "block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": 33
+  },
+  {
+    "namespace": "minecraft",
+    "material": "piston_head",
+    "mode": "block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": 34
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_wool",
+    "mode": "block",
+    "top_color": [223, 223, 223, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_wool",
+    "mode": "block",
+    "top_color": [234, 128, 55, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_wool",
+    "mode": "block",
+    "top_color": [191, 76, 201, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_wool",
+    "mode": "block",
+    "top_color": [105, 139, 212, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_wool",
+    "mode": "block",
+    "top_color": [195, 181, 28, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_wool",
+    "mode": "block",
+    "top_color": [59, 189, 48, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_wool",
+    "mode": "block",
+    "top_color": [218, 132, 155, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_wool",
+    "mode": "block",
+    "top_color": [67, 67, 67, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_gray_wool",
+    "mode": "block",
+    "top_color": [159, 166, 166, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_wool",
+    "mode": "block",
+    "top_color": [39, 117, 150, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_wool",
+    "mode": "block",
+    "top_color": [130, 54, 196, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_wool",
+    "mode": "block",
+    "top_color": [39, 51, 154, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_wool",
+    "mode": "block",
+    "top_color": [86, 51, 28, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_wool",
+    "mode": "block",
+    "top_color": [56, 77, 24, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_wool",
+    "mode": "block",
+    "top_color": [164, 45, 41, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_wool",
+    "mode": "block",
+    "top_color": [27, 23, 23, 255],
+    "darken": true,
+    "legacy_id": 35,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "moving_piston",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 36
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dandelion",
+    "mode": "block",
+    "top_color": [255, 255, 0, 255],
+    "darken": true,
+    "legacy_id": 37
+  },
+  {
+    "namespace": "minecraft",
+    "material": "poppy",
+    "mode": "block",
+    "top_color": [209, 6, 9, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_orchid",
+    "mode": "block",
+    "top_color": [28, 146, 214, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "allium",
+    "mode": "block",
+    "top_color": [191, 117, 251, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "azure_bluet",
+    "mode": "block",
+    "top_color": [216, 222, 230, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_tulip",
+    "mode": "block",
+    "top_color": [208, 54, 18, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_tulip",
+    "mode": "block",
+    "top_color": [222, 115, 31, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_tulip",
+    "mode": "block",
+    "top_color": [231, 231, 231, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_tulip",
+    "mode": "block",
+    "top_color": [234, 190, 234, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oxeye_daisy",
+    "mode": "block",
+    "top_color": [210, 199, 30, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_mushroom",
+    "mode": "block",
+    "top_color": [200, 200, 0, 255],
+    "darken": true,
+    "legacy_id": 39
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_mushroom",
+    "mode": "block",
+    "top_color": [255, 0, 0, 255],
+    "darken": true,
+    "legacy_id": 40
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gold_block",
+    "mode": "block",
+    "top_color": [255, 237, 140, 255],
+    "darken": true,
+    "legacy_id": 41
+  },
+  {
+    "namespace": "minecraft",
+    "material": "iron_block",
+    "mode": "block",
+    "top_color": [217, 217, 217, 255],
+    "darken": true,
+    "legacy_id": 42
+  },
+  {
+    "namespace": "minecraft",
+    "material": "stone_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sandstone_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [218, 210, 158, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "petrified_oak_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cobblestone_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [100, 100, 100, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brick_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [86, 35, 23, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "stone_brick_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_brick_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [66, 32, 38, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "quartz_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [217, 213, 206, 255],
+    "darken": true,
+    "legacy_id": [43, 44],
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "bricks",
+    "mode": "block",
+    "top_color": [86, 35, 23, 255],
+    "darken": true,
+    "legacy_id": 45
+  },
+  {
+    "namespace": "minecraft",
+    "material": "tnt",
+    "mode": "block",
+    "top_color": [255, 0, 0, 255],
+    "darken": true,
+    "legacy_id": 46
+  },
+  {
+    "namespace": "minecraft",
+    "material": "bookshelf",
+    "mode": "block",
+    "top_color": [191, 169, 116, 255],
+    "darken": true,
+    "legacy_id": 47
+  },
+  {
+    "namespace": "minecraft",
+    "material": "mossy_cobblestone",
+    "mode": "block",
+    "top_color": [127, 174, 125, 255],
+    "darken": true,
+    "legacy_id": 48
+  },
+  {
+    "namespace": "minecraft",
+    "material": "obsidian",
+    "mode": "block",
+    "top_color": [17, 13, 26, 255],
+    "darken": true,
+    "legacy_id": 49
+  },
+  {
+    "namespace": "minecraft",
+    "material": "torch",
+    "mode": "torch_block",
+    "top_color": [255, 225, 96, 208],
+    "darken": false,
+    "legacy_id": 50
+  },
+  {
+    "namespace": "minecraft",
+    "material": "wall_torch",
+    "mode": "torch_block",
+    "top_color": [255, 225, 96, 208],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "fire",
+    "mode": "block",
+    "top_color": [224, 174, 21, 255],
+    "darken": false,
+    "legacy_id": 51
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spawner",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 52
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_stairs",
+    "mode": "block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": 53
+  },
+  {
+    "namespace": "minecraft",
+    "material": "chest",
+    "mode": "block",
+    "top_color": [191, 135, 2, 255],
+    "darken": true,
+    "legacy_id": 54
+  },
+  {
+    "namespace": "minecraft",
+    "material": "redstone_wire",
+    "mode": "block",
+    "top_color": [111, 1, 1, 255],
+    "darken": true,
+    "legacy_id": 55
+  },
+  {
+    "namespace": "minecraft",
+    "material": "diamond_ore",
+    "mode": "block",
+    "top_color": [129, 140, 143, 255],
+    "darken": true,
+    "legacy_id": 56
+  },
+  {
+    "namespace": "minecraft",
+    "material": "diamond_block",
+    "mode": "block",
+    "top_color": [45, 166, 152, 255],
+    "darken": true,
+    "legacy_id": 57
+  },
+  {
+    "namespace": "minecraft",
+    "material": "crafting_table",
+    "mode": "block",
+    "top_color": [169, 107, 0, 255],
+    "darken": true,
+    "legacy_id": 58
+  },
+  {
+    "namespace": "minecraft",
+    "material": "wheat",
+    "mode": "block",
+    "top_color": [144, 188, 39, 255],
+    "darken": true,
+    "legacy_id": 59
+  },
+  {
+    "namespace": "minecraft",
+    "material": "farmland",
+    "mode": "block",
+    "top_color": [134, 96, 67, 255],
+    "darken": true,
+    "legacy_id": 60
+  },
+  {
+    "namespace": "minecraft",
+    "material": "furnace",
+    "mode": "block",
+    "top_color": [188, 188, 188, 255],
+    "darken": true,
+    "legacy_id": [61, 62]
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sign",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": [63, 68]
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_door",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": 64
+  },
+  {
+    "namespace": "minecraft",
+    "material": "ladder",
+    "mode": "block",
+    "top_color": [255, 200, 140, 0],
+    "darken": false,
+    "legacy_id": 65
+  },
+  {
+    "namespace": "minecraft",
+    "material": "rail",
+    "mode": "block",
+    "top_color": [120, 120, 120, 128],
+    "darken": true,
+    "legacy_id": 66
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cobblestone_stairs",
+    "mode": "block",
+    "top_color": [120, 120, 120, 128],
+    "darken": true,
+    "legacy_id": 67
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lever",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": false,
+    "legacy_id": 69
+  },
+  {
+    "namespace": "minecraft",
+    "material": "stone_pressure_plate",
+    "mode": "half_block",
+    "top_color": [120, 120, 120, 255],
+    "darken": true,
+    "legacy_id": 70
+  },
+  {
+    "namespace": "minecraft",
+    "material": "iron_door",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": 71
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_pressure_plate",
+    "mode": "half_block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": 72
+  },
+  {
+    "namespace": "minecraft",
+    "material": "redstone_ore",
+    "mode": "block",
+    "top_color": [163, 145, 145, 255],
+    "darken": true,
+    "legacy_id": [73, 74]
+  },
+  {
+    "namespace": "minecraft",
+    "material": "redstone_torch",
+    "mode": "torch_block",
+    "top_color": [181, 140, 64, 32],
+    "darken": false,
+    "legacy_id": [75, 76]
+  },
+  {
+    "namespace": "minecraft",
+    "material": "redstone_wall_torch",
+    "mode": "torch_block",
+    "top_color": [181, 140, 64, 32],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "stone_button",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": false,
+    "legacy_id": 77
+  },
+  {
+    "namespace": "minecraft",
+    "material": "snow",
+    "mode": "half_block",
+    "top_color": [255, 255, 255, 255],
+    "darken": true,
+    "legacy_id": 78
+  },
+  {
+    "namespace": "minecraft",
+    "material": "ice",
+    "mode": "block",
+    "top_color": [120, 120, 255, 120],
+    "darken": true,
+    "legacy_id": 79
+  },
+  {
+    "namespace": "minecraft",
+    "material": "snow_block",
+    "mode": "block",
+    "top_color": [255, 255, 255, 255],
+    "darken": true,
+    "legacy_id": 80
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cactus",
+    "mode": "block",
+    "top_color": [85, 107, 47, 255],
+    "darken": true,
+    "legacy_id": 81
+  },
+  {
+    "namespace": "minecraft",
+    "material": "clay",
+    "mode": "block",
+    "top_color": [144, 152, 168, 255],
+    "darken": true,
+    "legacy_id": 82
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sugar_cane",
+    "mode": "block",
+    "top_color": [193, 234, 150, 200],
+    "darken": true,
+    "legacy_id": 83
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jukebox",
+    "mode": "block",
+    "top_color": [125, 66, 44, 255],
+    "darken": true,
+    "legacy_id": 84
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_fence",
+    "mode": "block",
+    "top_color": [157, 128, 79, 200],
+    "darken": true,
+    "legacy_id": 85
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pumpkin",
+    "mode": "block",
+    "top_color": [227, 144, 29, 255],
+    "darken": true,
+    "legacy_id": 86
+  },
+  {
+    "namespace": "minecraft",
+    "material": "netherrack",
+    "mode": "block",
+    "top_color": [194, 115, 115, 255],
+    "darken": true,
+    "legacy_id": 87
+  },
+  {
+    "namespace": "minecraft",
+    "material": "soul_sand",
+    "mode": "block",
+    "top_color": [121, 97, 82, 255],
+    "darken": true,
+    "legacy_id": 88
+  },
+  {
+    "namespace": "minecraft",
+    "material": "glowstone",
+    "mode": "block",
+    "top_color": [255, 188, 94, 255],
+    "darken": true,
+    "legacy_id": 89
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_portal",
+    "mode": "block",
+    "top_color": [60, 13, 106, 127],
+    "darken": true,
+    "legacy_id": 90
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jack_o_lantern",
+    "mode": "block",
+    "top_color": [227, 144, 29, 255],
+    "darken": true,
+    "legacy_id": 91
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cake",
+    "mode": "half_block",
+    "top_color": [228, 205, 206, 255],
+    "darken": true,
+    "legacy_id": 92
+  },
+  {
+    "namespace": "minecraft",
+    "material": "repeater",
+    "mode": "half_block",
+    "top_color": [111, 1, 1, 255],
+    "darken": true,
+    "legacy_id": [93, 94]
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_stained_glass",
+    "mode": "block",
+    "top_color": [223, 223, 223, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_stained_glass",
+    "mode": "block",
+    "top_color": [234, 128, 55, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_stained_glass",
+    "mode": "block",
+    "top_color": [191, 76, 201, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_stained_glass",
+    "mode": "block",
+    "top_color": [105, 139, 212, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_stained_glass",
+    "mode": "block",
+    "top_color": [195, 181, 28, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_stained_glass",
+    "mode": "block",
+    "top_color": [59, 189, 48, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_stained_glass",
+    "mode": "block",
+    "top_color": [218, 132, 155, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_stained_glass",
+    "mode": "block",
+    "top_color": [67, 67, 67, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_stained_glass",
+    "mode": "block",
+    "top_color": [159, 166, 166, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_stained_glass",
+    "mode": "block",
+    "top_color": [39, 117, 150, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_stained_glass",
+    "mode": "block",
+    "top_color": [130, 54, 196, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_stained_glass",
+    "mode": "block",
+    "top_color": [39, 51, 154, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_stained_glass",
+    "mode": "block",
+    "top_color": [86, 51, 28, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_stained_glass",
+    "mode": "block",
+    "top_color": [56, 77, 24, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_stained_glass",
+    "mode": "block",
+    "top_color": [164, 45, 41, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_stained_glass",
+    "mode": "block",
+    "top_color": [27, 23, 23, 127],
+    "darken": true,
+    "legacy_id": 95,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_trapdoor",
+    "mode": "half_block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": 96
+  },
+  {
+    "namespace": "minecraft",
+    "material": "infested_stone",
+    "mode": "block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": 97,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "infested_cobblestone",
+    "mode": "block",
+    "top_color": [100, 100, 100, 255],
+    "darken": true,
+    "legacy_id": 97,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "infested_stone_bricks",
+    "mode": "block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": 97,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "infested_mossy_stone_bricks",
+    "mode": "block",
+    "top_color": [127, 174, 125, 255],
+    "darken": true,
+    "legacy_id": 97,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "infested_cracked_stone_bricks",
+    "mode": "block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": 97,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "infested_chiseled_stone_bricks",
+    "mode": "block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": 97,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "stone_bricks",
+    "mode": "block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": 98
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_mushroom_block",
+    "mode": "block",
+    "top_color": [206, 174, 123, 255],
+    "darken": true,
+    "legacy_id": 99
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_mushroom_block",
+    "mode": "block",
+    "top_color": [183, 31, 29, 255],
+    "darken": true,
+    "legacy_id": 100
+  },
+  {
+    "namespace": "minecraft",
+    "material": "iron_bars",
+    "mode": "block",
+    "top_color": [217, 217, 217, 200],
+    "darken": true,
+    "legacy_id": 101
+  },
+  {
+    "namespace": "minecraft",
+    "material": "glass_pane",
+    "mode": "block",
+    "top_color": [255, 255, 255, 48],
+    "darken": true,
+    "legacy_id": 102
+  },
+  {
+    "namespace": "minecraft",
+    "material": "melon",
+    "mode": "block",
+    "top_color": [50, 200, 45, 255],
+    "darken": true,
+    "legacy_id": 103
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pumpkin_stem",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 104
+  },
+  {
+    "namespace": "minecraft",
+    "material": "melon_stem",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 105
+  },
+  {
+    "namespace": "minecraft",
+    "material": "vine",
+    "mode": "block",
+    "top_color": [50, 89, 45, 128],
+    "darken": false,
+    "legacy_id": 106
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_fence_gate",
+    "mode": "block",
+    "top_color": [157, 128, 79, 200],
+    "darken": true,
+    "legacy_id": 107
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brick_stairs",
+    "mode": "block",
+    "top_color": [86, 35, 23, 255],
+    "darken": true,
+    "legacy_id": 108
+  },
+  {
+    "namespace": "minecraft",
+    "material": "stone_brick_stairs",
+    "mode": "block",
+    "top_color": [128, 128, 128, 255],
+    "darken": true,
+    "legacy_id": 109
+  },
+  {
+    "namespace": "minecraft",
+    "material": "mycelium",
+    "mode": "block",
+    "top_color": [110, 93, 133, 255],
+    "darken": true,
+    "legacy_id": 110
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lily_pad",
+    "mode": "half_block",
+    "top_color": [50, 89, 45, 230],
+    "darken": false,
+    "legacy_id": 111
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_bricks",
+    "mode": "block",
+    "top_color": [66, 32, 38, 255],
+    "darken": true,
+    "legacy_id": 112
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_brick_fence",
+    "mode": "block",
+    "top_color": [66, 32, 38, 200],
+    "darken": true,
+    "legacy_id": 113
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_brick_stairs",
+    "mode": "block",
+    "top_color": [66, 32, 38, 255],
+    "darken": true,
+    "legacy_id": 114
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_wart",
+    "mode": "block",
+    "top_color": [149, 21, 8, 230],
+    "darken": true,
+    "legacy_id": 115
+  },
+  {
+    "namespace": "minecraft",
+    "material": "enchanting_table",
+    "mode": "block",
+    "top_color": [130, 5, 5, 255],
+    "darken": true,
+    "legacy_id": 116
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brewing_stand",
+    "mode": "block",
+    "top_color": [124, 118, 51, 230],
+    "darken": true,
+    "legacy_id": 117
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cauldron",
+    "mode": "block",
+    "top_color": [49, 49, 49, 255],
+    "darken": true,
+    "legacy_id": 118
+  },
+  {
+    "namespace": "minecraft",
+    "material": "end_portal",
+    "mode": "block",
+    "top_color": [35, 60, 99, 128],
+    "darken": true,
+    "legacy_id": 119
+  },
+  {
+    "namespace": "minecraft",
+    "material": "end_portal_frame",
+    "mode": "block",
+    "top_color": [62, 115, 105, 255],
+    "darken": true,
+    "legacy_id": 120
+  },
+  {
+    "namespace": "minecraft",
+    "material": "end_stone",
+    "mode": "block",
+    "top_color": [203, 206, 148, 255],
+    "darken": true,
+    "legacy_id": 121
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dragon_egg",
+    "mode": "block",
+    "top_color": [72, 4, 82, 255],
+    "darken": true,
+    "legacy_id": 122
+  },
+  {
+    "namespace": "minecraft",
+    "material": "redstone_lamp",
+    "mode": "block",
+    "top_color": [145, 90, 57, 255],
+    "darken": true,
+    "legacy_id": 123
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [157, 128, 79, 255],
+    "darken": true,
+    "legacy_id": [125, 126],
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [102, 77, 46, 255],
+    "darken": true,
+    "legacy_id": [125, 126],
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [193, 177, 122, 255],
+    "darken": true,
+    "legacy_id": [125, 126],
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [152, 109, 76, 255],
+    "darken": true,
+    "legacy_id": [125, 126],
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [168, 91, 50, 255],
+    "darken": true,
+    "legacy_id": [125, 126],
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [60, 39, 18, 255],
+    "darken": true,
+    "legacy_id": [125, 126],
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cocoa",
+    "mode": "block",
+    "top_color": [190, 116, 45, 230],
+    "darken": true,
+    "legacy_id": 127
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sandstone_stairs",
+    "mode": "block",
+    "top_color": [218, 210, 158, 255],
+    "darken": true,
+    "legacy_id": 128
+  },
+  {
+    "namespace": "minecraft",
+    "material": "emerald_ore",
+    "mode": "block",
+    "top_color": [94, 124, 105, 255],
+    "darken": true,
+    "legacy_id": 129
+  },
+  {
+    "namespace": "minecraft",
+    "material": "ender_chest",
+    "mode": "block",
+    "top_color": [42, 58, 60, 255],
+    "side_color": [35, 49, 33, 255],
+    "darken": true,
+    "legacy_id": 130
+  },
+  {
+    "namespace": "minecraft",
+    "material": "tripwire_hook",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 131
+  },
+  {
+    "namespace": "minecraft",
+    "material": "tripwire",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 132
+  },
+  {
+    "namespace": "minecraft",
+    "material": "emerald_block",
+    "mode": "block",
+    "top_color": [84, 218, 123, 255],
+    "darken": true,
+    "legacy_id": 133
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_stairs",
+    "mode": "block",
+    "top_color": [102, 77, 46, 255],
+    "darken": true,
+    "legacy_id": 134
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_stairs",
+    "mode": "block",
+    "top_color": [193, 177, 122, 255],
+    "darken": true,
+    "legacy_id": 135
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_stairs",
+    "mode": "block",
+    "top_color": [152, 109, 76, 255],
+    "darken": true,
+    "legacy_id": 136
+  },
+  {
+    "namespace": "minecraft",
+    "material": "command_block",
+    "mode": "block",
+    "top_color": [186, 118, 74, 255],
+    "darken": true,
+    "legacy_id": 137
+  },
+  {
+    "namespace": "minecraft",
+    "material": "beacon",
+    "mode": "block",
+    "top_color": [196, 255, 254, 230],
+    "darken": true,
+    "legacy_id": 138
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cobblestone_wall",
+    "mode": "block",
+    "top_color": [100, 100, 100, 255],
+    "darken": true,
+    "legacy_id": 139
+  },
+  {
+    "namespace": "minecraft",
+    "material": "flower_pot",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 140
+  },
+  {
+    "namespace": "minecraft",
+    "material": "carrots",
+    "mode": "block",
+    "top_color": [2, 161, 0, 255],
+    "darken": true,
+    "legacy_id": 141
+  },
+  {
+    "namespace": "minecraft",
+    "material": "potatoes",
+    "mode": "block",
+    "top_color": [0, 174, 25, 255],
+    "darken": true,
+    "legacy_id": 142
+  },
+  {
+    "namespace": "minecraft",
+    "material": "oak_button",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 143
+  },
+  {
+    "namespace": "minecraft",
+    "material": "skeleton_skull",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "skeleton_wall_skull",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "wither_skeleton_skull",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "wither_skeleton_wall_skull",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "zombie_head",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "zombie_wall_head",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "player_head",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "player_wall_head",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "creeper_head",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "creeper_wall_head",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dragon_head",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dragon_wall_head",
+    "mode": "block",
+    "top_color": [255, 255,255, 0],
+    "darken": true,
+    "legacy_id": 144,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "anvil",
+    "mode": "block",
+    "top_color": [66, 62, 62, 255],
+    "darken": true,
+    "legacy_id": 145,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "chipped_anvil",
+    "mode": "block",
+    "top_color": [66, 62, 62, 255],
+    "darken": true,
+    "legacy_id": 145,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "damaged_anvil",
+    "mode": "block",
+    "top_color": [66, 62, 62, 255],
+    "darken": true,
+    "legacy_id": 145,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "trapped_chest",
+    "mode": "block",
+    "top_color": [191, 135, 2, 255],
+    "darken": true,
+    "legacy_id": 146
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_weighted_pressure_plate",
+    "mode": "half_block",
+    "top_color": [255, 237, 140, 255],
+    "darken": true,
+    "legacy_id": 147
+  },
+  {
+    "namespace": "minecraft",
+    "material": "heavy_weighted_pressure_plate",
+    "mode": "half_block",
+    "top_color": [217, 217, 217, 255],
+    "darken": true,
+    "legacy_id": 148
+  },
+  {
+    "namespace": "minecraft",
+    "material": "comparator",
+    "mode": "half_block",
+    "top_color": [111, 1, 1, 255],
+    "darken": true,
+    "legacy_id": 149
+  },
+  {
+    "namespace": "minecraft",
+    "material": "daylight_detector",
+    "mode": "half_block",
+    "top_color": [194, 179, 158, 255],
+    "side_color": [29, 23, 14, 255],
+    "darken": true,
+    "legacy_id": 151
+  },
+  {
+    "namespace": "minecraft",
+    "material": "redstone_block",
+    "mode": "block",
+    "top_color": [150, 24, 7, 255],
+    "darken": true,
+    "legacy_id": 152
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_quartz_ore",
+    "mode": "block",
+    "top_color": [190, 143, 136, 255],
+    "darken": true,
+    "legacy_id": 153
+  },
+  {
+    "namespace": "minecraft",
+    "material": "hopper",
+    "mode": "block",
+    "top_color": [55, 55, 55, 255],
+    "darken": true,
+    "legacy_id": 154
+  },
+  {
+    "namespace": "minecraft",
+    "material": "quartz_block",
+    "mode": "block",
+    "top_color": [217, 213, 206, 255],
+    "darken": true,
+    "legacy_id": 155
+  },
+  {
+    "namespace": "minecraft",
+    "material": "quartz_stairs",
+    "mode": "block",
+    "top_color": [217, 213, 206, 255],
+    "darken": true,
+    "legacy_id": 156
+  },
+  {
+    "namespace": "minecraft",
+    "material": "activator_rail",
+    "mode": "block",
+    "top_color": [120, 120, 120, 128],
+    "side_color": [255, 220, 0, 128],
+    "darken": false,
+    "legacy_id": 157
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dropper",
+    "mode": "block",
+    "top_color": [107, 107, 107, 255],
+    "darken": true,
+    "legacy_id": 158
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_terracotta",
+    "mode": "block",
+    "top_color": [210, 177, 161, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_terracotta",
+    "mode": "block",
+    "top_color": [162, 82, 36, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_terracotta",
+    "mode": "block",
+    "top_color": [149, 89, 110, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_terracotta",
+    "mode": "block",
+    "top_color": [117, 111, 140, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_terracotta",
+    "mode": "block",
+    "top_color": [186, 134, 36, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_terracotta",
+    "mode": "block",
+    "top_color": [102, 115, 48, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_terracotta",
+    "mode": "block",
+    "top_color": [163, 80, 80, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_terracotta",
+    "mode": "block",
+    "top_color": [57, 42, 35, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_gray_terracotta",
+    "mode": "block",
+    "top_color": [135, 107, 98, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_terracotta",
+    "mode": "block",
+    "top_color": [91, 95, 94, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_terracotta",
+    "mode": "block",
+    "top_color": [119, 72, 87, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_terracotta",
+    "mode": "block",
+    "top_color": [76, 62, 92, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_terracotta",
+    "mode": "block",
+    "top_color": [77, 51, 36, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_terracotta",
+    "mode": "block",
+    "top_color": [76, 84, 43, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_terracotta",
+    "mode": "block",
+    "top_color": [142, 61, 47, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_terracotta",
+    "mode": "block",
+    "top_color": [39, 24, 17, 255],
+    "darken": true,
+    "legacy_id": 159,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_stained_glass_pane",
+    "mode": "block",
+    "top_color": [223, 223, 223, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_stained_glass_pane",
+    "mode": "block",
+    "top_color": [234, 128, 55, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_stained_glass_pane",
+    "mode": "block",
+    "top_color": [191, 76, 201, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_stained_glass_pane",
+    "mode": "block",
+    "top_color": [105, 139, 212, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_stained_glass_pane",
+    "mode": "block",
+    "top_color": [195, 181, 28, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_stained_glass_pane",
+    "mode": "block",
+    "top_color": [59, 189, 48, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_stained_glass_pane",
+    "mode": "block",
+    "top_color": [218, 132, 155, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_stained_glass_pane",
+    "mode": "block",
+    "top_color": [67, 67, 67, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_stained_glass_pane",
+    "mode": "block",
+    "top_color": [159, 166, 166, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_stained_glass_pane",
+    "mode": "block",
+    "top_color": [39, 117, 150, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_stained_glass_pane",
+    "mode": "block",
+    "top_color": [130, 54, 196, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_stained_glass_pane",
+    "mode": "block",
+    "top_color": [39, 51, 154, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_stained_glass_pane",
+    "mode": "block",
+    "top_color": [86, 51, 28, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_stained_glass_pane",
+    "mode": "block",
+    "top_color": [56, 77, 24, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_stained_glass_pane",
+    "mode": "block",
+    "top_color": [164, 45, 41, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_stained_glass_pane",
+    "mode": "block",
+    "top_color": [27, 23, 23, 127],
+    "darken": true,
+    "legacy_id": 160,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_leaves",
+    "mode": "legacy_leaf_block",
+    "top_color": [58, 145, 19, 128],
+    "darken": true,
+    "legacy_id": 161,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_leaves",
+    "mode": "legacy_leaf_block",
+    "top_color": [52, 131, 18, 128],
+    "darken": true,
+    "legacy_id": 161,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_log",
+    "mode": "log_block",
+    "top_color": [155, 90, 62, 255],
+    "side_color": [104, 98, 88, 255],
+    "darken": false,
+    "legacy_id": 162,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_log",
+    "mode": "log_block",
+    "top_color": [79, 63, 41, 255],
+    "side_color": [51, 40, 23, 255],
+    "darken": false,
+    "legacy_id": 162,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_stairs",
+    "mode": "block",
+    "top_color": [168, 91, 50, 255],
+    "darken": true,
+    "legacy_id": 163
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_stairs",
+    "mode": "block",
+    "top_color": [60, 39, 18, 255],
+    "darken": true,
+    "legacy_id": 164
+  },
+  {
+    "namespace": "minecraft",
+    "material": "slime_block",
+    "mode": "block",
+    "top_color": [114, 188, 105, 230],
+    "darken": true,
+    "legacy_id": 165
+  },
+  {
+    "namespace": "minecraft",
+    "material": "barrier",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": true,
+    "legacy_id": 166
+  },
+  {
+    "namespace": "minecraft",
+    "material": "iron_trapdoor",
+    "mode": "half_block",
+    "top_color": [217, 217, 217, 255],
+    "darken": true,
+    "legacy_id": 167
+  },
+  {
+    "namespace": "minecraft",
+    "material": "prismarine",
+    "mode": "block",
+    "top_color": [69, 122, 123, 255],
+    "darken": true,
+    "legacy_id": 168,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "prismarine_bricks",
+    "mode": "block",
+    "top_color": [69, 123, 108, 255],
+    "darken": true,
+    "legacy_id": 168,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_prismarine",
+    "mode": "block",
+    "top_color": [59, 87, 75, 255],
+    "darken": true,
+    "legacy_id": 168,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sea_lantern",
+    "mode": "block",
+    "top_color": [68, 121, 104, 255],
+    "darken": true,
+    "legacy_id": 169
+  },
+  {
+    "namespace": "minecraft",
+    "material": "hay_block",
+    "mode": "block",
+    "top_color": [192, 160, 14, 255],
+    "darken": true,
+    "legacy_id": 170
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_carpet",
+    "mode": "half_block",
+    "top_color": [223, 223, 223, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_carpet",
+    "mode": "half_block",
+    "top_color": [234, 128, 55, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_carpet",
+    "mode": "half_block",
+    "top_color": [191, 76, 201, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_carpet",
+    "mode": "half_block",
+    "top_color": [105, 139, 212, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_carpet",
+    "mode": "half_block",
+    "top_color": [195, 181, 28, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_carpet",
+    "mode": "half_block",
+    "top_color": [59, 189, 48, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_carpet",
+    "mode": "half_block",
+    "top_color": [218, 132, 155, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_carpet",
+    "mode": "half_block",
+    "top_color": [67, 67, 67, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_gray_carpet",
+    "mode": "half_block",
+    "top_color": [159, 166, 166, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_carpet",
+    "mode": "half_block",
+    "top_color": [39, 117, 150, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_carpet",
+    "mode": "half_block",
+    "top_color": [130, 54, 196, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_carpet",
+    "mode": "half_block",
+    "top_color": [39, 51, 154, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_carpet",
+    "mode": "half_block",
+    "top_color": [86, 51, 28, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_carpet",
+    "mode": "half_block",
+    "top_color": [56, 77, 24, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_carpet",
+    "mode": "half_block",
+    "top_color": [164, 45, 41, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_carpet",
+    "mode": "half_block",
+    "top_color": [27, 23, 23, 255],
+    "darken": true,
+    "legacy_id": 171,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "terracotta",
+    "mode": "block",
+    "top_color": [140, 86, 63, 255],
+    "darken": true,
+    "legacy_id": 172
+  },
+  {
+    "namespace": "minecraft",
+    "material": "coal_block",
+    "mode": "block",
+    "top_color": [20, 20, 20, 255],
+    "darken": true,
+    "legacy_id": 173
+  },
+  {
+    "namespace": "minecraft",
+    "material": "packed_ice",
+    "mode": "block",
+    "top_color": [120, 120, 255, 180],
+    "darken": true,
+    "legacy_id": 174
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sunflower",
+    "mode": "large_plant_block",
+    "top_color": [230, 187, 33, 255],
+    "side_color": [66, 108, 43, 255],
+    "darken": false,
+    "legacy_id": 175,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lilac",
+    "mode": "large_plant_block",
+    "top_color": [159, 120, 164, 255],
+    "darken": false,
+    "legacy_id": 175,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "tall_grass",
+    "mode": "large_plant_block",
+    "top_color": [144, 188, 39, 255],
+    "darken": false,
+    "legacy_id": 175,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "large_fern",
+    "mode": "large_plant_block",
+    "top_color": [144, 188, 39, 255],
+    "darken": false,
+    "legacy_id": 175,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "rose_bush",
+    "mode": "large_plant_block",
+    "top_color": [190, 26, 18, 255],
+    "darken": false,
+    "legacy_id": 175,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "peony",
+    "mode": "large_plant_block",
+    "top_color": [222, 165, 247, 255],
+    "side_color": [69, 96, 73, 255],
+    "darken": false,
+    "legacy_id": 175,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_sandstone",
+    "mode": "block",
+    "top_color": [166, 85, 30, 255],
+    "darken": true,
+    "legacy_id": 179
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_sandstone_stairs",
+    "mode": "block",
+    "top_color": [166, 85, 30, 255],
+    "darken": true,
+    "legacy_id": 180
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_sandstone_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [166, 85, 30, 255],
+    "darken": true,
+    "legacy_id": [
+      181,
+      182
+    ]
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_fence_gate",
+    "mode": "block",
+    "top_color": [102, 77, 46, 200],
+    "darken": true,
+    "legacy_id": 183
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_fence_gate",
+    "mode": "block",
+    "top_color": [193, 177, 122, 200],
+    "darken": true,
+    "legacy_id": 184
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_fence_gate",
+    "mode": "block",
+    "top_color": [152, 109, 76, 200],
+    "darken": true,
+    "legacy_id": 185
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_fence_gate",
+    "mode": "block",
+    "top_color": [60, 39, 18, 200],
+    "darken": true,
+    "legacy_id": 186
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_fence_gate",
+    "mode": "block",
+    "top_color": [168, 91, 50, 200],
+    "darken": true,
+    "legacy_id": 187
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_fence",
+    "mode": "block",
+    "top_color": [102, 77, 46, 200],
+    "darken": true,
+    "legacy_id": 188
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_fence",
+    "mode": "block",
+    "top_color": [193, 177, 122, 200],
+    "darken": true,
+    "legacy_id": 189
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_fence",
+    "mode": "block",
+    "top_color": [152, 109, 76, 200],
+    "darken": true,
+    "legacy_id": 190
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_fence",
+    "mode": "block",
+    "top_color": [60, 39, 18, 200],
+    "darken": true,
+    "legacy_id": 191
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_fence",
+    "mode": "block",
+    "top_color": [168, 91, 50, 200],
+    "darken": true,
+    "legacy_id": 192
+  },
+  {
+    "namespace": "minecraft",
+    "material": "spruce_door",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": 193
+  },
+  {
+    "namespace": "minecraft",
+    "material": "birch_door",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": 194
+  },
+  {
+    "namespace": "minecraft",
+    "material": "jungle_door",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": 195
+  },
+  {
+    "namespace": "minecraft",
+    "material": "acacia_door",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": 196
+  },
+  {
+    "namespace": "minecraft",
+    "material": "dark_oak_door",
+    "mode": "block",
+    "darken": false,
+    "legacy_id": 197
+  },
+  {
+    "namespace": "minecraft",
+    "material": "end_rod",
+    "mode": "block",
+    "top_color": [94, 73, 131, 140],
+    "darken": false,
+    "legacy_id": 198
+  },
+  {
+    "namespace": "minecraft",
+    "material": "chorus_plant",
+    "mode": "block",
+    "top_color": [116, 70, 124, 255],
+    "darken": true,
+    "legacy_id": 199
+  },
+  {
+    "namespace": "minecraft",
+    "material": "chorus_flower",
+    "mode": "block",
+    "top_color": [108, 84, 108, 255],
+    "darken": true,
+    "legacy_id": 200
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purpur_block",
+    "mode": "block",
+    "top_color": [104, 58, 103, 255],
+    "darken": true,
+    "legacy_id": 201
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purpur_pillar",
+    "mode": "block",
+    "top_color": [166, 124, 166, 255],
+    "darken": true,
+    "legacy_id": 202
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purpur_stairs",
+    "mode": "block",
+    "top_color": [140, 105, 142, 255],
+    "darken": true,
+    "legacy_id": 203
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purpur_slab",
+    "mode": "legacy_slab_block",
+    "top_color": [104, 58, 103, 255],
+    "darken": true,
+    "legacy_id": [204, 205]
+  },
+  {
+    "namespace": "minecraft",
+    "material": "end_stone_bricks",
+    "mode": "block",
+    "top_color": [223, 229, 170, 255],
+    "darken": true,
+    "legacy_id": 206
+  },
+  {
+    "namespace": "minecraft",
+    "material": "beetroots",
+    "mode": "block",
+    "top_color": [76, 108, 49, 255],
+    "darken": true,
+    "legacy_id": 207
+  },
+  {
+    "namespace": "minecraft",
+    "material": "grass_path",
+    "mode": "block",
+    "top_color": [149, 125, 71, 255],
+    "darken": true,
+    "legacy_id": 208
+  },
+  {
+    "namespace": "minecraft",
+    "material": "end_gateway",
+    "mode": "block",
+    "top_color": [15, 15, 25, 255],
+    "darken": true,
+    "legacy_id": 209
+  },
+  {
+    "namespace": "minecraft",
+    "material": "repeating_command_block",
+    "mode": "block",
+    "top_color": [135, 122, 152, 255],
+    "darken": true,
+    "legacy_id": 210
+  },
+  {
+    "namespace": "minecraft",
+    "material": "chain_command_block",
+    "mode": "block",
+    "top_color": [114, 135, 131, 255],
+    "darken": true,
+    "legacy_id": 211
+  },
+  {
+    "namespace": "minecraft",
+    "material": "frosted_ice",
+    "mode": "block",
+    "top_color": [120, 120, 255, 120],
+    "darken": true,
+    "legacy_id": 212
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magma_block",
+    "mode": "block",
+    "top_color": [132, 64, 26, 255],
+    "darken": true,
+    "legacy_id": 213
+  },
+  {
+    "namespace": "minecraft",
+    "material": "nether_wart_block",
+    "mode": "block",
+    "top_color": [107, 60, 60, 255],
+    "darken": true,
+    "legacy_id": 214
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_nether_bricks",
+    "mode": "block",
+    "top_color": [106, 59, 62, 255],
+    "darken": true,
+    "legacy_id": 215
+  },
+  {
+    "namespace": "minecraft",
+    "material": "bone_block",
+    "mode": "block",
+    "top_color": [218, 214, 193, 255],
+    "darken": true,
+    "legacy_id": 216
+  },
+  {
+    "namespace": "minecraft",
+    "material": "structure_void",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": false,
+    "legacy_id": 217
+  },
+  {
+    "namespace": "minecraft",
+    "material": "observer",
+    "mode": "block",
+    "top_color": [107, 107, 107, 255],
+    "darken": true,
+    "legacy_id": 218
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_shulker_box",
+    "mode": "block",
+    "top_color": [205, 210, 210, 255],
+    "darken": true,
+    "legacy_id": 219
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_shulker_box",
+    "mode": "block",
+    "top_color": [228, 104, 9, 255],
+    "darken": true,
+    "legacy_id": 220
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_shulker_box",
+    "mode": "block",
+    "top_color": [168, 52, 158, 255],
+    "darken": true,
+    "legacy_id": 221
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_shulker_box",
+    "mode": "block",
+    "top_color": [46, 156, 206, 255],
+    "darken": true,
+    "legacy_id": 222
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_shulker_box",
+    "mode": "block",
+    "top_color": [241, 182, 27, 255],
+    "darken": true,
+    "legacy_id": 223
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_shulker_box",
+    "mode": "block",
+    "top_color": [94, 163, 22, 255],
+    "darken": true,
+    "legacy_id": 224
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_shulker_box",
+    "mode": "block",
+    "top_color": [221, 114, 150, 255],
+    "darken": true,
+    "legacy_id": 225
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_shulker_box",
+    "mode": "block",
+    "top_color": [56, 59, 63, 255],
+    "darken": true,
+    "legacy_id": 226
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_gray_shulker_box",
+    "mode": "block",
+    "top_color": [117, 117, 108, 255],
+    "darken": true,
+    "legacy_id": 227
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_shulker_box",
+    "mode": "block",
+    "top_color": [20, 116, 130, 255],
+    "darken": true,
+    "legacy_id": 228
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_shulker_box",
+    "mode": "block",
+    "top_color": [148, 103, 148, 255],
+    "darken": true,
+    "legacy_id": 229
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_shulker_box",
+    "mode": "block",
+    "top_color": [42, 44, 135, 255],
+    "darken": true,
+    "legacy_id": 230
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_shulker_box",
+    "mode": "block",
+    "top_color": [103, 64, 35, 255],
+    "darken": true,
+    "legacy_id": 231
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_shulker_box",
+    "mode": "block",
+    "top_color": [76, 96, 32, 255],
+    "darken": true,
+    "legacy_id": 232
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_shulker_box",
+    "mode": "block",
+    "top_color": [138, 30, 29, 255],
+    "darken": true,
+    "legacy_id": 233
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_shulker_box",
+    "mode": "block",
+    "top_color": [23, 24, 28, 255],
+    "darken": true,
+    "legacy_id": 234
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 235
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 236
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 237
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 238
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 239
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 240
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 241
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 242
+  },
+  {
+    "namespace": "minecraft",
+    "material": "silver_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 243
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 244
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 245
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 246
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_glazed_terracotta ",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 247
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 248
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 249
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_glazed_terracotta",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 250
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_gray_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_concrete",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 251,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "white_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "orange_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 1
+  },
+  {
+    "namespace": "minecraft",
+    "material": "magenta_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 2
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_blue_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 3
+  },
+  {
+    "namespace": "minecraft",
+    "material": "yellow_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 4
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lime_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 5
+  },
+  {
+    "namespace": "minecraft",
+    "material": "pink_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 6
+  },
+  {
+    "namespace": "minecraft",
+    "material": "gray_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 7
+  },
+  {
+    "namespace": "minecraft",
+    "material": "light_gray_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 8
+  },
+  {
+    "namespace": "minecraft",
+    "material": "cyan_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "purple_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
+    "material": "blue_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 11
+  },
+  {
+    "namespace": "minecraft",
+    "material": "brown_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 12
+  },
+  {
+    "namespace": "minecraft",
+    "material": "green_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 13
+  },
+  {
+    "namespace": "minecraft",
+    "material": "red_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 14
+  },
+  {
+    "namespace": "minecraft",
+    "material": "black_concrete_powder",
+    "mode": "block",
+    "darken": true,
+    "legacy_id": 252,
+    "legacy_meta": 15
+  },
+  {
+    "namespace": "minecraft",
+    "material": "structure_block",
+    "mode": "block",
+    "top_color": [98, 74, 98, 255],
+    "darken": true,
+    "legacy_id": 255
+  }
+]

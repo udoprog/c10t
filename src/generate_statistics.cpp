@@ -8,10 +8,13 @@
 #include "mc/level.hpp"
 
 #include "players.hpp"
+#include "main_utils.hpp"
+#include "engine/block_rotation.hpp"
 
 #include <iomanip>
 
 #include <boost/foreach.hpp>
+#include <boost/optional.hpp>
 
 using namespace std;
 
@@ -45,10 +48,22 @@ bool generate_statistics(
     mc::world world(world_path);
 
     AltitudeGraph *_stat = new AltitudeGraph(s);
-    long statistics[mc::MaterialCount];
 
-    for (int i = 0; i < mc::MaterialCount; i++) {
+    mc::MaterialT *materials = mc::MaterialTable.data();
+    long statistics[mc::MaterialTable.size()];
+
+    for (int i = 0; i < mc::MaterialTable.size(); i++) {
       statistics[i] = 0;
+    }
+
+    boost::optional<mc::MaterialT*> graph_block;
+    {
+        mc::MaterialT *material;
+        if(get_blocktype(s.graph_block, material)) {
+            graph_block = boost::optional<mc::MaterialT*>(material);
+        } else {
+            graph_block = boost::optional<mc::MaterialT*>();
+        }
     }
 
     bool any_db =
@@ -120,19 +135,36 @@ bool generate_statistics(
             continue;
           }
 
-          /*
-          boost::shared_ptr<nbt::ByteArray> blocks = level_data.get_blocks();
+          boost::shared_ptr<mc::Level_Compound> L = level_data.get_level();
+          BOOST_FOREACH(mc::Section_Compound Section, L->Sections) {
+            block_rotation br_blocks(0, Section.Blocks);
+            block_rotation br_data(0, Section.Data);
 
-          for (int i = 0; i < blocks->length; i++) {
-            nbt::Byte block = blocks->values[i];
-            statistics[block] += 1;
-            if(s.graph_block > 0 && blocks->values[i] == s.graph_block)
-            {
-                // altitude is calculated as i % mc::MapY... Kind of messy, but...
-                _stat->registerBloc(blocks->values[i], i % mc::MapY);
+            for (int y = 15; y >= 0; y--) {
+                int abs_y = (Section.Y * 16) + y;
+
+                for (int z = 0; z < mc::MapZ; z++) {
+                    for (int x = 0; x < mc::MapX; x++) {
+                        br_blocks.set_xz(x, z);
+                        br_data.set_xz(x, z);
+
+                        int block_type = br_blocks.get8(y);
+                        int block_data = br_data.get4(y);
+                        boost::optional<mc::MaterialT*> material = mc::get_material_legacy(block_type, block_data);
+
+                        if (material) {
+                            if (material.get()->enabled) {
+                                size_t index = material.get() - materials;
+                                statistics[index] += 1;
+                            }
+                            if(graph_block && material.get() == graph_block.get()) {
+                                _stat->registerBloc(material.get(), abs_y);
+                            }
+                        }
+                    }
+                }
             }
           }
-          */
 
           reporter.add(1);
         }
@@ -179,9 +211,11 @@ bool generate_statistics(
     }
 
     stats << "[BLOCKS]" << endl;
-
-    for (int i = 0; i < mc::MaterialCount; i++) {
-      stats << setw(3) << i << " " << setw(24) << mc::MaterialName[i] << " " << statistics[i] << endl;
+    for (int i = 0; i < mc::MaterialTable.size(); i++) {
+      if (statistics[i] > 0) {
+        std::string full_name = mc::MaterialTable[i].mc_namespace + ":" + mc::MaterialTable[i].name;
+        stats << std::left << setw(32) << full_name << " " << statistics[i] << endl;
+      }
     }
 
     stats.close();
@@ -193,7 +227,7 @@ bool generate_statistics(
 
     out << "statistics written to " << output_path;
 
-    if(s.graph_block > 0)
+    if(graph_block)
         _stat->createGraph();
 
     return true;

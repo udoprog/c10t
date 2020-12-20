@@ -2,21 +2,21 @@
 
 #include <getopt.h>
 
+#include <unistd.h>
+
 #include <sstream>
 #include <fstream>
 #include <iomanip>
 
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 
 #include "mc/blocks.hpp"
 
-bool get_blockid(const std::string blockid_string, int& blockid);
 bool parse_color(const std::string value, color& c);
 bool parse_set(const char* set_str, int& blockid, color& c);
-bool do_base_color_set(const char *set_str);
-bool do_side_color_set(const char *set_str);
 
 // Convert a string such as "-30,40,50,30" to the corresponding N,S,E,W integers,
 // and fill in the min/max settings.
@@ -36,7 +36,8 @@ vector<std::string> warnings;
 stringstream error;
 
 template<typename C>
-void boost_split(C& collection, const string& s) {
+void boost_split(C& collection, const string& s)
+{
     char_separator<char> sep(" \t\n\r,:");
     typedef tokenizer<boost::char_separator<char> > tokenizer;
     tokenizer tokens(s, sep);
@@ -46,28 +47,30 @@ void boost_split(C& collection, const string& s) {
     }
 }
 
-bool get_blockid(const string blockid_string, int& blockid)
+bool get_blocktype(const std::string& block_string, mc::MaterialT*& block_type)
 {
-    for (int i = 0; i < mc::MaterialCount; i++) {
-        if (blockid_string.compare(mc::MaterialName[i]) == 0) {
-            blockid = i;
-            return true;
+    // First attempt modern name lookup
+    std::map<std::string, mc::MaterialT*>::iterator it = mc::MaterialMap.find(block_string);
+    if (it == mc::MaterialMap.end()) {
+        // Perhaps it is an old identifier then
+        // TODO: also accept id:meta format
+        try {
+            int id = lexical_cast<int>(block_string);
+            int meta = 0;
+            boost::optional<mc::MaterialT*> material = mc::get_material_legacy(id, meta);
+            if (material) {
+                block_type = material.get();
+                return true;
+            }
+        } catch(const bad_lexical_cast& e) {
+            // ignore string to integer translation errors
         }
-    }
-    
-    try {
-        blockid = lexical_cast<int>(blockid_string);
-    } catch(const bad_lexical_cast& e) {
-        error << "Cannot be converted to number: " << blockid_string;
+        error << "Block is nither a known block name nor a known numeric block identifier; " << block_string;
         return false;
+    } else {
+        block_type = it->second;
+        return true;
     }
-    
-    if (!(blockid >= 0 && blockid < mc::MaterialCount)) {
-        error << "Not a valid blockid: " << blockid_string;
-        return false;
-    }
-    
-    return true;
 }
 
 bool parse_color(const string value, color& c)
@@ -77,7 +80,7 @@ bool parse_color(const string value, color& c)
     boost_split(parts, value);
 
     int cr, cg, cb, ca=0xff;
-    
+
     if (parts.size() < 3) {
         error << "Color sets must be of the form <red>,<green>,<blue>[,<alpha>] but was: " << value;
         return false;
@@ -94,7 +97,7 @@ bool parse_color(const string value, color& c)
         error << "Cannot be converted to a color: " << value;
         return false;
     }
-    
+
     if (!(
             cr >= 0 && cr <= 0xff &&
             cg >= 0 && cg <= 0xff &&
@@ -103,65 +106,62 @@ bool parse_color(const string value, color& c)
         error << "Color values must be between 0-255: " << value;
         return false;
     }
-    
+
     c.r = color_i_to_f[cr];
     c.g = color_i_to_f[cg];
     c.b = color_i_to_f[cb];
     c.a = color_i_to_f[ca];
-    
+
     return true;
 }
 
-bool parse_set(const char* set_str, int& blockid, color& c)
+bool parse_set(const char* set_str, mc::MaterialT*& block_type, color& c)
 {
     istringstream iss(set_str);
-    string key, value;
-    
-    assert(getline(iss, key, '='));
-    assert(getline(iss, value));
-    
-    if (!get_blockid(key, blockid)) {
+    string block_name, color_string;
+
+    assert(getline(iss, block_name, '='));
+    assert(getline(iss, color_string));
+
+    if (!get_blocktype(block_name, block_type)) {
         return false;
     }
 
-    if (!parse_color(value, c)) {
+    if (!parse_color(color_string, c)) {
         return false;
     }
-    
+
     return true;
 }
 
-bool do_base_color_set(const char *set_str) {
-    int blockid;
-    color c;
-    
-    if (!parse_set(set_str, blockid, c)) {
-        return false;
-    }
+bool do_base_color_set(const char *set_str)
+{
+    mc::MaterialT *material;
+    color color_top;
 
-    mc::set_color(blockid, 0, c);
-    return true;
+    if (parse_set(set_str, material, color_top)) {
+        material->top = color_top;
+        return true;
+    }
+    return false;
 }
 
-bool do_side_color_set(const char *set_str) {
-    int blockid;
-    color c;
-    
-    if (!parse_set(set_str, blockid, c)) {
-        return false;
-    }
+bool do_side_color_set(const char *set_str)
+{
+    mc::MaterialT *material;
+    color color_side;
 
-    if (mc::MaterialColorData[blockid].count > 0) {
-        mc::MaterialColorData[blockid].side[0] = color(c);
-    } else {
-        error << "Side colors cannot be set (program flow error)" << endl;
+    if (parse_set(set_str, material, color_side)) {
+        material->side = color_side;
+        return true;
     }
-    return true;
+    return false;
 }
 
 // Convert a string such as "-30,40,50,30" to the corresponding N,S,E,W integers,
 // and fill in the min/max settings.
-bool parse_limits(const string& limits_str, settings_t& s) {
+bool parse_limits(const string& limits_str, settings_t& s)
+{
     std::vector<std::string> limits;
 
     boost_split(limits, limits_str);
@@ -184,7 +184,8 @@ bool parse_limits(const string& limits_str, settings_t& s) {
     return true;
 }
 
-bool parse_tuple(const string& str, settings_t& s, int& a, int& b) {
+bool parse_tuple(const string& str, settings_t& s, int& a, int& b)
+{
     std::vector<std::string> parts;
 
     boost_split(parts, str);
@@ -205,101 +206,219 @@ bool parse_tuple(const string& str, settings_t& s, int& a, int& b) {
     return true;
 }
 
-bool read_set(std::set<string>& set, const string s) {
+bool read_set(std::set<string>& set, const string s)
+{
     boost_split(set, s);
 
     if (set.size() == 0) {
         error << "List must specify items separated by comma `,'";
         return false;
     }
-    
+
     return true;
 }
 
-bool do_write_palette(settings_t& s, const fs::path& path) {
+bool do_write_palette(settings_t& s, const fs::path& path)
+{
     std::ofstream pal(path.string().c_str());
 
-    pal << "#" << left << setw(20) << "<block-id>" << setw(16) << "<base R,G,B,A>" << " " << setw(16) << "<side R,G,B,A>" << '\n';
-    
-    for (int i = 0; i < mc::MaterialCount; i++) {
-        for (int j = 0; j < mc::MaterialColorData[i].count; j++) {
-            color topCol = mc::MaterialColorData[i].top[j];
-            color sideCol = mc::MaterialColorData[i].side[j];
-            std::ostringstream name;
-            name << mc::MaterialName[i] << ":" << j;
-            pal << left << setw(20) << name.str() << " " << setw(16)
-                << topCol << " " << setw(16) << sideCol << '\n';
+    mc::MaterialMode_tr_to_string materialmode_tr;
+
+    bool first_material = true;
+    pal << "[" << std::endl;
+    BOOST_FOREACH(mc::MaterialT &material, mc::MaterialTable) {
+        if (!material.enabled) {
+            continue;
         }
+        if (first_material) {
+            first_material = false;
+        } else {
+            pal << "," << std::endl;
+        }
+        pal << "  {" << std::endl;
+        pal << "    \"namespace\": \"" << material.mc_namespace << "\"," << std::endl;
+        pal << "    \"material\": \"" << material.name << "\"," << std::endl;
+        pal << "    \"mode\": \"" << materialmode_tr.get_value(material.mode).get() << "\"," << std::endl;
+        pal << "    \"top_color\": [" << material.top << "]," << std::endl;
+        pal << "    \"side_color\": [" << material.side << "]," << std::endl;
+        pal << "    \"darken\": false," << std::endl;
+        if (material.legacy_ids.size() == 1) {
+            pal << "    \"legacy_id\": " << material.legacy_ids[0] << "," << std::endl;
+        } else if (material.legacy_ids.size() > 1) {
+            pal << "    \"legacy_id\": [";
+            bool first_id = true;
+            BOOST_FOREACH(int i, material.legacy_ids) {
+                if (first_id) {
+                    first_id = false;
+                } else {
+                    pal << ", ";
+                }
+                pal << i;
+            }
+            pal << "]" << std::endl;
+        }
+        if (material.legacy_ids.size() > 0) {
+            pal << "    \"legacy_meta\": " << material.legacy_meta << std::endl;
+        }
+        pal << "  }";
     }
+    pal << "]" << std::endl;
 
     if (pal.fail()) {
         error << "Failed to write palette to " << path;
         return false;
     }
-    
+
     return true;
 }
 
-bool do_read_palette(settings_t& s, const fs::path& path) {
-    typedef tokenizer<boost::char_separator<char> > tokenizer;
+int do_colors(std::ostream& out)
+{
+  out << "List of material Colors (total: " << mc::MaterialTable.size() << ")" << endl;
 
-    std::ifstream pal(path.string().c_str());
-    char_separator<char> sep(" \t\n\r");
-    
-    while (!pal.eof()) {
-        string line;
-        getline(pal, line, '\n');
-        
-        tokenizer tokens(line, sep);
-        
-        int blockid = 0, i = 0, data = -1, dataPos = 0;
-        color top, side;
-        
-        for (tokenizer::iterator tok_iter = tokens.begin(); tok_iter != tokens.end(); ++tok_iter, ++i) {
-            string token = *tok_iter;
-            
-            if (token.at(0) == '#') {
-                // rest is comment
-                break;
-            }
-            
-            switch(i) {
-                case 0:
-                    if ((size_t)(dataPos = token.find(':')) != string::npos) {
-                        data = lexical_cast<int>(token.substr(dataPos + 1));
-                        if (data < 0 || data >= 16) {
-                            return false;
-                        }
-                        token.resize(dataPos);
-                    }
+  BOOST_FOREACH(mc::MaterialT &material, mc::MaterialTable) {
+    bool print_separator = false;
+    BOOST_FOREACH(int i, material.legacy_ids) {
+      if (print_separator) {
+        out << ", ";
+      }
+      out << i << ":" << material.legacy_meta;
+      print_separator = true;
+    }
+    if (print_separator) {
+      out << "; ";
+    }
+    out << material.mc_namespace << ":" << material.name << " = top(" << material.top << "), side(" << material.side << ")" << endl;
+  }
 
-                    if (!get_blockid(token, blockid)) {
-                        return false;
-                    }
-                    break;
-                case 1:
-                    if (!parse_color(token, top)) {
-                        return false;
-                    }
-                    
-                    /* don't set color here so we only have ONE call to set_color below */
-                    break;
-                case 2:
-                    if (!parse_color(token, side)) {
-                        return false;
-                    }
-                    
-	    /* colors read from the palette are unfortunately
-                     * darkened by default and we can't avoid this for now :(
-                     */
-                    mc::set_color(blockid, data, top, side);
-                    break;
-                default:
-                    break;
+  return 0;
+}
+
+std::vector<int> int_vector_from_json(boost::property_tree::ptree parsed_json)
+{
+    std::vector<int> result = std::vector<int>();
+    boost::optional<int> single = parsed_json.get_value_optional<int>();
+    if (single) {
+        result = { single.get() };
+    } else {
+        result.reserve(4);
+        BOOST_FOREACH(boost::property_tree::ptree::value_type &entry, parsed_json) {
+            single = entry.second.get_value_optional<int>();
+            if (entry.first.empty() && single) {
+                result.push_back(single.get());
+            } else {
+                error << "Error while parsing integer array" << std::endl;
             }
         }
+        result.shrink_to_fit();
     }
-    
+    return result;
+}
+
+color color_from_json(const boost::property_tree::ptree color_json)
+{
+    boost::property_tree::ptree::const_iterator it = color_json.begin();
+    if (it == color_json.end()) {
+       throw "not a color";
+    }
+    int r = it->second.get_value<int>();
+    it++;
+    if (it == color_json.end()) {
+       throw "not a color";
+    }
+    int g = it->second.get_value<int>();
+    it++;
+    if (it == color_json.end()) {
+       throw "not a color";
+    }
+    int b = it->second.get_value<int>();
+    it++;
+    if (it == color_json.end()) {
+       throw "not a color";
+    }
+    int a = it->second.get_value<int>();
+    it++;
+    if (it != color_json.end()) {
+       throw "not a color";
+    }
+    return color(r, g, b, a);
+}
+
+struct color_translator
+{
+    typedef boost::property_tree::ptree internal_type;
+    typedef color external_type;
+
+    boost::optional<color> get_value(const boost::property_tree::ptree &pt) {
+        try {
+            return boost::optional<color>(color_from_json(pt));
+        } catch(...) {
+        }
+        return boost::optional<color>();
+    }
+};
+
+bool do_read_palette(settings_t& s, const fs::path& path)
+{
+    boost::property_tree::ptree parsed_json;
+    try {
+        std::ifstream json_src(path.string().c_str());
+        boost::property_tree::read_json(json_src, parsed_json);
+        json_src.close();
+    } catch(boost::property_tree::json_parser::json_parser_error& e) {
+        return false;
+    }
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &mc_block_entry, parsed_json) {
+      // flat JSON list expected, of which entries have no name (.first).
+      boost::property_tree::ptree block_entry = mc_block_entry.second;
+      boost::optional<std::string> mc_namespace = block_entry.get_optional<std::string>("namespace");
+      boost::optional<std::string> material = block_entry.get_optional<std::string>("material");
+      mc::MaterialMode_tr_from_string materialmode_tr;
+      boost::optional<mc::MaterialMode> mode = block_entry.get_optional<mc::MaterialMode>("mode", materialmode_tr);
+      color_translator color_tr;
+      boost::optional<color> top_color = boost::optional<color>();
+      if (boost::optional<boost::property_tree::ptree&> node = block_entry.get_child_optional("top_color")) {
+        top_color = color_tr.get_value(node.get());
+      }
+      boost::optional<color> side_color = boost::optional<color>();
+      if (boost::optional<boost::property_tree::ptree&> node = block_entry.get_child_optional("side_color")) {
+        side_color = color_tr.get_value(node.get());
+      }
+      boost::optional<bool> darken_side = block_entry.get_optional<bool>("darken");
+      std::vector<int> legacy_id;
+      if (boost::optional<boost::property_tree::ptree&> node = block_entry.get_child_optional("legacy_id")) {
+        legacy_id = int_vector_from_json(node.get());
+      }
+      boost::optional<int> legacy_meta = block_entry.get_optional<int>("legacy_meta");
+      if (mc_namespace && material) {
+        if (legacy_id.size() == 0 && legacy_meta) {
+           error << "Invalid entry; " << mc_namespace.get() << ":" << material.get() << " has invalid legacy attributes." << std::endl;
+        } else if(!mode) {
+          error << "Invalid entry; " << mc_namespace.get() << ":" << material.get() << " is missing the material mode attribute." << std::endl;
+        } else if (legacy_meta && (legacy_meta.get() < 0 || legacy_meta.get() >= 16)) {
+          error << "Invalid entry; " << mc_namespace.get() << ":" << material.get() << " has an invalid legacy meta value, it must be >= 0 and < 16." << std::endl;
+        } else if (mode.get() == mc::MaterialMode::LegacySlab && legacy_id.size() != 2) {
+          error << "Invalid entry; " << mc_namespace.get() << ":" << material.get() << " has invalid legacy mode; exactly two legacy ids are required." << std::endl;
+        } else {
+          if (!top_color) {
+            error << "Warning; block " << mc_namespace.get() << ":" << material.get() << " has no top color set" << std::endl;
+          }
+          color top = top_color.value_or(mc::SharedDefaultColor);
+          color side = side_color.value_or(top);
+          if (!darken_side || darken_side.get()) {
+            side.darken(0x20);
+          }
+          mc::MaterialTable.push_back(mc::MaterialT { mc_namespace.get(), material.get(), mode.get(), top, side, legacy_id, legacy_meta.value_or(0), s.enable_all_blocks });
+        }
+      } else {
+        error << "Invalid entry; entry is missing namespace or material attribute." << std::endl;
+      }
+    }
+
+    // Whenever the MaterialTable is changed the palette lookup
+    // tables needs to be regenerated.
+    mc::reload_palette();
+
     return true;
 }
 
@@ -367,29 +486,17 @@ struct option long_options[] =
         {"graph-block",                                                 required_argument,     &flag,     31},
         {"strip-sign-prefix",                                     no_argument,                 &flag,     32},
         {"engine",                                                            required_argument,     &flag,     64},
+        {"side",                                                   required_argument,     &flag,     65},
         {0,                                                                         0,                                     0,             0}
 };
 
 bool read_opts(settings_t& s, int argc, char* argv[])
 {
     int c;
-    int blockid;
     int option_index;
-
-    bool includes[mc::MaterialCount];
-    bool excludes[mc::MaterialCount];
-
-    for (int i = 0; i < mc::MaterialCount; i++) {
-        includes[i] = false;
-        excludes[i] = false;
-    }
-
-    bool exclude_all = false;
 
     while ((c = getopt_long(argc, argv, "DNvxcnHqzZyalshM:C:L:R:w:o:e:t:b:i:m:r:W:P:B:S:p:", long_options, &option_index)) != -1)
     {
-        blockid = -1;
-        
         if (c == 0) {
             switch (flag) {
             case 0:
@@ -405,15 +512,21 @@ bool read_opts(settings_t& s, int argc, char* argv[])
                 break;
             case 2:
                 s.ttf_path = optarg;
+
+                if (access(optarg, R_OK) == -1) {
+                    error << "ttf path cannot be accessed";
+                    return false;
+                }
+
                 break;
             case 3:
                 s.ttf_size = atoi(optarg);
-                
+
                 if (s.ttf_size <= 0) {
                     error << "ttf-size must be greater than 0";
                     return false;
                 }
-                
+
                 break;
             case 4:
                 if (!parse_color(optarg, s.ttf_color)) {
@@ -431,33 +544,33 @@ bool read_opts(settings_t& s, int argc, char* argv[])
 
                 if (optarg) {
                     s.show_signs_filter = optarg;
-                    
+
                     if (s.show_signs_filter.empty()) {
                         error << "Sign filter must not be empty string";
                         return false;
                     }
                 }
-                
+
                 break;
             case 8:
                 if (!parse_color(optarg, s.sign_color)) {
                     return false;
                 }
-                
+
                 s.has_sign_color = true;
                 break;
             case 9:
                 if (!parse_color(optarg, s.player_color)) {
                     return false;
                 }
-                
+
                 s.has_player_color = true;
                 break;
             case 10:
                 if (!parse_color(optarg, s.coordinate_color)) {
                     return false;
                 }
-                
+
                 s.has_coordinate_color = true;
                 break;
             case 11:
@@ -471,45 +584,42 @@ bool read_opts(settings_t& s, int argc, char* argv[])
                 s.cache_compress = true;
                 break;
             case 14:
-                for (int i = mc::Air + 1; i < mc::MaterialCount; i++) {
-                    for (int j = 0 ; j < mc::MaterialColorData[i].count ; j++) {
-                        mc::MaterialColorData[i].top[j].a = 0xFF;
-                        mc::MaterialColorData[i].side[j].a = 0xFF;
-                    }
-                }
+                s.disable_alpha = true;
                 break;
-            case 15: s.striped_terrain = true; break;
+            case 15:
+                s.striped_terrain = true;
+                break;
             case 21:
                 hints.push_back("`--write-markers' has been deprecated in favour of `--write-json' - use that instead and note the new json structure");
             case 16:
                 s.write_json = true;
 
                 s.write_json_path = fs::system_complete(fs::path(optarg));
-                
+
                 {
                     fs::path parent = s.write_json_path.parent_path();
-                    
+
                     if (!fs::is_directory(parent)) {
                         error << "Not a directory: " << parent.string();
                         return false;
                     }
                 }
-                
+
                 break;
             case 26:
                 s.write_js = true;
 
                 s.write_js_path = fs::system_complete(fs::path(optarg));
-                
+
                 {
                     fs::path parent = s.write_js_path.parent_path();
-                    
+
                     if (!fs::is_directory(parent)) {
                         error << "Not a directory: " << parent.string();
                         return false;
                     }
                 }
-                
+
                 break;
             case 27:
                 try {
@@ -532,17 +642,17 @@ bool read_opts(settings_t& s, int argc, char* argv[])
                 if (!parse_color(optarg, s.warp_color)) {
                     return false;
                 }
-                
+
                 s.has_warp_color = true;
                 break;
             case 20:
                 s.prebuffer = atoi(optarg);
-                
+
                 if (s.prebuffer <= 0) {
                     error << "Number of prebuffered jobs must be more than 0";
                     return false;
                 }
-                
+
                 break;
             case 22:
                 s.hellmode = true;
@@ -559,18 +669,8 @@ bool read_opts(settings_t& s, int argc, char* argv[])
                 }
                 break;
             case 31:
-                    try {
-                        s.graph_block = boost::lexical_cast<int>(optarg);
-                    } catch(boost::bad_lexical_cast& e) {
-                        error << "Cannot be converted to number: " << optarg;
-                        return false;
-                    }
-                if(!get_blockid(optarg, s.graph_block))
-                {
-                        return false;
-                }
+                s.graph_block = optarg;
                 break;
-
             case 32:
                 s.strip_sign_prefix = true;
                 break;
@@ -584,11 +684,13 @@ bool read_opts(settings_t& s, int argc, char* argv[])
 
                 s.engine_use = true;
                 break;
+            case 65:
+                s.side_color_overrides.push_back(optarg);
             }
-            
+
             continue;
         }
-        
+
         switch (c)
         {
         case 'v':
@@ -599,12 +701,12 @@ bool read_opts(settings_t& s, int argc, char* argv[])
             break;
         case 'm':
             s.threads = atoi(optarg);
-            
+
             if (s.threads <= 0) {
                 error << "Number of worker threads must be more than 0";
                 return false;
             }
-            
+
             break;
         case 'q':
             s.mode = Oblique;
@@ -622,15 +724,13 @@ bool read_opts(settings_t& s, int argc, char* argv[])
             s.mode = ObliqueAngle;
             break;
         case 'a':
-            exclude_all = true;
+            s.enable_all_blocks = false;
             break;
         case 'i':
-            if (!get_blockid(optarg, blockid)) return false;
-            includes[blockid] = true;
+            s.included.push_back(optarg);
             break;
         case 'e':
-            if (!get_blockid(optarg, blockid)) return false;
-            excludes[blockid] = true;
+            s.excluded.push_back(optarg);
             break;
         case 'w':
             s.world_path = fs::system_complete(fs::path(optarg));
@@ -639,7 +739,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
             s.action = GenerateWorld;
             s.output_path = fs::system_complete(fs::path(optarg));
             break;
-        case 's': 
+        case 's':
             s.silent = true;
             break;
         case 'x':
@@ -662,12 +762,12 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         case 'c': s.cavemode = true; break;
         case 't':
             s.top = atoi(optarg);
-            
+
             if (!(s.top > s.bottom && s.top < mc::MapY)) {
                 error << "Top limit must be between `<bottom limit> - " << mc::MapY << "', not " << s.top;
                 return false;
             }
-            
+
             break;
         case 'L':
             if (!parse_limits(optarg, s)) {
@@ -676,7 +776,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
             break;
         case 'R':
             s.max_radius = boost::lexical_cast<uint64_t>(optarg);
-            
+
             if (s.max_radius < 1) {
                 error << "Radius must be greater than zero";
                 return false;
@@ -689,12 +789,12 @@ bool read_opts(settings_t& s, int argc, char* argv[])
             break;
         case 'b':
             s.bottom = atoi(optarg);
-            
+
             if (!(s.bottom < s.top && s.bottom >= 0)) {
                 error << "Bottom limit must be between `0 - <top limit>', not " << s.bottom;
                 return false;
             }
-            
+
             break;
         case 'l':
             s.action = ListColors;
@@ -702,7 +802,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
         case 'M':
             {
                 s.memory_limit = boost::lexical_cast<int>(optarg);
-            
+
                 if (s.memory_limit <= 0) {
                     error << "Memory limit must be non-negative value, not " << s.memory_limit;
                     return false;
@@ -721,11 +821,10 @@ bool read_opts(settings_t& s, int argc, char* argv[])
             s.palette_read_path = optarg;
             break;
         case 'B':
-            if (!do_base_color_set(optarg)) return false;
-            break;
+            s.top_color_overrides.push_back(optarg);
         case 'S':
             s.action = GenerateStatistics;
-            
+
             if (optarg != NULL) {
                 s.statistics_path = fs::system_complete(fs::path(optarg));
             }
@@ -753,7 +852,7 @@ bool read_opts(settings_t& s, int argc, char* argv[])
 
                     s.split.push_back(split_int);
                 }
-                    
+
                 s.use_split = true;
             }
             break;
@@ -770,18 +869,6 @@ bool read_opts(settings_t& s, int argc, char* argv[])
              error << "Unknown getopt error : ) - congrats, you broke it";
              return false;
         }
-    }
-
-    if (exclude_all) {
-        for (int i = 0; i < mc::MaterialCount; i++)
-        {
-            s.excludes[i] = true;
-        }
-    }
-
-    for (int i = 0; i < mc::MaterialCount; i++) {
-        if (includes[i]) s.excludes[i] = false;
-        if (excludes[i]) s.excludes[i] = true;
     }
 
     if (!s.palette_write_path.empty()) {

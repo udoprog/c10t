@@ -23,7 +23,7 @@ namespace mc {
   typedef boost::shared_ptr<level_info> level_info_ptr;
   typedef boost::shared_ptr<level> level_ptr;
   typedef boost::shared_ptr<region> region_ptr;
-  
+
   class invalid_file : std::exception {
     private:
       const char* message;
@@ -49,27 +49,27 @@ namespace mc {
     boost::shared_ptr<nbt::IntArray> HeightMap;
     boost::ptr_vector<Section_Compound> Sections;
   };
-  
+
   class level
   {
     public:
       level(level_info_ptr _level_info);
       ~level();
-      
+
       std::string get_path();
       time_t modification_time();
-      
+
       /*
        * might throw invalid_file if the file is not gramatically correct
        */
       void read(dynamic_buffer& buffer);
-      
+
       boost::shared_ptr<Level_Compound> get_level();
 
       bool operator<(const level& other) const;
     private:
       level_info_ptr _level_info;
-      
+
       // these must be public for the parser to be able to reach them.
       std::vector<marker> signs;
 

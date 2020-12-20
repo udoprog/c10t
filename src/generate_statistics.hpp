@@ -4,6 +4,7 @@
 #include <ostream>
 #include <vector>
 #include <string>
+
 #include <boost/filesystem.hpp>
 
 #include "settings_t.hpp"

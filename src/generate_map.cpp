@@ -82,9 +82,9 @@ template<typename T>
 inline void load_warps(ostream& out, fs::path warps_path, T& warps)
 {
   out << "warps: " << warps_path << ": " << flush;
-  
+
   warps_db wdb(warps_path);
-  
+
   try {
     wdb.read(warps);
     out << warps.size() << " warp(s) OK" << endl;
@@ -100,11 +100,11 @@ template<typename T, typename S>
 inline void load_players(ostream& out, fs::path show_players_path, T& players, S& player_set)
 {
   out << "players: " << show_players_path << ": " << flush;
-  
+
   players_db pdb(show_players_path, player_set);
 
   std::vector<player> all_players;
-  
+
   try {
     pdb.read(all_players);
   } catch(players_db_exception& e) {
@@ -133,17 +133,17 @@ template<typename P, typename T>
 void push_player_markers(settings_t& s, text::font_face base_font, P& players, T& markers)
 {
   text::font_face player_font = base_font;
-  
+
   if (s.has_player_color) {
     player_font.set_color(s.player_color);
   }
-  
+
   BOOST_FOREACH(player p, players) {
     if (p.zPos / mc::MapZ < s.min_z) continue;
     if (p.zPos / mc::MapZ > s.max_z) continue;
     if (p.xPos / mc::MapX < s.min_x) continue;
     if (p.xPos / mc::MapX > s.max_x) continue;
-    
+
     markers.push_back(new marker(p.name, "player", player_font, p.xPos, p.yPos, p.zPos));
   }
 }
@@ -155,16 +155,16 @@ template<typename S, typename T>
 void push_sign_markers(settings_t& s, text::font_face base_font, S& signs, T& markers)
 {
   text::font_face sign_font = base_font;
-  
+
   if (s.has_sign_color) {
     sign_font.set_color(s.sign_color);
   }
-  
+
   BOOST_FOREACH(mc::marker lm, signs) {
     if (!s.show_signs_filter.empty() && lm.get_text().find(s.show_signs_filter) == std::string::npos) {
       continue;
     }
-    
+
     if (!s.strip_sign_prefix) {
       markers.push_back(new marker(lm.get_text(), "sign", sign_font,
             lm.get_x(), lm.get_y(), lm.get_z()));
@@ -191,7 +191,7 @@ void push_coordinate_markers(
     T& markers)
 {
   text::font_face coordinate_font = base_font;
-  
+
   if (s.has_coordinate_color) {
     coordinate_font.set_color(s.coordinate_color);
   }
@@ -200,7 +200,7 @@ void push_coordinate_markers(
   {
     mc::utils::level_coord c = value.second.get_coord();
     mc::level_info::level_info_ptr level_info = value.second.get_level();
-    
+
     if (c.get_z() - 4 < world.min_z) continue;
     if (c.get_z() + 4 > world.max_z) continue;
     if (c.get_x() - 4 < world.min_x) continue;
@@ -209,7 +209,7 @@ void push_coordinate_markers(
     if (c.get_x() % 10 != 0) continue;
 
     std::stringstream result;
-    
+
     result << "(" << level_info->get_x() * mc::MapX
         << ", " << level_info->get_z() * mc::MapZ << ")";
 
@@ -232,18 +232,18 @@ inline void push_warp_markers(
         T& markers)
 {
   text::font_face warp_font = base_font;
-  
+
   if (s.has_warp_color) {
     warp_font.set_color(s.warp_color);
   }
-  
+
   /* initial code for projecting warps */
-  BOOST_FOREACH(warp w, warps) { 
+  BOOST_FOREACH(warp w, warps) {
     if (w.zPos / mc::MapZ < s.min_z) continue;
     if (w.zPos / mc::MapZ > s.max_z) continue;
     if (w.xPos / mc::MapX < s.min_x) continue;
     if (w.xPos / mc::MapX > s.max_x) continue;
-    
+
     marker *m = new marker(w.name, "warp", warp_font, w.xPos, w.yPos, w.zPos);
     markers.push_back(m);
   }
@@ -262,31 +262,31 @@ void populate_markers(
         boost::ptr_vector<marker>& markers)
 {
   boost::ptr_vector<marker>::iterator it;
-  
+
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
-    
+
     mc::utils::level_coord original_coord(m.get_x(), m.get_z());
     mc::utils::level_coord coord = original_coord.rotate(s.rotation);
-    
+
     pos_t x, y;
-    
+
     engine->wp2pt(coord.get_x(), m.get_y(), coord.get_z(), x, y);
 
     json::object* o = new json::object;
-    
+
     o->put("text", new json::string(m.get_text()));
     o->put("type", new json::string(m.get_type()));
-    
+
     // the projected coordinates
     o->put("x", new json::number(x));
     o->put("y", new json::number(y));
-    
+
     // the real coordinates
     o->put("X", new json::number(m.get_x()));
     o->put("Y", new json::number(m.get_y()));
     o->put("Z", new json::number(m.get_z()));
-    
+
     array->push(o);
   }
   // don't bother to check for errors right now, but could be done using the "fail" accessor.
@@ -301,9 +301,9 @@ inline void overlay_markers(
 {
   memory_image positionmark(5, 5);
   positionmark.fill(s.ttf_color);
-  
+
   boost::ptr_vector<marker>::iterator it;
-  
+
   for (it = markers.begin(); it != markers.end(); it++) {
     marker m = *it;
 
@@ -312,13 +312,13 @@ inline void overlay_markers(
     if (!font.is_initialized()) {
       continue;
     }
-    
+
     mc::utils::level_coord original_coord(m.get_x(), m.get_z());
     mc::utils::level_coord coord = original_coord.rotate(s.rotation);
-    
+
     pos_t x;
     pos_t y;
-    
+
     engine->wp2pt(coord.get_x(), m.get_y(), coord.get_z(), x, y);
 
     font.draw(work_in_progress, m.get_text(), x + 5, y);
@@ -348,15 +348,15 @@ void write_json_file(
 
   json::object file;
   json::object* json_static = new json::object;
-  
+
   json_static->put("MapX", new json::number(mc::MapX));
   json_static->put("MapY", new json::number(mc::MapY));
   json_static->put("MapZ", new json::number(mc::MapZ));
-  
+
   file.put("st", json_static);
-  
+
   json::object* json_world = new json::object;
-  
+
   json_world->put("cx", new json::number(center_x));
   json_world->put("cy", new json::number(center_y));
   json_world->put("dx", new json::number((world.diff_x + 1) * mc::MapX));
@@ -370,13 +370,13 @@ void write_json_file(
   json_world->put("mode", new json::number(s.mode));
   json_world->put("split_base", new json::number(s.split_base));
   json_world->put("split", new json::number(s.split.size()));
-  
+
   file.put("world", json_world);
-  
+
   json::array* markers_array = new json::array;
   populate_markers(s, markers_array, engine, markers);
   file.put("markers", markers_array);
-  
+
   if (s.write_json) {
     out << "Writing json information: " << path_string(s.write_json_path) << endl;
     std::ofstream of(path_string(s.write_json_path).c_str());
@@ -417,7 +417,7 @@ bool generate_map(
     fs::path& output_path)
 {
   out << endl << "Generating PNG Map" << endl << endl;
-  
+
   // all marker source information.
   std::vector<player> players;
   std::vector<warp> warps;
@@ -425,19 +425,19 @@ bool generate_map(
 
   // this is where the actual markers will be populated later.
   boost::ptr_vector<marker> markers;
-  
+
   // symbolic definition of a world.
   mc::world world(world_path);
 
   // where to store level info
   levels_map levels;
-  
+
   // this is the rendering engine that will be used.
   boost::shared_ptr<engine_core> engine;
-    
+
   // image to work against, could be backed by hard drive, or purely in memory.
   image_ptr work_in_progress;
-  
+
   /**
    * Any of these options will trigger the database blocks to run.
    */
@@ -447,7 +447,7 @@ bool generate_map(
        || s.show_coordinates
        || s.show_warps;
 
-  bool output_json = 
+  bool output_json =
     s.write_json || s.write_js;
 
   /*
@@ -456,11 +456,11 @@ bool generate_map(
   if (use_any_database)
   {
     out << " --- LOOKING FOR DATABASES --- " << endl;
-    
+
     if (s.show_warps) {
       load_warps(out, s.show_warps_path, warps);
     }
-    
+
     if (s.show_players) {
       load_players(out, world_path / "players", players, s.show_players_set);
     }
@@ -473,12 +473,12 @@ bool generate_map(
       out << "will store chunk coordinates" << endl;
     }
   }
-    
+
   {
     out << " --- SCANNING WORLD DIRECTORY --- " << endl;
     out << "world: " << path_string(world_path) << endl;
   }
-  
+
   /*
    * Scan the world for regions containing levels.
    */
@@ -488,7 +488,7 @@ bool generate_map(
 
     int failed_regions = 0;
     int filtered_levels = 0;
-    
+
     while (iterator.has_next()) {
       mc::region_ptr region = iterator.next();
 
@@ -506,9 +506,9 @@ bool generate_map(
 
       BOOST_FOREACH(mc::utils::level_coord c, coords) {
         mc::level_info::level_info_ptr level(new mc::level_info(region, c));
-        
+
         mc::utils::level_coord coord = level->get_coord();
-        
+
         if (s.coord_out_of_range(coord)) {
           ++filtered_levels;
           out_log << level->get_path() << ": (z,x) position"
@@ -516,17 +516,17 @@ bool generate_map(
                   << " out of limit" << std::endl;
           continue;
         }
-        
+
         mc::rotated_level_info rlevel =
           mc::rotated_level_info(level, coord.rotate(s.rotation));
-        
+
         levels.insert(levels_map::value_type(rlevel.get_coord(), rlevel));
 
         world.update(rlevel.get_coord());
         reporter.add(1);
       }
     }
-    
+
     reporter.done(0);
 
     if (failed_regions > 0) {
@@ -542,7 +542,7 @@ bool generate_map(
     out << "No chunks to render" << endl;
     return 0;
   }
-  
+
   if (s.debug) {
     out << " --- DEBUG WORLD INFO --- " << endl;
     out << "mc::world" << endl;
@@ -565,8 +565,7 @@ bool generate_map(
   engine_s.cavemode = s.cavemode;
   engine_s.top = s.top;
   engine_s.bottom = s.bottom;
-  engine_s.excludes = s.excludes;
-  
+
   if (s.engine_use) {
     dl_t* dl = dl_open(path_string(s.engine_path).c_str());
 
@@ -603,7 +602,7 @@ bool generate_map(
         break;
     }
   }
-  
+
   /**
    * Setup work-in-progress image to required type depending on predicted memory
    * use.
@@ -611,12 +610,12 @@ bool generate_map(
   {
     pos_t image_width, image_height;
     pos_t level_width, level_height;
-    
+
     engine->get_boundaries(image_width, image_height);
     engine->get_level_boundaries(level_width, level_height);
-    
+
     pos_t memory_usage = (image_width * image_height * sizeof(color)) / 0x100000;
-    
+
     if (memory_usage >= s.memory_limit) {
       {
         out << " --- BUILDING SWAP --- " << endl;
@@ -626,9 +625,9 @@ bool generate_map(
         out << "swap size: " << memory_usage << " MB" << endl;
         out << "memory limit: " << s.memory_limit << " MB" << endl;
       }
-      
+
       cached_image* image;
-      
+
       try {
         image = new cached_image(s.swap_file, image_width, image_height, level_width, level_height);
       } catch(std::ios::failure& e) {
@@ -637,14 +636,14 @@ bool generate_map(
         } else {
           error << s.swap_file << ": " << e.what() << ": could not open file";
         }
-        
+
         return false;
       }
-      
+
       work_in_progress.reset(image);
 
       nonstd::limited<streampos> c(out, 1024 * 1024, image->get_size(), dot, mb_endl);
-      
+
       try {
         image->build(c);
       } catch(std::ios::failure& e) {
@@ -653,7 +652,7 @@ bool generate_map(
         } else {
           error << s.swap_file << ": could not build cache: " << e.what();
         }
-        
+
         return false;
       }
     } else {
@@ -662,7 +661,7 @@ bool generate_map(
         out << "memory usage: " << memory_usage << " MB" << endl;
         out << "memory limit: " << s.memory_limit << " MB" << endl;
       }
-      
+
       work_in_progress.reset(new memory_image(image_width, image_height));
     }
   }
@@ -728,27 +727,27 @@ bool generate_map(
 
       fs::path level_dir = mc::utils::level_dir(s.cache_dir, coord.get_x(), coord.get_z());
       cache_file cache(level_dir, basename, mod, s.cache_compress);
-      
+
       if (s.cache_use) {
         if (cache.exists()) {
           if (cache.read(operations)) {
             cache_hit = true;
           }
-          
+
           cache.clear();
         }
       }
-      
+
       if (!cache_hit) {
         engine->render(level, operations);
       }
 
       //operations->optimize();
-      
+
       if (s.cache_use) {
         // create the necessary directories required when caching
         cache.create_directories();
-        
+
         // ignore failure while writing the operations to cache
         if (!cache.write(operations)) {
           // on failure, remove the cache file - this will prompt c10t to regenerate it next time
@@ -761,7 +760,7 @@ bool generate_map(
       if (cache_hit) {
         ++cache_hits;
       }
-      
+
       //if (p.signs.size() > 0) {
         //if (s.debug) { out << "Found " << p.signs.size() << " signs"; };
         //signs.insert(signs.end(), p.signs.begin(), p.signs.end());
@@ -783,20 +782,20 @@ bool generate_map(
         return false;
       }
     }
-    
+
     reporter.done(0);
 
     if (failed_levels > 0) {
       out << "SEE LOG: " << failed_levels << " level(s) failed!" << endl;
     }
-    
+
     if (s.cache_use) {
       out << "cache_hits: " << cache_hits << "/" << world_size << endl;
     }
 
     out << "image limits: "
         << engine->get_min_x() << "x" << engine->get_min_y() << " to "
-        << engine->get_max_x() << "x" << engine->get_max_y() 
+        << engine->get_max_x() << "x" << engine->get_max_y()
         << " will be the cropped image ("
         << (engine->get_max_x() - engine->get_min_x()) << "x"
         << (engine->get_max_y() - engine->get_min_y())
@@ -805,10 +804,10 @@ bool generate_map(
     image_ptr cropped = image::crop(work_in_progress, engine->get_min_x(), engine->get_max_x(), engine->get_min_y(), engine->get_max_y());
     work_in_progress = cropped;
   }
-  
+
   if (use_any_database) {
     text::font_face font(s.ttf_path, s.ttf_size, s.ttf_color);
-    
+
     /*
      * If we are only going to output json information, do not initialize font.
      * This will prevent any fonts from actually rendering anything later on.
@@ -820,31 +819,31 @@ bool generate_map(
         error << "failed to initialize font: " << e.what() << std::endl;
       }
     }
-    
+
     if (s.show_players) {
       push_player_markers(s, font, players, markers);
     }
-    
+
     if (s.show_signs && signs.size() > 0) {
       push_sign_markers(s, font, signs, markers);
     }
-    
+
     if (s.show_coordinates) {
       push_coordinate_markers(out, s, font, world, levels, markers);
     }
-    
+
     if (s.show_warps) {
       push_warp_markers(s, font, warps, markers);
     }
 
   }
-  
+
   if (output_json) {
     if (!use_any_database) {
       hints.push_back("Use `--write-json' in combination with `--show-*'"
           " in order to write different types of markers to file");
     }
-    
+
     write_json_file(out, s, engine, world, markers);
   }
   else {
@@ -853,7 +852,7 @@ bool generate_map(
 
   engine_core::pos_t center_x, center_y;
   engine->wp2pt(0, 0, 0, center_x, center_y);
-  
+
   if (s.use_split) {
     out << " --- SAVING MULTIPLE IMAGES --- " << endl;
 
@@ -880,19 +879,19 @@ bool generate_map(
         stringstream ss;
         ss << boost::format(path_string(output_path)) % i % p.x % p.y;
         fs::path path(ss.str());
-        
+
         if (!fs::is_directory(path.parent_path())) {
           fs::create_directories(path.parent_path());
         }
-        
+
         png_format::opt_type opts;
-        
+
         opts.center_x = center_x;
         opts.center_y = center_y;
         opts.comment = C10T_COMMENT;
-        
+
         std::string path_str(path_string(path));
-        
+
         if (s.split_base > 0) {
           target->clear();
           img->resize(target);
@@ -910,7 +909,7 @@ bool generate_map(
 
         out << path_string(path) << ": OK" << endl;
       }
-      
+
       ++i;
     }
   }
@@ -919,22 +918,22 @@ bool generate_map(
       out << " --- SAVING IMAGE --- " << endl;
       out << "path: " << path_string(output_path) << endl;
     }
-    
+
     png_format::opt_type opts;
-    
+
     opts.center_x = center_x;
     opts.center_y = center_y;
     opts.comment = C10T_COMMENT;
-    
+
     try {
       work_in_progress->save<png_format>(path_string(output_path), opts);
     } catch (format_exception& e) {
       out << path_string(output_path) << ": " << e.what() << endl;
       return false;
     }
-    
+
     out << path_string(output_path) << ": OK" << endl;
   }
-  
+
   return true;
 }

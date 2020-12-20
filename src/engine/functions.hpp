@@ -17,45 +17,55 @@ void apply_shading(
     const engine_settings& engine_s,
     int bl, int sl, int hm, int y, color &c);
 
+inline bool is_open(mc::MaterialT*& m) {
+  if (!m) {
+    return false;
+  }
+
+  return m->top.is_transparent();
+}
+
 inline bool is_open(int bt) {
   if (bt == -1) {
     return false;
   }
-  
+
   switch(bt) {
-    case mc::Air: return true;
-    case mc::Leaves: return true;
+    case mc::LegacyBlocks::Air: return true;
+    case mc::LegacyBlocks::Leaves: return true;
     default: return false;
   }
 }
 
+// this functions is currently unused
 inline bool cave_ignore_block(int y, int bt, block_rotation& b_r, bool &cave_initial) {
   if (cave_initial) {
     if (!is_open(bt)) {
       cave_initial = false;
       return true;
     }
-    
+
     return true;
   }
-  
+
   if (!is_open(bt) && is_open(b_r.get8(y + 1))) {
     return false;
   }
-  
+
   return true;
 }
 
+// this functions is currently unused
 inline bool hell_ignore_block(int y, int bt, block_rotation& b_r, bool &hell_initial) {
   if (hell_initial) {
     if (is_open(bt)) {
       hell_initial = false;
       return false;
     }
-    
+
     return true;
   }
-  
+
   return false;
 }
 

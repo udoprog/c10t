@@ -34,7 +34,7 @@ public:
     void createGraph();
 
     /* call this to register block information */
-    void registerBloc(Byte value, int altitude);
+    void registerBloc(mc::MaterialT *material, int altitude);
 
     long getMax();
 private:

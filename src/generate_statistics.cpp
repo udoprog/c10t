@@ -9,7 +9,6 @@
 
 #include "players.hpp"
 #include "main_utils.hpp"
-#include "engine/block_rotation.hpp"
 
 #include <iomanip>
 
@@ -50,9 +49,9 @@ bool generate_statistics(
     AltitudeGraph *_stat = new AltitudeGraph(s);
 
     mc::MaterialT *materials = mc::MaterialTable.data();
-    long statistics[mc::MaterialTable.size()];
+    boost::shared_ptr<long[]> statistics(new long[mc::MaterialTable.size()]);
 
-    for (int i = 0; i < mc::MaterialTable.size(); i++) {
+    for (size_t i = 0; i < mc::MaterialTable.size(); i++) {
       statistics[i] = 0;
     }
 
@@ -137,32 +136,22 @@ bool generate_statistics(
 
           boost::shared_ptr<mc::Level_Compound> L = level_data.get_level();
           BOOST_FOREACH(mc::Section_Compound Section, L->Sections) {
-            block_rotation br_blocks(0, Section.Blocks);
-            block_rotation br_data(0, Section.Data);
-
             for (int y = 15; y >= 0; y--) {
-                int abs_y = (Section.Y * 16) + y;
-
-                for (int z = 0; z < mc::MapZ; z++) {
-                    for (int x = 0; x < mc::MapX; x++) {
-                        br_blocks.set_xz(x, z);
-                        br_data.set_xz(x, z);
-
-                        int block_type = br_blocks.get8(y);
-                        int block_data = br_data.get4(y);
-                        boost::optional<mc::MaterialT*> material = mc::get_material_legacy(block_type, block_data);
-
-                        if (material) {
-                            if (material.get()->enabled) {
-                                size_t index = material.get() - materials;
-                                statistics[index] += 1;
-                            }
-                            if(graph_block && material.get() == graph_block.get()) {
-                                _stat->registerBloc(material.get(), abs_y);
-                            }
-                        }
+              int abs_y = (Section.Y * 16) + y;
+               for (int z = 0; z < mc::MapZ; z++) {
+                 for (int x = 0; x < mc::MapX; x++) {
+                   mc::BlockT block;
+                   if (Section.get_block(block, x, z, y)) {
+                    if (block.material->enabled) {
+                      size_t index = block.material - materials;
+                      statistics[index] += 1;
                     }
+                    if(graph_block && block.material == graph_block.get()) {
+                      _stat->registerBloc(block.material, abs_y);
+                    }
+                  }
                 }
+              }
             }
           }
 
@@ -211,7 +200,7 @@ bool generate_statistics(
     }
 
     stats << "[BLOCKS]" << endl;
-    for (int i = 0; i < mc::MaterialTable.size(); i++) {
+    for (size_t i = 0; i < mc::MaterialTable.size(); i++) {
       if (statistics[i] > 0) {
         std::string full_name = mc::MaterialTable[i].mc_namespace + ":" + mc::MaterialTable[i].name;
         stats << std::left << setw(32) << full_name << " " << statistics[i] << endl;

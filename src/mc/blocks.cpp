@@ -1,10 +1,10 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
 
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/foreach.hpp>
-#include <boost/optional.hpp>
 #include <iostream>
+
+#include <boost/foreach.hpp>
+
 #include "blocks.hpp"
 
 namespace mc {

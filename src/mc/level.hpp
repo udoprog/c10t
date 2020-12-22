@@ -6,12 +6,14 @@
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/optional.hpp>
 
 #include "mc/dynamic_buffer.hpp"
 #include "mc/utils.hpp"
 #include "mc/marker.hpp"
 
 #include "nbt/types.hpp"
+#include "mc/blocks.hpp"
 
 namespace mc {
   namespace fs = boost::filesystem;
@@ -41,6 +43,8 @@ namespace mc {
     boost::shared_ptr<nbt::ByteArray> SkyLight;
     boost::shared_ptr<nbt::ByteArray> BlockLight;
     nbt::Byte Y;
+
+    bool get_block(BlockT &block, int x, int y, int z);
   };
 
   struct Level_Compound {

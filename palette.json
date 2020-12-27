@@ -9,6 +9,13 @@
   },
   {
     "namespace": "minecraft",
+    "material": "cave_air",
+    "mode": "block",
+    "top_color": [255, 255, 255, 0],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
     "material": "stone",
     "mode": "block",
     "top_color": [128, 128, 128, 255],
@@ -627,9 +634,18 @@
     "material": "grass",
     "mode": "block",
     "top_color": [144, 188, 39, 255],
-    "side_color": [144, 188, 39, 255],
     "darken": false,
-    "legacy_id": 31
+    "legacy_id": 31,
+    "legacy_meta": 0
+  },
+  {
+    "namespace": "minecraft",
+    "material": "fern",
+    "mode": "block",
+    "top_color": [120, 164, 13, 255],
+    "darken": false,
+    "legacy_id": 31,
+    "legacy_meta": 2
   },
   {
     "namespace": "minecraft",
@@ -898,6 +914,24 @@
   },
   {
     "namespace": "minecraft",
+    "material": "cornflower",
+    "mode": "block",
+    "top_color": [18, 136, 204, 245],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 9
+  },
+  {
+    "namespace": "minecraft",
+    "material": "lily_of_the_valley",
+    "mode": "block",
+    "top_color": [231, 231, 231, 255],
+    "darken": true,
+    "legacy_id": 38,
+    "legacy_meta": 10
+  },
+  {
+    "namespace": "minecraft",
     "material": "brown_mushroom",
     "mode": "block",
     "top_color": [200, 200, 0, 255],
@@ -1057,6 +1091,13 @@
   },
   {
     "namespace": "minecraft",
+    "material": "lantern",
+    "mode": "torch_block",
+    "top_color": [255, 225, 96, 208],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
     "material": "fire",
     "mode": "block",
     "top_color": [224, 174, 21, 255],
@@ -1154,6 +1195,7 @@
     "namespace": "minecraft",
     "material": "oak_door",
     "mode": "block",
+    "top_color": [157, 128, 79, 255],
     "darken": false,
     "legacy_id": 64
   },
@@ -1201,6 +1243,7 @@
     "namespace": "minecraft",
     "material": "iron_door",
     "mode": "block",
+    "top_color": [217, 217, 217, 255],
     "darken": false,
     "legacy_id": 71
   },
@@ -2953,6 +2996,7 @@
     "namespace": "minecraft",
     "material": "spruce_door",
     "mode": "block",
+    "top_color": [102, 77, 46, 255],
     "darken": false,
     "legacy_id": 193
   },
@@ -2960,6 +3004,7 @@
     "namespace": "minecraft",
     "material": "birch_door",
     "mode": "block",
+    "top_color": [193, 177, 122, 255],
     "darken": false,
     "legacy_id": 194
   },
@@ -2967,6 +3012,7 @@
     "namespace": "minecraft",
     "material": "jungle_door",
     "mode": "block",
+    "top_color": [152, 109, 76, 255],
     "darken": false,
     "legacy_id": 195
   },
@@ -2974,6 +3020,7 @@
     "namespace": "minecraft",
     "material": "acacia_door",
     "mode": "block",
+    "top_color": [168, 91, 50, 255],
     "darken": false,
     "legacy_id": 196
   },
@@ -2981,6 +3028,7 @@
     "namespace": "minecraft",
     "material": "dark_oak_door",
     "mode": "block",
+    "top_color": [60, 39, 18, 255],
     "darken": false,
     "legacy_id": 197
   },
@@ -3647,5 +3695,40 @@
     "top_color": [98, 74, 98, 255],
     "darken": true,
     "legacy_id": 255
+  },
+  {
+    "namespace": "minecraft",
+    "material": "seagrass",
+    "mode": "block",
+    "top_color": [9, 161, 62, 64],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "tall_seagrass",
+    "mode": "block",
+    "top_color": [9, 161, 62, 64],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "sweet_berry_bush",
+    "mode": "block",
+    "top_color": [120, 164, 13, 255],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "bamboo",
+    "mode": "block",
+    "top_color": [45, 125, 15, 255],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "bamboo_sapling",
+    "top_color": [58, 111, 38, 255],
+    "mode": "block",
+    "darken": false
   }
 ]

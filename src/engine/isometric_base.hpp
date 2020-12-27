@@ -32,11 +32,11 @@ public:
 
     oper->set_limits(image_width + 1, image_height);
 
-    BOOST_FOREACH(mc::Section_Compound Section, L->Sections) {
+    BOOST_FOREACH(boost::shared_ptr<mc::Section_Compound> Section, L->Sections) {
       block_rotation br_blocks(s.rotation);
 
       for (int y = 0; y < 16; y++) {
-        int abs_y = (16 * Section.Y) + y;
+        int abs_y = (16 * Section->get_y()) + y;
 
         for (int z = 0; z < mc::MapZ; z++) {
           for (int x = mc::MapX - 1; x >= 0; x--) {
@@ -45,7 +45,7 @@ public:
             br_blocks.transform_xz(projected_x, projected_z);
 
             mc::BlockT block;
-            if (Section.get_block(block, projected_x, projected_z, y)) {
+            if (Section->get_block(block, projected_x, projected_z, y)) {
               if (!block.material->enabled) {
                 continue;
               }

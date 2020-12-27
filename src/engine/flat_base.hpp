@@ -36,11 +36,11 @@ public:
       blocked[i] = false;
     }
 
-    BOOST_REVERSE_FOREACH(mc::Section_Compound Section, L->Sections) {
+    BOOST_REVERSE_FOREACH(boost::shared_ptr<mc::Section_Compound> Section, L->Sections) {
       block_rotation br_blocks(s.rotation);
 
       for (int y = 15; y >= 0; y--) {
-        int abs_y = (Section.Y * 16) + y;
+        int abs_y = (Section->get_y() * 16) + y;
 
         for (int z = 0; z < mc::MapZ; z++) {
           for (int x = 0; x < mc::MapX; x++) {
@@ -55,7 +55,7 @@ public:
             br_blocks.transform_xz(projected_x, projected_z);
 
             mc::BlockT block;
-            if (Section.get_block(block, projected_x, projected_z, y)) {
+            if (Section->get_block(block, projected_x, projected_z, y)) {
               if (!block.material->enabled) {
                 continue;
               }

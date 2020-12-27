@@ -6,6 +6,7 @@
 #include "mc/region.hpp"
 #include "mc/level_info.hpp"
 
+#include <boost/foreach.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -496,7 +497,34 @@ namespace mc {
   enum section_name {
     Level,
     Sections,
+    Palette,
+    Properties,
     None
+  };
+
+  struct context_section {
+    // shared
+    nbt::Byte Y;
+    boost::shared_ptr<nbt::ByteArray> SkyLight;
+
+    // legacy
+    boost::shared_ptr<nbt::ByteArray> Blocks;
+    boost::shared_ptr<nbt::ByteArray> Data;
+    boost::shared_ptr<nbt::ByteArray> BlockLight;
+
+    // modern
+    boost::shared_ptr<nbt::LongArray> BlockStates;
+    std::vector<std::string> Palette;
+    std::vector<std::map<std::string, std::string>> PaletteProperties;
+
+    // Constructor for emplacing
+    context_section() {
+      // Minecraft seems to keep an
+      // invalid entry first; which
+      // has Y set to -1, so default
+      // to -1 for invalid here as well.
+      this->Y = -1;
+    }
   };
 
   struct level_context {
@@ -506,7 +534,8 @@ namespace mc {
     size_t error_where;
     const char* error_why;
 
-    Section_Compound* tmp_Section;
+    nbt::Int Version;
+    std::vector<context_section> sections;
 
     section_name p[64];
     int pos;
@@ -518,60 +547,192 @@ namespace mc {
     }
   };
 
+  Modern_Section_Compound::Modern_Section_Compound(
+    nbt::Byte Y,
+    boost::shared_ptr<nbt::LongArray> BlockStates,
+    boost::shared_ptr<nbt::ByteArray> SkyLight,
+    std::vector<std::string> &Palette,
+    std::vector<std::map<std::string, std::string>> &PaletteProperties
+  ) : Section_Compound(Y, SkyLight), BlockStates(BlockStates) {
+    palette_size = Palette.size() < PaletteProperties.size() ? Palette.size() : PaletteProperties.size();
+    BlockPalette.reset(new boost::optional<mc::BlockT>[palette_size]);
+    for(size_t i = 0; i < palette_size; i++) {
+      std::map<std::string, mc::MaterialT*>::iterator material_it = mc::MaterialMap.find(Palette[i]);
+      if (material_it == mc::MaterialMap.end()) {
+        std::cout << "unknown material: " << Palette[i] << std::endl;
+        BlockPalette[i] = boost::optional<mc::BlockT>();
+      } else {
+        BlockT block;
+        block.material = material_it->second;
+
+        std::map<std::string, std::string>::iterator property_it;
+        switch (block.material->mode) {
+        case mc::MaterialMode::LargeFlowerBlock:
+          property_it = PaletteProperties[i].find("half");
+          if (property_it == PaletteProperties[i].end()) {
+            block.properties.is_top = false;
+          } else {
+            // "lower" or "upper"
+            block.properties.is_top = property_it->second.compare("upper") == 0;
+          }
+          break;
+        case mc::MaterialMode::LogBlock:
+          property_it = PaletteProperties[i].find("axis");
+          if (property_it == PaletteProperties[i].end()) {
+            block.properties.orientation = mc::BlockOrientation::UpDown;
+          } else {
+            // "x", "y" or "z"
+            if (property_it->second.compare("x") == 0) {
+              block.properties.orientation = mc::BlockOrientation::EastWest;
+            } else if (property_it->second.compare("y") == 0) {
+              block.properties.orientation = mc::BlockOrientation::UpDown;
+            } else if (property_it->second.compare("z") == 0) {
+              block.properties.orientation = mc::BlockOrientation::NorthSouth;
+            } else {
+              block.properties.orientation = mc::BlockOrientation::Invalid;
+            }
+          }
+          break;
+        }
+
+        /* Debug properties
+        std::pair<std::string, std::string> map_pair;
+        BOOST_FOREACH(map_pair, PaletteProperties[i]) {
+          std::cout << ">> " << map_pair.first << " " << map_pair.second << std::endl;
+        }
+        */
+
+        BlockPalette[i] = boost::optional<BlockT>(block);
+      }
+    }
+  }
+
   inline bool in_level_section(level_context* C) {
     return   C->pos == 4
-          && C->p[0] == None
-          && C->p[1] == Level
-          && C->p[2] == Sections
-          && C->p[3] == None;
+          && C->p[0] == section_name::None
+          && C->p[1] == section_name::Level
+          && C->p[2] == section_name::Sections
+          && C->p[3] == section_name::None;
+  }
+
+  inline bool in_palette_section(level_context* C) {
+    return   C->pos == 6
+          && C->p[0] == section_name::None
+          && C->p[1] == section_name::Level
+          && C->p[2] == section_name::Sections
+          && C->p[3] == section_name::None
+          && C->p[4] == section_name::Palette
+          && C->p[5] == section_name::None;
+  }
+
+  inline bool in_palette_properties(level_context* C) {
+    return   C->pos == 7
+          && C->p[0] == section_name::None
+          && C->p[1] == section_name::Level
+          && C->p[2] == section_name::Sections
+          && C->p[3] == section_name::None
+          && C->p[4] == section_name::Palette
+          && C->p[5] == section_name::None
+          && C->p[6] == section_name::Properties;
   }
 
   void begin_compound(level_context* C, nbt::String name) {
     if (name.compare("Level") == 0) {
-      C->p[C->pos++] = Level;
+      C->p[C->pos++] = section_name::Level;
       return;
+    } else if(in_palette_section(C)) {
+      if(name.compare("Properties") == 0) {
+        C->p[C->pos++] = section_name::Properties;
+        return;
+      }
     }
 
-    C->p[C->pos++] = None;
+    C->p[C->pos++] = section_name::None;
 
     if (in_level_section(C)) {
-        C->tmp_Section = new Section_Compound;
-        C->tmp_Section->Y = 0;
+      C->sections.emplace_back();
+    } else if(in_palette_section(C)) {
+      C->sections.back().PaletteProperties.emplace_back();
     }
   }
 
   void end_compound(level_context* C, nbt::String name) {
-    if (in_level_section(C)) {
-        if (!C->tmp_Section->Data) {
-            std::cout << "missing Data" << std::endl;
-        }
-
-        if (!C->tmp_Section->SkyLight) {
-            std::cout << "missing SkyLight" << std::endl;
-        }
-
-        if (!C->tmp_Section->BlockLight) {
-            std::cout << "missing BlockLight" << std::endl;
-        }
-
-        if (!C->tmp_Section->Blocks) {
-            std::cout << "missing Blocks" << std::endl;
-        }
-
-        C->Level->Sections.push_back(C->tmp_Section);
-        C->tmp_Section = NULL;
-    }
-
     --C->pos;
+    // Construct level objects after parsing all data from region
+    // file to ensure that version information is available.
+    if (C->pos == 0) {
+      BOOST_FOREACH(context_section &ctx_section, C->sections) {
+
+        if (ctx_section.Y == -1) {
+          continue;
+        }
+
+        // Legacy or no version
+        if (C->Version < 1519) {
+          if (!ctx_section.Data) {
+            std::cout << "missing Data" << std::endl;
+          }
+
+          if (!ctx_section.SkyLight) {
+            std::cout << "missing SkyLight" << std::endl;
+          }
+
+          if (!ctx_section.BlockLight) {
+            std::cout << "missing BlockLight" << std::endl;
+          }
+
+          if (!ctx_section.Blocks) {
+            std::cout << "missing Blocks" << std::endl;
+          }
+
+          boost::shared_ptr<Section_Compound> s(new Legacy_Section_Compound(
+            ctx_section.Y,
+            ctx_section.Blocks,
+            ctx_section.Data,
+            ctx_section.SkyLight,
+            ctx_section.BlockLight
+          ));
+          C->Level->Sections.push_back(s);
+        } else {
+          // Not only may a section be truncated but
+          // their individual fields may as well.
+          if (!ctx_section.BlockStates) {
+            //std::cout << "missing BlockStates" << std::endl;
+          }
+
+          if (!ctx_section.SkyLight) {
+            //std::cout << "missing SkyLight" << std::endl;
+          }
+
+          if (ctx_section.Palette.size() != ctx_section.PaletteProperties.size()) {
+            //std::cout << "bad palette sizes" << std::endl;
+          }
+
+          boost::shared_ptr<Section_Compound> s(new Modern_Section_Compound(
+            ctx_section.Y,
+            ctx_section.BlockStates,
+            ctx_section.SkyLight,
+            ctx_section.Palette,
+            ctx_section.PaletteProperties
+          ));
+          C->Level->Sections.push_back(s);
+        }
+      }
+    }
   }
 
   void begin_list(level_context* C, nbt::String name, nbt::Byte type, nbt::Int count) {
     if (name.compare("Sections") == 0) {
-      C->p[C->pos++] = Sections;
+      C->p[C->pos++] = section_name::Sections;
       return;
+    } else if(in_level_section(C)) {
+      if (name.compare("Palette") == 0) {
+        C->p[C->pos++] = section_name::Palette;
+        return;
+      }
     }
 
-    C->p[C->pos++] = None;
+    C->p[C->pos++] = section_name::None;
   }
 
   void end_list(level_context* C, nbt::String name) {
@@ -579,19 +740,35 @@ namespace mc {
   }
 
   void register_string(level_context* C, nbt::String name, nbt::String value) {
+    if (in_palette_section(C)) {
+      if (name.compare("Name") == 0) {
+        C->sections.back().Palette.push_back(value);
+      }
+    } else if(in_palette_properties(C)) {
+      std::pair<std::map<std::string, std::string>::iterator, bool> const& result =
+        C->sections.back().PaletteProperties.back().insert(
+          std::map<std::string, std::string>::value_type(name, value)
+        );
+      if (!result.second) {
+        std::cout << "duplicated palette property: " << name << std::endl;
+      }
+    }
   }
 
   void register_byte(level_context* C, nbt::String name, nbt::Byte value) {
-    if (in_level_section(C))
-    {
+    if (in_level_section(C)) {
       if (name.compare("Y") == 0) {
-        C->tmp_Section->Y = value;
-        return;
+        C->sections.back().Y = value;
       }
     }
   }
 
   void register_int(level_context* C, nbt::String name, nbt::Int i) {
+    if (C->pos == 1 && C->p[0] == section_name::None) {
+      if (name.compare("DataVersion") == 0) {
+        C->Version = i;
+      }
+    }
   }
 
   void register_int_array(level_context* C, nbt::String name, nbt::IntArray* int_array) {
@@ -599,25 +776,24 @@ namespace mc {
   }
 
   void register_byte_array(level_context* C, nbt::String name, nbt::ByteArray* byte_array) {
-    if (in_level_section(C))
-    {
+    if (in_level_section(C)) {
       if (name.compare("Data") == 0) {
-        C->tmp_Section->Data.reset(byte_array);
+        C->sections.back().Data.reset(byte_array);
         return;
       }
 
       if (name.compare("SkyLight") == 0) {
-        C->tmp_Section->SkyLight.reset(byte_array);
+        C->sections.back().SkyLight.reset(byte_array);
         return;
       }
 
       if (name.compare("BlockLight") == 0) {
-        C->tmp_Section->BlockLight.reset(byte_array);
+        C->sections.back().BlockLight.reset(byte_array);
         return;
       }
 
       if (name.compare("Blocks") == 0) {
-        C->tmp_Section->Blocks.reset(byte_array);
+        C->sections.back().Blocks.reset(byte_array);
         return;
       }
     }
@@ -626,7 +802,12 @@ namespace mc {
   }
 
   void register_long_array(level_context* C, nbt::String name, nbt::LongArray* long_array) {
-
+    if (in_level_section(C)) {
+      if (name.compare("BlockStates") == 0) {
+        C->sections.back().BlockStates.reset(long_array);
+        return;
+      }
+    }
     delete long_array;
   }
 
@@ -680,7 +861,47 @@ namespace mc {
     return boost::optional<int>((element >> (indice_bit_count * index_in_element)) & out_bits);
   }
 
-  bool Section_Compound::get_block(BlockT& block, int x, int z, int y) {
+  bool Modern_Section_Compound::get_block(BlockT& block, int x, int z, int y) {
+    if (this->BlockStates) {
+      boost::optional<int> block_data;
+
+      // Static expansion of dynamic palette resolver;
+      // each section (16**3) contains 4096 unique blocks wihch yeilds max 2**12.
+      if (this->palette_size <= 16) {
+        block_data = get_indice<nbt::Long, 4>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 32) {
+        block_data = get_indice<nbt::Long, 5>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 64) {
+        block_data = get_indice<nbt::Long, 6>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 128) {
+        block_data = get_indice<nbt::Long, 7>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 256) {
+        block_data = get_indice<nbt::Long, 8>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 512) {
+        block_data = get_indice<nbt::Long, 9>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 1024) {
+        block_data = get_indice<nbt::Long, 10>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 2048) {
+        block_data = get_indice<nbt::Long, 11>(x, z, y, this->BlockStates);
+      } else if (this->palette_size <= 4096) {
+        block_data = get_indice<nbt::Long, 12>(x, z, y, this->BlockStates);
+      } else {
+        // For this to happen the map format must change as each segment only can
+        // contain a maximum of 4096 unique blocks.
+        std::cout << "chunk segment has a larger palette then expected" << std::endl;
+      }
+
+      if (block_data) {
+        if (this->BlockPalette[block_data.get()]) {
+          block = this->BlockPalette[block_data.get()].get();
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  bool Legacy_Section_Compound::get_block(BlockT& block, int x, int z, int y) {
     boost::optional<int> lower_block_type;
     boost::optional<int> block_type = get_indice<nbt::Byte, 8>(x, z, y, this->Blocks);
     // Data values are packed two by two and the position LSB decides which

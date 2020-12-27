@@ -3,6 +3,8 @@
 #ifndef __MC_LEVEL_HPP__
 #define __MC_LEVEL_HPP__
 
+#include <map>
+
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
@@ -37,21 +39,58 @@ namespace mc {
       }
   };
 
-  struct Section_Compound {
-    boost::shared_ptr<nbt::ByteArray> Blocks;
-    boost::shared_ptr<nbt::ByteArray> Data;
-    boost::shared_ptr<nbt::ByteArray> SkyLight;
-    boost::shared_ptr<nbt::ByteArray> BlockLight;
-    nbt::Byte Y;
+  class Section_Compound {
+    private:
+      nbt::Byte Y;
+      boost::shared_ptr<nbt::ByteArray> SkyLight;
 
-    bool get_block(BlockT &block, int x, int y, int z);
+    protected:
+      Section_Compound(nbt::Byte Y, boost::shared_ptr<nbt::ByteArray> SkyLight) : Y(Y), SkyLight(SkyLight) {};
+
+    public:
+      virtual bool get_block(BlockT &block, int x, int y, int z) = 0;
+      nbt::Byte get_y() { return this->Y; }
+  };
+
+  class Modern_Section_Compound : public Section_Compound {
+    private:
+      size_t palette_size;
+      boost::shared_ptr<nbt::LongArray> BlockStates;
+      boost::shared_ptr<boost::optional<BlockT>[]> BlockPalette;
+
+    public:
+      Modern_Section_Compound(
+        nbt::Byte Y,
+        boost::shared_ptr<nbt::LongArray> BlockStates,
+        boost::shared_ptr<nbt::ByteArray> SkyLight,
+        std::vector<std::string> &Palette,
+        std::vector<std::map<std::string, std::string>> &PaletteProperties
+      );
+      bool get_block(BlockT &block, int x, int y, int z);
+  };
+
+  class Legacy_Section_Compound : public Section_Compound {
+    private:
+      boost::shared_ptr<nbt::ByteArray> Blocks;
+      boost::shared_ptr<nbt::ByteArray> Data;
+      boost::shared_ptr<nbt::ByteArray> BlockLight;
+
+    public:
+      Legacy_Section_Compound(
+        nbt::Byte Y,
+        boost::shared_ptr<nbt::ByteArray> Blocks,
+        boost::shared_ptr<nbt::ByteArray> Data,
+        boost::shared_ptr<nbt::ByteArray> SkyLight,
+        boost::shared_ptr<nbt::ByteArray> BlockLight
+      ) : Section_Compound(Y, SkyLight), Blocks(Blocks), Data(Data), BlockLight(BlockLight) {};
+      bool get_block(BlockT &block, int x, int y, int z);
   };
 
   struct Level_Compound {
     nbt::Int xPos;
     nbt::Int zPos;
     boost::shared_ptr<nbt::IntArray> HeightMap;
-    boost::ptr_vector<Section_Compound> Sections;
+    std::vector<boost::shared_ptr<Section_Compound>> Sections;
   };
 
   class level

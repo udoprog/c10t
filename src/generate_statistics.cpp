@@ -135,13 +135,13 @@ bool generate_statistics(
           }
 
           boost::shared_ptr<mc::Level_Compound> L = level_data.get_level();
-          BOOST_FOREACH(mc::Section_Compound Section, L->Sections) {
+          BOOST_FOREACH(boost::shared_ptr<mc::Section_Compound> Section, L->Sections) {
             for (int y = 15; y >= 0; y--) {
-              int abs_y = (Section.Y * 16) + y;
+              int abs_y = (Section->get_y() * 16) + y;
                for (int z = 0; z < mc::MapZ; z++) {
                  for (int x = 0; x < mc::MapX; x++) {
                    mc::BlockT block;
-                   if (Section.get_block(block, x, z, y)) {
+                   if (Section->get_block(block, x, z, y)) {
                     if (block.material->enabled) {
                       size_t index = block.material - materials;
                       statistics[index] += 1;

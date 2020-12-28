@@ -3730,5 +3730,19 @@
     "top_color": [58, 111, 38, 255],
     "mode": "block",
     "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "kelp",
+    "mode": "block",
+    "top_color": [9, 161, 62, 64],
+    "darken": false
+  },
+  {
+    "namespace": "minecraft",
+    "material": "kelp_plant",
+    "mode": "block",
+    "top_color": [9, 161, 62, 64],
+    "darken": false
   }
 ]

@@ -57,6 +57,7 @@ namespace mc {
       size_t palette_size;
       boost::shared_ptr<nbt::LongArray> BlockStates;
       boost::shared_ptr<boost::optional<BlockT>[]> BlockPalette;
+      bool stream_bit_packing;
 
     public:
       Modern_Section_Compound(

@@ -605,6 +605,28 @@ namespace mc {
         BlockPalette[i] = boost::optional<BlockT>(block);
       }
     }
+
+    // check bit packing method of array; check if the array fits exactly 4096 indices for
+    // bit counts that don't divide 64 (size of long) then it is an optimal bit stream rather
+    // then the expected truncated bit-packing. (as for why it is sometimes used I have no idea)
+    if (palette_size > 16 && palette_size <= 32 && BlockStates->length == 320) {
+      stream_bit_packing = true;
+    } else if(palette_size > 32 && palette_size <= 64 && BlockStates->length == 384) {
+      stream_bit_packing = true;
+    } else if(palette_size > 64 && palette_size <= 128 && BlockStates->length == 448) {
+      stream_bit_packing = true;
+    } else if(palette_size > 256 && palette_size <= 512 && BlockStates->length == 576) {
+      stream_bit_packing = true;
+    } else if(palette_size > 512 && palette_size <= 1024 && BlockStates->length == 640) {
+      stream_bit_packing = true;
+    } else if(palette_size > 1024 && palette_size <= 2048 && BlockStates->length == 704) {
+      stream_bit_packing = true;
+    } else if(palette_size > 2048 && palette_size <= 4096 && BlockStates->length == 768) {
+      stream_bit_packing = true;
+    } else {
+      // slack bits, if any, are assumed to be unused.
+      stream_bit_packing = false;
+    }
   }
 
   inline bool in_level_section(level_context* C) {
@@ -705,7 +727,7 @@ namespace mc {
           }
 
           if (ctx_section.Palette.size() != ctx_section.PaletteProperties.size()) {
-            //std::cout << "bad palette sizes" << std::endl;
+            std::cout << "bad palette sizes" << std::endl;
           }
 
           boost::shared_ptr<Section_Compound> s(new Modern_Section_Compound(
@@ -839,8 +861,14 @@ namespace mc {
     return Level;
   }
 
-  // T here will typically be nbt::Byte or nbt::long
-  // indice_bit_count may not exceed 32 since the return type is int.
+  /**
+   * Get the bit slice (indice) for the given coordinates in the provided array.
+   *
+   * This method assumes truncated bit-packing.
+   *
+   * T here will typically be nbt::Byte or nbt::long
+   * indice_bit_count is the number of bits in the slice and may not exceed 32 since the return type is int.
+   */
   template<typename T, size_t indice_bit_count>
   inline boost::optional<int> get_indice(int x, int z, int y, boost::shared_ptr<nbt::Array<T>> &arr) {
     size_t indice_index = (y * 16 + z) * 16 + x;
@@ -861,38 +889,96 @@ namespace mc {
     return boost::optional<int>((element >> (indice_bit_count * index_in_element)) & out_bits);
   }
 
+  /**
+   * Get the bit slice (indice) for the given coordinates in the provided array.
+   *
+   * This method assumes optimal bit-packing.
+   *
+   * T here will typically be nbt::Byte or nbt::long
+   * indice_bit_count is the number of bits in the slice and may not exceed 32 since the return type is int.
+   */
+  template<typename T, size_t indice_bit_count>
+  inline boost::optional<int> get_stream_indice(int x, int z, int y, boost::shared_ptr<nbt::Array<T>> &arr) {
+    size_t indice_index = (y * 16 + z) * 16 + x;
+
+    size_t bits_into_stream = indice_index * indice_bit_count;
+
+    size_t bits_in_element = bits_into_stream % 64;
+    size_t element_index = (bits_into_stream - bits_in_element) / 64;
+
+    if (arr->length < 0 || element_index >= static_cast<size_t>(arr->length))
+      return boost::optional<int>();
+
+    T element = arr->values[element_index];
+    int result = element >> bits_in_element;
+    size_t got = 64 - bits_in_element;
+    if (got < indice_bit_count) {
+      if (element_index + 1 >= static_cast<size_t>(arr->length))
+        return boost::optional<int>();
+      element = arr->values[element_index + 1];
+      result = result | (element << got);
+    }
+
+    int out_bits = ~(0xFFFFFFFF << indice_bit_count);
+    return boost::optional<int>(result & out_bits);
+  }
+
   bool Modern_Section_Compound::get_block(BlockT& block, int x, int z, int y) {
     if (this->BlockStates) {
-      boost::optional<int> block_data;
+      boost::optional<int> block_data = boost::optional<int>();
 
       // Static expansion of dynamic palette resolver;
-      // each section (16**3) contains 4096 unique blocks wihch yeilds max 2**12.
-      if (this->palette_size <= 16) {
-        block_data = get_indice<nbt::Long, 4>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 32) {
-        block_data = get_indice<nbt::Long, 5>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 64) {
-        block_data = get_indice<nbt::Long, 6>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 128) {
-        block_data = get_indice<nbt::Long, 7>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 256) {
-        block_data = get_indice<nbt::Long, 8>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 512) {
-        block_data = get_indice<nbt::Long, 9>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 1024) {
-        block_data = get_indice<nbt::Long, 10>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 2048) {
-        block_data = get_indice<nbt::Long, 11>(x, z, y, this->BlockStates);
-      } else if (this->palette_size <= 4096) {
-        block_data = get_indice<nbt::Long, 12>(x, z, y, this->BlockStates);
+      // each section (16**3) contains 4096 unique blocks wihch yields max 2**12.
+      if(this->stream_bit_packing) {
+        // Special case bit-packing.
+        if (this->palette_size > 16 && this->palette_size <= 32) {
+          block_data = get_stream_indice<nbt::Long, 5>(x, z, y, this->BlockStates);
+        } else if (this->palette_size > 32 && this->palette_size <= 64) {
+          block_data = get_stream_indice<nbt::Long, 6>(x, z, y, this->BlockStates);
+        } else if (this->palette_size > 64 && this->palette_size <= 128) {
+          block_data = get_stream_indice<nbt::Long, 7>(x, z, y, this->BlockStates);
+        } else if (this->palette_size > 256 && this->palette_size <= 512) {
+          block_data = get_stream_indice<nbt::Long, 9>(x, z, y, this->BlockStates);
+        } else if (this->palette_size > 512 && this->palette_size <= 1024) {
+          block_data = get_stream_indice<nbt::Long, 10>(x, z, y, this->BlockStates);
+        } else if (this->palette_size > 1024 && this->palette_size <= 2048) {
+          block_data = get_stream_indice<nbt::Long, 11>(x, z, y, this->BlockStates);
+        } else if (this->palette_size > 2048 && this->palette_size <= 4096) {
+          block_data = get_stream_indice<nbt::Long, 12>(x, z, y, this->BlockStates);
+        } else {
+          // If this happens check the constructor logic when
+          // stream_bit_packing decision is made.
+          std::cout << "chunk segment uses unexpected bit-packing" << std::endl;
+        }
       } else {
-        // For this to happen the map format must change as each segment only can
-        // contain a maximum of 4096 unique blocks.
-        std::cout << "chunk segment has a larger palette then expected" << std::endl;
+        // This is the common bit-packing method.
+        if (this->palette_size <= 16) {
+          block_data = get_indice<nbt::Long, 4>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 32) {
+          block_data = get_indice<nbt::Long, 5>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 64) {
+          block_data = get_indice<nbt::Long, 6>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 128) {
+          block_data = get_indice<nbt::Long, 7>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 256) {
+          block_data = get_indice<nbt::Long, 8>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 512) {
+          block_data = get_indice<nbt::Long, 9>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 1024) {
+          block_data = get_indice<nbt::Long, 10>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 2048) {
+          block_data = get_indice<nbt::Long, 11>(x, z, y, this->BlockStates);
+        } else if (this->palette_size <= 4096) {
+          block_data = get_indice<nbt::Long, 12>(x, z, y, this->BlockStates);
+        } else {
+          // For this to happen the map format must change as each segment only can
+          // contain a maximum of 4096 unique blocks.
+          std::cout << "chunk segment has a larger palette then expected" << std::endl;
+        }
       }
 
       if (block_data) {
-        if (this->BlockPalette[block_data.get()]) {
+        if (block_data.get() < this->palette_size && this->BlockPalette[block_data.get()]) {
           block = this->BlockPalette[block_data.get()].get();
           return true;
         }

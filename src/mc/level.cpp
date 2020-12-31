@@ -902,16 +902,17 @@ namespace mc {
     size_t indice_index = (y * 16 + z) * 16 + x;
 
     size_t bits_into_stream = indice_index * indice_bit_count;
+    size_t element_bits = sizeof(T) * 8;
 
-    size_t bits_in_element = bits_into_stream % 64;
-    size_t element_index = (bits_into_stream - bits_in_element) / 64;
+    size_t bits_in_element = bits_into_stream % element_bits;
+    size_t element_index = (bits_into_stream - bits_in_element) / element_bits;
 
     if (arr->length < 0 || element_index >= static_cast<size_t>(arr->length))
       return boost::optional<int>();
 
     T element = arr->values[element_index];
     int result = element >> bits_in_element;
-    size_t got = 64 - bits_in_element;
+    size_t got = element_bits - bits_in_element;
     if (got < indice_bit_count) {
       if (element_index + 1 >= static_cast<size_t>(arr->length))
         return boost::optional<int>();

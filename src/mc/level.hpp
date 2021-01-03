@@ -40,11 +40,9 @@ namespace mc {
   };
 
   class Section_Compound {
-    private:
+    protected:
       nbt::Byte Y;
       boost::shared_ptr<nbt::ByteArray> SkyLight;
-
-    protected:
       Section_Compound(nbt::Byte Y, boost::shared_ptr<nbt::ByteArray> SkyLight) : Y(Y), SkyLight(SkyLight) {};
 
     public:

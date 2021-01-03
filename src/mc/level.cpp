@@ -542,6 +542,7 @@ namespace mc {
 
     level_context() : error(false), error_where(0), error_why("")
     {
+      this->Version = -1;
       this->Level.reset(new Level_Compound);
       this->pos = 0;
     }
@@ -685,7 +686,8 @@ namespace mc {
     if (C->pos == 0) {
       BOOST_FOREACH(context_section &ctx_section, C->sections) {
 
-        if (ctx_section.Y == -1) {
+        if (ctx_section.Y < 0) {
+          // Skip invalid height indexes; these are typically 0 - 15.
           continue;
         }
 

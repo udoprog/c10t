@@ -9,7 +9,7 @@ Requirements
   * libz (?)
   * libpng (>= 1.2)
   * libfreetype (>= 2)
-  * libboost (thread, filesystem, system and test) (>= 1.46)
+  * libboost (thread, filesystem, system, regex and test) (>= 1.46)
 
 Features
 --------

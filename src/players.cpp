@@ -1,6 +1,8 @@
 // Distributed under the BSD License, see accompanying LICENSE.txt
 // (C) Copyright 2010 John-John Tedro et al.
 
+#include <boost/regex.hpp>
+
 #include "players.hpp"
 
 namespace fs = boost::filesystem;
@@ -30,7 +32,7 @@ void register_double(player *p, std::string name, nbt::Double value) {
       case 1: p->yPos = value; break;
       case 2: p->zPos = value; break;
     }
-    
+
     p->pos_c++;
   }
 }
@@ -54,20 +56,31 @@ players_db::players_db(fs::path path, std::set<std::string> set)
 {
 }
 
+const boost::regex player_extension( "[^\\.]*\\.dat" );
+
 void players_db::read(std::vector<player>& players) const
 {
   fs::path full_path = fs::system_complete( path );
-  
+
   if (!fs::is_directory(full_path)) {
     throw players_db_exception("database does not exist");
   }
-  
+
   fs::directory_iterator end_iter;
-  
-  for ( fs::directory_iterator dir_itr( full_path );
+
+  for (fs::directory_iterator dir_itr(full_path);
         dir_itr != end_iter;
         ++dir_itr )
   {
+    // Player files are simply dat-files; filter for them
+    // to avoid picking up dat_old-files or any other
+    // unexpeced files.
+    boost::smatch match;
+    if (!boost::regex_match(dir_itr->path().filename().string(), match, player_extension)) {
+      continue;
+    }
+
+    // player files have always been .dat; TODO filter that since .dat_old is used.. sometimes?
     player p(dir_itr->path());
 
     if (filter_set.size() > 0) {

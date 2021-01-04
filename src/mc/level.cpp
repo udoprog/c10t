@@ -919,7 +919,8 @@ namespace mc {
       if (element_index + 1 >= static_cast<size_t>(arr->length))
         return boost::optional<int>();
       element = arr->values[element_index + 1];
-      result = result | (element << got);
+      int got_bits = ~(0xFFFFFFFF << got);
+      result = (result & got_bits) | (element << got);
     }
 
     int out_bits = ~(0xFFFFFFFF << indice_bit_count);

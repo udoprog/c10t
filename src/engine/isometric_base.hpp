@@ -32,9 +32,8 @@ public:
 
     oper->set_limits(image_width + 1, image_height);
 
+    block_rotation br_blocks(s.rotation);
     BOOST_FOREACH(boost::shared_ptr<mc::Section_Compound> Section, L->Sections) {
-      block_rotation br_blocks(s.rotation);
-
       for (int y = 0; y < 16; y++) {
         int abs_y = (16 * Section->get_y()) + y;
 

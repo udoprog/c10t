@@ -518,12 +518,7 @@ namespace mc {
     std::vector<std::map<std::string, std::string>> PaletteProperties;
 
     // Constructor for emplacing
-    context_section() {
-      // Minecraft seems to keep an
-      // invalid entry first; which
-      // has Y set to -1, so default
-      // to -1 for invalid here as well.
-      this->Y = -1;
+    context_section() : Y(INT8_MIN) {
     }
   };
 
@@ -534,17 +529,14 @@ namespace mc {
     size_t error_where;
     const char* error_why;
 
-    nbt::Int Version;
+    nbt::Int version;
     std::vector<context_section> sections;
 
     section_name p[64];
     int pos;
 
-    level_context() : error(false), error_where(0), error_why("")
-    {
-      this->Version = -1;
+    level_context() : error(false), version(-1), pos(0), error_where(0), error_why("") {
       this->Level.reset(new Level_Compound);
-      this->pos = 0;
     }
   };
 
@@ -563,7 +555,7 @@ namespace mc {
         std::cout << "unknown material: " << Palette[i] << std::endl;
         BlockPalette[i] = boost::optional<mc::BlockT>();
       } else {
-        BlockT block;
+        mc::BlockT block;
         block.material = material_it->second;
 
         std::map<std::string, std::string>::iterator property_it;
@@ -603,13 +595,13 @@ namespace mc {
         }
         */
 
-        BlockPalette[i] = boost::optional<BlockT>(block);
+        BlockPalette[i] = boost::optional<mc::BlockT>(block);
       }
     }
 
     // check bit packing method of array; check if the array fits exactly 4096 indices for
-    // bit counts that don't divide 64 (size of long) then it is an optimal bit stream rather
-    // then the expected truncated bit-packing. (as for why it is sometimes used I have no idea)
+    // bit counts that don't divide 64 (size of long) then it is an proper bit stream rather
+    // then the truncated bit-packing.
     if (palette_size > 16 && palette_size <= 32 && BlockStates->length == 320) {
       stream_bit_packing = true;
     } else if(palette_size > 32 && palette_size <= 64 && BlockStates->length == 384) {
@@ -630,7 +622,8 @@ namespace mc {
     }
   }
 
-  inline bool in_level_section(level_context* C) {
+  // Originally a level compond object existed which was later removed
+  inline bool in_level_section_a(level_context* C) {
     return   C->pos == 4
           && C->p[0] == section_name::None
           && C->p[1] == section_name::Level
@@ -638,7 +631,27 @@ namespace mc {
           && C->p[3] == section_name::None;
   }
 
-  inline bool in_palette_section(level_context* C) {
+  inline bool in_level_section_b(level_context* C) {
+    return   C->pos == 4
+          && C->p[0] == section_name::None
+          && C->p[1] == section_name::Sections
+          && C->p[2] == section_name::None
+          && C->p[3] == section_name::None;
+  }
+
+  // Y value did not move
+  inline bool in_level_section_c(level_context* C) {
+    return   C->pos == 3
+          && C->p[0] == section_name::None
+          && C->p[1] == section_name::Sections
+          && C->p[2] == section_name::None;
+  }
+
+  inline bool in_level_section(level_context* C) {
+    return in_level_section_a(C) || in_level_section_b(C);
+  }
+
+  inline bool in_palette_section_a(level_context* C) {
     return   C->pos == 6
           && C->p[0] == section_name::None
           && C->p[1] == section_name::Level
@@ -648,7 +661,21 @@ namespace mc {
           && C->p[5] == section_name::None;
   }
 
-  inline bool in_palette_properties(level_context* C) {
+  inline bool in_palette_section_b(level_context* C) {
+    return   C->pos == 6
+          && C->p[0] == section_name::None
+          && C->p[1] == section_name::Sections
+          && C->p[2] == section_name::None
+          && C->p[3] == section_name::None
+          && C->p[4] == section_name::Palette
+          && C->p[5] == section_name::None;
+  }
+
+  inline bool in_palette_section(level_context* C) {
+    return in_palette_section_a(C) || in_palette_section_b(C);
+  }
+
+  inline bool in_palette_properties_a(level_context* C) {
     return   C->pos == 7
           && C->p[0] == section_name::None
           && C->p[1] == section_name::Level
@@ -657,6 +684,21 @@ namespace mc {
           && C->p[4] == section_name::Palette
           && C->p[5] == section_name::None
           && C->p[6] == section_name::Properties;
+  }
+
+  inline bool in_palette_properties_b(level_context* C) {
+    return   C->pos == 7
+          && C->p[0] == section_name::None
+          && C->p[1] == section_name::Sections
+          && C->p[2] == section_name::None
+          && C->p[3] == section_name::None
+          && C->p[4] == section_name::Palette
+          && C->p[5] == section_name::None
+          && C->p[6] == section_name::Properties;
+  }
+
+  inline bool in_palette_properties(level_context* C) {
+    return in_palette_properties_a(C) || in_palette_properties_b(C);
   }
 
   void begin_compound(level_context* C, nbt::String name) {
@@ -688,11 +730,11 @@ namespace mc {
 
         if (ctx_section.Y < 0) {
           // Skip invalid height indexes; these are typically 0 - 15.
-          continue;
+          //continue;
         }
 
         // Legacy or no version
-        if (C->Version < 1519) {
+        if (C->version < 1519) {
           if (!ctx_section.Data) {
             std::cout << "missing Data" << std::endl;
           }
@@ -746,11 +788,11 @@ namespace mc {
   }
 
   void begin_list(level_context* C, nbt::String name, nbt::Byte type, nbt::Int count) {
-    if (name.compare("Sections") == 0) {
+    if (name.compare("Sections") == 0 || name.compare("sections") == 0) {
       C->p[C->pos++] = section_name::Sections;
       return;
     } else if(in_level_section(C)) {
-      if (name.compare("Palette") == 0) {
+      if (name.compare("Palette") == 0 || name.compare("palette") == 0) {
         C->p[C->pos++] = section_name::Palette;
         return;
       }
@@ -780,7 +822,7 @@ namespace mc {
   }
 
   void register_byte(level_context* C, nbt::String name, nbt::Byte value) {
-    if (in_level_section(C)) {
+    if (in_level_section_a(C) || in_level_section_c(C)) {
       if (name.compare("Y") == 0) {
         C->sections.back().Y = value;
       }
@@ -790,7 +832,7 @@ namespace mc {
   void register_int(level_context* C, nbt::String name, nbt::Int i) {
     if (C->pos == 1 && C->p[0] == section_name::None) {
       if (name.compare("DataVersion") == 0) {
-        C->Version = i;
+        C->version = i;
       }
     }
   }
@@ -827,7 +869,7 @@ namespace mc {
 
   void register_long_array(level_context* C, nbt::String name, nbt::LongArray* long_array) {
     if (in_level_section(C)) {
-      if (name.compare("BlockStates") == 0) {
+      if (name.compare("BlockStates") == 0 || name.compare("data") == 0) {
         C->sections.back().BlockStates.reset(long_array);
         return;
       }
@@ -878,7 +920,8 @@ namespace mc {
     // Compiler should catch that this is static and pre-compute it,
     // specifically it will resolve statically since all arguments
     // are sourced from template parameters.
-    size_t indice_count_in_element = static_cast<size_t>(floor(static_cast<double>(sizeof(T)*8) / static_cast<double>(indice_bit_count)));
+    size_t indice_count_in_element =
+      static_cast<size_t>(floor(static_cast<double>(sizeof(T)*8) / static_cast<double>(indice_bit_count)));
 
     size_t index_in_element = indice_index % indice_count_in_element;
     size_t element_index = (indice_index - index_in_element) / indice_count_in_element;
@@ -894,9 +937,9 @@ namespace mc {
   /**
    * Get the bit slice (indice) for the given coordinates in the provided array.
    *
-   * This method assumes optimal bit-packing.
+   * This method assumes non-truncated bit-packing.
    *
-   * T here will typically be nbt::Byte or nbt::long
+   * T here will typically be nbt::long
    * indice_bit_count is the number of bits in the slice and may not exceed 32 since the return type is int.
    */
   template<typename T, size_t indice_bit_count>
@@ -932,7 +975,8 @@ namespace mc {
       boost::optional<int> block_data = boost::optional<int>();
 
       // Static expansion of dynamic palette resolver;
-      // each section (16**3) contains 4096 unique blocks wihch yields max 2**12.
+      // each section (16**3) contains 4096 unique blocks wihch yields max 2**12
+      // and the minimum is 4 bits regardless of the number of entries in the palette.
       if(this->stream_bit_packing) {
         // Special case bit-packing.
         if (this->palette_size > 16 && this->palette_size <= 32) {

@@ -714,7 +714,7 @@ namespace mc {
 
     C->p[C->pos++] = section_name::None;
 
-    if (in_level_section(C)) {
+    if (in_level_section_a(C) || in_level_section_c(C)) {
       C->sections.emplace_back();
     } else if(in_palette_section(C)) {
       C->sections.back().PaletteProperties.emplace_back();
@@ -914,7 +914,7 @@ namespace mc {
    * indice_bit_count is the number of bits in the slice and may not exceed 32 since the return type is int.
    */
   template<typename T, size_t indice_bit_count>
-  inline boost::optional<int> get_indice(int x, int z, int y, boost::shared_ptr<nbt::Array<T>> &arr) {
+  inline boost::optional<uint32_t> get_indice(int x, int z, int y, boost::shared_ptr<nbt::Array<T>> &arr) {
     size_t indice_index = (y * 16 + z) * 16 + x;
 
     // Compiler should catch that this is static and pre-compute it,
@@ -927,11 +927,11 @@ namespace mc {
     size_t element_index = (indice_index - index_in_element) / indice_count_in_element;
 
     if (arr->length < 0 || element_index >= static_cast<size_t>(arr->length))
-      return boost::optional<int>();
+      return boost::optional<uint32_t>();
 
     T element = arr->values[element_index];
-    int out_bits = ~(0xFFFFFFFF << indice_bit_count);
-    return boost::optional<int>((element >> (indice_bit_count * index_in_element)) & out_bits);
+    uint32_t out_bits = ~(0xFFFFFFFF << indice_bit_count);
+    return boost::optional<uint32_t>((element >> (indice_bit_count * index_in_element)) & out_bits);
   }
 
   /**
@@ -943,7 +943,7 @@ namespace mc {
    * indice_bit_count is the number of bits in the slice and may not exceed 32 since the return type is int.
    */
   template<typename T, size_t indice_bit_count>
-  inline boost::optional<int> get_stream_indice(int x, int z, int y, boost::shared_ptr<nbt::Array<T>> &arr) {
+  inline boost::optional<uint32_t> get_stream_indice(int x, int z, int y, boost::shared_ptr<nbt::Array<T>> &arr) {
     size_t indice_index = (y * 16 + z) * 16 + x;
 
     size_t bits_into_stream = indice_index * indice_bit_count;
@@ -953,26 +953,26 @@ namespace mc {
     size_t element_index = (bits_into_stream - bits_in_element) / element_bits;
 
     if (arr->length < 0 || element_index >= static_cast<size_t>(arr->length))
-      return boost::optional<int>();
+      return boost::optional<uint32_t>();
 
     T element = arr->values[element_index];
     int result = element >> bits_in_element;
     size_t got = element_bits - bits_in_element;
     if (got < indice_bit_count) {
       if (element_index + 1 >= static_cast<size_t>(arr->length))
-        return boost::optional<int>();
+        return boost::optional<uint32_t>();
       element = arr->values[element_index + 1];
       int got_bits = ~(0xFFFFFFFF << got);
       result = (result & got_bits) | (element << got);
     }
 
-    int out_bits = ~(0xFFFFFFFF << indice_bit_count);
-    return boost::optional<int>(result & out_bits);
+    uint32_t out_bits = ~(0xFFFFFFFF << indice_bit_count);
+    return boost::optional<uint32_t>(result & out_bits);
   }
 
   bool Modern_Section_Compound::get_block(BlockT& block, int x, int z, int y) {
     if (this->BlockStates) {
-      boost::optional<int> block_data = boost::optional<int>();
+      boost::optional<uint32_t> block_data = boost::optional<uint32_t>();
 
       // Static expansion of dynamic palette resolver;
       // each section (16**3) contains 4096 unique blocks wihch yields max 2**12
@@ -1036,11 +1036,11 @@ namespace mc {
   }
 
   bool Legacy_Section_Compound::get_block(BlockT& block, int x, int z, int y) {
-    boost::optional<int> lower_block_type;
-    boost::optional<int> block_type = get_indice<nbt::Byte, 8>(x, z, y, this->Blocks);
+    boost::optional<uint32_t> lower_block_type;
+    boost::optional<uint32_t> block_type = get_indice<nbt::Byte, 8>(x, z, y, this->Blocks);
     // Data values are packed two by two and the position LSB decides which
     // half-byte contains the requested block data value.
-    boost::optional<int> block_data = get_indice<nbt::Byte, 4>(x, z, y, this->Data);
+    boost::optional<uint32_t> block_data = get_indice<nbt::Byte, 4>(x, z, y, this->Data);
 
     if (block_type && block_data) {
       boost::optional<MaterialT*> material = get_material_legacy(block_type.get(), block_data.get());

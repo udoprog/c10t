@@ -29,7 +29,7 @@ inspiration.
 Building from Source (using cmake)
 ----------------------------------
 
-###Ubuntu###
+### Ubuntu ###
 
  1. Install dependencies:
 

@@ -117,6 +117,24 @@ namespace mc {
   extern std::map<std::string, MaterialT*> MaterialMap;
   extern std::vector<std::vector<MaterialT*>> MaterialPaletteLegacy;
 
+  enum BlockOrientation {
+    Invalid,
+    UpDown,
+    EastWest,
+    NorthSouth,
+    OnlySides
+  };
+
+  typedef struct {
+    BlockOrientation orientation = BlockOrientation::Invalid;
+    bool is_top = false;
+  } BlockPropertiesT;
+
+  typedef struct {
+    MaterialT *material;
+    BlockPropertiesT properties;
+  } BlockT;
+
   inline boost::optional<MaterialT*> get_material_legacy(int material, int data) {
     // Legacy lookup needs to aggressivly fallback to the first metadata
     // variant when possible, this is because some blocks have either only

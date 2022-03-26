@@ -462,7 +462,14 @@ bool generate_map(
     }
 
     if (s.show_players) {
-      load_players(out, world_path / "players", players, s.show_players_set);
+
+      // Try both legacy and modern player dbs.
+      fs::path full_path = world_path / "playerdata";
+      if (!fs::is_directory(full_path)) {
+        full_path = full_path = world_path / "players";
+      }
+
+      load_players(out, full_path, players, s.show_players_set);
     }
 
     if (s.show_signs) {

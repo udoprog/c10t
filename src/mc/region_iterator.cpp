@@ -6,6 +6,8 @@ bool dir_filter(const std::string& name)
 {
   if (name.compare(0, 3, "DIM") == 0) return false;
   if (name.compare("players") == 0) return false;
+  if (name.compare("poi") == 0) return false;
+  if (name.compare("entities") == 0) return false;
   return true;
 }
 
@@ -21,7 +23,7 @@ namespace mc {
     : root(path), lister(new dirlist(path))
   {
   }
-  
+
   bool region_iterator::has_next()
   {
     if (!lister->has_next(dir_filter, file_filter)) {
@@ -32,7 +34,7 @@ namespace mc {
     current_region.reset(new region(next));
     return true;
   }
-  
+
   region_ptr region_iterator::next() {
     return current_region;
   }

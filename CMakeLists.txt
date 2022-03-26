@@ -28,7 +28,7 @@ find_package(ZLIB REQUIRED)
 find_package(PNG 1.2 REQUIRED)
 find_package(Freetype 2 REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost 1.46 COMPONENTS thread filesystem system REQUIRED)
+find_package(Boost 1.46 COMPONENTS thread filesystem system regex REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${ZLIB_INCLUDE_DIR})

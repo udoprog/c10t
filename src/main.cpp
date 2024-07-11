@@ -430,7 +430,7 @@ int main(int argc, char *argv[]){
 
         if (s.use_split) {
             try {
-                boost::format(fs::basename(s.output_path)) % 0 % 0;
+                boost::format(s.output_path.stem().string()) % 0 % 0;
             } catch (boost::io::too_many_args& e) {
                 error << "The `-o' parameter must contain two number format specifiers `%d' (x and y coordinates) - example: -o out/base.%d.%d.png";
                 goto exit_error;

@@ -53,7 +53,6 @@ inline void cout_end() {
   cout << hex << std::setw(2) << setfill('0') << static_cast<int>(END_BYTE) << flush;
 }
 
-
 int do_help(ostream& out) {
   out << "This program was made possible because of the work and inspiration by ZomBuster and Firemark" << endl;
   out << "" << endl;

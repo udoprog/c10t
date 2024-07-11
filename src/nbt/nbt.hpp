@@ -333,9 +333,11 @@ namespace nbt {
       inline String read_string(input_buffer_ptr file) {
         Short s = read_short(file);
         nbt_assert_error(exc_env, file, s >= 0, "String specified with invalid length < 0");
-        uint8_t *str = new uint8_t[s + 1];
-        assert_error_c(exc_env, file, file->read(str, s) == s, "Buffer to short to read String", delete str);
-        String so((const char*)str, s);
+        size_t count = static_cast<size_t>(s);
+        uint8_t *str = new uint8_t[count + 1];
+        nbt_assert_error(exc_env, file, str, "Unable to allocate string buffer");
+        assert_error_c(exc_env, file, file->read(str, count) == count, "Buffer to short to read String", delete [] str);
+        String so(reinterpret_cast<char*>(str), count);
         delete [] str;
         return so;
       }
@@ -736,7 +738,7 @@ namespace nbt {
         parse(file);
       }
       
-      void parse_file(const char *path)
+      void parse_file(const char* path)
       {
         input_buffer_ptr file(new gzfile_buffer(path));
         parse(file);

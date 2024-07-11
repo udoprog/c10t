@@ -39,7 +39,7 @@ void register_double(player *p, std::string name, nbt::Double value) {
 
 player::player(const fs::path path) :
   path(path),
-  name(fs::basename(path)),
+  name(path.stem().string()),
   error(false), error_where(0), error_why(""), in_pos(false),
   pos_c(0), xPos(0), yPos(0), zPos(0)
 {

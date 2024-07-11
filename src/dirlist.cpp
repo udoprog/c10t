@@ -32,7 +32,7 @@ bool dirlist::has_next(dir_filter_func dir_filter, file_filter_func file_filter)
           ++itr )
     {
       if (fs::is_directory(itr->status())) {
-        if (!dir_filter(fs::basename(itr->path()))) {
+        if (!dir_filter(itr->path().stem().string())) {
           continue;
         }
 
